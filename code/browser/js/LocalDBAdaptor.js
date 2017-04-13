@@ -1,0 +1,1 @@
+class LocalDBAdaptor extends DBAdaptor {}
