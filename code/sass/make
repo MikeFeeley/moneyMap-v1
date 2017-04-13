@@ -1,0 +1,6 @@
+#!/bin/tcsh
+
+foreach l (`ls *.css`)
+  echo $l
+  sass --load-path . --scss $l ../browser/css/$l
+end

@@ -1,0 +1,333 @@
+@import 'lib';
+
+$name-narrow: 250px;
+$name-wide:   300px;
+$indent:       24px;
+
+@mixin schedule-entry-base() {
+  ul {padding-left: 0px;}
+  li {
+    white-space: nowrap;
+    div:not(._toolTip) {
+      display: inline-block;
+      vertical-align: bottom;
+    }
+    ._content {
+      padding: 0px;
+      margin:  2px;
+    }
+    div._content, label._content {
+      border:  2px solid transparent;
+    }
+    div._field_name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      vertical-align: top;
+      ._content {
+        @include adaptive-width($name-narrow,$name-wide);
+      }
+    }
+    ._field_start ._content, ._field_end ._content {width: 4em}
+    ._field_amount ._content                       {width: 8em; text-align: right}
+    ._field_repeat {
+      input {margin-bottom: 6px}
+      div._content {width: 12px}
+      ._content, ._suffix {
+        font-style: italic;
+        color: #aaa;
+      }
+      ._suffix {
+        padding: 0;
+        margin: 2px;
+        border: 2px solid transparent;
+        width:  82px;
+      }
+      div > ._suffix {
+        border-right: 6px solid transparent;
+      }
+      &:not(._value_checked) ._suffix
+        {color: #ddd}
+    }
+    ._field_limit {
+      ._content {width: 20px;}
+      ._prefix, ._content, ._suffix {
+        font-style: italic;
+        color: #aaa;
+      }
+      div._content {
+        opacity: 0;
+      }
+    }
+    ._field_notes ._content {
+      @include adaptive-width(75px,200px);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #8a8;
+      font-style: italic;
+    }
+    div._field_total {
+      vertical-align: top;
+      text-align: right;
+      color:      #bbb;
+      ._content {width: 80px}
+    }
+    div._field_unallocated {
+      vertical-align: top;
+      text-align: right;
+      font-style: italic;
+      color:      #88c;
+      margin-right: 20px;
+      ._content {width: 125px}
+      &._negative {
+        color: #c44;
+      }
+    }
+  }
+}
+
+@mixin schedule-entry ($width-narrow, $width-wide, $h1Font, $h2Font, $h3Font, $bFont) {
+  @include schedule-entry-base();
+  z-index: 1000;
+  @include adaptive-width($width-narrow, $width-wide);
+  * {
+    font-size: $bFont;
+    ._content {
+      white-space: nowrap;
+    }
+  }
+  > ul > li,
+  > ul > div > li {
+    margin-bottom: 70px;
+    > ._field:not(._field_name) {
+      margin-top: 16px;
+    }
+    > ._field_name  {
+      * {
+        font-size: $h1Font;
+        font-weight: 100;
+      }
+    }
+    > div > ._field_scheduleLine {
+      display: none;
+    }
+  }
+  > ul > li {
+    > ul > li {
+      margin-left: $indent * 1;
+      > ._field_name ._content {
+        @include adaptive-width($name-narrow - $indent * 1, $name-wide - $indent * 1);
+      }
+      > ul > li {
+        margin-left: $indent * 1;
+        > ._field_name ._content {
+          @include adaptive-width($name-narrow - $indent * 2, $name-wide - $indent * 2);
+        }
+        > ul > li {
+          margin-left: $indent * 1;
+          > ._field_name ._content {
+            @include adaptive-width($name-narrow - $indent * 3, $name-wide - $indent * 3);
+          }
+          > ul > li {
+            margin-left: $indent * 1;
+            > ._field_name ._content {
+              @include adaptive-width($name-narrow - $indent * 4, $name-wide - $indent * 4);
+            }
+            > ul > li {
+              margin-left: $indent * 1;
+              > ._field_name ._content {
+                @include adaptive-width($name-narrow - $indent * 5, $name-wide - $indent * 5);
+              }
+              > ul > li {
+                margin-left: $indent * 1;
+                > ._field_name ._content {
+                  @include adaptive-width($name-narrow - $indent * 6, $name-wide - $indent * 6);
+                }
+                > ul > li {
+                  margin-left: $indent * 1;
+                  > ._field_name ._content {
+                    @include adaptive-width($name-narrow - $indent * 7, $name-wide - $indent * 7);
+                  }
+                  > ul > li {
+                    margin-left: $indent * 1;
+                    > ._field_name ._content {
+                      @include adaptive-width($name-narrow - $indent * 8, $name-wide - $indent * 8);
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  > ul > li > ul > li,
+  > ul > div > li > ul > li,
+  > ul > li > ul > div > li {
+    padding-top: 28px;
+    > ._field:not(._field_name) {
+      margin-top: 12px;
+    }
+    > ._field_name {
+      * {
+        font-size: $h2Font;
+      }
+    }
+    > div > div > ._content {
+      color: black;
+      font-weight: 200;
+    }
+    > ul > li {
+      > ._field:not(._field_name) {
+        margin-top: 2px;
+      }
+     > div > div > ._content {
+        color: black;
+        font-weight: 100;
+        font-size: $h3Font;
+      }
+      > ul > li {
+        > div > div > ._content {
+          color: #666;
+          font-weight: 100;
+        }
+        > ul > li {
+          > div > div > ._content {
+            font-weight: 100;
+            color: #888;
+          }
+          > ul > li {
+            > div > div > ._content {
+              font-weight: 100;
+              color: #aaa;
+              font-style: italic;
+            }
+    }}}}
+    ._list_line_scheduleLine * {
+      color: #444;
+      font-weight: 100;
+    }
+  }
+  > ul > li > ul li > ul > li._placeholder {
+    margin-top: -1px;
+  }
+  > ul > li > ul li > ul > li._placeholder:first-child:not(:last-child),
+  > ul > li > ul li > ul > li.ui-sortable-helper:first-child + li._placeholder:not(:last-child) {
+    margin-bottom: -1px;
+  }
+  > ul > li > ul > li > ul li._list_line_categoryLine,
+  > ul > li > ul > div > li > ul li._list_line_categoryLine,
+  > ul > div > li > ul > li > ul li._list_line_categoryLine {
+    border-top: 1px dotted #d8d8d8;
+  }
+}
+
+._ScheduleEntry {
+  @include schedule-entry (980px, 1180px, 30px, 24px, 15px, 13px);
+  position: relative;
+  ._field_scheduleLine {
+     @include adaptive-width(465px, 590px);
+  }
+}
+
+._MiniScheduleEntry {
+  @include schedule-entry-base();
+  background: #ffffff;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-radius: 6px;
+  margin-top: 13px;
+  ._content, ._prefix, ._suffix {
+    font-size: 13px;
+  }
+  > .ui-sortable {
+    margin: 0px;
+  }
+  ._field_unallocated {
+    display: none;
+  }
+  ul {
+    padding-left: 0px;
+  }
+  > ul > li, > ul > div > li {
+    margin-top: 0px;
+    margin-bottom: 0px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+  }
+  > ul > li,
+  > ul > div > li {
+    margin-bottom: 0px;
+    > ._field:not(._field_name) {
+      margin-top: 0px;
+    }
+    > ._field_scheduleLine {
+      display: block;
+    }
+  }
+  > ul > li > ul > li,
+  > ul > div > li > ul > li,
+  > ul > li > ul > div > li {
+    padding-top: 0px;
+  }
+  li div {
+    &._field_name ._content {
+      width: 216px;
+      &:empty:before {
+        content: "\200b";
+      }
+    }
+    &._field_total {
+      float: right;
+    }
+    &._field_scheduleLine, &._field_unallocated {
+      display: none;
+    }
+    &._field_notes ._content {
+      width: 150px;
+    }
+  }
+  > table {
+    border-collapse: collapse;
+    tr > td {
+      padding: 0px;
+      > ._field_name > div > ._content {
+        padding: 0px;
+        margin:  2px;
+      }
+    }
+  }
+}
+
+._CategoryMenu {
+  a {text-decoration: none}
+  ._content, ._prefix, ._suffix {
+    font-weight: 100;
+    font-size:   $left-font-size;
+    margin:  0px;
+    padding: 0px;
+    border:  0px;
+    color: $left-color;
+  }
+  ._selectedIndex > ._field ._content {
+    color: #222;
+    font-weight: 400;
+  }
+  > ul {
+    padding-left: 8px;
+    > li:not(:first-child) > ._field  ._content {
+      margin-top: $left-margin-sep;
+    }
+    > li > ._field  ._content {
+      margin-bottom: 4px;
+    }
+    > li > ul {
+      padding-left: 24px;
+    }
+  }
+  > ul > li > ._field  ._content {
+    font-weight: 100;
+    font-size: $left-head-font-size;
+  }
+}

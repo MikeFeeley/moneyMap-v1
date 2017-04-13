@@ -1,0 +1,591 @@
+@import 'lib';
+
+$table-stripe-backgroud: #f8f8f8;
+
+@mixin transaction-table-base ($head-font, $body-font, $height) {
+  position: relative;
+  white-space: nowrap;
+  border-collapse: collapse;
+
+  td ._content {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0px;
+    margin:  2px;
+  }
+  td div._content, td label._content {
+    border:  2px solid transparent;
+  }
+
+  > thead {
+    * {
+      font-size: $head-font;
+      font-weight: 100;
+    }
+    > tr {
+      > th {
+        border-right: 1px solid transparent;
+        padding: 0px 2px;
+      }
+      > th:first-child {
+        border-left:  2px solid transparent;
+        border-right: 1px solid transparent;
+        padding: 0px 2px;
+      }
+    }
+    > tr {
+      > th._field_rules > ._content                               {width:  12px}
+      > th._field_date > ._content                                {width:  48px}
+      > th._field_payee  > ._content                              {width: 240px}
+      > th._field_debit > ._content, th._field_credit > ._content {width:  72px}
+      > th._field_account > ._content                             {width:  96px}
+      > th._field_category > ._content                            {width: 120px}
+      > th._field_description > ._content                         {width: 240px}
+    }
+    tr > th > ._content {
+      margin-left:  5px;
+      margin-right: 3px;
+    }
+ }
+  > tbody {
+    * {
+      font-size: $body-font;
+    }
+    > tr:nth-child(even) {
+      background: $table-stripe-backgroud;
+    }
+    > tr {
+      > td {
+        padding: 0px 2px;
+        height:  $height;
+      }
+      >td:not(:last-child) {
+        border-right: 1px dotted #ddd;
+      }
+      >td:last-child  {border-right: 1px solid transparent}
+      >td:first-child {border-left:  2px solid transparent}
+    }
+    > tr > td {
+      > ._field_rules > div > ._content
+      {width: 12px}
+      > ._field_date > div > ._content
+      {width: 48px;}
+      > ._field_payee > div >  ._content, > ._field_description > div >  ._content
+      {width: 240px;}
+      > ._field_debit > div >  ._content, > ._field_credit > div >  ._content
+      {width: 72px;}
+      > ._field_account > div >  ._content, > ._field_account >  ._content {
+        width: 96px;
+      }
+      > ._field_account > div > div._content {
+        border: 0px;
+        margin-left: 8px;
+        margin-right: -4px;
+      }
+      > ._field_category > div > ._content
+      {width: 120px;}
+      > ._field_date > div >  ._content, > ._field_debit > div >  ._content, > ._field_credit > div >  ._content
+      {text-align: right;}
+    }
+  }
+}
+
+@mixin transaction-table ($head-font, $body-font, $height, $stCol, $gx0, $gx1, $gx2, $gx3, $gi0, $gi1, $gi2, $gi3, $ge0, $ge1, $ge2) {
+  @include transaction-table-base ($head-font, $body-font, $height);
+  > tbody {
+    > tr._group {
+      $group-border-color: #ccc;
+      $group-border: 1px solid $group-border-color;
+      & > td:last-child {
+        border-right: $group-border;
+      }
+      &._leader {
+        > td:first-child {border-left: 2px solid $group-border-color};
+        border-top:  $group-border;
+        > td {
+          &:nth-child(#{$gx0}), &:nth-child(#{$gx1}), &:nth-child(#{$gx2}), &:nth-child(#{$gx3}) {
+            border-bottom: $group-border;
+          }
+        }
+      }
+      &:not(._leader) {
+        > td {
+          &:nth-child(#{$gx0}), &:nth-child(#{$gx1}), &:nth-child(#{$gx2}), &:nth-child(#{$gx3}) {
+            background: #f0f0f0;
+            ._content {
+              display: none;
+            }
+          }
+          &:nth-child(#{$ge0}), &:nth-child(#{$ge1}), &:nth-child(#{$ge2}) {
+            border-left: $group-border;
+          }
+        }
+      }
+      &._last {
+        > td {
+          &:nth-child(#{$gi0}), &:nth-child(#{$gi1}), &:nth-child(#{$gi2}), &:nth-child(#{$gi3}) {
+            border-bottom: $group-border;
+          }
+        }
+      }
+    }
+  }
+}
+
+._TransactionHUD > table, ._TransactionHUD > ._body > table {
+  @include transaction-table-base (18px, 13px, 18px);
+}
+
+._TransactionEdit > table, ._TransactionEdit > ._body > table {
+  @include transaction-table (18px, 13px, 26px, 0, 1, 2, 5, 5, 3, 4, 6, 7, 3, 5, 6);
+}
+._ImportTransactionsTable {
+  @include transaction-table (18px, 13px, 26px, 1, 1, 2, 3, 6, 4, 5, 7, 8, 4, 6, 7);
+  margin-top: 24px;
+  margin-bottom: 32px;
+  &._needsAttention {
+    margin-bottom: 600px;  /* hack to handle pop-ups at bottom of screen gracefully */
+    > tbody > tr > td:last-child,  > thead > tr > th:last-child {
+      color: #aaa;
+    }
+  }
+  width: 1000px;
+  clear: left;
+  > ._title {
+    float: left;
+    font-size: 36px;
+    font-weight: 100;
+    margin-bottom: 12px;
+  }
+  > ._button {
+    margin-top: 10px;
+    font-weight: 100;
+    font-size: 16px;
+    float: right;
+    padding-bottom: 6px;
+  }
+  > table {
+    clear: left;
+  }
+  td ._field_rules {
+    * {
+      font-weight: 100;
+      padding-bottom: 1px;
+    }
+    text-align: center;
+    &:not(._not_empty) {
+      color: #bbb;
+    }
+    &._not_empty {
+      background-color: #bbb;
+      color: white;
+    }
+  }
+  ._rulebox {
+    background-color:  #bbb;
+    padding: 3px;
+    margin-top: -3px;
+    margin-bottom: 3px;
+    border-top-right-radius: 6px;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+  }
+  ._ImportRulesView {
+    background-color: #f0f0f0;
+    border-radius: 6px;
+    padding: 2px 3px;
+    table {
+      border-collapse: collapse;
+    }
+    ._rule > fieldset:nth-child(2) {
+      margin-top: -6px;
+    }
+    fieldset {
+      fieldset {
+        background: #fcfcfc;
+        margin-top: -8px;
+        legend {
+          background: #fcfcfc;
+            span {
+              padding-left: 4px; padding-right: 4px;
+            }
+        }
+      }
+      &._rule {
+        position: relative;
+        padding-left: 3px;
+        padding-right: 3px;
+        margin-top: 8px;
+        margin-bottom: 8px;
+        &._nomatch {
+          opacity: 0.5;
+          border: 1px solid #e00;
+          > legend > span {
+            color: #e00;
+          }
+        }
+        &:not(._nomatch) {
+          border: 1px solid #bbb;
+          > legend > span {
+            color: #666;
+          }
+        }
+        legend {
+          span   {font-size: 24px; vertical-align: 20%}
+          *      {color: #666}
+          button {vertical-align: 50%}
+        }
+      }
+      &._part {
+        border: 1px solid #bbb;
+        margin-top: 6px;
+        > legend span {
+          font-size: 18px;
+          color: #bbb;
+          vertical-align: 24%;
+       }
+      }
+      legend * {
+        font-weight: 100;
+        button {
+          margin-left: 2px;
+          color: #bbb;
+          vertical-align: 40%;
+        }
+      }
+      > table > tbody > tr {
+        > td {
+          padding: 0px 2px;
+        }
+        > td:not(:last-child):not(:first-child) {
+          border-right: 1px dotted #bbb;
+        }
+        > td:last-child  {border-right: 1px solid transparent}
+        > td:first-child {border-left:  2px solid transparent; border-right: 1px solid transparent}
+      }
+    }
+    table._predicate {
+      margin-top: -8px;
+      margin-left: -28px;
+      margin-right: -28px;
+      tr:nth-child(2), tr:nth-child(3) {
+        > td:nth-child(1) ._content
+          {width: 8px}
+        > td:nth-child(2) ._content
+          {width: 48px;}
+        > td:nth-child(3) ._content
+          {width: 240px;}
+        > td:nth-child(8) ._content
+          {width: 220px;}
+        > td:nth-child(4) ._content, > td:nth-child(5) ._content
+          {width: 72px;}
+        > td:nth-child(6) ._content
+          {width: 96px}
+        > td:nth-child(7) > ._content
+          {width: 120px;}
+        > td:nth-child(2) ._content, > td:nth-child(4) ._content, > td td:nth-child(5) ._content
+          {text-align: right;}
+      }
+    }
+    table._update {
+      margin-top: -8px;
+      margin-bottom: -4px;
+      margin-left: -28px;
+      margin-right: -28px;
+      > tbody > tr:nth-child(2) {
+        /* almost same as above ... consolidate later */
+        > td:nth-child(1) ._content
+          {width: 8px}
+        > td:nth-child(2) ._content
+          {width: 48px;}
+        > td:nth-child(3) ._content
+          {width: 240px;}
+        > td:nth-child(8) ._content
+          {width: 220px;}
+        > td:nth-child(4) ._content, > td:nth-child(5) ._content
+          {width: 72px;}
+        > td:nth-child(6) ._content
+          {width: 100px}
+        > td:nth-child(7) > div > div > ._content
+          {width: 120px;}
+        > td:nth-child(2) ._content, > td:nth-child(4) ._content, > td td:nth-child(5) ._content
+          {text-align: right;}
+      }
+    }
+    table._split {
+      margin-top: -8px;
+      margin-bottom: -4px;
+      margin-left: -28px;
+      margin-right: -28px;
+      > tbody > tr {
+        /* almost same as above ... consolidate later */
+        > td:nth-child(1) ._content
+          {width: 8px}
+        > td:nth-child(2) ._content
+          {width: 48px;}
+        > td:nth-child(3) ._content
+          {width: 240px;}
+        > td:nth-child(8) ._content
+          {width: 220px;}
+        > td:nth-child(4) ._content, > td:nth-child(5) ._content
+          {width: 72px;}
+        > td:nth-child(6) ._content
+          {width: 96px;}
+        > td:nth-child(7) > div > div > ._content
+          {width: 120px;}
+        > td:nth-child(2) ._content, > td:nth-child(4) ._content, > td td:nth-child(5) ._content
+          {text-align: right;}
+      }
+    }
+    table._add {
+      margin-top: -8px;
+      margin-bottom: -4px;
+      margin-left: -28px;
+      margin-right: -28px;
+      > tbody > tr {
+        /* almost same as above ... consolidate later */
+        > td:nth-child(1) ._content
+          {width: 8px}
+        > td:nth-child(2) ._content
+          {width: 48px;}
+        > td:nth-child(3) ._content
+          {width: 240px;}
+        > td:nth-child(8) ._content
+          {width: 220px;}
+        > td:nth-child(4) ._content, > td:nth-child(5) ._content
+          {width: 72px;}
+        > td:nth-child(6) ._content
+          {width: 100px;}
+        > td:nth-child(7) > div > div > ._content
+          {width: 120px;}
+        > td:nth-child(2) ._content, > td:nth-child(4) ._content, > td td:nth-child(5) ._content
+          {text-align: right;}
+      }
+    }
+  }
+}
+
+._AccountBalanceView {
+  padding-left: 8px;
+  padding-top: 8px;
+  width: $left-width - 8;
+  > ._title {
+    font-size: $left-title-font-size;
+    font-weight: 100;
+    margin-top: 8px;
+  }
+  > ._title:not(:first-child) {
+    margin-top: 48px;
+  }
+  > ._groupName {
+    font-weight: 100;
+    font-size:   $left-head-font-size;
+    margin-top:    32px;
+    margin-bottom: 12px;
+  }
+  > ._tuple {
+    div {
+      font-weight: 100;
+      font-size: $left-subhead-font-size;
+    }
+    div:nth-child(1) {
+      float: left;
+    }
+    div:nth-child(2) {
+      float: right;
+    }
+    clear:    all;
+    overflow: hidden;
+    margin-right: 8px;
+    margin-bottom: 8px;
+  }
+}
+
+div._TransactionHUD {
+  td {
+    white-space: nowrap;
+  }
+  width: auto;
+  min-width: 700px;
+  &:not(._TransactionEdit) {
+    @include dark-popup();
+    z-index: 5000;
+  }
+  &._TransactionEdit {
+    @include light-popup();
+    z-index: 5000;
+    > ._body > table {
+      color: #444;
+    }
+  }
+  position: relative;
+  > ._title {
+    white-space: nowrap;
+    position: absolute;
+    top: 4px;
+    left: 12px;
+    font-size: 32px;
+    font-weight: 100;
+    max-width: 600px;
+  }
+  > ._buttons {
+    position: absolute;
+    top:   6px;
+    right: 4px;
+    > button {
+      vertical-align: middle;
+    }
+    > ._prevButton, > ._nextButton {
+      font-weight: 800;
+      margin-left: 0;
+      margin-right: 0;
+    }
+    > ._editButton {
+      margin-left: 12px;
+    }
+  }
+  > ._body {
+    margin-top: 40px;
+    > ._subtitle {
+      font-size: 20px;
+      font-weight: 100;
+      margin-left: 6px;
+      margin-top: -4px;
+      margin-bottom: 8px;
+    }
+    > table {
+      width: 100%;
+      font-size: 13px;
+      > thead > tr > th {
+        border-bottom: 1px solid #888;
+      }
+      > tbody, > tfoot {
+        > tr {
+          > td:nth-child(1), > td:nth-child(3), > td:nth-child(4) {
+            text-align: right;
+          }
+        }
+      }
+      > tbody {
+        > tr {
+          > td, > td > ._field > div > ._content {
+            margin-top: 0px;
+            margin-bottom: 0px;
+            padding-top: 0px;
+            padding-bottom: 0px;
+            border: 0px;
+            border-left:  1px solid transparent;
+            border-right: 1px solid transparent;
+            font-size: 13px;
+          }
+          > td:not(:last-child) {
+            border-right: 1px dotted #ccc;
+          }
+          > td:not(:first-child) {
+            padding-left: 2px;
+          }
+          > td:not(:last-child) {
+            padding-right: 2px;
+          }
+        }
+      }
+      > tfoot > tr {
+        > td {
+          font-weight: bold;
+          border-top:  1px solid #888;
+        }
+        > td._leftArrow {
+          color:       #888;
+          font-weight: 100;
+          font-style:  italic;
+          text-align:  left;
+        }
+        > td._rightArrow {
+          color:       #888;
+          font-weight: 100;
+          font-style:  italic;
+          text-align:  right;
+        }
+      }
+    }
+  }
+}
+
+._ImportTransactions {
+  position: absolute;
+  height:   100%;
+  width:    100%;
+  > ._AccountBalanceView {
+    * {color: $left-color};
+    background-color: $left-background;
+    float: left;
+    height: calc(100% - 8px);
+    &::-webkit-scrollbar { width: 0 !important };
+    border-right: $left-border;
+    overflow: scroll;
+  }
+  > ._import {
+    height: calc(100% - 8px);
+    padding-left: 8px;
+    padding-top: 8px;
+    ._instructions, ._import_status {
+      font-size: 36px;
+      font-weight: 100;
+      margin-bottom: 20px;
+      float: left;
+    }
+    ._instructions {
+      color: #bbb;
+    }
+    ._import_status {
+      color: #888;
+    }
+    margin-left: 220px;
+    overflow-y: scroll;
+    clear: all;
+  }
+  clear: all;
+  overflow-y: scroll;
+}
+
+._ApplyPopup {
+  @include dark-popup();
+  > ._title {
+    font-weight: 200;
+    font-size: 24px;
+    float: left;
+  }
+  > ._apply_button {
+    float: right;
+    margin-top: 6px;
+  }
+  > ._ApplyToTable {
+    > table {
+      > thead > tr > th {
+        width: auto;
+        font-weight: 600;
+        border-bottom: 1px solid #999;
+      }
+      > tbody {
+        > tr {
+          * {
+            padding: 0;
+            margin: 0;
+            border: 0;
+          }
+          > td:not(:last-child) {
+            border-right: 1px dotted #666;
+          }
+          > td:not(:first-child) {
+            padding-left: 2px;
+          }
+          > td:not(:last-child) {
+            padding-right: 2px;
+          }
+        }
+      }
+    }
+  }
+}
+
+
