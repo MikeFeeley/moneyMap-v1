@@ -80,7 +80,7 @@ class Categories {
   }
 
   get (id) {
-    return this._index .get (id) || this._allIndex .get (id);
+    return this._index .get (id) || this._allIndex .get (id); // TEST
   }
 
   getPathname (doc) {
