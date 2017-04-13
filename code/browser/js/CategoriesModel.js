@@ -9,6 +9,11 @@ class CategoriesModel extends Observable {
     this._model .delete();
   }
 
+  *find (query) {
+    this._categories = new Categories (yield* this._model .find (query));
+    return this._categories;
+  }
+
   _onModelChange (eventType, doc, arg, source) {
     if (this._categories)
       this._categories .onModelChange (eventType, doc, arg, source);
@@ -21,26 +26,20 @@ class CategoriesModel extends Observable {
 }
 
 class Categories {
-  constructor (docs, allDocs) {
-    this._index    = this._processDocs (docs);
-    this._allIndex = this._processDocs (allDocs);
-  }
-
-  _processDocs (docs) {
-    var index = docs .reduce ((map, doc) => {map .set (doc._id, doc); return map}, new Map());
+  constructor (docs) {
+    this._index = docs .reduce ((map, doc) => {map .set (doc._id, doc); return map;}, new Map());
     for (let doc of docs)
-      this._addParentLink (doc, 'parent', 'children', index);
-    return index;
+      this._addParentLink (doc);
   }
 
-  _addParentLink (doc, parent='parent', children='children', index=this._index) {
-    doc [parent] = doc [parent]? index .get (doc [parent]): undefined;
+  _addParentLink (doc, parent='parent', children='children') {
+    doc [parent] = doc [parent]? this._index .get (doc [parent]): undefined;
     if (doc [parent])
       var list = (doc [parent] [children] = doc [parent] [children] || [])
     else
       var list = (this._roots = this._roots || [])
-    var i = list .findIndex (d => {return d .sort >= doc .sort});
-    list .splice (i >=0? i: list.length + 1, 0, doc);
+    var index = list .findIndex (d => {return d .sort >= doc .sort});
+    list .splice (index >=0? index: list.length + 1, 0, doc);
   }
 
   _removeParentLink (doc, parent='parent', children='children') {
@@ -80,7 +79,7 @@ class Categories {
   }
 
   get (id) {
-    return this._index .get (id) || this._allIndex .get (id); 
+    return this._index .get (id);
   }
 
   getPathname (doc) {
