@@ -595,6 +595,7 @@ class Navigate {
         return m;
       }, new Map()) .values())
     })
+    console.log ('ba', budgetAmounts);
     parentIds = Array .from (budgetAmounts .reduce ((s,ba) => {
       return ba .reduce ((s, a) => {
         if (a .id)
@@ -653,7 +654,8 @@ class Navigate {
                     id:    a .id,
                     value: a .amount || 0
                   }
-                }
+                } else
+                  return {value: 0}
               })
             }
           })

@@ -186,7 +186,7 @@ class NavigateView extends Observable  {
           return {
             label:       c .name,
             id:          c .id,
-            data:        c .amounts .map (a => {return (a && a .value) || 0}),
+            data:        c .amounts .map (a => {return a .value}),
             borderWidth: 1
           }
         })
