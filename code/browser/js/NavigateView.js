@@ -170,7 +170,7 @@ class NavigateView extends Observable  {
    *         name:     name for this row
    *         id:       category id for this row
    *         isCredit: true iff this is a credit amount
-   *         amounts:  array of values, one for each column
+   *         amounts:  array of (id, value) pairs, one for each column
    *       }]
    *     }]
    *   }
@@ -186,7 +186,7 @@ class NavigateView extends Observable  {
           return {
             label:       c .name,
             id:          c .id,
-            data:        c .amounts,
+            data:        c .amounts .map (a => {return (a && a .value) || 0}),
             borderWidth: 1
           }
         })
@@ -315,7 +315,7 @@ class NavigateView extends Observable  {
         var ds = config .data .datasets .find (d => {return d .id == data .update .id});
         if (ds) {
           ds .label = data .update .name;
-          ds .data  = data .update .amounts;
+          ds .data  = data .update .amounts .map (a => {return a .value});
         }
       } else {
         dataset = data .replace;
@@ -466,7 +466,7 @@ class NavigateView extends Observable  {
    *         name:    name for this row
    *         id:      category id for this row
    *         isCredit: true iff this is a credit amount
-   *         amounts: array of values, one for each column
+   *         amounts: array of (id, value) pairs, one for each column
    *       }]
    *     }]
    *   }
@@ -482,7 +482,7 @@ class NavigateView extends Observable  {
         var totals = dataset .groups .reduce ((total, group) => {
           var groupTotal = group .rows .reduce ((groupTotal, row) => {
             return row .amounts .map ((a,i) => {
-              return a * (row .isCredit? 1: -1) + (groupTotal [i] || 0);
+              return a .value * (row .isCredit? 1: -1) + (groupTotal [i] || 0);
             })
           }, []);
           return groupTotal .map ((a,i) => {
@@ -514,7 +514,7 @@ class NavigateView extends Observable  {
         var tr     = groupTrs [dataset .groups .indexOf (group)];
         var totals = group .rows .reduce ((total, row) => {
           return row .amounts .map ((a,i) => {
-            return a + (total [i] || 0)
+            return a .value + (total [i] || 0)
           })
         },[])
         var grandTotal = totals .reduce ((s,a) => {return s + a}, 0);
@@ -537,10 +537,10 @@ class NavigateView extends Observable  {
       var tr = rowMap .get (row .id);
       if (tr) {
         var isCredit = row .isCredit;
-        var rowTotal = row .amounts .reduce ((s,a) => {return s + a}, 0);
+        var rowTotal = row .amounts .reduce ((s,a) => {return s + a .value}, 0);
         var vm = row .amounts
-          .concat (totalRows? [rowTotal / dataset .months, rowTotal] : [])
-          .map    (a => {return Types .moneyD .toString (a)})
+          .concat (totalRows? [{value: rowTotal / dataset .months}, {value: rowTotal}] : [])
+          .map    (a => {return Types .moneyD .toString (a .value)})
         var vs = [row .name]
           .concat (vm)
           .concat (totalRows? Types .percent .toString (rowTotal / dataset .income) : [])

@@ -83,12 +83,9 @@ class HistoryModel extends Model {
     }
   }
 
-  *getAmounts (budgetId, parentIds, parentPathnames) {
-    var cats = yield* this._getCats (budgetId);
-    if (parentIds)
-      var children = parentIds .reduce ((list,pid) => {return list .concat ((cats .get (pid) || {}) .children || [])}, []);
-    else
-      var children = parentNames .reduce ((list,name) => {return list .concat () }, []) // XXX find by path
+  *getAmounts (budgetId, parentIds) {
+    var cats     = yield* this._getCats (budgetId);
+    var children = parentIds .reduce ((list,pid) => {return list .concat ((cats .get (pid) || {}) .children || [])}, []);
     var families = children  .reduce ((map,cat)  => {return map .set (cat._id, [cat] .concat(this._getDescendants (cat)))}, new Map());
     var everyone = Array .from (families .keys())
       .map    (cid    => {return families .get (cid) .map (f => {return f._id})})
@@ -109,7 +106,7 @@ class HistoryModel extends Model {
           }
         })
       }
-    });
+    }) .filter (d => {return d .name !== undefined});
     for (let pid of parentIds) {
       var other = history .get (pid);
       if (other)

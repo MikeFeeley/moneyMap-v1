@@ -109,7 +109,7 @@ class Navigate {
         } else
           this._addMonthsGraph (arg .name, [this._categories .get (arg .id)], true, arg .position);
       else if (arg .name == '_budgetHistoryGraph')
-        async (this, this._addHistoryGraph) ([arg .id], true, arg .position);
+        async (this, this._addHistoryGraph) ([] .concat (arg .id), true, arg .position);
     } else if (eventType == NavigateViewEvent .BUDGET_TABLE_CLICK && arg .id && isNaN (arg .id)) {
       if (['_budgetTable', '_activityTable'] .includes (arg .name)) {
         if (arg .altClick) {
@@ -127,8 +127,10 @@ class Navigate {
           }
         } else
           this._addMonthsTable (arg .name, [this._categories .get (arg .id)], true, true, arg .position);
-      } else if (arg .name == '_budgetHistoryTable')
-        async (this, this._addHistoryTable) ([arg .id], true, true, arg .position);
+      } else if (arg .name == '_budgetHistoryTable') {
+      console.log (arg);
+        async (this, this._addHistoryTable) ([] .concat (arg .id), true, true, arg .position);
+      }
     } else if (eventType == NavigateViewEvent .PROGRESS_GRAPH_TITLE_CLICK && arg .data .length) {
       var id = this._categories .get (arg .data [0]._id) .parent ._id;
       BudgetProgressHUD .show (id, arg .html, arg .position, this._accounts, this._variance);
@@ -152,7 +154,7 @@ class Navigate {
    *         id:       category id for this row
    *         isCredit: true iff this is a credit amount
    *         isGoal:   true iff this is a goal category
-   *         amounts:  array of values, one for each column
+   *         amounts:  array of (id, value) pairs, one for each column
    *       }]
    *     }]
    *   }
@@ -177,9 +179,8 @@ class Navigate {
         });
       }
       var other = (getAmounts (root, dates, includeYearly)) .map ((rt, i) => {
-        return rt - rows .reduce ((t,rw) => {return t + rw .amounts [i]}, 0)
+        return {value: rt .value - rows .reduce ((t,rw) => {return t + rw .amounts [i] .value}, 0)}
       });
-      if (other .reduce ((t,o) => {return t + o}) != 0)
         rows .push ({
           name: 'Other',
           id:    99,
@@ -214,11 +215,17 @@ class Navigate {
       var amounts = [];
       for (let date of dates) {
         var amount = this._budget .getAmount (cat, date .start, date .end);
-        amounts .push ((amount .month && amount .month .amount || 0) * (this._budget .isCredit (cat)? -1: 1));
+        amounts .push ({
+          id:    cat._id,
+          value: (amount .month && amount .month .amount || 0) * (this._budget .isCredit (cat)? -1: 1)
+        });
       }
       if (includeYearly) {
         var amount = this._budget .getAmount (cat, this._budget .getStartDate(), this._budget .getEndDate());
-        amounts .push ((amount .year && amount .year .amount || 0) * (this._budget .isCredit (cat)? -1: 1));
+        amounts .push ({
+          id:    cat._id,
+          value: (amount .year && amount .year .amount || 0) * (this._budget .isCredit (cat)? -1: 1)
+        });
       }
       return amounts;
     }
@@ -272,7 +279,10 @@ class Navigate {
             rows: g. rows .map (r => {
               return {
                 name:    r.name, id: r.id, isCredit: r.isCredit, isGoal: r.isGoal,
-                amounts: r. amounts .slice (0, -1) .concat (r. amounts [r. amounts .length -1]/12)
+                amounts: r. amounts .slice (0, -1) .concat ({
+                  id:    r .id,
+                  value: r. amounts [r. amounts .length -1] .value / 12
+                })
               }
             })
           }
@@ -522,17 +532,16 @@ class Navigate {
    *       name: name for this group
    *       rows: [{
    *         name:    name for this row
-   *         id:      category id for this row
+   *         id:      category id(s) for this row
    *         isCredit: true iff this is a credit amount
-   *         amounts: array of values, one for each column
+   *         amounts: array of (id, value) pairs, one for each column
    *       }]
    *     }]
    *   }
    */
   *_getHistoryData (parentIds) {
-    var defaultParents = [this._budget .getIncomeCategory(), this._budget .getSavingsCategory(), this._budget .getExpenseCategory()];
-    parentIds       = parentIds || (defaultParents .map (p => {return p._id}));
-    var parentNames = parentIds .map (id => {return this._categories .getPathname (this._categories .get (id))});
+    var defaultParents  = [this._budget .getIncomeCategory(), this._budget .getSavingsCategory(), this._budget .getExpenseCategory()];
+    parentIds           = parentIds || (defaultParents .map (p => {return p._id}));
     var historicBudgets = yield* this._budget .getHistoricBudgets();
     var historicAmounts = [];
     for (let budget of historicBudgets)
@@ -552,7 +561,7 @@ class Navigate {
           id:      parent._id,
           name:    parent .name,
           amounts: amounts
-        })
+        });
         for (let cat of (parent .children || []))
           amounts .push ({
             id:       cat._id,
@@ -574,9 +583,25 @@ class Navigate {
           })
       }
     }
-    var curBudgetAmounts = budgetAmounts [0];
     budgets       = historicBudgets .concat (budgets);
     budgetAmounts = historicAmounts .concat (budgetAmounts);
+    budgetAmounts = budgetAmounts .map (ba => {
+      return Array .from (ba .reduce ((m, a) => {
+        let e = m .get (a .name);
+        if (e)
+          e .amounts = e .amounts .concat (a .amounts);
+        else
+          m .set (a .name, a);
+        return m;
+      }, new Map()) .values())
+    })
+    parentIds = Array .from (budgetAmounts .reduce ((s,ba) => {
+      return ba .reduce ((s, a) => {
+        if (a .id)
+          s .add (a .id);
+        return s;
+      }, s)
+    }, new Set));
     var cats = parentIds .map (pid => {
       return budgetAmounts
         .reduce ((map, budgetAmount) => {
@@ -587,7 +612,7 @@ class Navigate {
                 if (!e .sort)
                   e .sort = a .sort;
               } else
-                m .set (a.name, a)
+                m .set (a.name, a);
             }
             return m;
           }, map)
@@ -606,14 +631,29 @@ class Navigate {
         return {
           name: parent .name,
           rows: Array .from (cats [i] .values()) .sort ((a,b) => {return a.sort<b.sort? -1: 1}) .map (cat => {
+            var ids = Array .from (budgetAmounts .reduce ((s,ba) => {
+              return ba .reduce ((s,g) => {
+                return g .amounts .reduce ((s,a) => {
+                  if (a .name == cat .name)
+                    s .add (a .id);
+                  return s;
+                }, s)
+              }, s)
+            }, new Set()));
             return {
               name:     cat .name,
-              id:       cat .id,
+              id:       ids,
               isCredit: cat .isCredit,
               isGoal:   cat .isGoal,
               amounts:  budgetAmounts .map (ba => {
                 var group = ba .find (as => {return as .id == pid});
-                return group && (group .amounts .find (a => {return a .name == cat .name}) || {}) .amount || 0
+                if (group) {
+                  var a = group .amounts .find (a => {return a .name == cat .name}) || {};
+                  return {
+                    id:    a .id,
+                    value: a .amount || 0
+                  }
+                }
               })
             }
           })
@@ -821,7 +861,10 @@ class Navigate {
     var getAmounts = cat => {
       var amounts = [];
       for (let date of dates) {
-        amounts .push (this._actuals .getAmountRecursively (cat, date .start, date .end) * (this._budget .isCredit (cat)? -1: 1));
+        amounts .push ({
+          id:    cat._id,
+          value: this._actuals .getAmountRecursively (cat, date .start, date .end) * (this._budget .isCredit (cat)? -1: 1)
+        });
       }
       return amounts;
     }

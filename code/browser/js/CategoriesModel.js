@@ -9,11 +9,6 @@ class CategoriesModel extends Observable {
     this._model .delete();
   }
 
-  *find (query) {
-    this._categories = new Categories (yield* this._model .find (query));
-    return this._categories;
-  }
-
   _onModelChange (eventType, doc, arg, source) {
     if (this._categories)
       this._categories .onModelChange (eventType, doc, arg, source);
@@ -26,10 +21,10 @@ class CategoriesModel extends Observable {
 }
 
 class Categories {
-  constructor (docs) {
+  constructor (docs, budget) {
     this._index = docs .reduce ((map, doc) => {map .set (doc._id, doc); return map;}, new Map());
     for (let doc of docs)
-      this._addParentLink (doc);
+      this._addParentLink (doc, 'parent', doc .budgets .includes (budget .getId())? 'children': 'zombies');
   }
 
   _addParentLink (doc, parent='parent', children='children') {

@@ -51,14 +51,11 @@ class SchedulesModel extends Observable {
    * Called by Presenter
    */
   *find (catQuery, schQuery) {
-    (catQuery = catQuery || {}) .budgets = this._budget .getId();
-    (schQuery = schQuery || {}) .budget  = this._budget .getId();
+    (schQuery = schQuery || {}) .budget = this._budget .getId();
     var cats    = this._catModel .find (catQuery);
     var schs    = this._schModel .find (schQuery);
-    var allCats = this._catModel .find ();
     cats     = yield* cats;
     schs     = yield* schs;
-    allCats = yield* allCats;
     for (let cat of cats) {
       cat._id    = this._joinMI (this._catModel, cat._id);
       cat.parent = this._joinMI (this._catModel, cat.parent);
@@ -67,7 +64,7 @@ class SchedulesModel extends Observable {
       sch._id      = this._joinMI (this._schModel, sch._id);
       sch.category = this._joinMI (this._catModel, sch.category);
     }
-    this._categories = new Schedules (cats, schs, allCats);
+    this._categories = new Schedules (cats, schs, this._budget);
     return this._categories;
   }
 
@@ -290,8 +287,8 @@ var ScheduleType = {
 }
 
 class Schedules extends Categories {
-  constructor (cats, schs, allCats) {
-    super (cats, allCats);
+  constructor (cats, schs, budget) {
+    super (cats, budget);
     for (let s of schs) {
       if (this._index .get (s .category)) {
         this._index .set (s._id, s);
