@@ -127,10 +127,8 @@ class Navigate {
           }
         } else
           this._addMonthsTable (arg .name, [this._categories .get (arg .id)], true, true, arg .position);
-      } else if (arg .name == '_budgetHistoryTable') {
-      console.log (arg);
+      } else if (arg .name == '_budgetHistoryTable')
         async (this, this._addHistoryTable) ([] .concat (arg .id), true, true, arg .position);
-      }
     } else if (eventType == NavigateViewEvent .PROGRESS_GRAPH_TITLE_CLICK && arg .data .length) {
       var id = this._categories .get (arg .data [0]._id) .parent ._id;
       BudgetProgressHUD .show (id, arg .html, arg .position, this._accounts, this._variance);
