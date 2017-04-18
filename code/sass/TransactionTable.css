@@ -48,7 +48,7 @@ $table-stripe-backgroud: #f8f8f8;
     }
  }
   > tbody {
-    * {
+    > tr > td {
       font-size: $body-font;
     }
     > tr:nth-child(even) {
