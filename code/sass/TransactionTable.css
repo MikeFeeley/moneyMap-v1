@@ -48,7 +48,7 @@ $table-stripe-backgroud: #f8f8f8;
     }
  }
   > tbody {
-    > tr > td {
+    > tr > td, tr > td > div > div > ._content {
       font-size: $body-font;
     }
     > tr:nth-child(even) {
@@ -474,8 +474,8 @@ div._TransactionHUD {
             padding-top: 0px;
             padding-bottom: 0px;
             border: 0px;
-            border-left:  1px solid transparent;
-            border-right: 1px solid transparent;
+            border-left:  2px solid transparent;
+            border-right: 2px solid transparent;
             font-size: 13px;
           }
           > td:not(:last-child) {
