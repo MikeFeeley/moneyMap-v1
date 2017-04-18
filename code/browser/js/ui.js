@@ -2,13 +2,17 @@ var ui = {
 
   ModalStack: class {
 
+    static _onMouseDown (e) {
+      ui .ModalStack._stopRemainingMouseEvents = false;
+      ui .ModalStack._handleClick (e);
+    }
+
     static _onClick (e) {
       if (ui .ModalStack._stopRemainingMouseEvents) {
         e .stopPropagation()
         e .stopImmediatePropagation();
         e .preventDefault();
-      } else
-        ui .ModalStack ._handleClick (e);
+      }
     }
 
     static _handleClick (e) {
@@ -26,7 +30,9 @@ var ui = {
           break;
       }
       if (matched) {
-        e .stopPropagation();
+        e .stopPropagation()
+        e .stopImmediatePropagation();
+        e .preventDefault();
         ui .ModalStack._stopRemainingMouseEvents = true;
       }
     }
@@ -36,18 +42,12 @@ var ui = {
       ui .ModalStack._handleClick (e)
     }
 
-    static _onMouseDown (e) {
-      ui .ModalStack._stopRemainingMouseEvents = false;
-      ui .ModalStack._handleClick (e);
-    }
-
     static _onMouseUp (e) {
       if (ui .ModalStack._stopRemainingMouseEvents) {
         e .stopPropagation()
         e .stopImmediatePropagation();
         e .preventDefault();
-      } else
-        ui .ModalStack._handleClick (e)
+      }
     }
 
     static add (guard, action, remove) {
@@ -65,9 +65,9 @@ var ui = {
     }
 
     static init() {
-      $('body') [0] .addEventListener ('click',                e => {ui .ModalStack._onClick (e)},             true);
-      $('body') [0] .addEventListener ('webkitmouseforcedown', e => {ui .ModalStack._onForceClick (e)},        true);
       $('body') [0] .addEventListener ('mousedown',            e => {ui .ModalStack._onMouseDown (e)},         true);
+      $('body') [0] .addEventListener ('webkitmouseforcedown', e => {ui .ModalStack._onForceClick (e)},        true);
+      $('body') [0] .addEventListener ('click',                e => {ui .ModalStack._onClick (e)},             true);
       $('body') [0] .addEventListener ('mouseup',              e => {ui .ModalStack._onMouseUp (e)},           true);
     }
   },

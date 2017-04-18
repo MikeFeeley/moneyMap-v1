@@ -174,7 +174,7 @@ class ViewField {
         clearTimeout (tid);
         tid = undefined;
       }
-      if (!toolTip || typeof toolTip.stop != 'function') console.trace ('XXX DEBUG XXX', toolTip, toolTip && toolTip.stop);
+      if (!toolTip || typeof toolTip.stop != 'function') console.trace ('XXX PANIC XXX', toolTip, toolTip && toolTip.stop);
       toolTip
         .stop    (true)
         .fadeOut (120);
