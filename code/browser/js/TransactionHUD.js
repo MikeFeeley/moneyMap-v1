@@ -1,13 +1,15 @@
 class TransactionHUD extends TransactionTable {
-  constructor (title, query, accounts, variance, onClose) {
+  constructor (title, query, accounts, variance, onClose, monthStart, monthEnd) {
     var name    = '_TransactionHUD';
     var sort    = (a,b) => {return a.date < b.date? -1: a.date == b.date? 0: 1}
     var columns = ['date','payee','debit','credit','account','category','description'];
     var options = {readOnly: false, noGrouping: true};
     var view    = new TransactionTableView (name, columns, options, accounts, variance);
     super (name, query, sort, options, columns, accounts, variance, view);
-    this._title = title;
-    this._onClose = onClose;
+    this._title      = title;
+    this._onClose    = onClose;
+    this._monthStart = monthStart;
+    this._monthEnd   = monthEnd;
   }
 
   delete() {
@@ -120,9 +122,10 @@ class TransactionHUD extends TransactionTable {
         if (field) {
           var selectedText = window.getSelection().toString();
           TransactionHUD .showRefineByField (
-            this._title, this._query, field, selectedText, this._accounts, this._variance, this._html .offsetParent(),
+            this._title, JSON .parse (JSON .stringify (this._query)), field, selectedText, this._accounts, this._variance, this._html .offsetParent(),
             {top: this._html .position() .top + 50, left: this._html .position() .left + 50, right: 'auto'},
-            () => {this._html .removeClass ('_occluded')}
+            () => {this._html .removeClass ('_occluded')},
+            this._monthStart, this._monthEnd
           );
           this._html .addClass ('_occluded');
         }
@@ -155,7 +158,7 @@ class TransactionHUD extends TransactionTable {
     );
   }
 
-  static showRefineByField (title, query, field, selectedText, accounts, variance, toHtml, position, onClose) {
+  static showRefineByField (title, query, field, selectedText, accounts, variance, toHtml, position, onClose, monthStart, monthEnd) {
     var query = Object .keys (query) .reduce ((o,f) => {o[f] = query[f]; return o}, {});
     if (selectedText .length && ['payee', 'description'] .includes (field._name)) {
       var selectValue = selectedText;
@@ -176,7 +179,7 @@ class TransactionHUD extends TransactionTable {
     var name = field._name .charAt (0) .toUpperCase() + field._name .slice (1);
     var [t,s] = Array .isArray (title)? title: [title,''];
     s = s + (s.length? ' and ': 'Where ') + name + ' ' + selectType + ' ' + selectValue;
-    TransactionHUD .show ([t,s], query, accounts, variance, toHtml, position, onClose);
+    TransactionHUD .show ([t,s], query, accounts, variance, toHtml, position, onClose, monthStart, monthEnd);
   }
 
   static showCategory (id, dates, accounts, variance, toHtml, position, includeMonths=true, includeYears=true, addCats=[]) {
@@ -216,8 +219,8 @@ class TransactionHUD extends TransactionTable {
     TransactionHUD .show (title, query, accounts, variance, toHtml, position);
   }
 
-  static show (title, query, accounts, variance, toHtml, position, onClose) {
-    var hud = new TransactionHUD (title, query, accounts, variance, onClose);
+  static show (title, query, accounts, variance, toHtml, position, onClose, monthStart, monthEnd) {
+    var hud = new TransactionHUD (title, query, accounts, variance, onClose, monthStart, monthEnd);
     async (hud, hud .addHtml) (toHtml, position);
   }
 }
