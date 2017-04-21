@@ -120,10 +120,11 @@ class TransactionHUD extends TransactionTable {
         var target = $(e .target);
         var field  = target .hasClass ('_content') && target .parent() .parent ('._field') .data ('field');
         if (field) {
-          var selectedText = window.getSelection().toString();
+          let selectedText = window.getSelection().toString();
+          let top          = e .pageY + this._html .offsetParent() .scrollTop() - this._html .offsetParent() .offset() .top;
           TransactionHUD .showRefineByField (
             this._title, JSON .parse (JSON .stringify (this._query)), field, selectedText, this._accounts, this._variance, this._html .offsetParent(),
-            {top: this._html .position() .top + 50, left: this._html .position() .left + 50, right: 'auto'},
+            {top: top, left: this._html .position() .left + 50, right: 'auto'},
             () => {this._html .removeClass ('_occluded')},
             this._monthStart, this._monthEnd
           );
