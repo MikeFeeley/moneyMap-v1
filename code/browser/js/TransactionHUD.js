@@ -190,7 +190,7 @@ class TransactionHUD extends TransactionTable {
         var type = categories .getType (cat);
         if ((type == ScheduleType .MONTH && includeMonths) || (type == ScheduleType .YEAR && includeYears) || type == ScheduleType .NONE)
           family .push (cat ._id);
-        for (let id of getFamily (cat .children))
+        for (let id of getFamily ((cat .children || []) .concat (cat .zombies || [])))
           family .push (id);
         }
       return family;

@@ -52,7 +52,7 @@ class Actuals {
         this._index .set (c._id, act);
         if (act .parent)
           act .parent .children .push (act);
-        createEmptyActuals (c .children);
+        createEmptyActuals ((c .children || []) .concat (c .zombies || []));
       }
     }
     createEmptyActuals (this._budget .getCategories() .getRoots());
@@ -141,7 +141,7 @@ class Actuals {
 
   getAmountRecursively (cat, st = this._budget .getStartDate(), en = this._budget .getEndDate(), skip) {
     var amt = this .getAmount (cat, st, en, skip);
-    for (let child of cat .children || [])
+    for (let child of (cat .children || []) .concat (cat .zombies || []))
       amt += this .getAmountRecursively (child, st, en, skip);
     return amt;
   }

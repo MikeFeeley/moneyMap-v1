@@ -29,7 +29,7 @@ class VarianceModel extends Observable {
   }
 
   getAmountByMonth (id, date, includePriorYear) {
-    var cat        = this._budget .getCategories() .get (id);
+    var cat  = this._budget .getCategories() .get (id);
     var data = {date: [], budget: [], actual: []}
     for (let st = this._budget .getStartDate(); st <= date; st = Types .date .addMonthStart (st, 1)) {
       var period = {cur: {start: st, end: Math .min (Types .date .monthEnd (st), date)}};
@@ -39,9 +39,14 @@ class VarianceModel extends Observable {
       data .actual .push ((amount .month? amount .month .actual .cur: 0) + (amount .none? amount .none .actual .cur: 0));
     }
     if (includePriorYear) {
+      let homonyms = (cat .parent .children || []) .concat (cat .parent .zombies || []) .filter (c => {return c .name == cat .name});
       data .priorYear = [];
-      for (let st = Types .date .addYear (this._budget .getStartDate(), -1); st < Types .date .addYear (date, -1); st = Types .date .addMonthStart (st, 1))
-        data .priorYear .push (this._actuals .getAmountRecursively (cat, st, Types .date .monthEnd (st)) * (this._budget .isCredit (cat)? -1: 1));
+      for (let st = Types .date .addYear (this._budget .getStartDate(), -1); st < Types .date .addYear (date, -1); st = Types .date .addMonthStart (st, 1)) {
+        let actual = homonyms .reduce ((a, cat) => {
+          return a + this._actuals .getAmountRecursively (cat, st, Types .date .monthEnd (st)); 
+        }, 0)
+        data .priorYear .push (actual * (this._budget .isCredit (cat)? -1: 1));
+      }
     }
     return data;
   }
