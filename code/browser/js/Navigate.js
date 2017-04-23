@@ -186,7 +186,7 @@ class Navigate {
           isGoal:   this._budget .isGoal   (root),
           amounts:  other
         })
-      groups .push ({name: root .name, rows: rows .filter (r => {return r .amounts .find (a => {return a != 0})})});
+      groups .push ({name: root .name, rows: rows .filter (r => {return r .amounts .find (a => {return a .value != 0})})});
     }
     return {
       cols:       cols,
