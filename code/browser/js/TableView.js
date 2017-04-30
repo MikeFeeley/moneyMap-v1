@@ -1,3 +1,7 @@
+var TableViewEvent = Object.create (TupleViewEvent, {
+  HEAD_CLICK: {value: 300},
+});
+
 class TableView extends TupleView {
 
   constructor (name, fields, headers, options) {
@@ -96,6 +100,11 @@ class TableView extends TupleView {
       $('<th>', {class: this._getFieldHtmlClass (h .name)})
         .append   ($('<div>', {text: h .header, class: '_content'}))
         .appendTo (this._thead);
+    this._thead .on ('click', 'th', e => {
+      let c = $(e .currentTarget) .attr ('class');
+      if (c .indexOf ('_field_') == 0)
+        this._notifyObservers (TableViewEvent .HEAD_CLICK, c .substring (7, c .length));
+    });
     this._table .on ('keydown', e => {return this ._handleKeydown (e)});
     this._tbody .on ('click', 'tr', e => {
       if (!this._options || ! this._options .readOnly) {

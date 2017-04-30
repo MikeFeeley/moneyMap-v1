@@ -53,7 +53,10 @@ class TransactionHUD extends TransactionTable {
     var t = (Array .isArray (this._title)? this._title[0] : this._title) .split (' ');
     t.length -= 1;
     if (Types .date._difMonths (this._query .date .$lte, this._query .date .$gte) > 1) {
-      t [t .length - 1] = ' Year ' + Types .dateFY .toString (this._query .date .$lte, budget .getStartDate(), budget .getEndDate())
+      if (Types .date._month (this._query .date .$gte) == 1)
+        t [t .length - 1] = ' Year ' + Types .date._year (this._query .date .$gte)
+      else
+        t [t .length - 1] = ' Year ' + Types .dateFY .toString (this._query .date .$lte, budget .getStartDate(), budget .getEndDate())
     } else {
       t [t .length - 1] = Types .dateMonthY .toString (this._query .date .$gte);
     }
@@ -87,6 +90,18 @@ class TransactionHUD extends TransactionTable {
       this._query .date .$gte = this._monthStart;
       this._query .date .$lte = this._monthEnd;
     }
+    this._setTitleDate();
+    async (this, this .refreshHtml)();
+  }
+
+  _calendarYear() {
+    if (Types .date._difMonths (this._query .date .$lte, this._query .date .$gte) == 1) {
+      this._monthStart = this._query .date .$gte;
+      this._monthEnd   = this._query .date .$lte;
+    }
+    let y = Types. date._year (this._monthStart);
+    this._query .date .$gte = Types .date._date (y, 1,   1);
+    this._query .date .$lte = Types .date._date (y, 12, 31);
     this._setTitleDate();
     async (this, this .refreshHtml)();
   }
@@ -135,9 +150,10 @@ class TransactionHUD extends TransactionTable {
     });
     if (position)
       this._html .css ({top: position .top, right: position .right, left: position .left});
-    $('<div>', {class: '_title', text: Array .isArray (this._title)? this._title[0]: this._title}) .appendTo (this._html) .click (e=> {
-      this._toggleMonthYear();
-    });
+    $('<div>', {class: '_title', text: Array .isArray (this._title)? this._title[0]: this._title}) .appendTo (this._html)
+      .on ('click',                     e => {this._toggleMonthYear()})
+      .on ('webkitmouseforcewillbegin', e => {e .preventDefault()})
+      .on ('webkitmouseforcedown',      e => {this._calendarYear()})
     var buttons = $('<div>', {class: '_buttons'}) .appendTo (this._html);
     $('<button>', {html: '&lang;', class: '_prevButton'}) .appendTo (buttons) .click (e => {
       this._changeMonth (-1);
@@ -157,6 +173,19 @@ class TransactionHUD extends TransactionTable {
       (e) => {return ! $.contains (this._html .get (0), e .target) && this._html .get (0) != e .target},
       ()  => {this .delete()}, true
     );
+  }
+
+  _showRefineByDateRange (start, end) {
+    let query = JSON .parse (JSON .stringify (this._query));
+    query .date .$gte = start;
+    query .date .$lte = end;
+    let [t, s] = Array .isArray (this._title)? this._title: [this._title,''];
+    TransactionHUD .show ([t, s], query, this._accounts, this._variance, this._html .offsetParent(),
+      {top: this._html .position() .top + 50, left: this._html .position() .left + 50, right: 'auto'},
+      () => {this._html .removeClass ('_occluded')},
+      this._monthStart, this._monthend
+    );
+    this._html .addClass ('_occluded');
   }
 
   static showRefineByField (title, query, field, selectedText, accounts, variance, toHtml, position, onClose, monthStart, monthEnd) {
@@ -225,3 +254,24 @@ class TransactionHUD extends TransactionTable {
     async (hud, hud .addHtml) (toHtml, position);
   }
 }
+
+class TransactionHUDDateTextbox extends ViewScalableTextbox {
+  constructor (name, format, startDate, prefix='', suffix='', placeholder='') {
+    super (name, format, prefix, suffix, placeholder);
+    this._startDate = startDate;
+  }
+  get() {
+    return this._format .fromView (this._get(), (m) => {
+      var value = this._value;
+      if (value) {
+        var df = m - Types.dateDM._month (value);
+        return Types.dateDM._year (value) + (Math.abs (df) < 6? 0: (df < 0? 1: -1));
+      } else {
+        var sy = Types .dateMY ._year  (this._startDate);
+        var sm = Types .dateMY ._month (this._startDate);
+        return m >= sm? sy: sy + 1;
+      }
+    });
+  }
+}
+

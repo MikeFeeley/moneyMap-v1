@@ -39,7 +39,7 @@ class VarianceModel extends Observable {
       data .actual .push ((amount .month? amount .month .actual .cur: 0) + (amount .none? amount .none .actual .cur: 0));
     }
     if (includePriorYear) {
-      let homonyms = (cat .parent .children || []) .concat (cat .parent .zombies || []) .filter (c => {return c .name == cat .name});
+      let homonyms = (cat .parent && (cat .parent .children || []) .concat (cat .parent .zombies || []) .filter (c => {return c .name == cat .name})) || [];
       data .priorYear = [];
       for (let st = Types .date .addYear (this._budget .getStartDate(), -1); st < Types .date .addYear (date, -1); st = Types .date .addMonthStart (st, 1)) {
         let actual = homonyms .reduce ((a, cat) => {

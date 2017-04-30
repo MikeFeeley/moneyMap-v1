@@ -1,5 +1,5 @@
-var ImportTransactionsViewEvent = Object.create (ViewEvent, {
-  DROPPED: {value: 200}
+var ImportTransactionsViewEvent = Object.create (TableViewEvent, {
+  DROPPED: {value: 400}
 });
 
 class ImportTransactionsView extends View {

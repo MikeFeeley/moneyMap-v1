@@ -483,8 +483,8 @@ class ApplyToTableView extends TransactionTableView {
   }
 }
 
-var ApplyToTableViewEvent = Object .create (TupleViewEvent, {
-  APPLY: {value: 300}
+var ApplyToTableViewEvent = Object .create (TableViewEvent, {
+  APPLY: {value: 400}
 })
 
 class IRVDateTextbox extends ViewTextbox {
