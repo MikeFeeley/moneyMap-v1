@@ -865,8 +865,8 @@ class Navigate {
           })
           return m;
         }, new Map())
-        . entries())
-        . map (e => {
+        .entries())
+        .map (e => {
           return {
             name:    accounts .find (a => {return a[0] == e[0]}) [1],
             type:    e [0],
@@ -874,6 +874,7 @@ class Navigate {
             amounts: e [1] .amounts
           }
         })
+        .filter (e => {return e .amounts .reduce ((s,a) => {return s+a}) != 0})
     }
   }
 
