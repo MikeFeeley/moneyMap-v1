@@ -7,11 +7,10 @@ class Navigate {
     this._categories         = this._budget .getCategories();
     this._view               = new NavigateView (accounts, variance);
     this._updaters           = [];
-    this._history            = new HistoryModel (this._variance);
     this._balances           = new Model ('balanceHistory');
     this._parameters         = new Model ('parameters');
+    this._history            = new Model ('history');
     this._varianceObserver   = this._variance   .addObserver (this, this._onModelChange);
-    this._historyObserver    = this._history    .addObserver (this, this._onModelChange);
     this._balancesObserver   = this._balances   .addObserver (this, this._onModelChange);
     this._parametersObserver = this._parameters .addObserver (this, this._onModelChange);
     this._view .addObserver (this, this._onViewChange);
@@ -19,12 +18,11 @@ class Navigate {
 
   delete() {
     this._variance   .deleteObserver (this._varianceObserver);
-    this._history    .deleteObserver (this._historyObserver);
     this._balances   .deleteObserver (this._balancesObserver);
     this._parameters .deleteObserver (this._parametersObserver);
-    this._history    .delete();
     this._balances   .delete();
     this._parameters .delete();
+    this._history    .delete();
   }
 
   _onModelChange (eventType, doc, arg, source, model) {
@@ -538,12 +536,87 @@ class Navigate {
    *   }
    */
   *_getHistoryData (parentIds) {
+    yield* this._actuals .findHistory ();
     var defaultParents  = [this._budget .getIncomeCategory(), this._budget .getSavingsCategory(), this._budget .getExpenseCategory()];
     parentIds           = parentIds || (defaultParents .map (p => {return p._id}));
-    var historicBudgets = yield* this._budget .getHistoricBudgets();
+    var parents         = parentIds .map (pid => {return this._categories .get (pid)});
+    // get historic amounts
+    var historicBudgets = yield* this._budget  .getHistoricBudgets();
+    var noTranAmounts   = yield* this._history .find();
     var historicAmounts = [];
     for (let budget of historicBudgets)
-      historicAmounts .push (yield* this._history .getAmounts (budget._id, parentIds));
+      if (budget .hasTransactions) {
+        // get actual amount from transaction history
+        historicAmounts .push (parents .map (parent => {
+          let isCredit = this._budget .isCredit (parent);
+          let isGoal   = this._budget .isGoal   (parent);
+          let amounts = Array .from ((parent .children || []) .concat (parent .zombies || []) .reduce ((m,c) => {
+              let a = this._actuals .getAmountRecursively (c, budget .start, budget .end) * (isCredit? -1: 1);
+              let e = m .get (c .name);
+              if (e) {
+                e .amount += a;
+              } else {
+                m .set (c .name, {
+                  id:       c._id,
+                  name:     c .name,
+                  sort:     c .sort,
+                  isCredit: isCredit,
+                  isGoal:   isGoal,
+                  amount:   a
+                })
+              }
+              return m;
+            }, new Map()) .values())
+          let parentAmount = this._actuals .getAmountRecursively (parent, budget .start, budget .end) * (isCredit? -1: 1);
+          let otherAmount  = parentAmount - amounts .reduce ((t,a) => {return t + a .amount}, 0);
+          if (otherAmount != 0)
+            amounts .push ({
+              name:     'Other',
+              isCredit: isCredit,
+              isGoal:   isGoal,
+              amount:   otherAmount
+            })
+          return {
+            id:      parent._id,
+            name:    parent .name,
+            amounts: amounts
+          }
+        }))
+      } else {
+        // get summary amount from history model
+        let a = noTranAmounts
+          .filter (e => {return e .budget == budget._id})
+          .map    (e => {e .category = this._categories .get (e .category); return e})
+        historicAmounts .push (parents .map (parent => {
+          let isCredit = this._budget .isCredit (parent);
+          let isGoal   = this._budget .isGoal   (parent);
+          let amounts  = a .filter (e => {return e .category .parent._id == parent._id}) .map (e => {return {
+            id:       e .category._id,
+            name:     e .category .name,
+            sort:     e .category .sort,
+            isCredit: isCredit,
+            isGoal:   isGoal,
+            amount:   e .amount
+          }});
+          let parentAmount = (a .find (e => {return e .category._id == parent._id}) || {}) .amount;
+          if (parentAmount != null) {
+            let otherAmount  = parentAmount - amounts .reduce ((t,a) => {return t + a .amount}, 0);
+             if (otherAmount != 0)
+              amounts .push ({
+                name:     'Other',
+                isCredit: isCredit,
+                isGoal:   isGoal,
+                amount:   otherAmount
+              })
+          }
+          return {
+            id:      parent._id,
+            name:    parent .name,
+            amounts: amounts
+          }
+        }))
+      }
+    // compute future budgets
     var budgets = [{
       name:  this._budget .getName(),
       start: this._budget .getStartDate(),
@@ -560,27 +633,29 @@ class Navigate {
           name:    parent .name,
           amounts: amounts
         });
+        let isCredit = this._budget .isCredit (parent);
+        let isGoal   = this._budget .isGoal   (parent);
         for (let cat of (parent .children || []))
           amounts .push ({
             id:       cat._id,
             name:     cat .name,
             sort:     cat .sort,
-            isCredit: this._budget .isCredit (cat),
-            isGoal:   this._budget .isGoal   (cat),
-            amount:   this._budget .getAmount (cat, budget .start, budget .end) .amount * (this._budget .isCredit (cat)? -1: 1)
+            isCredit: isCredit,
+            isGoal:   isGoal,
+            amount:   this._budget .getAmount (cat, budget .start, budget .end) .amount * (isCredit? -1: 1)
           });
-        var parentAmount = this._budget .getAmount (parent, budget .start, budget .end) .amount * (this._budget .isCredit (parent)? -1: 1);
+        var parentAmount = this._budget .getAmount (parent, budget .start, budget .end) .amount * (isCredit? -1: 1);
         var otherAmount  = parentAmount - amounts .reduce ((t,a) => {return t + a .amount}, 0);
         if (otherAmount != 0)
           amounts .push ({
             name:     'Other',
-            sort:     amounts .reduce ((max,a) => {return Math .max (max, a .sort)}, 0) + 1,
-            isCredit: this._budget .isCredit (parent),
-            isGoal:   this._budget .isGoal   (parent),
+            isCredit: isCredit,
+            isGoal:   isGoal,
             amount:   otherAmount
           })
       }
     }
+    // combine history and future and normalize to category name
     budgets       = historicBudgets .concat (budgets);
     budgetAmounts = historicAmounts .concat (budgetAmounts);
     budgetAmounts = budgetAmounts .map (ba => {
@@ -616,6 +691,7 @@ class Navigate {
           }, map)
         }, new Map());
     });
+    // compute return values
     return {
       cols:      budgets .map (b => {return b .name}),
       highlight: historicBudgets .length,
@@ -628,7 +704,7 @@ class Navigate {
         }
         return {
           name: parent .name,
-          rows: Array .from (cats [i] .values()) .sort ((a,b) => {return a.sort<b.sort? -1: 1}) .map (cat => {
+          rows: Array .from (cats [i] .values()) .sort ((a,b) => {return a.sort==null? 1: b.sort==null? -1: a.sort<b.sort? -1: 1}) .map (cat => {
             var ids = Array .from (budgetAmounts .reduce ((s,ba) => {
               return ba .reduce ((s,g) => {
                 return g .amounts .reduce ((s,a) => {
@@ -729,7 +805,7 @@ class Navigate {
       [AccountType .RRSP,       'RRSP'],
       [AccountType .RESP,       'RESP'],
       [AccountType .TFSA,       'TFSA'],
-      [AccountType .INVSETMENT, 'Non-Registered Investments'],
+      [AccountType .INVESTMENT, 'Non-Registered Investments'],
       [AccountType .HOME,       'Home'],
       [AccountType .MORTGAGE,   'Mortgage']
     ];

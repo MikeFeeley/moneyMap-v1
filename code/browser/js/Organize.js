@@ -6,7 +6,7 @@ class Organize {
     this._categories = this._budget .getCategories();
     this._accModel   = new Model ('accounts');
     this._budModel   = new Model ('budgets');
-    this._hisModel   = new HistoryModel (this._variance);
+    this._hisModel   = new Model ('history');
     this._balModel   = new Model ('balanceHistory');
     this._parModel   = new Model ('parameters');
     this._view       = new OrganizeView();
@@ -121,7 +121,7 @@ class Organize {
     var roots = [this._budget .getIncomeCategory(), this._budget .getSavingsCategory(), this._budget .getExpenseCategory()];
     var rows  = roots
       .reduce ((l,r) => {
-        return l .concat (r .children || [])
+        return l .concat (r .children || []) .concat (r .zombies || [])
       }, [])
       .map (c => {
         return {_id: c._id, name: c .name, sort: c .sort}
@@ -231,10 +231,6 @@ class Organize {
   }
 
   *_addBudgets() {
-    var onHasTransactionChange = (isChecked, budget) => {
-      if (isChecked)
-        async (this._hisModel, this._hisModel .generate) (budget);
-    }
     var catFormat = new ViewFormatOptions (
       value => {var cat = this._categories .get (value); return cat? cat.name: value},
       view  => {var cat = this._categories .findBestMatch (view); return cat? cat._id: view},
@@ -245,7 +241,7 @@ class Organize {
       new ViewTextbox              ('name',             ViewFormats ('string')),
       new ViewTextbox              ('start',            ViewFormats ('dateDMY')),
       new ViewTextbox              ('end',              ViewFormats ('dateDMY')),
-      new _HasTransactionsCheckbox (onHasTransactionChange),
+      new ViewCheckbox             ('hasTransactions'),
       new ViewSelect               ('incomeCategory',   catFormat),
       new ViewSelect               ('savingsCategory',  catFormat),
       new ViewSelect               ('expenseCategory',  catFormat),

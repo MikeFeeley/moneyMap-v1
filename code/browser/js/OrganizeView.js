@@ -31,14 +31,3 @@ class OrganizeView  extends Observable {
     $('<div>', {text: text, class: '_text'}) .appendTo (this._content);
   }
 }
-
-class _HasTransactionsCheckbox extends ViewCheckbox {
-  constructor (onCheck) {
-    super ('hasTransactions');
-    this._onCheck = onCheck;
-  }
-  _addHtml() {
-    super._addHtml();
-    this._input .click (() => {this._onCheck (this._input .prop ('checked'), this._id)});
-  }
-}

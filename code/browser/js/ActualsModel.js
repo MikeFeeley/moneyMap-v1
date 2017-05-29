@@ -19,7 +19,17 @@ class ActualsModel extends Observable {
     this._actuals = new Actuals (this._budget, yield* this._model .find ({
       $and: [{date: {$gte: Types .date .addYear (this._budget .getStartDate(), -1)}}, {date: {$lte: this._budget .getEndDate()}}]
     }));
+    this._haveHistory = false;
     return this._actuals;
+  }
+
+  *findHistory() {
+    if (! this._haveHistory) {
+      this._actuals .addTransactions (yield* this._model .find({
+        date: {$lt: Types .date .addYear (this._budget .getStartDate(), -1)}
+      }));
+      this._haveHistory = true;
+    }
   }
 
   getAmount (cat, st, en, skip) {
@@ -56,6 +66,11 @@ class Actuals {
       }
     }
     createEmptyActuals (this._budget .getCategories() .getRoots());
+  }
+
+  addTransactions (trans) {
+    for (let t of trans)
+      this._trans .set (t._id, t);
   }
 
   _getEntry (id) {
