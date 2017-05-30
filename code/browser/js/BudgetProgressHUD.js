@@ -146,8 +146,10 @@ class BudgetProgressHUD {
           noRemoveCategoryWithNonBlankSchedule: true,
           categoriesOnlyWithParent:             [this._id],
           onFieldClick:                         (id, name, html, pos) => {
-            this .blur();
-            BudgetProgressHUD .show (id, html, pos, this._accounts, this._variance)
+            if (name != 'name' && id) {
+              this .blur();
+              BudgetProgressHUD .show (id, html, pos, this._accounts, this._variance)
+            }
           },
           setFocus:                             setFocus
         }
