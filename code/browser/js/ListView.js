@@ -234,10 +234,11 @@ class ListView extends SortedTupleView {
         let id     = $(e .currentTarget) .data ('id');
         let field  = $(e .target) .closest ('._field') .data ('field');
         let name   = field && field._name;
-        let html   = $(e .target) .offsetParent();
-        let pos    = $(e .target) .position();
-        pos .top  += e .offsetY;
-        pos .left += e .offsetX;
+        let pElmt  = field? $(e .target): $(e .currentTarget) .find ('._content');
+        let html   = pElmt .offsetParent();
+        let pos    = pElmt .position();
+        pos .top  += e .originalEvent .offsetY;
+        pos .left += e .originalEvent .offsetX;
         this._notifyObservers (ListViewEvent .FIELD_CLICK, {id: id, name: name, html: html, pos: pos});
       });
       line .on ('keydown', e => {return this._handleKeypress (e)});

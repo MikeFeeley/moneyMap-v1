@@ -47,7 +47,6 @@ body {
   font-size: 13px;
   > ._hudContent {
     width: 550px;
-    margin-bottom: 16px;
     background: #f6f6f6;
     border: 8px solid transparent;
     vertical-align: middle;
