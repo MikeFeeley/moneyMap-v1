@@ -151,6 +151,7 @@ class BudgetProgressGraph extends Observable {
       maintainAspectRatio: false,
       elements: {rectangle: {borderWidth: 2, borderSkipped: 'left'}},
       legend: {display: false},
+      events: ['mousemove', 'mouseout', 'click', 'touchstart', 'touchmove', 'webkitmouseforcedown'],
       onClick: (e, elements) => {
         if (e .offsetX < this._chart .chartArea .left) {
           var index   = Math .floor (e .offsetY / (this._chart .chart .height / this._chart .chart .config .data .labels .length));
@@ -174,7 +175,8 @@ class BudgetProgressGraph extends Observable {
           isLabel:         isLabel,
           datasetIndex:    datasetIndex,
           html:            html,
-          position:        position
+          position:        position,
+          altClick:        e .webkitForce > 1 || e .altKey
         })
         return false;
       },

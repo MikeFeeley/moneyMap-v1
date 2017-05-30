@@ -61,7 +61,7 @@ class Navigate {
         var root = this._categories .get (arg .id);
         var t    = arg .title .split (' ');
         var im   = t [t .length -1] == 'Month';
-        if (! this._addProgressGraph (root, arg .html, true, arg .position, undefined, im, ! im))
+        if (arg .altClick || ! this._addProgressGraph (root, arg .html, true, arg .position, undefined, im, ! im))
           BudgetProgressHUD .show (root._id, arg .html, arg .position, this._accounts, this._variance);
       } else {
         var today = Types .dateMY .today();
