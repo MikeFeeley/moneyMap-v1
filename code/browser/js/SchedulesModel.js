@@ -170,12 +170,12 @@ class SchedulesModel extends Observable {
     var mis = this._splitMI (mi);
     Model .newUndoGroup();
     if (mis .model == this._schModel) {
-      var sch    = this._categories .get (mi);
-      var result = yield* mis .model .remove (mis .id);
-      if (sch .category && (sch .category .schedule || []) .length == 0) {
+      var sch = this._categories .get (mi);
+      if (sch .category && (sch .category .schedule || []) .length == 1 && (sch .category .schedule || []) .includes (sch)) {
         mi  = sch .category._id;
         mis = this._splitMI (mi);
-      }
+      } else
+        var result = yield* mis .model .remove (mis .id);
     }
     if (mis .model == this._catModel) {
       var cat = this._categories .get (mi);
@@ -191,6 +191,8 @@ class SchedulesModel extends Observable {
         return l .concat ((c .schedule || []) .map (s => {return this._splitMI (s._id) .id}));
       }, []);
       result = (yield* this._catModel .checkUpdateList (ul));
+      if (! result && sch)
+        yield* this._schModel .update (this._splitMI (sch._id) .id, {amount: 0, start: 0, end: 0, limit: 0, repeat: 0});
       if (result)
         result = (yield* this._schModel .removeList (sl));
       if (result)

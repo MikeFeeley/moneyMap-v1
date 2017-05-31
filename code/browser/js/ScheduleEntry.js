@@ -1,7 +1,9 @@
 class ScheduleEntry extends List {
 
   constructor (name, accounts, variance, options = {}) {
-    super (variance .getBudget() .getSchedulesModel(), new ScheduleEntryView (name, options, accounts, variance), options);
+    let budget = variance .getBudget();
+    super (budget .getSchedulesModel(), new ScheduleEntryView (name, options, accounts, variance), options);
+    this._budget     = budget;
     this._categories = this._model .getCategories();
   }
 
@@ -48,6 +50,16 @@ class ScheduleEntry extends List {
       updateTotals (this._categories .get (doc .category || doc .parent));
       if (arg && arg ._original_parent)
         updateTotals (this._categories .get (arg ._original_parent));
+      if (eventType == ModelEvent .UPDATE && arg .budgets) {
+        let bid = this._budget .getId();
+        if (! arg .budgets .includes (bid))
+          this._removeTuple (doc._id);
+        else if (! arg ._original_budgets .includes (bid)) {
+          let cat = this._categories .get (doc._id)
+          if (! this._options .depthLimit || this._options .depthLimit >= calcDepth (cat))
+            this._addTuple (cat);
+        }
+      }
       if (this._options .setFocus) {
         this._view .selectTupleWithId (doc._id, {field: this._view._getFieldHtml (doc._id, 'name')});
         this._options .setFocus = false;
