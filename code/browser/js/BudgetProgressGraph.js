@@ -31,6 +31,7 @@ class BudgetProgressGraph extends Observable {
     var red             = '#ff9999';
     var darkRed         = '#ff7777';
     var lightGreen      = '#eeffee';
+    var medGreen        = '#bbffbb';
     var green           = '#88ff88';
     var darkGreen       = '#66dd66';
     var grey            = '#dddddd';
@@ -83,8 +84,8 @@ class BudgetProgressGraph extends Observable {
       ['Prior Months',              'preBudgetedActual',   darkGreen,       darkGreen],
       ['This Month within Budget',  'curBudgetedActual',   green,           green],
       ['This Transaction (Credit)', 'thisCreditBudgeted',  lightGreyRed,    greyRed],
-      ['Over in Prior Months',      'preOverActual',       darkGreen,       darkGreen],
-      ['Over Budget',               'curOverActual',       green,           green],
+      ['Over in Prior Months',      'preOverActual',       medGreen,        medGreen],
+      ['Over Budget',               'curOverActual',       medGreen,        medGreen],
       ['This Transaction (Credit)', 'thisCreditOver',      lightGreyRed,    greyRed],
       ['This Transaction',          'thisBudgeted',        lightGreen,      green],
       ['This Transaction',          'thisOver',            lightGreen,      green],
