@@ -107,6 +107,8 @@ class VarianceModel extends Observable {
     s .isBudgetless = a .isBudgetless && b .isBudgetless;
     s .isCredit     = a .isCredit     || b .isCredit;
     s .isGoal       = a .isGoal       || b .isGoal;
+    if (a .otherMonths || b .otherMonths)
+      s .otherMonths = (a .otherMonths || 0) + (b .otherMonths || 0);
     return s;
   }
 
@@ -150,6 +152,11 @@ class VarianceModel extends Observable {
       amount [type] .actual [per] = this._actuals .getAmount           (cat, period [per] .start, period [per] .end, skip);
       amount [type] .budget [per] = this._budget  .getIndividualAmount (cat, period [per] .start, period [per] .end) .amount;
     }
+    if (type == 'month') {
+      let budgetEndDate = this._budget .getEndDate();
+      if (period .cur .end != budgetEndDate)
+        amount .otherMonths = this._budget .getIndividualAmount (cat, Types .date .addMonthStart (period .cur .end, 1), budgetEndDate) .amount;
+    }
     amount .isBudgetless = type == 'none';
     amount .isCredit     = isCredit;
     amount .isGoal       = isGoal;
@@ -189,7 +196,7 @@ class VarianceModel extends Observable {
       var t = ['none', 'month', 'year'] .reduce ((t,sch) => {
         return t + ['prev', 'cur'] .reduce ((t,per) => {return t + ((chiAmount [sch] && chiAmount [sch] .budget [per]) || 0)}, 0);
       }, 0);
-      amount .year .budget .prev = Math .max (0, amount .year .budget .prev - t);
+      amount .year .budget .prev = Math .max (0, amount .year .budget .prev - t - (chiAmount .otherMonths || 0));
       amount .year .budget .cur  = 0;
     }
 
