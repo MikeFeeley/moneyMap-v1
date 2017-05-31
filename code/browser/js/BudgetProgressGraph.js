@@ -115,6 +115,7 @@ class BudgetProgressGraph extends Observable {
     else {
       var max = this._data .reduce ((m,d) => {return Math .max (m, d .total)}, 0) + 5000;
       this._chart .data .linePosition = this._data .map (d => {return d .total * d .percentComplete / max});
+      this._chart .options .scales .xAxes [0] .ticks .max = max;
     }
     this._chart .data .ids = this._data .map (d => {return d._id});
     this._chart .update();
