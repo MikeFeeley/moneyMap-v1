@@ -232,7 +232,7 @@ class ListView extends SortedTupleView {
         this._selectTuple ($(e.currentTarget), {field: $(e.target) .closest ('._field')});
         e.stopPropagation();
         let id     = $(e .currentTarget) .data ('id');
-        let field  = $(e .target) .closest ('._field') .data ('field');
+        let field  = $(e .target) .parent() .data ('field');
         let name   = field && field._name;
         let pElmt  = field? $(e .target): $(e .currentTarget) .find ('._content');
         let html   = pElmt .offsetParent();

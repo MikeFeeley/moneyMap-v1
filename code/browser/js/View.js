@@ -331,7 +331,7 @@ class ViewTextbox extends ViewEdit {
     this._placeholder = placeholder;
   }
   _addHtml() {
-    this._inputContainer = $('<div>')                                                                     .appendTo (this._html);
+    this._inputContainer = $('<div>', {data: {field: this}})                                              .appendTo (this._html);
     $('<div>', {class: '_prefix', text: this._prefix})                                                    .appendTo (this._inputContainer);
     this._input = $('<input>', {type: 'text', class: '_content', prop: {placeholder: this._placeholder}}) .appendTo (this._inputContainer);
     $('<div>', {class: '_suffix', text: this._suffix})                                                    .appendTo (this._inputContainer);
@@ -354,10 +354,10 @@ class ViewTextbox extends ViewEdit {
 
 var ViewScalable = Base => class extends Base {
   _addHtml() {
-    this._labelContainer = $('<div>') .appendTo (this._html);
-    $('<div>', {class: '_prefix', text: this._prefix}) .appendTo (this._labelContainer);
-    this._label = $('<div>', {class: '_content'})      .appendTo (this._labelContainer);
-    $('<div>', {class: '_suffix', text: this._suffix}) .appendTo (this._labelContainer);
+    this._labelContainer = $('<div>', {data: {field: this}}) .appendTo (this._html);
+    $('<div>', {class: '_prefix', text: this._prefix})       .appendTo (this._labelContainer);
+    this._label = $('<div>', {class: '_content'})            .appendTo (this._labelContainer);
+    $('<div>', {class: '_suffix', text: this._suffix})       .appendTo (this._labelContainer);
   }
 
   setSelected (isSelected) {
@@ -367,11 +367,18 @@ var ViewScalable = Base => class extends Base {
           this._superAddHtml();
         else
           super._addHtml();
+        let c = this._labelContainer;
+        let d = c .data();
         this._labelContainer .replaceWith (this._inputContainer);
+        c .data (d);
       } else {
         this._html .find (':input') .blur();
-        if (this._inputContainer)
+        if (this._inputContainer) {
+          let c = this._inputContainer;
+          let d = c .data();
           this._inputContainer .replaceWith (this._labelContainer);
+          c .data (d);
+        }
       }
       this._isSelected = isSelected;
       if (this._isSelected)
