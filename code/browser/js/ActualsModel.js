@@ -5,7 +5,7 @@ class ActualsModel extends Observable {
     this._model  = new Model ('transactions');
     this._model .addObserver (this, this._onModelChange);
   }
-
+  
   delete() {
     this._model .delete();
   }
@@ -25,9 +25,9 @@ class ActualsModel extends Observable {
 
   *findHistory() {
     if (! this._haveHistory) {
-      this._actuals .addTransactions (yield* this._model .find({
+      this._actuals .addTransactions (yield* this._model .find ({
         date: {$lt: Types .date .addYear (this._budget .getStartDate(), -1)}
-      }));
+      }, true));
       this._haveHistory = true;
     }
   }

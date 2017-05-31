@@ -123,12 +123,12 @@ class Model extends Observable {
   /**
    * Query server and return matching documents
    */
-  *find (query) {
+  *find (query, append = false) {
     this._options = query && query .$options;
     if (query && query .$options)
       query = Object .keys (query) .reduce ((o,k) => {if (k != '$options') o [k] = query [k]; return o}, {});
-    this._query = query;
-    var docs    = yield* this._collection .find (this._query);
+    var docs    = yield* this._collection .find (query);
+    this._query = (this._query && append)? {$or: [this._query, query]}: query;
     if (this._options && this._options .groupBy) {
       var groups =
         docs
@@ -148,7 +148,12 @@ class Model extends Observable {
       }, new Map());
     }
     if (docs) {
-      this._ids = docs .reduce ((set, doc) => {set .add (doc._id); return set}, new Set());
+      let ids = docs .reduce ((set, doc) => {set .add (doc._id); return set}, new Set());
+      if (append)
+        for (let id of ids)
+          this._ids .add (id);
+      else
+        this._ids = ids;
       return docs .map (d => {
         return Object .keys (d) .reduce ((o,f) => {o[f] = d[f]; return o}, {});
       })
