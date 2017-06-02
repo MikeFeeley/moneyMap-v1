@@ -155,9 +155,24 @@ class BudgetProgressHUDView extends View {
   }
 
   setVisible (isVisible) {
-    if (isVisible)
+    var getScrollParent = node => {
+      if (node === null)
+        return null;
+      else if (window .getComputedStyle (node) .overflowY == 'scroll' && node .scrollHeight > node .clientHeight) {
+        return node;
+      } else
+        return getScrollParent (node.parentNode);
+    }
+    if (isVisible) {
       this._html .removeClass ('hidden');
-    else
+      window .setTimeout (() => {
+        let sp = $(getScrollParent (this._html [0]));
+        let st = sp .scrollTop();
+        let sc = this._html .offset() .top + this._html .outerHeight() - document .documentElement .clientHeight;
+        if (sc > 0)
+          sp .scrollTop (st + sc);
+      }, 0);
+    } else
       this._html .addClass ('hidden');
   }
 
