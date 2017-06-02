@@ -32,8 +32,8 @@ class ImportTransactions extends Observable {
     yield* this._importRulesModel .find();
     this._lastImport = new ImportBatchTable (this);
     this._attention  = new NeedsAttentionTable (this);
-    yield* this._view .addTable (this._lastImport);
     yield* this._view .addTable (this._attention);
+    yield* this._view .addTable (this._lastImport);
   }
 
   *_importFile (file) {

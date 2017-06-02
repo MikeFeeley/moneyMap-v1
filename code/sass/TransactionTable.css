@@ -144,7 +144,6 @@ $table-stripe-backgroud: #f8f8f8;
   margin-top: 24px;
   margin-bottom: 32px;
   &._needsAttention {
-    margin-bottom: 600px;  /* hack to handle pop-ups at bottom of screen gracefully */
     > tbody > tr > td:last-child,  > thead > tr > th:last-child {
       color: #aaa;
     }
