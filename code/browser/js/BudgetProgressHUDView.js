@@ -166,11 +166,12 @@ class BudgetProgressHUDView extends View {
     if (isVisible) {
       this._html .removeClass ('hidden');
       window .setTimeout (() => {
+        // use timeout to ensure that this code doesn't run until after html has reappeared and thus has computed height
         let sp = $(getScrollParent (this._html [0]));
         let st = sp .scrollTop();
         let sc = this._html .offset() .top + this._html .outerHeight() - document .documentElement .clientHeight;
         if (sc > 0)
-          sp .scrollTop (st + sc);
+          sp .animate ({scrollTop: (st + sc)}, 200);
       }, 0);
     } else
       this._html .addClass ('hidden');
