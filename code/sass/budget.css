@@ -256,35 +256,9 @@ body {
 }
 
 ._Navigate {
-  > ._index {
-    > a {
-      padding-left:   $left-padding-left;
-      font-weight:    100;
-      color:          $left-color;
-      text-decoration: none;
-      display: block;
-      &._text {
-        font-size: $left-title-font-size;
-        margin-bottom: 20px;
-        &:first-child {
-          margin-top: 16px;
-        }
-        &:not(:first-child) {
-          margin-top: 40px;
-        }
-      }
-      &._subtext {
-        color: #999;
-        margin-top: -14px;
-        margin-bottom: 24px;
-        margin-left: 16px;
-        font-size: $left-subhead-font-size;
-      }
-    }
-  }
   > ._list {
     position: relative;
-    padding: 0px 12px;
+    padding: 0px 40px;
     width: auto;
     ._heading {
       font-size:     48px;
@@ -305,9 +279,20 @@ body {
       margin-top: 16px;
     }
     > * {
-      margin-bottom: 32px;
+      margin-top:    50px;
+      margin-bottom: 100px;
     }
-    > div > ._budgetYearGraph {
+    > ._progressGraphs {
+      margin-top: 0px;
+      > div > ._progressGraph:not(._popup) {
+         margin-bottom: 80px;
+         > div:not(:first-child) {
+           margin-right: 40px;
+           margin-left: 40px;
+         }
+      }
+    }
+    > ._budgetYearGraph {
       > div {
         display: inline-block;
         vertical-align: middle;
@@ -323,6 +308,8 @@ body {
       > ._graph {
         width: 85%;
       }
+      margin-top: 0px;
+      margin-bottom: 32px;
     }
     > ._budgetMonthsGraph, > ._budgetHistoryGraph, > ._activityMonthsGraph {
       position: relative;

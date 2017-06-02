@@ -27,8 +27,8 @@ class ImportTransactions extends Observable {
 
   *addHtml (toHtml) {
     yield* this._view .addHtml (toHtml);
-    this._view .addText ('_instructions', 'Drag banking files here to import them ...');
-    this._view .addText ('_import_status', '');
+//    this._view .addText ('_instructions', 'Drag banking files here to import them ...');
+    this._view .addText ('_import_status', 'Drag banking files here to import them ...');
     yield* this._importRulesModel .find();
     this._lastImport = new ImportBatchTable (this);
     this._attention  = new NeedsAttentionTable (this);
@@ -81,7 +81,7 @@ class ImportTransactions extends Observable {
     var is = ic? ic + ' transaction' + (ic>1? 's': '') + ' imported': '';
     var ds = dc? dc + ' duplicate'   + (dc>1? 's': '') + ' skipped' : '';
     var s  = is + (is .length && ds .length? '; ': '') + ds;
-    this._view .updateText ('_import_status', (s .length? s: 'empty file'));
+    this._view .updateText ('_import_status', 'Last Import: ' + (s .length? s: 'empty file'));
     if (trans .length)
       yield* this._lastImport .refreshToLatest();
     yield* this._attention .refreshHtml();

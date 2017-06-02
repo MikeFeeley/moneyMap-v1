@@ -46,21 +46,21 @@ function* main() {
     it = new ImportTransactions (accModel, varModel);
     or = new Organize (accModel, varModel);
 
-
-    if (tabs) {
-      tabs .updateTab ('Navigate', html => {
-        async (na, na .addHtml) (html);
-      });
-      tabs .updateTab ('Categorize', html => {
-        async (it, it.addHtml) (html);
-      })
-      tabs. updateTab ('Plan', html => {
-        se .addHtml (html);
-      });
-      tabs .updateTab ('Organize', html => {
-        async (or, or .addHtml) (html);
-      })
-    }
+// this exists for changing budgets ... will redo soon
+//    if (tabs) {
+//      tabs .updateTab ('Navigate', html => {
+//        async (na, na .addHtml) (html);
+//      });
+//      tabs .updateTab ('Categorize', html => {
+//        async (it, it.addHtml) (html);
+//      })
+//      tabs. updateTab ('Plan', html => {
+//        se .addHtml (html);
+//      });
+//      tabs .updateTab ('Organize', html => {
+//        async (or, or .addHtml) (html);
+//      })
+//    }
   }
 
   yield* setBudget ('2016/7');
@@ -68,16 +68,35 @@ function* main() {
   // Tabs
   tabs = new ui.Tabs ($('body'));
 
-  tabs .addTab ('Navigate', html => {
-    async (na, na .addHtml) (html);
-  });
-  tabs .addTab ('Categorize', html => {
+  tabs .addTab ('Progress', html => {
+    na .addProgressHtml (html);
+  })
+
+  tabs .addTab ('Transactions', html => {
     async (it, it.addHtml) (html);
-  }, true)
-  tabs. addTab ('Plan', html => {
+  }, true);
+
+  tabs .addTab ('Plan', html => {
+    na .addPlanHtml (html);
+  })
+
+  tabs. addTab ('Schedule', html => {
     se .addHtml (html);
   });
-  tabs .addTab ('Organize', html => {
+
+  tabs .addTab ('Perspective', html => {
+    async (na, na .addPerspectiveHtml) (html);
+  })
+
+  tabs .addTab ('Wealth', html => {
+    async (na, na .addNetWorthHtml) (html);
+  })
+
+  tabs .addTab ('Activity', html => {
+    na .addRealityHtml (html);
+  })
+
+  tabs .addTab ('Settings', html => {
     async (or, or .addHtml) (html);
   });
 

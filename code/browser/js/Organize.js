@@ -209,7 +209,8 @@ class Organize {
         return xAccSort < yAccSort? -1: xAccSort > yAccSort? 1: xBudSort < yBudSort? -1: xBudSort > yBudSort? 1: 0;
       })
       var sort = 0;
-      yield* this._balModel .updateList (his .map (h => {return {id: h._id, update: {sort: sort++}}}));
+      if (! his .reduce ((x,h) => {return x? (x .sort <= h .sort? h: false): false}))
+        yield* this._balModel .updateList (his .map (h => {return {id: h._id, update: {sort: sort++}}}));
       var fields  = [new ViewLabel ('account', accFormat)];
       var headers = [];
       var columns = [];

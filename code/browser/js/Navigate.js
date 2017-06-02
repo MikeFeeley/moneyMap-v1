@@ -5,47 +5,107 @@ class Navigate {
     this._actuals            = variance .getActuals();
     this._budget             = variance .getBudget();
     this._categories         = this._budget .getCategories();
-    this._view               = new NavigateView (accounts, variance);
-    this._updaters           = [];
+    this._updaters           = new Map();
     this._balances           = new Model ('balanceHistory');
     this._parameters         = new Model ('parameters');
     this._history            = new Model ('history');
-    this._varianceObserver   = this._variance   .addObserver (this, this._onModelChange);
-    this._balancesObserver   = this._balances   .addObserver (this, this._onModelChange);
-    this._parametersObserver = this._parameters .addObserver (this, this._onModelChange);
-    this._view .addObserver (this, this._onViewChange);
+    this._accountsModel      = new Model ('accounts');
+    this._varianceObserver   = this._variance      .addObserver (this, this._onModelChange);
+    this._balancesObserver   = this._balances      .addObserver (this, (e,d,a) => {this._onModelChange (e,d,a,null,{constructor: {name: 'BalanceHistory'}})});
+    this._parametersObserver = this._parameters    .addObserver (this, (e,d,a) => {this._onModelChange (e,d,a,null,{constructor: {name: 'Parameters'}})});
+    this._accountsObserver   = this._accountsModel .addObserver (this, (e,d,a) => {this._onModelChange (e,d,a,null,{constructor: {name: 'Accounts'}})});
+    this._accountsModel .observe ({});
   }
 
   delete() {
-    this._variance   .deleteObserver (this._varianceObserver);
-    this._balances   .deleteObserver (this._balancesObserver);
-    this._parameters .deleteObserver (this._parametersObserver);
-    this._balances   .delete();
-    this._parameters .delete();
-    this._history    .delete();
+    this._variance      .deleteObserver (this._varianceObserver);
+    this._balances      .deleteObserver (this._balancesObserver);
+    this._parameters    .deleteObserver (this._parametersObserver);
+    this._accounts      .deleteObserver (this._accountsObserver);
+    this._balances      .delete();
+    this._parameters    .delete();
+    this._history       .delete();
+    this._accountsModel .delete();
+  }
+
+  addProgressHtml (toHtml) {
+    this._progressView = new NavigateView (this._accounts, this._variance);
+    this._progressView .addObserver       (this, this._onViewChange);
+    this._progressView .addHtml           (toHtml, () => {
+      this._clearUpdatersForView (this._progressView);
+      this._addProgressGraphs ();
+    })
+  }
+
+  addPlanHtml (toHtml) {
+    this._planView = new NavigateView (this._accounts, this._variance);
+    this._planView .addObserver       (this, this._onViewChange);
+    this._planView .addHtml           (toHtml, () => {
+      this._clearUpdatersForView     (this._planView);
+      this._addBudgetYearTotalsGraph (this._planView);
+      this._addYearCategoriesGraphs  ('_budgetChart', this._planView);
+      var ds = this._getBudgetData   (undefined, true);
+      this._addMonthsGraph           ('_budgetMonthsGraph', undefined, undefined, undefined, this._planView, ds);
+      this._addMonthsTable           ('_budgetTable', undefined, undefined, undefined, undefined, this._planView, ds);
+    })
+  }
+
+  *_aph() {
+    this._clearUpdatersForView           (this._perspectiveView);
+    var ds = yield* this._getHistoryData ();
+    yield* this._addHistoryGraph         (undefined, undefined, undefined, this._perspectiveView, ds);
+    yield* this._addHistoryTable         (undefined, undefined, undefined, undefined, this._perspectiveView, ds);
+  }
+
+  *addPerspectiveHtml (toHtml) {
+    this._perspectiveView = new NavigateView (this._accounts, this._variance);
+    this._perspectiveView .addObserver       (this, this._onViewChange);
+    this._perspectiveView .addHtml (toHtml, () => {async (this, this._aph) ()})
+  }
+
+  *_anwh() {
+    this._clearUpdatersForView            (this._newWorthView);
+    var ds = yield* this._getNetWorthData ();
+    this._addNetWorthGraph                (this._newWorthView, ds);
+    this._addNetWorthTable                (this._newWorthView, ds);
+  }
+
+  *addNetWorthHtml (toHtml) {
+    this._newWorthView = new NavigateView (this._accounts, this._variance);
+    this._newWorthView .addObserver       (this, this._onViewChange);
+    this._newWorthView .addHtml           (toHtml, () => {async (this, this._anwh) ()})
+  }
+
+  addRealityHtml (toHtml) {
+    this._realityView = new NavigateView (this._accounts, this._variance);
+    this._realityView .addObserver       (this, this._onViewChange);
+    this._realityView .addHtml           (toHtml, () => {
+      this._clearUpdatersForView    (this._realityView);
+      this._realityView .addHeading ('What has actually happened so far ...');
+      this._addActivity             (this._realityView)
+    })
   }
 
   _onModelChange (eventType, doc, arg, source, model) {
-    if (! this._view .updateHandledLazily()) {
-      var modelName = model .constructor .name;
-      switch (modelName) {
-        case 'ActualsModel':
-          var ids = (doc .category && [doc .category]) || [];
-          if (eventType == ModelEvent .UPDATE && arg._original_category != null)
-            ids .push (arg._original_category);
-          break;
-        case 'SchedulesModel':
-          var ids = [doc .category || doc._id];
-          break;
-      }
-      this._update (eventType, modelName, ids);
+    var modelName = model .constructor .name;
+    switch (modelName) {
+      case 'ActualsModel':
+        var ids = (doc .category && [doc .category]) || [];
+        if (eventType == ModelEvent .UPDATE && arg._original_category != null)
+          ids .push (arg._original_category);
+        break;
+      case 'SchedulesModel':
+        var ids = [doc .category || doc._id];
+        break;
+      default:
+        var ids = [doc._id] || [];
+        break;
     }
+    this._update (eventType, modelName, ids);
   }
 
   _onViewChange (eventType, arg) {
-    if (eventType == NavigateViewEvent .MADE_VISIBLE && !this._view .hasHtml() && this._toHtml)
-      async (this, this .addHtml) (this._toHtml);
-    else if (eventType == NavigateViewEvent .PROGRESS_GRAPH_CLICK && arg .id) {
+    if (eventType == NavigateViewEvent .PROGRESS_GRAPH_CLICK && arg .id) {
       if (arg .html .hasClass('_popup')) {
         arg .position .top += arg .html .position() .top;
         arg .position .left = arg .html .position() .left + (arg .html .parent() .hasClass ('_right')? -20: +20);
@@ -89,7 +149,7 @@ class Navigate {
           TransactionHUD .showCategory (arg .id, dates, this._accounts, this._variance, arg .html, position);
         }
       } else
-        this._addYearCategoriesGraph (arg .name, this._categories .get (arg .id), null, true, arg .position, arg .direction);
+        this._addYearCategoriesGraph (arg .name, this._categories .get (arg .id), null, arg .view, true, arg .position, arg .direction);
     } else if (eventType == NavigateViewEvent .BUDGET_GRAPH_CLICK && arg .id) {
       if (['_budgetMonthsGraph', '_activityMonthsGraph'] .includes (arg .name) && isNaN (arg .id))
         if (arg .altClick) {
@@ -105,9 +165,9 @@ class Navigate {
             TransactionHUD .showCategory (arg .id, dates, this._accounts, this._variance, arg .html, position);
           }
         } else
-          this._addMonthsGraph (arg .name, [this._categories .get (arg .id)], true, arg .position);
+          this._addMonthsGraph (arg .name, [this._categories .get (arg .id)], true, arg .position, arg .view);
       else if (arg .name == '_budgetHistoryGraph')
-        async (this, this._addHistoryGraph) ([] .concat (arg .id), true, arg .position);
+        async (this, this._addHistoryGraph) ([] .concat (arg .id), true, arg .position, arg .view);
     } else if (eventType == NavigateViewEvent .BUDGET_TABLE_CLICK && arg .id && isNaN (arg .id)) {
       if (['_budgetTable', '_activityTable'] .includes (arg .name)) {
         if (arg .altClick) {
@@ -124,17 +184,17 @@ class Navigate {
               break;
           }
         } else
-          this._addMonthsTable (arg .name, [this._categories .get (arg .id)], true, true, arg .position);
+          this._addMonthsTable (arg .name, [this._categories .get (arg .id)], true, true, arg .position, arg .view);
       } else if (arg .name == '_budgetHistoryTable')
-        async (this, this._addHistoryTable) ([] .concat (arg .id), true, true, arg .position);
+        async (this, this._addHistoryTable) ([] .concat (arg .id), true, true, arg .position, arg .view);
     } else if (eventType == NavigateViewEvent .PROGRESS_GRAPH_TITLE_CLICK && arg .data .length) {
       var id = this._categories .get (arg .data [0]._id) .parent ._id;
       BudgetProgressHUD .show (id, arg .html, arg .position, this._accounts, this._variance);
     }
   }
 
-  _addBudgetYearTotalsGraph (toHtml) {
-    this._view .addBudgetYearGraph (this._budget, toHtml);
+  _addBudgetYearTotalsGraph (toView, toHtml) {
+    toView .addBudgetYearGraph (this._budget, toHtml);
   }
 
   /**
@@ -257,7 +317,7 @@ class Navigate {
     }
   }
 
-  _addMonthsGraph (name, roots, popup, position, dataset, toHtml) {
+  _addMonthsGraph (name, roots, popup, position, view, dataset, toHtml) {
     if (! dataset) {
       if (name == '_budgetMonthsGraph')
         dataset = this._getBudgetData (roots, true);
@@ -285,16 +345,16 @@ class Navigate {
         })
       }
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
-      var updater = this._addUpdater ((eventType, model, ids) => {
+      var updater = this._addUpdater (view, (eventType, model, ids) => {
         this._tableUpdater (eventType, model, ids, dataset, roots, false, updateView)
       });
-      var updateView = this._view .addMonthsGraph (name, dataset, popup, position, () => {
-        this._deleteUpdater (updater);
+      var updateView = view .addMonthsGraph (name, dataset, popup, position, () => {
+        this._deleteUpdater (view, updater);
       }, toHtml);
     }
   }
 
-  _addMonthsTable (name, roots, skipFoot, popup, position, dataset, toHtml) {
+  _addMonthsTable (name, roots, skipFoot, popup, position, view, dataset, toHtml) {
     if (! dataset) {
       if (name == '_budgetTable')
         dataset = this._getBudgetData (roots, true);
@@ -302,11 +362,11 @@ class Navigate {
         dataset = this._getActualsData (roots);
     }
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
-      var updater = this._addUpdater ((eventType, model, ids) => {
+      var updater = this._addUpdater (view, (eventType, model, ids) => {
         this._tableUpdater (eventType, model, ids, dataset, roots, true, updateView)
       });
-      var updateView = this._view .addBudgetTable (name, dataset, skipFoot, popup, position, () => {
-        this._deleteUpdater (updater);
+      var updateView = view .addBudgetTable (name, dataset, skipFoot, popup, position, () => {
+        this._deleteUpdater (view, updater);
       }, true, toHtml);
     }
   }
@@ -364,7 +424,7 @@ class Navigate {
     return this._getYearData (root, blackouts, getAmount, 'SchedulesModel')
   }
 
-  _addYearCategoriesGraph (name, root, blackouts, popup, position, direction) {
+  _addYearCategoriesGraph (name, root, blackouts, view, popup, position, direction) {
     switch (name) {
       case '_budgetChart':
         var data = this._getBudgetYearData (root, blackouts);
@@ -374,7 +434,7 @@ class Navigate {
         break;
     }
     if ((!popup || data .cats .length > 1) && data .cats .find (c => {return c .amount != 0}))
-      var updater = this._addUpdater ((eventType, model, ids) => {
+      var updater = this._addUpdater (view, (eventType, model, ids) => {
         if (model == data .model)
           if (eventType == ModelEvent .UPDATE && ! ids .includes (data .root._id))
             for (let id of ids) {
@@ -405,18 +465,18 @@ class Navigate {
           }
       })
       if (data .cats .length)
-        var updateView = this._view .addDoughnut (data, name, popup, position, direction, () => {
-          this._deleteUpdater (updater);
+        var updateView = view .addDoughnut (data, name, popup, position, direction, () => {
+          this._deleteUpdater (view, updater);
         });
  }
 
-  _addYearCategoriesGraphs (name, toHtml) {
+  _addYearCategoriesGraphs (name, view, toHtml) {
     var income  = this._budget .getIncomeCategory();
     var savings = this._budget .getSavingsCategory();
     var expense = this._budget .getExpenseCategory();
-    this._view .addGroup (name + 's', toHtml);
+    view .addGroup (name + 's', toHtml);
     for (let root of [income, savings, expense])
-      this._addYearCategoriesGraph (name, root, root == savings && [income, expense]);
+      this._addYearCategoriesGraph (name, root, root == savings && [income, expense], view);
   }
 
   _getProgressGraphLabels (roots) {
@@ -436,7 +496,7 @@ class Navigate {
       .map (a => {return a .name});
   }
 
-  _addProgressGraph (root, side, popup, position, labelWidth, includeMonths=true, includeYears=true) {
+  _addProgressGraph (root, side, popup, position, labelWidth, includeMonths=true, includeYears=true, bigHeading=false) {
 
     var getAllData = () => {
       amounts = (root .children || []) .map (cat => {return {
@@ -452,11 +512,18 @@ class Navigate {
     }
 
     var addGraphsToView = () => {
+      if (bigHeading) {
+        this._progressView .addHeadingToProgressGraph (progressGraph, root .name);
+        var mo = 'This Month';
+        var yr = 'This Year (at any time)';
+      } else {
+        var mo = root .name + ' this Month';
+        var yr = root .name + ' this Year (at any time)';
+      }
       if (months && months .length)
-        updateMonthView = this._view .addToProgressGraph (progressGraph, root .name + ' this Month', months, labelWidth);
+        updateMonthView = this._progressView .addToProgressGraph (progressGraph, mo, months, labelWidth);
       if (years && years .length)
-        updateYearView  = this._view .addToProgressGraph (progressGraph, root .name + ' this Year (at any time)', years, labelWidth);
-
+        updateYearView  = this._progressView .addToProgressGraph (progressGraph, yr, years, labelWidth);
     }
 
     var getData = (type, amounts) => {
@@ -478,7 +545,7 @@ class Navigate {
     var amounts, months, years, updateMonthView, updateYearView;
     getAllData();
     if ((months && months .length) || (years  && years .length)) {
-      var updater = this._addUpdater ((eventType, model, ids) => {
+      var updater = this._addUpdater (this._progressView, (eventType, model, ids) => {
         var affected = eventType != ModelEvent .UPDATE || ids .includes (root._id) || amounts .find (a => {
           return ids .includes (a .cat._id) || this._categories .getDescendants (a .cat) .find (d => {return ids .includes (d._id)});
         })
@@ -486,18 +553,18 @@ class Navigate {
           var oldMonths = months, oldYears = years;
           getAllData();
           if ((oldMonths .length == 0) != (months .length == 0) || (oldYears .length == 0) != (years .length == 0)) {
-            this._view .emptyProgressGraph (progressGraph);
+            this._progressView .emptyProgressGraph (progressGraph);
             addGraphsToView();
           } else {
             if (months .length)
-              updateMonthView (months, labelWidth, root .name + ' this Month');
+              updateMonthView (months, labelWidth, (bigHeading? 'T' : root .name + ' t') + 'his Month');
             if (years .length)
-              updateYearView (years,  labelWidth, root .name + ' this Year (at any time)');
+              updateYearView (years,  labelWidth, (bigHeading? 'T' : root .name + ' t') + 'his Year (at any time)');
           }
         }
       });
-      var progressGraph = this._view .addProgressGraph (side, popup, position, () => {this._deleteUpdater (updater)}, () => {
-        this._deleteUpdater (updater);
+      var progressGraph = this._progressView .addProgressGraph (side, popup, position, () => {this._deleteUpdater (this._progressView, updater)}, () => {
+        this._deleteUpdater (this._progressView, updater);
       });
       progressGraph._includeMonths = includeMonths;
       progressGraph._includeYears  = includeYears;
@@ -509,15 +576,10 @@ class Navigate {
 
   _addProgressGraphs() {
     var date       = Types .dateMY .today();
-    var roots      = [this._budget .getIncomeCategory(), this._budget .getSavingsCategory(), this._budget .getExpenseCategory()];
+    var roots      = [this._budget .getExpenseCategory(), this._budget .getSavingsCategory(), this._budget .getIncomeCategory()];
     var labelWidth = this._getProgressGraphLabels (roots);
-    for (let root of roots) {
-      if (root == this._budget .getExpenseCategory()) {
-        this._addProgressGraph (root, 'left', false, undefined, labelWidth, true, false)
-        this._addProgressGraph (root, 'bottom', false, undefined, labelWidth, false, true)
-      } else
-        this._addProgressGraph (root, 'right', false, undefined, labelWidth, true, true)
-    }
+    for (let root of roots)
+      this._addProgressGraph (root, 'bottom', false, undefined, labelWidth, true, true, true)
   }
 
   /**
@@ -739,53 +801,35 @@ class Navigate {
 
   _budgetHistoryUpdater (eventType, model, ids, dataset, parentIds, includeYearly, updateView) {
     var defaultRoots = [this._budget .getIncomeCategory(), this._budget .getSavingsCategory(), this._budget .getExpenseCategory()];
-    if (model == 'SchedulesModel') {
-//      if (eventType == ModelEvent .UPDATE)
-//        for (let id of ids) {
-//          for (let root of roots || defaultRoots) {
-//            var affectedCat = (root .children || []) .find (cat => {
-//              return cat._id == id || this._categories .getDescendants (cat) .find (d => {return d._id == id})
-//            });
-//            if (affectedCat)
-//              break;
-//          }
-//          if (affectedCat)
-//            updateView ({update: {
-//              id:       affectedCat._id,
-//              name:     affectedCat .name,
-//              amounts:  this._getHistoryDataForCat (affectedCat, dataset .dates, true)
-//            }})
-//        }
-//      else
-        async (this, this._updateHistoryView) (parentIds, updateView);
-    }
+    if (model == 'SchedulesModel')
+      async (this, this._updateHistoryView) (parentIds, updateView);
   }
 
   *_updateHistoryView (parentIds, updateView) {
     updateView ({replace: yield* this._getHistoryData (parentIds)})
   }
 
-  *_addHistoryGraph (parentIds, popup, position, dataset, toHtml) {
+  *_addHistoryGraph (parentIds, popup, position, view, dataset, toHtml) {
     dataset = dataset || (yield* this._getHistoryData (parentIds));
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
-      var updater = this._addUpdater ((eventType, model, ids) => {
+      var updater = this._addUpdater (view, (eventType, model, ids) => {
         this._budgetHistoryUpdater (eventType, model, ids, dataset, parentIds, false, updateView)
       });
-      var updateView = this._view .addHistoryGraph (dataset, popup, position, () => {
-        this._deleteUpdater (updater);
+      var updateView = view .addHistoryGraph (dataset, popup, position, () => {
+        this._deleteUpdater (view, updater);
       }, toHtml);
     }
   }
 
-  *_addHistoryTable (parentIds, skipFoot, popup, position, dataset, toHtml) {
+  *_addHistoryTable (parentIds, skipFoot, popup, position, view, dataset, toHtml) {
     dataset = dataset || (yield* this._getHistoryData (parentIds));
     dataset .cols = dataset .cols .map (c => {return c .slice (-4)})
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
-      var updater = this._addUpdater ((eventType, model, ids) => {
+      var updater = this._addUpdater (view, (eventType, model, ids) => {
         this._budgetHistoryUpdater (eventType, model, ids, dataset, parentIds, true, updateView)
       });
-      var updateView = this._view .addHistoryTable (dataset, skipFoot, popup, position, () => {
-        this._deleteUpdater (updater);
+      var updateView = view .addHistoryTable (dataset, skipFoot, popup, position, () => {
+        this._deleteUpdater (view, updater);
       }, toHtml);
     }
   }
@@ -878,7 +922,7 @@ class Navigate {
     }
   }
 
-  _addNetWorthGraph (dataset, toHtml) {
+  _addNetWorthGraph (view, dataset, toHtml) {
     var homeTypes = [AccountType .HOME, AccountType .MORTGAGE];
     dataset = {
       cols: dataset .cols,
@@ -897,25 +941,42 @@ class Navigate {
         curBal:  curEquity,
         amounts: equity
       });
-    this._view .addNetWorthGraph (dataset, toHtml);
+    let updater = this._addUpdater (view, (eventType, model, ids) => {
+      if (['Accounts', 'ActualsModel', 'BalanceHistory'] .includes (model))
+        updateView();
+    })
+    let updateView = view .addNetWorthGraph (dataset, toHtml, () => {
+      this._deleteUpdater (view, updater);
+    });
+  }
+
+  _addNetWorthTable (view, dataset, toHtml) {
+    let updater = this._addUpdater (view, (eventType, model, ids) => {
+      if (['Accounts', 'ActualsModel', 'BalanceHistory'] .includes (model))
+        updateView();
+    })
+    let updateView = view .addNetWorthTable (dataset, toHtml, () => {
+      this._deleteUpdater (view, updater);
+    });
   }
   
-  _addNetWorthTable (dataset, toHtml) {
-    this._view .addNetWorthTable (dataset, toHtml);
-  }
-  
-  _addUpdater (updater) {
-    this._updaters .push (updater);
+  _addUpdater (view, updater) {
+    (this._updaters .get (view) || (this._updaters .set (view, []) .get (view))) .push (updater);
     return updater;
   }
 
-  _deleteUpdater (updater) {
-    this._updaters = this._updaters .filter (u => {return u != updater});
+  _deleteUpdater (view, updater) {
+    this._updaters .set (view, (this._updaters .get (view) || []) .filter (u => {return u != updater}));
+  }
+
+  _clearUpdatersForView (view) {
+    this._updaters .set (view, []);
   }
 
   _update (eventType, model, ids) {
-    for (let updater of this._updaters)
-      updater (eventType, model, ids);
+    for (let vu of this._updaters .values())
+      for (let updater of vu)
+        updater (eventType, model, ids);
   }
 
   /** Activity... **/
@@ -952,41 +1013,12 @@ class Navigate {
     return this._getData (roots, getAmounts, getIncome, 'ActualsModel', dates, false);
   }
 
-  _addActivity (headYear, headGraph, headTable) {
-    this._addYearCategoriesGraphs ('_activityChart', headYear);
+  _addActivity (view, headYear, headGraph, headTable) {
+    this._addYearCategoriesGraphs ('_activityChart', view, headYear);
     var dataset = this._getActualsData (undefined);
-    this._addMonthsGraph ('_activityMonthsGraph', undefined, undefined, undefined, dataset, headGraph);
-    this._addMonthsTable ('_activityTable', undefined, undefined, undefined, undefined, dataset, headTable);
+    this._addMonthsGraph ('_activityMonthsGraph', undefined, undefined, undefined, view, dataset, headGraph);
+    this._addMonthsTable ('_activityTable', undefined, undefined, undefined, undefined, view, dataset, headTable);
   }
 
   /** ...Activity **/
-
-  *addHtml (toHtml) {
-    this._toHtml = toHtml;
-    this._view .addHtml                        (toHtml);
-    this._view .addHeading                     ('Progress', 'Your Progress');
-    this._addProgressGraphs                    ();
-    var by = this._view .addHeading            ('Plan', 'Your Plan for the Year', 'Year');
-    this._addBudgetYearTotalsGraph             (by);
-    this._addYearCategoriesGraphs              ('_budgetChart');
-    var bg = this._view .addHeading            (null, 'Your Plan by Month', 'Chart');
-    var bt = this._view .addHeading            (null, 'Your Plan by the Numbers', 'Numbers');
-    var ay = this._view .addHeading            ('Activity', 'Your Activity this Year', 'Year');
-    var ag = this._view .addHeading            (null, 'Your Activity by Month', 'Chart');
-    var at = this._view .addHeading            (null, 'Your Activity by the Numbers', 'Numbers');
-    var hg = this._view .addHeading            ('Perspective', 'Historical Perspective', 'Chart');
-    var ht = this._view .addHeading            (null, 'History by the Numbers', 'Numbers');
-    var wg = this._view .addHeading            ('Wealth', 'Your Monitary Net Worth', 'Graph');
-    var wt = this._view .addHeading            (null, 'Your Net Worth by the Numbers', 'Numbers');
-    var dataset = this._getBudgetData          (undefined, true);
-    this._addMonthsGraph                       ('_budgetMonthsGraph', undefined, undefined, undefined, dataset, bg);
-    this._addMonthsTable                       ('_budgetTable', undefined, undefined, undefined, undefined, dataset, bt);
-    this._addActivity                          (ay, ag, at);
-    var dataset = yield* this._getHistoryData  ();
-    yield* this._addHistoryGraph               (undefined, undefined, undefined, dataset, hg);
-    yield* this._addHistoryTable               (undefined, undefined, undefined, undefined, dataset, ht);
-    var dataset = yield* this._getNetWorthData ();
-    this._addNetWorthGraph                     (dataset, wg);
-    this._addNetWorthTable                     (dataset, wt);
-  }
 }

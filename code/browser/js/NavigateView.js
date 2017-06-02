@@ -14,17 +14,10 @@ class NavigateView extends Observable  {
     this._idSeq = 0;
   }
 
-  addHtml (toHtml) {
-    this._html    = $('<div>', {class: this._name + ' _IndexedListView'}) .appendTo (toHtml);
-    this._index   = $('<div>', {class: '_index'}) .appendTo (this._html);
-    this._content = $('<div>', {class: '_list'})  .appendTo (this._html);
-    this._html .parent() .data ('visible', () => {
-      this._notifyObservers (NavigateViewEvent .MADE_VISIBLE);
-    })
-    if (this._budgetYearGraph) {
-      this._budgetYearGraph .delete();
-      this._budgetYearGraph = null;
-    }
+  addHtml (toHtml, buildHtml) {
+    this._toHtml    = toHtml;
+    this._buildHtml = buildHtml;
+    this._createHtml();
   }
 
   resetHtml() {
@@ -34,10 +27,23 @@ class NavigateView extends Observable  {
       this._progressGraphs = null;
     }
     this._idSeq = 0;
+    if (this._budgetYearGraph) {
+      this._budgetYearGraph .delete();
+      this._budgetYearGraph = null;
+    }
   }
 
-  hasHtml() {
-    return this._html != null;
+  _createHtml () {
+    if (this._toHtml) {
+      this._html    = $('<div>', {class: this._name }) .appendTo (this._toHtml);
+      this._content = $('<div>', {class: '_list'})  .appendTo (this._html);
+      this._toHtml .data ('visible', () => {
+        if (this._html == null && this._toHtml)
+          this._createHtml()
+      });
+      if (this._buildHtml)
+        this._buildHtml();
+    }
   }
 
   _resetColors() {
@@ -48,34 +54,25 @@ class NavigateView extends Observable  {
     return 'rgba(' + (this._colors [this._colorIndex] .concat (alpha)) .join (',') + ')'
   }
 
+  _isVisible() {
+    return this._toHtml && ! this._toHtml .hasClass ('background');
+  }
+
   _nextColor() {
     this._colorIndex = (this._colorIndex + 1) % this._colors .length;
   }
 
-  updateHandledLazily() {
-    if (!this._html || this._html .closest ('.background') .parent() .parent ('.contents') .length) {
-      this .resetHtml();
-      return true;
-    } else
-      return false;
-  }
-
-  addHeading (indexText, text, indexSubText) {
+  addHeading (text) {
     var id      = this._name + '_' + this._idSeq++;
     var anchors = [];
-    if (indexText)
-      anchors .push ($('<a>', {text: indexText,    attr: {href: '#' + id}, class: '_text'})    .appendTo (this._index));
-    if (indexSubText)
-      anchors .push ($('<a>' ,{text: indexSubText, attr: {hred: '#' + id}, class: '_subtext'}) .appendTo (this._index));
     var content = $('<div>', {class: '_heading', text: text, attr: {id: id}}) .appendTo (this._content);
-    for (let anchor of anchors)
-      anchor .click (e => {
-        var scrollTo = $('#' + id);
-        this._content .animate ({
-          scrollTop: scrollTo .position() .top + this._content .scrollTop() + Number (scrollTo .css ('margin-top') .slice (0, -2)) - 20
-        });
-        e .preventDefault();
-      })
+    return content;
+  }
+
+  addSubHeading (text) {
+    var id      = this._name + '_' + this._idSeq++;
+    var anchors = [];
+    var content = $('<div>', {class: '_text', text: text, attr: {id: id}}) .appendTo (this._content);
     return content;
   }
 
@@ -101,6 +98,11 @@ class NavigateView extends Observable  {
     }
   }
 
+  addHeadingToProgressGraph (progressGraph, heading) {
+    if (progressGraph)
+      $('<div>', {class: '_heading', text: heading}) .appendTo (progressGraph);
+  }
+
   addToProgressGraph (progressGraph, heading, data, labelWidth) {
     if (progressGraph) {
       if (heading)
@@ -110,7 +112,8 @@ class NavigateView extends Observable  {
             this._notifyObservers (NavigateViewEvent .PROGRESS_GRAPH_TITLE_CLICK, {
               data:     data,
               html:     progressGraph,
-              position: {top: 50, left: 50}
+              position: {top: 50, left: 50},
+              view:     this
             });
             return false;
           })
@@ -130,9 +133,12 @@ class NavigateView extends Observable  {
       });
       graph .add (data);
       return (data, labelWidth, heading) => {
-        if (heading)
-          head .text (heading);
-        graph .update (data, labelWidth);
+        if (this._isVisible) {
+          if (heading)
+            head .text (heading);
+          graph .update (data, labelWidth);
+        } else
+          this .resetHtml();
       }
     }
   }
@@ -144,7 +150,7 @@ class NavigateView extends Observable  {
       progressGraph .addClass ('hidden');
   }
 
-  addBudgetYearGraph (budget, toHtml) {
+  addBudgetYearGraph (budget, toHtml = this._content) {
     if (this._budgetYearGraph)
       this._budgetYearGraph .delete();
     this._budgetYearGraph = new BudgetYearGraph (budget, toHtml)
@@ -280,7 +286,8 @@ class NavigateView extends Observable  {
               labelIndex: element [0] ._index,
               position:   position,
               html:       container .closest ('div:not(._popup)'),
-              altClick:   e .webkitForce > 1 || e .altKey
+              altClick:   e .webkitForce > 1 || e .altKey,
+              view:       this
             })
           }
           return false;
@@ -311,18 +318,21 @@ class NavigateView extends Observable  {
     setDataset();
     chart = new Chart (canvas .get (0) .getContext ('2d'), config);
     return (data) => {
-      if (data .update) {
-        var ds = config .data .datasets .find (d => {return d .id == data .update .id});
-        if (ds) {
-          ds .label = data .update .name;
-          ds .data  = data .update .amounts .map (a => {return a .value});
+      if (this._isVisible()) {
+        if (data .update) {
+          var ds = config .data .datasets .find (d => {return d .id == data .update .id});
+          if (ds) {
+            ds .label = data .update .name;
+            ds .data  = data .update .amounts .map (a => {return a .value});
+          }
+        } else {
+          dataset = data .replace;
+          processDataset();
+          setDataset();
         }
-      } else {
-        dataset = data .replace;
-        processDataset();
-        setDataset();
-      }
-      chart .update();
+        chart .update();
+      } else
+        this .resetHtml();
     }
   }
 
@@ -408,7 +418,8 @@ class NavigateView extends Observable  {
               position:  position,
               html:      container .closest ('div:not(._popup)'),
               direction: direction,
-              altClick:  e .webkitForce > 1 || e .altKey
+              altClick:  e .webkitForce > 1 || e .altKey,
+              view:      this
             })
           return false;
         },
@@ -429,23 +440,26 @@ class NavigateView extends Observable  {
     setDataset();
     var chart = new Chart (canvas .get (0). getContext ('2d'), config);
     return dt => {
-      if (dt .update) {
-        var ds = data .cats .find (d => {return d .id == dt .update .id});
-        if (ds) {
-          var idx = data .cats .indexOf (ds);
-          if (dt .update .name != null)
-            config .data .labels [idx] = dt .update .name;
-          data .cats [idx] .amount               = dt .update .amount;
-          config .data .datasets [0] .data [idx] = dt .update .amount;
-          config .centerLabel [1]                = Types .moneyD .toString (data .cats .reduce ((s,c) => {
-            return s + (! c .blackout? c .amount: 0)
-          }, 0))
+      if (this._isVisible()) {
+        if (dt .update) {
+          var ds = data .cats .find (d => {return d .id == dt .update .id});
+          if (ds) {
+            var idx = data .cats .indexOf (ds);
+            if (dt .update .name != null)
+              config .data .labels [idx] = dt .update .name;
+            data .cats [idx] .amount               = dt .update .amount;
+            config .data .datasets [0] .data [idx] = dt .update .amount;
+            config .centerLabel [1]                = Types .moneyD .toString (data .cats .reduce ((s,c) => {
+              return s + (! c .blackout? c .amount: 0)
+            }, 0))
+          }
+        } else {
+          data = dt .replace;
+          setDataset();
         }
-      } else {
-        data = dt .replace;
-        setDataset();
-      }
-      chart .update();
+        chart .update();
+      } else
+        this .resetHtml();
     }
   }
 
@@ -575,7 +589,8 @@ class NavigateView extends Observable  {
               col:      e .target && e .target .cellIndex,
               html:     container .offsetParent(),
               position: position,
-              altClick: e .originalEvent && (e .originalEvent .webkitForce > 1 || e .originalEvent .altKey)
+              altClick: e .originalEvent && (e .originalEvent .webkitForce > 1 || e .originalEvent .altKey),
+              view:     this
             })
         }
         return false;
@@ -614,28 +629,31 @@ class NavigateView extends Observable  {
     }
     addTable ();
     return data => {
-      if (data .update) {
-        outerLoop: for (let g of dataset .groups)
-          for (let r of g .rows)
-            if (r .id == data .update .id) {
-              r .name    = data .update .name;
-              r .amounts = data .update .amounts;
-              var group = g;
-              var row   = r;
-              break outerLoop;
-            }
-        updateGroup (group);
-        updateRow   (row);
-        updateFoot();
-      } else {
-        dataset = data .replace;
-        container .empty();
-        addTable();
-      }
+      if (this._isVisible()) {
+        if (data .update) {
+          outerLoop: for (let g of dataset .groups)
+            for (let r of g .rows)
+              if (r .id == data .update .id) {
+                r .name    = data .update .name;
+                r .amounts = data .update .amounts;
+                var group = g;
+                var row   = r;
+                break outerLoop;
+              }
+          updateGroup (group);
+          updateRow   (row);
+          updateFoot();
+        } else {
+          dataset = data .replace;
+          container .empty();
+          addTable();
+        }
+      } else
+        this .resetHtml();
     }
   }
 
-  addNetWorthGraph (dataset, toHtml) {
+  addNetWorthGraph (dataset, toHtml, onClose) {
     var options = {
       legend: {display: false},
       tooltips: {
@@ -705,9 +723,13 @@ class NavigateView extends Observable  {
       for (let v of fv)
         $('<td>', {text: v}) .appendTo (tr);
     }
+    return data => {
+      if (!this._isVisible())
+        this .resetHtml();
+    }
   }
 
-  addNetWorthTable (dataset, toHtml) {
+  addNetWorthTable (dataset, toHtml, onClose) {
     var table = $('<table>', {class: '_netWorthTable'});
     if (toHtml)
       table .insertAfter (toHtml);
@@ -742,11 +764,14 @@ class NavigateView extends Observable  {
       for (let i=0; i<vs.length; i++)
         $('<td>', {text: vs [i], class: dataset .highlight == i - 1? '_highlight': ''}) .appendTo (tr);
     }
+    return data => {
+      if (!this._isVisible())
+        this .resetHtml();
+    }
   }
 }
 
 var NavigateViewEvent = Object.create (ViewEvent, {
-  MADE_VISIBLE:               {value: 200},
   PROGRESS_GRAPH_CLICK:       {value: 201},
   BUDGET_CHART_CLICK:         {value: 202},
   BUDGET_GRAPH_CLICK:         {value: 203},
