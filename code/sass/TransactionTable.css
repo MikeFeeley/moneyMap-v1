@@ -542,6 +542,9 @@ div._TransactionHUD {
     margin-left: 220px;
     overflow-y: scroll;
     clear: all;
+    > div:last-child {
+      margin-bottom: 600px;  /* hack to handle pop-ups at bottom of screen gracefully */
+    }
   }
   clear: all;
   overflow-y: scroll;
