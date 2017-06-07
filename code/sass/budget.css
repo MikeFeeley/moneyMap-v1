@@ -319,6 +319,18 @@ body {
           margin-top: 0px;
           width: 800px;
         }
+        margin-bottom: 8px;
+      }
+    }
+    > ._progressGraphs > div, > ._activityMonthsGraph {
+      > ._popup {
+        > ._heading {
+          > ._subheading {
+            color: #666;
+            margin-left: 20px;
+            font-size: 20px;
+          }
+        }
       }
     }
     > ._budgetTables > ._budgetTable > table > tbody > tr > td, > ._activityTables > ._activityTable > table > tbody > tr > td {
@@ -504,8 +516,9 @@ body {
           > ._text {
             margin-top: 0px;
           }
+          margin-bottom: 8px;
         }
-        > ._TransactionHUD {
+        > ._TransactionHUD, ._activityMonthsGraph {
           width: auto;
           right: auto;
         }

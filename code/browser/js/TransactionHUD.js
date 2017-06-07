@@ -213,6 +213,9 @@ class TransactionHUD extends TransactionTable {
   }
 
   static showCategory (id, dates, accounts, variance, toHtml, position, includeMonths=true, includeYears=true, addCats=[]) {
+    let ids         = id .split ('_');
+    let selectPayee = id .includes ('payee_') && id .split ('_') .slice (-2) [0];
+    id = ids .slice (-1) [0];
     var getFamily = (cats) => {
       var family = [];
       for (let cat of cats || []) {
@@ -228,13 +231,15 @@ class TransactionHUD extends TransactionTable {
     var categories = budget .getCategories();
     var cat        = categories .get (id);
     var qualifier = includeMonths && !includeYears? ' (Monthly) ': includeYears && !includeMonths? ' (Anytime) ': '';
-    var title      = cat .name + qualifier + ' for ' + Types .dateMonthY .toString (dates .start);
+    var title      = cat .name + qualifier + (selectPayee? ' at ' + selectPayee: '') + ' for ' + Types .dateMonthY .toString (dates .start);
     var dates      = dates || {start: budget .getStartDate(), end: budget .getEndDate()};
     var query = {
       category: {$in: getFamily ([cat]) .concat (addCats)},
       date:     dates && {$gte: dates .start, $lte: dates .end},
       $options: {updateDoesNotRemove: true}
     };
+    if (selectPayee)
+      query .payee = {$regex: '^' + selectPayee};
     TransactionHUD .show (title, query, accounts, variance, toHtml, position);
   }
 

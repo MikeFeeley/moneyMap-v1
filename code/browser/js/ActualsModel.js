@@ -36,12 +36,16 @@ class ActualsModel extends Observable {
     return this._actuals .getAmount (cat, st, en, skip);
   }
 
-  getAmountRecursively (cat, st, en, skip) {
-    return this._actuals .getAmountRecursively (cat, st, en, skip);
+  getAmountRecursively (cat, st, en, skip, includeMonths, includeYears, addCats) {
+    return this._actuals .getAmountRecursively (cat, st, en, skip, includeMonths, includeYears, addCats);
   }
 
   getModel() {
     return this._model;
+  }
+
+  getTransactions (cat, st, en) {
+    return this._actuals .getTransactions (cat, st, en);
   }
 }
 
@@ -154,10 +158,13 @@ class Actuals {
     return ri;
   }
 
-  getAmountRecursively (cat, st = this._budget .getStartDate(), en = this._budget .getEndDate(), skip) {
-    var amt = this .getAmount (cat, st, en, skip);
+  getAmountRecursively (cat, st = this._budget .getStartDate(), en = this._budget .getEndDate(), skip, includeMonths=true, includeYears=true, addCats=[]) {
+    console .assert (! addCats || addCats .length == 0);
+    let type = this._budget .getCategories() .getType (cat);
+    let include = (includeMonths && type == ScheduleType .MONTH) || (includeYears  && type == ScheduleType .YEAR) || type == ScheduleType .NONE;
+    var amt = include? this .getAmount (cat, st, en, skip): 0;
     for (let child of (cat .children || []) .concat (cat .zombies || []))
-      amt += this .getAmountRecursively (child, st, en, skip);
+      amt += this .getAmountRecursively (child, st, en, skip, includeMonths, includeYears, addCats);
     return amt;
   }
 
@@ -169,5 +176,9 @@ class Actuals {
       if (s[0] == act .category._id && s[1] >= this._ranges [interval] .start && s[1] <= this._ranges [interval] .end)
         amt -= s[2];
     return amt;
+  }
+
+  getTransactions (cat, st = this._budget .getStartDate(), en = this._budget .getEndDate()) {
+    return Array .from (this._trans .values()) .filter (t => {return t .category == cat._id && t .date >= st && t .date <= en});
   }
 }

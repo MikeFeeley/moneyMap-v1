@@ -1,5 +1,24 @@
 var ui = {
 
+  scrollIntoView: (e, includeMargin = false) => {
+    var getScrollParent = node => {
+      if (node === null)
+        return null;
+      else if (window .getComputedStyle (node) .overflowY == 'scroll' && node .scrollHeight > node .clientHeight) {
+        return node;
+      } else
+        return getScrollParent (node.parentNode);
+    }
+    window .setTimeout (() => {
+      // use timeout to ensure that this code doesn't run until after html has reappeared and thus has computed height
+      let sp = $(getScrollParent (e [0], includeMargin));
+      let st = sp .scrollTop();
+      let sc = e .offset() .top + e .outerHeight (includeMargin) - document .documentElement .clientHeight;
+      if (sc > 0)
+        sp .animate ({scrollTop: (st + sc)}, 200);
+      }, 0);
+  },
+
   ModalStack: class {
 
     static _onMouseDown (e) {

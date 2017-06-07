@@ -63,13 +63,17 @@ router.get('/', function(req, res, next) {
       'ScheduleEntry',
       'TransactionTable'
     ],
-    libcsss:    ['jquery-ui'],
+    libcsss:    [
+      'jquery-ui',
+      'nouislider'
+    ],
     libjss:     [
       'jquery',
       'jquery-ui',
       'jquery.mjs.nestedSortable',
       'Chart',
-      'papaparse'
+      'papaparse',
+      'nouislider'
     ],
     initScript: "var __DATABASE__ = '" + (req .body .database?  req .body .database: '') + "';"
   });

@@ -27,7 +27,6 @@ class ImportTransactions extends Observable {
 
   *addHtml (toHtml) {
     yield* this._view .addHtml (toHtml);
-//    this._view .addText ('_instructions', 'Drag banking files here to import them ...');
     this._view .addText ('_import_status', 'Drag banking files here to import them ...');
     yield* this._importRulesModel .find();
     this._lastImport = new ImportBatchTable (this);
@@ -88,7 +87,6 @@ class ImportTransactions extends Observable {
   }
 
   _processDroppedFile (file) {
-  // maybe click on tab if not currently in view XXX
     return async (this, this._importFile) (file);
   }
 }

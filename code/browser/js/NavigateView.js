@@ -128,6 +128,7 @@ class NavigateView extends Observable  {
         if (eventType == BudgetProgressGraphEvent .GRAPH_CLICK) {
           arg .title = arg .target .closest ('div') .prev ('._text') .text();
           arg .data  = data;
+          arg .view  = this;
           this._notifyObservers (NavigateViewEvent .PROGRESS_GRAPH_CLICK, arg);
         }
       });
@@ -224,19 +225,22 @@ class NavigateView extends Observable  {
     var datasets;
     var labels;
     var data;
-    var container = this._content .find ('.' + name);
+    if (toHtml)
+      var container = toHtml
+    else
+      var container = this._content .find ('.' + name);
     if (container .length == 0) {
       var container = $('<div>', {class: name});
-      if (toHtml)
-        container .insertAfter (toHtml);
-      else
-        container .appendTo (this._content);
+      container .appendTo (this._content);
     }
     var graph  = $('<div>', {class: (popup? ' _popup': '')}) .appendTo (container)
     processDataset();
     if (popup) {
       if (data .length == 1) {
-        $('<div>', {class: '_heading', text: data [0] .name}) .appendTo (graph);
+        let head = $('<div>', {class: '_heading'}) .appendTo (graph);
+        $('<span>', {class: '_heading', text: [] .concat (data [0] .name)}) .appendTo (head);
+        if (data [0] .note)
+          $('<span>', {class: '_subheading', text: data [0] .note}) .appendTo (head);
       }
       if (position)
         graph .css (position)
@@ -284,6 +288,7 @@ class NavigateView extends Observable  {
               id:         datasets [element [0] ._datasetIndex] .id,
               label:      labels   [element [0] ._index],
               labelIndex: element [0] ._index,
+              data:       data,
               position:   position,
               html:       container .closest ('div:not(._popup)'),
               altClick:   e .webkitForce > 1 || e .altKey,
@@ -317,6 +322,8 @@ class NavigateView extends Observable  {
     };
     setDataset();
     chart = new Chart (canvas .get (0) .getContext ('2d'), config);
+    if (popup)
+      ui .scrollIntoView (graph, true);
     return (data) => {
       if (this._isVisible()) {
         if (data .update) {
