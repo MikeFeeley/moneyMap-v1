@@ -216,6 +216,7 @@ class TransactionHUD extends TransactionTable {
   static showCategory (id, dates, accounts, variance, toHtml, position, includeMonths=true, includeYears=true, addCats=[]) {
     let ids         = id .split ('_');
     let selectPayee = id .includes ('payee_') && id .split ('_') .slice (-2) [0];
+    let isOther     = id .includes ('other_');
     id = ids .slice (-1) [0];
     var getFamily = (cats) => {
       var family = [];
@@ -223,9 +224,10 @@ class TransactionHUD extends TransactionTable {
         var type = categories .getType (cat);
         if ((type == ScheduleType .MONTH && includeMonths) || (type == ScheduleType .YEAR && includeYears) || type == ScheduleType .NONE)
           family .push (cat ._id);
-        for (let id of getFamily ((cat .children || []) .concat (cat .zombies || [])))
-          family .push (id);
-        }
+        if (!isOther)
+          for (let id of getFamily ((cat .children || []) .concat (cat .zombies || [])))
+            family .push (id);
+          }
       return family;
     }
     var budget     = variance .getBudget();
