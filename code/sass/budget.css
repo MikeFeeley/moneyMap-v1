@@ -311,9 +311,9 @@ body {
       margin-top: 0px;
       margin-bottom: 32px;
     }
-    > ._budgetMonthsGraph, > ._budgetHistoryGraph, > ._activityMonthsGraph {
+    ._budgetMonthsGraph, > ._budgetHistoryGraph, ._activityMonthsGraph {
       position: relative;
-      > ._popup {
+      > ._popup, &._popup {
         @include light-popup();
         > ._heading {
           margin-top: 0px;
@@ -322,8 +322,8 @@ body {
         margin-bottom: 8px;
       }
     }
-    > ._progressGraphs > div, > ._activityMonthsGraph {
-      > ._popup {
+    > ._progressGraphs > div, ._activityMonthsGraph {
+      > ._popup, &._popup {
         > ._heading {
           > ._subheading {
             color: #666;
@@ -337,6 +337,9 @@ body {
       &:nth-child(14) {
         border-right: 1px solid #aaa;
       }
+    }
+    > ._budgetTables {
+      margin-bottom: 600px;
     }
     > ._budgetTables > ._budgetTable > table,
     > ._activityTables > ._activityTable > table,
@@ -487,7 +490,7 @@ body {
         display: inline-block;
         width:   33%;
       }
-      > ._popup {
+      > ._popup:not(._budgetMonthsGraph):not(._activityMonthsGraph) {
         @include translucent-popup();
         width:  200px;
         height: 200px;

@@ -235,7 +235,7 @@ class TransactionHUD extends TransactionTable {
     var cat        = categories .get (id);
     var qualifier = includeMonths && !includeYears? ' (Monthly) ': includeYears && !includeMonths? ' (Anytime) ': '';
     var dates      = dates || {start: budget .getStartDate(), end: budget .getEndDate()};
-    var title      = [cat .name + qualifier + ' for XXX XXX'];
+    var title      = [(isOther? 'Other ': '') + cat .name + qualifier + ' for XXX XXX'];
     if (selectPayee)
       title [1] = 'Where Payee starts with "' + selectPayee + '"';
     var query = {

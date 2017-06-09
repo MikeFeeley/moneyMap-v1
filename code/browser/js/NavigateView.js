@@ -234,7 +234,7 @@ class NavigateView extends Observable  {
       var container = $('<div>', {class: name});
       container .appendTo (this._content);
     }
-    var graph  = $('<div>', {class: (popup? ' _popup': '')}) .appendTo (container)
+    var graph  = $('<div>', {class: name + (popup? ' _popup': '')}) .appendTo (container)
     processDataset();
     if (popup) {
       if (data .length == 1) {
@@ -364,6 +364,10 @@ class NavigateView extends Observable  {
       group .appendTo (this._content);
   }
 
+
+  /**
+   * addDoughnut
+   */
   addDoughnut (data, name, popup, position, direction, onClose) {
 
     var setDataset = () => {
@@ -431,7 +435,6 @@ class NavigateView extends Observable  {
             direction = position .left > cWidth / 2? -1: 1;
           position .left += 80 * direction + (aWidth - pWidth) / 2;
           position .top  += 40;
- //         if (dataset .groups .length > 1 || dataset .groups [0] .rows .length > 1 || altClick) {
           if (index != null)
             this._notifyObservers (NavigateViewEvent .BUDGET_CHART_CLICK, {
               name:      name,
@@ -597,29 +600,33 @@ class NavigateView extends Observable  {
       tfoot = $('<tfoot>') .appendTo (table);
       table [0] .addEventListener ('webkitmouseforcewillbegin', e => {e .preventDefault()}, true)
       table .on ('click webkitmouseforcedown', 'tr', e => {
-      let id       = $(e .currentTarget) .data ('id');
-      let target   = e .target;
-      let col      = target && target .cellIndex - 1;
-      if (col == -1 && dataset .cols .length <= 1) {
-        col    = 0;
-        target = $(target) .next() [0];
-      }
-      let html     = $(target) .closest ('.' + name + 's');
-      let htmlo    = html .offset()
-      let position = $(target) .offset();
-      position .top  -= htmlo .top - 20;
-      position .left -= htmlo .left;
-      if (id)
-        this._notifyObservers (NavigateViewEvent .BUDGET_TABLE_CLICK, {
-          name:     name,
-          id:       id,
-          date:     col >= 0 && col < dataset .dates .length? dataset .dates [col]: col >= 0 && col < dataset .cols .length? []: null,
-          html:     html,
-          position: col < dataset .cols .length? position: {top: position.top, left: 0},
-          altClick: e .originalEvent && (e .originalEvent .webkitForce > 1 || e .originalEvent .altKey),
-          view:     this
-        })
-        return false;
+        let id       = $(e .currentTarget) .data ('id');
+        let target   = e .target;
+        let col      = target && target .cellIndex - 1;
+        if (col == -1 && dataset .cols .length <= 1) {
+          col    = 0;
+          target = $(target) .next() [0];
+        }
+        let html     = $(target) .closest ('.' + name + 's');
+        let htmlo    = html .offset()
+        let position = $(target) .offset();
+        position .top  -= htmlo .top - 20;
+        position .left -= htmlo .left;
+        if (dataset .cols .length && (col == -1 || col >= dataset .cols .length)) {
+          let prev = $(target) .closest ('div.' + name);
+          position .left = (prev .length? prev .position() .left: 0) + 20;
+        }
+        if (id)
+          this._notifyObservers (NavigateViewEvent .BUDGET_TABLE_CLICK, {
+            name:     name,
+            id:       id,
+            date:     col >= 0 && col < dataset .dates .length? dataset .dates [col]: col >= 0 && col < dataset .cols .length? []: null,
+            html:     html,
+            position: position,
+            altClick: e .originalEvent && (e .originalEvent .webkitForce > 1 || e .originalEvent .altKey),
+            view:     this
+          })
+          return false;
       });
       var headTr = $('<tr>') .appendTo (thead);
       var cols   = ['Category'] .concat (dataset .cols) .concat (totalRows? ['Ave','Total','%Inc'] : []);
