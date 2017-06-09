@@ -311,7 +311,7 @@ body {
       margin-top: 0px;
       margin-bottom: 32px;
     }
-    ._budgetMonthsGraph, > ._budgetHistoryGraph, ._activityMonthsGraph {
+    ._budgetMonthsGraph, ._budgetHistoryGraph, ._activityMonthsGraph {
       position: relative;
       > ._popup, &._popup {
         @include light-popup();

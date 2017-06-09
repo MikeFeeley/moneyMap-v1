@@ -229,9 +229,9 @@ class NavigateView extends Observable  {
     if (toHtml)
       var container = toHtml
     else
-      var container = this._content .find ('.' + name);
+      var container = this._content .find ('.' + name + 's');
     if (container .length == 0) {
-      var container = $('<div>', {class: name});
+      var container = $('<div>', {class: name + 's'});
       container .appendTo (this._content);
     }
     var graph  = $('<div>', {class: name + (popup? ' _popup': '')}) .appendTo (container)

@@ -175,8 +175,9 @@ class Navigate {
             TransactionHUD .showCategory (arg .id, dates, this._accounts, this._variance, arg .html, {top: arg .position .top, left: 0}, im, iy, sel && sel .addCats);
         } else
           this._addMonthsGraph (arg .name, arg .view, [arg .id], true, arg .position, arg .html, im, iy, sel && sel .addCats);
-      } else if (arg .name == '_budgetHistoryGraph' && arg .id .length >= 1 && arg .id [0])
+      } else if (arg .name == '_budgetHistoryGraph' && arg .id .length >= 1 && arg .id [0]) {
         async (this, this._addHistoryGraph) ([] .concat (arg .id), true, arg .position, arg .view);
+      }
 
     } else if (eventType == NavigateViewEvent .BUDGET_GRAPH_TITLE_CLICK && arg .id) {
       BudgetProgressHUD .show (arg .id .split ('_') .slice (-1) [0], arg .html, arg .position, this._accounts, this._variance);
