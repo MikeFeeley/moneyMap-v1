@@ -179,9 +179,8 @@ class Navigate {
             BudgetProgressHUD .show (id, arg .html, position, this._accounts, this._variance, arg .labelIndex < 12? dates .end: undefined);
           } else
             TransactionHUD .showCategory (arg .id, dates, this._accounts, this._variance, arg .html, {top: arg .position .top, left: 0}, im, iy, sel && sel .addCats);
-        } else if (! arg .id .startsWith ('leaf_')) {
+        } else
           this._addMonthsGraph (arg .name, arg .view, [arg .id], true, arg .position, arg .html, im, iy, sel && sel .addCats);
-        }
       } else if (arg .name == '_budgetHistoryGraph' && arg .id .length >= 1 && arg .id [0])
         async (this, this._addHistoryGraph) ([] .concat (arg .id), true, arg .position, arg .view);
 
@@ -225,9 +224,7 @@ class Navigate {
   }
 
   _getBudgetAmounts (id, isCredit, dates) {
-    if (id .startsWith ('other_'))
-      id = id .split ('_') .slice (-1) [0];
-    let cat      = this._categories .get (id);
+    let cat     = this._categories .get (id .split ('_') .slice (-1) [0]);
     let amounts = dates .map (date => {
       let a = this._budget .getAmount (cat, date .start, date .end);
       return {
@@ -252,25 +249,24 @@ class Navigate {
   }
 
   _getBudgetName (id) {
-    return id .startsWith ('other_')? 'Other': this._categories .get (id) .name
+    return id .includes ('other_')? 'Other': this._categories .get (id .split ('_') .slice (-1) [0]) .name
   }
 
   _getActualsChildren (id) {
-    if (id .startsWith ('other_'))
+    if (id .includes ('other_') || id .includes ('payee_'))
       return []
     else {
       let cat           = this._categories .get (id .split ('_') .slice (-1) [0]);
       let children      = cat .children || [];
       let payeeTruncate = /\d|#|\(/;
       if (children .length == 0) {
-        let matchPayee = id .startsWith ('payee_') && id .slice (6) .split ('_') [0];
         return this._actuals .getTransactions (cat, this._budget .getStartDate(), this._budget .getEndDate())
           .map (t => {
             let stop = t .payee .match (payeeTruncate);
             return (stop && stop .index? t .payee .slice (0, stop .index): t .payee) .split (' ') .slice (0,3) .join (' ');
           })
           .sort   ((a,b)   => {return a<b? -1: a==b? 0: 1})
-          .filter ((p,i,a) => {return (! matchPayee || p == matchPayee) && (i==0 || ! p .startsWith (a [i-1]))})
+          .filter ((p,i,a) => {return i==0 || ! p .startsWith (a [i-1])})
           .map    (p       => {return 'payee_' + p + '_' + cat._id})
       } else
         return children .map (c => {return c._id});
@@ -304,7 +300,8 @@ class Navigate {
   }
 
   _getActualsName (id, dates) {
-    return id .includes ('payee_')? id .split ('_') .slice (-2) [0]: id .startsWith ('other_')? 'Other': this._categories .get (id) .name
+    let ida = id .split ('_');
+    return id .includes ('payee_')? ida .slice (-2) [0]: id .includes ('other_')? 'Other': this._categories .get (ida .slice (-1) [0]) .name
   }
 
   _getActualsNote (id, includeMonths, includeYears) {
@@ -315,16 +312,14 @@ class Navigate {
   }
 
   _getMonthsRows (id, dates, allowLeaf, getChildren, getAmounts, getName, includeMonths, includeYears, addCats) {
-    let cat        = this._categories .get (id .split ('_') .slice (-1) [0]);
-    let isCredit   = this._budget .isCredit (cat);
-    let isGoal     = this._budget .isGoal   (cat);
-    let children   = getChildren (id);
-    let isLeaf     =
-      id .startsWith ('other_') || id .startsWith ('payee_') ||
-      children .length == 0     || (children .length == 1 && getChildren (children [0]) .length == 0);
-    if (! allowLeaf && isLeaf)
+    let isLeaf = (id .includes ('other_') || id .includes ('payee_') || getChildren (id) == 0);
+    if (isLeaf && (! allowLeaf || id .includes ('leaf_')))
       return []
     else {
+      let cat        = this._categories .get (id .split ('_') .slice (-1) [0]);
+      let isCredit   = this._budget .isCredit (cat);
+      let isGoal     = this._budget .isGoal   (cat);
+      let children   = getChildren (id);
       let rows       = ((children .length && children) || [id])
         .map (child => {return {
           name:     getName (child) || '',
@@ -335,7 +330,7 @@ class Navigate {
           amounts:  getAmounts (child, isCredit, dates, includeMonths, includeYears, addCats)
         }});
       let totals = rows .reduce ((t,r) => {return r .amounts .map ((a,i) => {return (t[i] || 0) + a .value})}, []);
-      rows = (id .startsWith ('other_')? []: rows)
+      rows = (id .includes ('other_')? []: rows)
         .concat ({
           name:     'Other',
           id:       'other_' + cat._id,
@@ -344,12 +339,8 @@ class Navigate {
           amounts:  getAmounts (id, isCredit, dates, includeMonths, includeYears, addCats) .map ((a,i) => {return {id: 'other_' + cat._id, value: a .value - (totals [i] || 0)}})
         })
         .filter (r => {return r .amounts .find (a => {return a .value != 0})})
-      if (rows .length == 1 && getChildren (rows [0] .id) .length != 0) {
-        if (allowLeaf)
-          rows [0] .id = 'leaf_' + rows [0] .id;
-        else
-          rows = []
-      }
+      if (rows .length == 1 && (rows [0] .id .includes ('other_') || getChildren (rows [0] .id) == 0))
+        rows [0] .id = 'leaf_' + rows [0] .id;
       return rows
     }
   }
@@ -447,7 +438,7 @@ class Navigate {
       highlight: cols .length > 1? cols .indexOf (Types .dateM .toString (Types .dateMY .today())): null,
       income:    getIncome(),
       getUpdate: (eventType, model, eventIds) => {
-        let tooDetailedForUpdate = groups .find (g => {return g .rows .find (r => {return r .id .startsWith ('payee_')})});
+        let tooDetailedForUpdate = groups .find (g => {return g .rows .find (r => {return r .id .includes ('payee_')})});
         if (models .includes (model)) {
           if (eventType == ModelEvent .UPDATE && eventIds .length == 1 && ! tooDetailedForUpdate) {
             for (let id of ids) {
@@ -455,10 +446,10 @@ class Navigate {
                 let rows  = this._getMonthsRows (id, dates, allowLeaf, getChildren, getAmounts, getName, includeMonths, includeYears, addCats);
                 let group = groups [ids .indexOf (id)];
                 let other = rows [rows .length - 1];
-                if (other .id .startsWith ('other_') && group .rows [group .rows .length - 1] .id .startsWith ('other_')) {
+                if (other .id .includes ('other_') && group .rows [group .rows .length - 1] .id .includes ('other_')) {
                   group .rows [group .rows .length -1] = other;
                   return {update: {id: other .id , name: other .name, amounts: other .amounts}}
-                } else if (other .id .startsWith ('other_') == group .rows [rows .length - 1] .id .startsWith ('other_'))
+                } else if (other .id .includes ('other_') == group .rows [rows .length - 1] .id .includes ('other_'))
                   return {}
               } else {
                 let affected = getChildren (id) .find (childId => {

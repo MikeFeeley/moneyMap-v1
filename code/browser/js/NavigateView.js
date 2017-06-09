@@ -291,21 +291,23 @@ class NavigateView extends Observable  {
         legend: {display: false},
         events: ['mousemove', 'mouseout', 'click', 'touchstart', 'touchmove', 'webkitmouseforcedown'],
         onClick: (e, elements) => {
-          let element   = chart .getElementAtEvent (e);
-          let position    = graph .position();
-          position .top  += 50;
-          position .left += 50;
-          this._notifyObservers (NavigateViewEvent .BUDGET_GRAPH_CLICK, {
-            name:       name,
-            id:         datasets [element [0] ._datasetIndex] .id,
-            label:      labels   [element [0] ._index],
-            labelIndex: element [0] ._index,
-            data:       data,
-            position:   position,
-            html:       container .closest ('div:not(._popup)'),
-            altClick:   e .webkitForce > 1 || e .altKey,
-            view:       this
-          })
+          var element = chart .getElementAtEvent (e);
+          if (element .length) { 
+            var position    = graph .position();
+            position .top  += 50;
+            position .left += 50;
+            this._notifyObservers (NavigateViewEvent .BUDGET_GRAPH_CLICK, {
+              name:       name,
+              id:         datasets [element [0] ._datasetIndex] .id,
+              label:      labels   [element [0] ._index],
+              labelIndex: element [0] ._index,
+              data:       data,
+              position:   position,
+              html:       container .closest ('div:not(._popup)'),
+              altClick:   e .webkitForce > 1 || e .altKey,
+              view:       this
+            })
+          }
           return false;
         },
         tooltips: {
@@ -595,28 +597,28 @@ class NavigateView extends Observable  {
       tfoot = $('<tfoot>') .appendTo (table);
       table [0] .addEventListener ('webkitmouseforcewillbegin', e => {e .preventDefault()}, true)
       table .on ('click webkitmouseforcedown', 'tr', e => {
-        let id       = $(e .currentTarget) .data ('id');
-        let target   = e .target;
-        let col      = target && target .cellIndex - 1;
-        if (col == -1 && dataset .cols .length <= 1) {
-          col    = 0;
-          target = $(target) .next() [0];
-        }
-        let html     = $(target) .closest ('.' + name + 's');
-        let htmlo    = html .offset()
-        let position = $(target) .offset();
-        position .top  -= htmlo .top - 20;
-        position .left -= htmlo .left;
-        if (id)
-          this._notifyObservers (NavigateViewEvent .BUDGET_TABLE_CLICK, {
-            name:     name,
-            id:       id,
-            date:     col >= 0 && col < dataset .dates .length? dataset .dates [col]: col >= 0 && col < dataset .cols .length? []: null,
-            html:     html,
-            position: col < dataset .cols .length? position: {top: position.top, left: 0},
-            altClick: e .originalEvent && (e .originalEvent .webkitForce > 1 || e .originalEvent .altKey),
-            view:     this
-          })
+      let id       = $(e .currentTarget) .data ('id');
+      let target   = e .target;
+      let col      = target && target .cellIndex - 1;
+      if (col == -1 && dataset .cols .length <= 1) {
+        col    = 0;
+        target = $(target) .next() [0];
+      }
+      let html     = $(target) .closest ('.' + name + 's');
+      let htmlo    = html .offset()
+      let position = $(target) .offset();
+      position .top  -= htmlo .top - 20;
+      position .left -= htmlo .left;
+      if (id)
+        this._notifyObservers (NavigateViewEvent .BUDGET_TABLE_CLICK, {
+          name:     name,
+          id:       id,
+          date:     col >= 0 && col < dataset .dates .length? dataset .dates [col]: col >= 0 && col < dataset .cols .length? []: null,
+          html:     html,
+          position: col < dataset .cols .length? position: {top: position.top, left: 0},
+          altClick: e .originalEvent && (e .originalEvent .webkitForce > 1 || e .originalEvent .altKey),
+          view:     this
+        })
         return false;
       });
       var headTr = $('<tr>') .appendTo (thead);
