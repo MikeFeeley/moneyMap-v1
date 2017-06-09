@@ -168,6 +168,7 @@ class TransactionHUD extends TransactionTable {
     if (Array .isArray (this._title))
       $('<div>', {text: this._title [1], class: '_subtitle'}) .appendTo (body);
     this._view._options .readOnly = true;
+    this._setTitleDate();
     yield* super .addHtml (body);
     this._modalStackEntry = ui .ModalStack .add (
       (e) => {return ! $.contains (this._html .get (0), e .target) && this._html .get (0) != e .target},
@@ -231,8 +232,10 @@ class TransactionHUD extends TransactionTable {
     var categories = budget .getCategories();
     var cat        = categories .get (id);
     var qualifier = includeMonths && !includeYears? ' (Monthly) ': includeYears && !includeMonths? ' (Anytime) ': '';
-    var title      = cat .name + qualifier + (selectPayee? ' at ' + selectPayee: '') + ' for ' + Types .dateMonthY .toString (dates .start);
     var dates      = dates || {start: budget .getStartDate(), end: budget .getEndDate()};
+    var title      = [cat .name + qualifier + ' for XXX XXX'];
+    if (selectPayee)
+      title [1] = 'Where Payee starts with "' + selectPayee + '"';
     var query = {
       category: {$in: getFamily ([cat]) .concat (addCats)},
       date:     dates && {$gte: dates .start, $lte: dates .end},

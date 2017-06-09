@@ -391,6 +391,9 @@ body {
           background: #aaa;
           color: white;
         }
+        > tr:not(:first-child):not(._subtotal) > td:first-child {
+          border-top: 1px solid transparent;
+        }
         > tr:not(._subtotal) {
           &:nth-child(even) {
             background-color: #f6f6f6;
@@ -406,7 +409,6 @@ body {
               color: #222;
               font-weight: 400;
               background-color: white;
-              border-top: 1px solid transparent;
             }
             &:nth-child(1) {
               border-right: 1px solid #aaa;

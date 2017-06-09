@@ -34,10 +34,9 @@ class BudgetProgressHUD {
   _onViewChange (eventType, arg) {
     if (eventType == BudgetProgressHUDViewEvent .GRAPH_CLICK && (arg .name != 'monthly' || arg .month)) {
       if (!arg .month) {
-        var today = Types .dateMY .today();
         arg .month  = {
-          start: Types .dateMY .monthStart (today),
-          end:   Types .dateMY .monthEnd   (today)
+          start: Types .dateMY .monthStart (this._date),
+          end:   Types .dateMY .monthEnd   (this._date)
         }
       }
       arg .position .left = Math .min (0, ($(document) .width() - 1000) - arg .html .offset() .left);

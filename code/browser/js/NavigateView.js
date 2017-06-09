@@ -108,7 +108,7 @@ class NavigateView extends Observable  {
       if (heading)
         var head = $('<div>', {class: '_text', text: heading})
           .appendTo (progressGraph)
-          .click (e => {
+          .on ('click webkitmouseforcedown', e => {
             this._notifyObservers (NavigateViewEvent .PROGRESS_GRAPH_TITLE_CLICK, {
               data:     data,
               html:     progressGraph,
@@ -117,6 +117,7 @@ class NavigateView extends Observable  {
             });
             return false;
           })
+      head [0] .addEventListener ('webkitmouseforcewillbegin', e => {e .preventDefault()}, true)
       var isPopup = progressGraph .hasClass ('_popup');
       if (isPopup)
         progressGraph .removeClass ('hidden');
@@ -237,7 +238,19 @@ class NavigateView extends Observable  {
     processDataset();
     if (popup) {
       if (data .length == 1) {
-        let head = $('<div>', {class: '_heading'}) .appendTo (graph);
+        let head = $('<div>', {class: '_heading'})
+          .appendTo (graph)
+          .on ('click webkitmouseforcedown', e => {
+            let position = graph .position();
+            position .top  += 50;
+            position .left += 50;
+            this._notifyObservers (NavigateViewEvent .BUDGET_GRAPH_TITLE_CLICK, {
+              id:       data [0] .id,
+              position: position,
+              html:     container .closest ('div:not(._popup)')
+            })
+          })
+        head [0] .addEventListener ('webkitmouseforcewillbegin', e => {e .preventDefault()}, true)
         $('<span>', {class: '_heading', text: [] .concat (data [0] .name)}) .appendTo (head);
         if (data [0] .note)
           $('<span>', {class: '_subheading', text: data [0] .note}) .appendTo (head);
@@ -278,23 +291,21 @@ class NavigateView extends Observable  {
         legend: {display: false},
         events: ['mousemove', 'mouseout', 'click', 'touchstart', 'touchmove', 'webkitmouseforcedown'],
         onClick: (e, elements) => {
-          var element = chart .getElementAtEvent (e);
-          if (element .length) { 
-            var position    = graph .position();
-            position .top  += 50;
-            position .left += 50;
-            this._notifyObservers (NavigateViewEvent .BUDGET_GRAPH_CLICK, {
-              name:       name,
-              id:         datasets [element [0] ._datasetIndex] .id,
-              label:      labels   [element [0] ._index],
-              labelIndex: element [0] ._index,
-              data:       data,
-              position:   position,
-              html:       container .closest ('div:not(._popup)'),
-              altClick:   e .webkitForce > 1 || e .altKey,
-              view:       this
-            })
-          }
+          let element   = chart .getElementAtEvent (e);
+          let position    = graph .position();
+          position .top  += 50;
+          position .left += 50;
+          this._notifyObservers (NavigateViewEvent .BUDGET_GRAPH_CLICK, {
+            name:       name,
+            id:         datasets [element [0] ._datasetIndex] .id,
+            label:      labels   [element [0] ._index],
+            labelIndex: element [0] ._index,
+            data:       data,
+            position:   position,
+            html:       container .closest ('div:not(._popup)'),
+            altClick:   e .webkitForce > 1 || e .altKey,
+            view:       this
+          })
           return false;
         },
         tooltips: {
@@ -418,6 +429,7 @@ class NavigateView extends Observable  {
             direction = position .left > cWidth / 2? -1: 1;
           position .left += 80 * direction + (aWidth - pWidth) / 2;
           position .top  += 40;
+ //         if (dataset .groups .length > 1 || dataset .groups [0] .rows .length > 1 || altClick) {
           if (index != null)
             this._notifyObservers (NavigateViewEvent .BUDGET_CHART_CLICK, {
               name:      name,
@@ -470,8 +482,8 @@ class NavigateView extends Observable  {
     }
   }
 
-  addHistoryTable (dataset, skipFoot, popup, position, onClose, toHtml) {
-    return this .addBudgetTable ('_budgetHistoryTable', dataset, skipFoot, popup, position, onClose, false, toHtml);
+  addHistoryTable (dataset, skipHead, skipFoot, popup, position, toHtml, onClose) {
+    return this .addBudgetTable ('_budgetHistoryTable', dataset, skipHead, skipFoot, popup, position, toHtml, onClose, false);
   }
 
   /**
@@ -492,7 +504,7 @@ class NavigateView extends Observable  {
    *     }]
    *   }
    */
-  addBudgetTable (name, dataset, skipFoot, popup, position, onClose, totalRows, toHtml) {
+  addBudgetTable (name, dataset, skipHead, skipFoot, popup, position, toHtml, onClose, totalRows) {
 
     var groupTrs = [];
     var rowMap   = new Map();
@@ -583,32 +595,40 @@ class NavigateView extends Observable  {
       tfoot = $('<tfoot>') .appendTo (table);
       table [0] .addEventListener ('webkitmouseforcewillbegin', e => {e .preventDefault()}, true)
       table .on ('click webkitmouseforcedown', 'tr', e => {
-        if (dataset .groups .length > 1 || dataset .groups [0] .rows .length > 1) {
-          var target   = $(e.currentTarget);
-          var id       = target .data ('id');
-          var position = container .position();
-          position .top  += 20 + target .position() .top;
-          position .left += 20;
-          if (id)
-            this._notifyObservers (NavigateViewEvent .BUDGET_TABLE_CLICK, {
-              name:     name,
-              id:       id,
-              col:      e .target && e .target .cellIndex,
-              html:     container .offsetParent(),
-              position: position,
-              altClick: e .originalEvent && (e .originalEvent .webkitForce > 1 || e .originalEvent .altKey),
-              view:     this
-            })
+        let id       = $(e .currentTarget) .data ('id');
+        let target   = e .target;
+        let col      = target && target .cellIndex - 1;
+        if (col == -1 && dataset .cols .length <= 1) {
+          col    = 0;
+          target = $(target) .next() [0];
         }
+        let html     = $(target) .closest ('.' + name + 's');
+        let htmlo    = html .offset()
+        let position = $(target) .offset();
+        position .top  -= htmlo .top - 20;
+        position .left -= htmlo .left;
+        if (id)
+          this._notifyObservers (NavigateViewEvent .BUDGET_TABLE_CLICK, {
+            name:     name,
+            id:       id,
+            date:     col >= 0 && col < dataset .dates .length? dataset .dates [col]: col >= 0 && col < dataset .cols .length? []: null,
+            html:     html,
+            position: col < dataset .cols .length? position: {top: position.top, left: 0},
+            altClick: e .originalEvent && (e .originalEvent .webkitForce > 1 || e .originalEvent .altKey),
+            view:     this
+          })
         return false;
       });
       var headTr = $('<tr>') .appendTo (thead);
       var cols   = ['Category'] .concat (dataset .cols) .concat (totalRows? ['Ave','Total','%Inc'] : []);
-      for (let i=0; i<cols.length; i++)
-        $('<th>', {text: cols [i], class: dataset .highlight == i - 1? '_highlight': ''}) .appendTo (headTr);
+      if (! skipHead)
+        for (let i=0; i<cols.length; i++)
+          $('<th>', {text: cols [i], class: dataset .highlight == i - 1? '_highlight': ''}) .appendTo (headTr);
       for (let group of dataset .groups) {
-        groupTrs .push ($('<tr>', {class: '_subtotal'}) .appendTo (tbody));
-        updateGroup (group);
+        if (! skipHead) {
+          groupTrs .push ($('<tr>', {class: '_subtotal'}) .appendTo (tbody));
+          updateGroup (group);
+        }
         for (let row of group .rows) {
           rowMap .set (row .id, $('<tr>', {data: {id: row .id}}) .appendTo (tbody));
           updateRow (row);
@@ -617,15 +637,13 @@ class NavigateView extends Observable  {
       updateFoot();
     }
 
-    var content = this._content .find ('.' + name + 's');
-    if (content .length == 0) {
-      content = $('<div>', {class: name + 's'});
-      if (toHtml)
-        content .insertAfter (toHtml)
-      else
-        content .appendTo (this._content);
+    /* addBudgetTable main */
+    if (! toHtml || toHtml .length == 0) {
+      toHtml = this._content .find ('.' + name + 's');
+      if (toHtml .length == 0)
+        toHtml = $('<div>', {class: name + 's'}) .appendTo (this._content);
     }
-    var container = $('<div>', {class: name + (popup? ' _popup': '')}) .appendTo (content);
+    var container = $('<div>', {class: name + (popup? ' _popup': '')}) .appendTo (toHtml);
     if (popup && position) {
       container .css (position);
       ui .ModalStack .add (
@@ -782,8 +800,9 @@ var NavigateViewEvent = Object.create (ViewEvent, {
   PROGRESS_GRAPH_CLICK:       {value: 201},
   BUDGET_CHART_CLICK:         {value: 202},
   BUDGET_GRAPH_CLICK:         {value: 203},
-  BUDGET_TABLE_CLICK:         {value: 204},
-  PROGRESS_GRAPH_TITLE_CLICK: {value: 205}
+  BUDGET_GRAPH_TITLE_CLICK:   {value: 204},
+  BUDGET_TABLE_CLICK:         {value: 205},
+  PROGRESS_GRAPH_TITLE_CLICK: {value: 206}
 });
 
 
