@@ -335,7 +335,7 @@ class VarianceModel extends Observable {
     period
       .cur = {
         start: Math .max (period .prev .start, Types .date .monthStart (date)),
-        end:   Math .max (period .prev .start, Types .date .monthEnd   (date))
+        end:   Math .max (period .prev .start, date)
       }
     var cat = this._budget .getCategories() .get (id);
 
