@@ -195,7 +195,8 @@ class NavigateView extends Observable  {
             label:       c .name,
             id:          c .id,
             data:        c .amounts .map (a => {return a .value}),
-            borderWidth: 1
+            borderWidth: 1,
+            type:        c .type
           }
         })
       });
@@ -207,11 +208,17 @@ class NavigateView extends Observable  {
         let idx = groups .indexOf (g);
         this._resetColors();
         for (let d of g) {
-          d .backgroundColor = this._getColor (groups .length > 1? backgroundAlphas [idx]: 0.3);
-          d .borderColor     = this._getColor (borderAlphas     [idx]);
-          d .stack           = stacks [idx];
+          if (d .type == 'line') {
+            d .borderColor     = 'rgba(221,0,0,1)';
+            d .backgroundColor = 'rgba(0,0,0,0)';
+            d .pointBackgroundColor = 'rgba(221,0,0,1)';
+          } else {
+            d .backgroundColor = this._getColor (groups .length > 1? backgroundAlphas [idx]: 0.3);
+            d .borderColor     = this._getColor (borderAlphas     [idx]);
+            d .stack           = stacks [idx];
+          }
           d .label           = labelPrefixes [idx] + d .label;
-          if (d .data .find (a => {return a != 0}))
+          if (d .type != 'line' && d .data .find (a => {return a != 0}))
             this._nextColor();
         }
       }
@@ -267,9 +274,9 @@ class NavigateView extends Observable  {
     if (data .length > 1) {
       var height = [[],[]];
       for (let i = 0; i < labels .length; i++)
-        for (let ds of datasets) {
-          height [ds .stack - 1] [i] = (height [ds .stack - 1] [i] || 0) + ds .data [i];
-        }
+        for (let ds of datasets)
+          if (ds .stack)
+            height [ds .stack - 1] [i] = (height [ds .stack - 1] [i] || 0) + ds .data [i];
       var max = height .reduce ((m,h) => {return Math .max (m, h .reduce ((m,v) => {return Math .max (m, v)}, 0))}, 0);
       var mu  = max / 10;
       if (mu <= 200000)
