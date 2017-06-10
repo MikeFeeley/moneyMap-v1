@@ -501,7 +501,8 @@ class Navigate {
       var updater = this._addUpdater (view, (eventType, model, ids) => {
         let update = dataset .getUpdate (eventType, model, ids);
         if (update) {
-          console .assert (! update .needUpdate);
+          if (update .needUpdate)
+            update = {needReplace: true}
           updateView (update);
         }
       });
@@ -520,7 +521,8 @@ class Navigate {
       var updater = this._addUpdater (view, (eventType, model, ids) => {
         let update = dataset .getUpdate (eventType, model, ids);
         if (update) {
-          console .assert (! update .needUpdate);
+        if (update .needUpdate)
+          update = {needReplace: true}
           updateView (update);
         }
       });
