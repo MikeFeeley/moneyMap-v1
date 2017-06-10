@@ -148,11 +148,13 @@ class Navigate {
     } else if (eventType == NavigateViewEvent .BUDGET_CHART_CLICK  && arg .id) { 
       /* Yearly Chart (Budget or Actual) */
       if (arg .altClick) {
-        let name     = arg .name .includes ('budget')? '_budgetMonthsGraph': '_activityMonthsGraph';
-        let html     = arg .html .closest (arg .name .includes ('budget')? '._budgetCharts' : '._activityCharts')
-        let position = {top: arg .position .top}
-        position [arg .direction == 1? 'left': 'right'] = 0;
-        this._addMonthsGraph (name, arg .view, [arg .id], true, position, html);
+        if (! arg .id .includes ('blackout_') && ! arg .id .includes ('unallocated_')) {
+          let name     = arg .name .includes ('budget')? '_budgetMonthsGraph': '_activityMonthsGraph';
+          let html     = arg .html .closest (arg .name .includes ('budget')? '._budgetCharts' : '._activityCharts')
+          let position = {top: arg .position .top}
+          position [arg .direction == 1? 'left': 'right'] = 0;
+          this._addMonthsGraph (name, arg .view, [arg .id], true, position, html);
+        }
       } else
         this._addYearCategoriesGraph (arg .name, arg .id, null, arg .view, true, arg .position, arg .direction);
 
@@ -206,6 +208,9 @@ class Navigate {
       BudgetProgressHUD .show (id, arg .html, arg .position, this._accounts, this._variance);
     }
   }
+
+
+
 
   /*******************************************/
   /***** GET BUDGET / ACTUAL INFORMATION *****/
@@ -339,13 +344,13 @@ class Navigate {
   _getChildrenData (type, id, dates, allowLeaf, includeMonths, includeYears, addCats) {
     let isLeaf = (id .includes ('other_') || id .includes ('payee_') || this._getChildren (type, id) == 0);
     if (isLeaf && (! allowLeaf || id .includes ('leaf_')))
-      return []
+      return {data: []}
     else {
       let cat        = this._categories .get (id .split ('_') .slice (-1) [0]);
       let isCredit   = this._budget .isCredit (cat);
       let isGoal     = this._budget .isGoal   (cat);
       let children   = this._getChildren (type, id);
-      let rows       = ((children .length && children) || [id])
+      let data       = ((children .length && children) || [id])
         .map (child => {return {
           name:     this._getName (type, child) || '',
           id:       child,
@@ -355,8 +360,8 @@ class Navigate {
           amounts:  this._getAmounts (type, child, isCredit, dates, includeMonths, includeYears, addCats)
         }});
       if (! id .includes ('other_')) {
-        let totals = rows .reduce ((t,r) => {return r .amounts .map ((a,i) => {return (t[i] || 0) + a .value})}, []);
-        rows .push ({
+        let totals = data .reduce ((t,r) => {return r .amounts .map ((a,i) => {return (t[i] || 0) + a .value})}, []);
+        data .push ({
           name:     'Other',
           id:       'other_' + cat._id,
           isCredit: isCredit,
@@ -366,12 +371,46 @@ class Navigate {
           }})
         })
       }
-      rows = rows .filter (r => {return r .amounts .reduce ((s,a) => {return s + a .value}, 0) != 0})
-      if (rows .length == 1 && (rows [0] .id .includes ('other_') || this._getChildren (type, rows [0] .id) == 0))
-        rows [0] .id = 'leaf_' + rows [0] .id;
-      return rows
+      data = data .filter (r => {return r .amounts .reduce ((s,a) => {return s + a .value}, 0) != 0})
+      if (data .length == 1 && (data [0] .id .includes ('other_') || this._getChildren (type, data [0] .id) == 0))
+        data [0] .id = 'leaf_' + data [0] .id;
+      let hasOther = data .length && data [data .length -1] .id .includes ('other_');
+      return {
+        data:      data,
+        getUpdate: (eventType, model, ids) => {
+          let needReplace = {needReplace: true};
+          if (this._getModels (type) .includes (model)) {
+            if (eventType == ModelEvent .UPDATE && ids .length == 1) {
+              let eid = ids [0];
+              let aff = data .filter (e => {
+                let i =  e. id .split ('_') .slice (-1) [0];
+                return i == eid || (! e .id .includes ('other_') && this._categories .getDescendants (this._categories .get (i)) .find (d => {return d._id == eid}))
+              });
+              if (aff .length == 1) {
+                let aid     = aff [0] .id;
+                let newData = this._getChildrenData (type, id, dates, allowLeaf, includeMonths, includeYears, addCats);
+                if (hasOther == (newData .data .length && newData .data [newData .data .length - 1] .id .includes ('other_'))) {
+                  let newAff = newData .data .filter (d => {return d .id == aid});
+                  if (newAff .length == 1) {
+                    newAff = newAff [0];
+                    return {update: {id: newAff .id, name: newAff .name, amounts: newAff .amounts}}
+                  } else if (newAff .length == 0)
+                    return {needUpdate: true, affected: aid}
+                  else
+                    return needUpdate
+                } else
+                  return needReplace
+              } else if (aff .length > 1)
+                return needReplace
+            } else
+              return needReplace
+          }
+        }
+      }
     }
   }
+
+
 
 
   /***************************************************/
@@ -423,11 +462,13 @@ class Navigate {
     }
     var groups = ids
       .map (id => {
+        let data = this._getChildrenData (type, id, dates, allowLeaf, includeMonths, includeYears, addCats);
         return {
-          id:   id,
-          name: this._getName         (type, id),
-          note: this._getNote         (type, id, includeMonths, includeYears),
-          rows: this._getChildrenData (type, id, dates, allowLeaf, includeMonths, includeYears, addCats),
+          id:        id,
+          name:      this._getName         (type, id),
+          note:      this._getNote         (type, id, includeMonths, includeYears),
+          rows:      data .data,
+          getUpdate: data .getUpdate
         }
       })
     return {
@@ -439,32 +480,13 @@ class Navigate {
       highlight: cols .length > 1? cols .indexOf (Types .dateM .toString (Types .dateMY .today())): null,
       income:    this._getIncome (type),
       getUpdate: (eventType, model, eventIds) => {
-        let tooDetailedForUpdate = groups .find (g => {return g .rows .find (r => {return r .id .includes ('payee_')})});
-        if (this._getModels (type) .includes (model)) {
-          if (eventType == ModelEvent .UPDATE && eventIds .length == 1 && ! tooDetailedForUpdate) {
-            for (let id of ids) {
-              if (id == eventIds [0]) {
-                let rows  = this._getChildrenData (type, id, dates, allowLeaf, getChildren, getAmounts, getName, includeMonths, includeYears, addCats);
-                let group = groups [ids .indexOf (id)];
-                let other = rows [rows .length - 1];
-                if (other .id .includes ('other_') && group .rows [group .rows .length - 1] .id .includes ('other_')) {
-                  group .rows [group .rows .length -1] = other;
-                  return {update: {id: other .id , name: other .name, amounts: other .amounts}}
-                } else if (other .id .includes ('other_') == group .rows [rows .length - 1] .id .includes ('other_'))
-                  return {}
-              } else {
-                let affected = this._getChildren (type, id) .find (childId => {
-                  let child = this._categories .get (childId .split ('_') .slice (-1) [0])
-                  return childId == eventIds [0] || this._categories .getDescendants (child) .find (d => {return d._id == eventIds [0]})
-                })
-                if (affected) {
-                  let isCredit = this._budget .isCredit (this._categories .get (affected .split ('_') .slice (-1) [0]))
-                  return {update: {id: affected, name: getName (affected), amounts: this._getAmounts (type, affected, isCredit, dates, includeMonths, includeYears, addCats)}}
-                }
-              }
-            }
+        for (let g of groups) {
+          let update = g .getUpdate (eventType, model, eventIds);
+          if (update) {
+            if (update .needReplace)
+              update = this._getData (type, dates, ids, allowLeaf, includeMonths, includeYears, addCats);
+            return update
           }
-          return {replace: this._getData (type, dates, ids, allowLeaf, includeMonths, includeYears, addCats)}
         }
       }
     }
@@ -478,8 +500,10 @@ class Navigate {
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       var updater = this._addUpdater (view, (eventType, model, ids) => {
         let update = dataset .getUpdate (eventType, model, ids);
-        if (update)
+        if (update) {
+          console .assert (! update .needUpdate);
           updateView (update);
+        }
       });
       var updateView = view .addMonthsGraph (name, dataset, popup, position, () => {
         this._deleteUpdater (view, updater);
@@ -495,8 +519,10 @@ class Navigate {
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       var updater = this._addUpdater (view, (eventType, model, ids) => {
         let update = dataset .getUpdate (eventType, model, ids);
-        if (update)
+        if (update) {
+          console .assert (! update .needUpdate);
           updateView (update);
+        }
       });
       var updateView = view .addBudgetTable (name, dataset, dates, skipFoot, popup, position, toHtml, () => {
         this._deleteUpdater (view, updater);
@@ -513,46 +539,106 @@ class Navigate {
   /**** YEARLY BUDGET OR ACTUAL GRAPH ****/
 
   _getYearData (type, id, blackouts) {
-    var dates = [{start: this._budget .getStartDate(), end: this._budget .getEndDate()}];
-    var data  = this._getChildrenData (type, id, dates);
-    if (blackouts) {
+    var getBlackouts = (d) => {
       var boAmts  = blackouts .map (b => {return this._getAmounts (type, b._id, this._budget .isCredit (b), dates) [0]});
-      var amts    = data .reduce ((s,c) => {return s + c .amounts[0] .value}, 0);
+      var amts    = d .reduce ((s,c) => {return s + c .amounts[0] .value}, 0);
       var unalloc = Math .max (0, boAmts [0] .value - boAmts [1] .value - amts);
-      data .push ({
-        id:      'unallocated_' + id,
+      return [{
+        id:      'unallocated_',
         name:    'Unallocated',
-        amounts: [{id: 'unallocated_' + id, value: unalloc}]
-      });
-      data .push ({
+        amounts: [{id: 'unallocated_', value: unalloc}]
+      }, {
         id:       'blackout_' + boAmts [1] .id,
         name:     blackouts [1] .name,
         amounts:  [boAmts [1]],
         blackout: true
-      });
+      }]
+    }
+    var dates = [{start: this._budget .getStartDate(), end: this._budget .getEndDate()}];
+    var data  = this._getChildrenData (type, id, dates);
+    if (blackouts) {
+      let bo = getBlackouts (data .data);
+      data .data .push (bo [0], bo [1]);
     }
     return {
       name: this._categories .get (id .split ('_') .slice (-1) [0]) .name,
-      cats: data .map (c => {return {
-        id:       c .id,
-        name:     c .name,
-        amount:   c .amounts [0] .value,
-        blackout: c .blackout
-      }})
+      cats: data .data .map (c => {return {
+        id:        c .id,
+        name:      c .name,
+        amount:    c .amounts [0] .value,
+        blackout:  c .blackout,
+      }}),
+      getUpdate: (e,m,i) => {
+        let update = data .getUpdate (e,m,i);
+        if (update) {
+          if (update .needUpdate && update .affected .startsWith ('blackout_')) {
+            let bo = getBlackouts (this._getChildrenData (type, id, dates) .data);
+            update = [{update: bo [0]}, {update: bo [1]}]
+          }
+          console.assert (! update .needUpdate);
+          return update;
+        }
+      }
     }
-    return ;
   }
 
   _addYearCategoriesGraph (name, id, blackouts, view, popup, position, direction) {
     if (! id .includes ('_')) {
       var type = name == '_budgetChart'? NavigateValueType .BUDGET: NavigateValueType .ACTUALS;
       var data = this._getYearData (type, id, blackouts);
-      if (data .cats .length && (data .cats .length > 1 || ! data .cats [0] .id .includes ('leaf_')))
-        view .addDoughnut (data, name, popup, position, direction, () => {
-
+      if (data .cats .length && (data .cats .length > 1 || ! data .cats [0] .id .includes ('leaf_'))) {
+        let updater = this._addUpdater (view, (eventType, model, ids) => {
+          let update = data .getUpdate (eventType, model, ids);
+          if (update) {
+            for (let u of [] .concat (update))
+              updateView (u);
+          }
+        })
+        var updateView = view .addDoughnut (data, name, popup, position, direction, () => {
+          this._deleteUpdater (view, updater);
         });
+      }
     }
   }
+//
+//
+//
+//
+//      var updater = this._addUpdater (view, (eventType, model, ids) => {
+//        if (model == data .model)
+//          if (eventType == ModelEvent .UPDATE && ! ids .includes (data .root._id))
+//            for (let id of ids) {
+//              var affectedCat = data .cats .find (cat => {
+//                return cat .id == id || this._categories .getDescendants (this._categories .get (cat .id)) .find (d => {
+//                  return d._id == id
+//                })
+//              });
+//              if (affectedCat) {
+//                affectedCat = this._categories .get (affectedCat .id);
+//                updateView ({update: {
+//                  name:   affectedCat .name,
+//                  id:     affectedCat._id,
+//                  amount: data .getAmount (affectedCat)
+//                }});
+//              } else if (data .blackouts) {
+//                var amounts = data .blackouts .map (b => {return data .getAmount (b)});
+//                var catAmts = data .cats .reduce ((s,c) => {return  s + (isNaN (c .id)? c .amount: 0)}, 0);
+//                var unalloc = Math .max (0, amounts [0] - amounts [1] - catAmts);
+//                var other   = amounts [1];
+//                updateView ({update: {id: 100, amount: unalloc}})
+//                updateView ({update: {id: 101, amount: other, name: data .blackouts [1] .name}})
+//              }
+//            }
+//          else {
+//            data .getData();
+//            updateView ({replace: data});
+//          }
+//      })
+//      if (data .cats .length)
+//        var updateView = view .addDoughnut (data, name, popup, position, direction, () => {
+//          this._deleteUpdater (view, updater);
+//        });
+//
 
   _addYearCategoriesGraphs (name, view, toHtml) {
     var income  = this._budget .getIncomeCategory();

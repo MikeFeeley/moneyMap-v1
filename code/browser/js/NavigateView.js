@@ -471,8 +471,8 @@ class NavigateView extends Observable  {
             var idx = data .cats .indexOf (ds);
             if (dt .update .name != null)
               config .data .labels [idx] = dt .update .name;
-            data .cats [idx] .amount               = dt .update .amount;
-            config .data .datasets [0] .data [idx] = dt .update .amount;
+            data .cats [idx] .amount               = dt .update .amounts [0] .value;
+            config .data .datasets [0] .data [idx] = dt .update .amounts [0] .value;
             config .centerLabel [1]                = Types .moneyD .toString (data .cats .reduce ((s,c) => {
               return s + (! c .blackout? c .amount: 0)
             }, 0))
