@@ -435,24 +435,29 @@ class Navigate {
                 let i =  e. id .split ('_') .slice (-1) [0];
                 return i == eid || (! e .id .includes ('other_') && this._categories .getDescendants (this._categories .get (i)) .find (d => {return d._id == eid}))
               });
-              if (aff .length == 1) {
-                let aid     = aff [0] .id;
-                let newData = this._getChildrenData (type, id, dates, allowLeaf, includeMonths, includeYears, addCats);
-                if (hasOther == (newData .data .length && newData .data [newData .data .length - 1] .id .includes ('other_'))) {
-                  let newAff = newData .data .filter (d => {return d .id == aid});
-                  if (newAff .length == 1) {
-                    newAff = newAff [0];
-                    return {update: {id: newAff .id, name: newAff .name, amounts: newAff .amounts}}
-                  } else if (newAff .length == 0)
-                    return {needUpdate: true, affected: aid}
-                  else
-                    return needUpdate
-                } else
-                  return needReplace
-              } else if (aff .length > 1)
-                return needReplace
+              if (aff .length) {
+                let up = aff .map (af => {
+                  let aid     = af .id;
+                  let newData = this._getChildrenData (type, id, dates, allowLeaf, includeMonths, includeYears, addCats);
+                  if (hasOther == (newData .data .length && newData .data [newData .data .length - 1] .id .includes ('other_'))) {
+                    let newAff = newData .data .filter (d => {return d .id == aid});
+                    if (newAff .length == 1) {
+                      newAff = newAff [0];
+                      return {update: {id: newAff .id, name: newAff .name, amounts: newAff .amounts}}
+                    } else if (newAff .length == 0)
+                      return {needUpdate: true, affected: aid}
+                    else
+                      return needUpdate
+                  } else
+                    return needReplace
+                })
+                if (up .find (u => {return u .needReplace}))
+                  return [needReplace]
+                else
+                  return up;
+              }
             } else
-              return needReplace
+              return [needReplace]
           }
         }
       }
@@ -537,9 +542,10 @@ class Navigate {
         for (let g of groups) {
           let update = g .getUpdate (eventType, model, eventIds);
           if (update) {
-            if (update .needReplace)
-              update = this._getData (type, dates, ids, allowLeaf, includeMonths, includeYears, addCats);
-            return update
+            if (update [0] .needReplace)
+              return [{replace: this._getData (type, dates, ids, allowLeaf, includeMonths, includeYears, addCats)}]
+            else
+              return update;
           }
         }
       }
@@ -555,9 +561,10 @@ class Navigate {
       var updater = this._addUpdater (view, (eventType, model, ids) => {
         let update = dataset .getUpdate (eventType, model, ids);
         if (update) {
-          if (update .needUpdate)
-            update = {needReplace: true}
-          updateView (update);
+          if (update .find (u => {return u .needUpdate}))
+            update = [{needReplace: true}]
+          for (let u of update)
+            updateView (u);
         }
       });
       var updateView = view .addMonthsGraph (name, dataset, popup, position, () => {
@@ -575,9 +582,10 @@ class Navigate {
       var updater = this._addUpdater (view, (eventType, model, ids) => {
         let update = dataset .getUpdate (eventType, model, ids);
         if (update) {
-        if (update .needUpdate)
-          update = {needReplace: true}
-          updateView (update);
+          if (update .find (u => {return u .needUpdate}))
+            update = [{needReplace: true}]
+          for (let u of update)
+            updateView (u);
         }
       });
       var updateView = view .addBudgetTable (name, dataset, dates, skipFoot, popup, position, toHtml, () => {
@@ -627,12 +635,14 @@ class Navigate {
       getUpdate: (e,m,i) => {
         let update = data .getUpdate (e,m,i);
         if (update) {
-          if (update .needUpdate && update .affected .startsWith ('blackout_')) {
-            let bo = getBlackouts (this._getChildrenData (type, id, dates) .data);
-            update = [{update: bo [0]}, {update: bo [1]}]
-          }
-          console.assert (! update .needUpdate);
-          return update;
+          let nu = [];
+          for (let u of update)
+            if (u .needUpdate && u .affected .startsWith ('blackout_')) {
+              let bo = getBlackouts (this._getChildrenData (type, id, dates) .data);
+              nu .push ({update: bo [0]}, {update: bo [1]})
+            } else
+              nu .push (u);
+          return nu;
         }
       }
     }
@@ -646,7 +656,7 @@ class Navigate {
         let updater = this._addUpdater (view, (eventType, model, ids) => {
           let update = data .getUpdate (eventType, model, ids);
           if (update) {
-            for (let u of [] .concat (update))
+            for (let u of update)
               updateView (u);
           }
         })
