@@ -543,7 +543,7 @@ div._TransactionHUD {
     overflow-y: scroll;
     clear: all;
     > div:last-child {
-      margin-bottom: 600px;  /* hack to handle pop-ups at bottom of screen gracefully */
+      margin-bottom: 1000px;  /* hack to handle pop-ups at bottom of screen gracefully */
     }
   }
   clear: all;

@@ -23,6 +23,7 @@ class BudgetProgressHUD {
       this._getData();
       this._updateMonth();
       this._updateYear();
+      this._updateTitle();
       if (eventType == ModelEvent .INSERT || eventType == ModelEvent .REMOVE) {
         var cat = this._variance .getBudget() .getCategories() .get (this._id);
         if (((cat .children || []) .length != 0) != this._hasSubCategories)
@@ -40,7 +41,10 @@ class BudgetProgressHUD {
         }
       }
       arg .position .left = Math .min (0, ($(document) .width() - 1000) - arg .html .offset() .left);
-      TransactionHUD .showCategory (this._id, arg .month, this._accounts, this._variance, arg .html, arg .position);
+      if (arg .altClick)
+        TransactionHUD .showCategory (this._id, arg .month, this._accounts, this._variance, arg .html, arg .position);
+      else
+        Navigate .showActualMonthGraph (this._id, arg .month, arg .html, arg .position, arg .name == '_month', arg .name == '_year');
     }
   }
 

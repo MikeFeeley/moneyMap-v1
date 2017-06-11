@@ -255,6 +255,35 @@ body {
   }
 }
 
+._budgetMonthsGraph, ._budgetHistoryGraph, ._activityMonthsGraph {
+  position: relative;
+  > ._popup, &._popup {
+    @include light-popup();
+    > ._heading {
+      margin-top: 0px;
+      width: 800px;
+    }
+    margin-bottom: 8px;
+  }
+}
+._progressGraphs > div, ._activityMonthsGraph {
+  > ._popup, &._popup {
+    > ._heading {
+      > ._heading {
+        font-size:     48px;
+        font-weight:   100;
+        margin-bottom: 24px;
+      }
+      > ._subheading {
+        color: #666;
+        margin-left: 20px;
+        font-size:   20px;
+        font-weight: 100;
+      }
+    }
+  }
+}
+
 ._Navigate {
   > ._list {
     position: relative;
@@ -310,28 +339,6 @@ body {
       }
       margin-top: 0px;
       margin-bottom: 32px;
-    }
-    ._budgetMonthsGraph, ._budgetHistoryGraph, ._activityMonthsGraph {
-      position: relative;
-      > ._popup, &._popup {
-        @include light-popup();
-        > ._heading {
-          margin-top: 0px;
-          width: 800px;
-        }
-        margin-bottom: 8px;
-      }
-    }
-    > ._progressGraphs > div, ._activityMonthsGraph {
-      > ._popup, &._popup {
-        > ._heading {
-          > ._subheading {
-            color: #666;
-            margin-left: 20px;
-            font-size: 20px;
-          }
-        }
-      }
     }
     > ._budgetTables > ._budgetTable > table > tbody > tr > td, > ._activityTables > ._activityTable > table > tbody > tr > td {
       &:nth-child(14) {

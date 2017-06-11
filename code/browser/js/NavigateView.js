@@ -159,12 +159,12 @@ class NavigateView extends Observable  {
     this._budgetYearGraph .add();
   }
 
-  addMonthsGraph (name, dataset, popup, position, onClose, toHtml) {
-    return this._addBudgetGraph (name, dataset, popup, position, onClose, toHtml);
+  addMonthsGraph (name, dataset, popup, position, onClose, toHtml, onAlternateView) {
+    return this._addBudgetGraph (name, dataset, popup, position, onClose, toHtml, onAlternateView);
   }
 
-  addHistoryGraph (dataset, popup, position, onClose, toHtml) {
-    return this._addBudgetGraph ('_budgetHistoryGraph', dataset, popup, position, onClose, toHtml);
+  addHistoryGraph (dataset, popup, position, onClose, toHtml, onAlternateView) {
+    return this._addBudgetGraph ('_budgetHistoryGraph', dataset, popup, position, onClose, toHtml, onAlternateView);
   }
 
   /**
@@ -184,7 +184,7 @@ class NavigateView extends Observable  {
    *   }
    */
 
-  _addBudgetGraph (name, dataset, popup, position, onClose, toHtml) {
+  _addBudgetGraph (name, dataset, popup, position, onClose, toHtml, onAlternateView) {
 
     var processDataset = () => {
       labels = dataset .cols;
@@ -344,22 +344,27 @@ class NavigateView extends Observable  {
     chart = new Chart (canvas .get (0) .getContext ('2d'), config);
     if (popup)
       ui .scrollIntoView (graph, true);
-    return (data) => {
-      if (this._isVisible()) {
-        if (data .update) {
-          var ds = config .data .datasets .find (d => {return d .id == data .update .id});
-          if (ds) {
-            ds .label = data .update .name;
-            ds .data  = data .update .amounts .map (a => {return a .value});
+    return (updates) => {
+      if (onAlternateView || this._isVisible()) {
+        for (let update of updates)
+          if (update .update) {
+            var ds = config .data .datasets .find (d => {return d .id == update .update .id});
+            if (ds) {
+              if (update .update .name != null)
+                ds .label = update .update .name;
+              if (update .update .amounts != null)
+                ds .data  = update .update .amounts .map (a => {return a .value});
+            }
+            if (data [0] .id == update .update .id && update .update .name)
+              graph .find ('span._heading') .text (update .update .name)
+          } else if (update .replace) {
+            dataset = update .replace;
+            processDataset();
+            setDataset();
           }
-        } else {
-          dataset = data .replace;
-          processDataset();
-          setDataset();
-        }
         chart .update();
-      } else
-        this .resetHtml();
+      } else if (!onAlternateView)
+        this._view .resetHtml();
     }
   }
 
@@ -470,24 +475,27 @@ class NavigateView extends Observable  {
     }
     setDataset();
     var chart = new Chart (canvas .get (0). getContext ('2d'), config);
-    return dt => {
+    return updates => {
       if (this._isVisible()) {
-        if (dt .update) {
-          var ds = data .cats .find (d => {return d .id == dt .update .id});
-          if (ds) {
-            var idx = data .cats .indexOf (ds);
-            if (dt .update .name != null)
-              config .data .labels [idx] = dt .update .name;
-            data .cats [idx] .amount               = dt .update .amounts [0] .value;
-            config .data .datasets [0] .data [idx] = dt .update .amounts [0] .value;
-            config .centerLabel [1]                = Types .moneyD .toString (data .cats .reduce ((s,c) => {
-              return s + (! c .blackout? c .amount: 0)
-            }, 0))
+        for (let update of updates)
+          if (update .update) {
+            var ds = data .cats .find (d => {return d .id == update .update .id});
+            if (ds) {
+              var idx = data .cats .indexOf (ds);
+              if (update .update .name != null)
+                config .data .labels [idx] = update .update .name;
+              if (update .update .amounts != null) {
+                data .cats [idx] .amount               = update .update .amounts [0] .value;
+                config .data .datasets [0] .data [idx] = update .update .amounts [0] .value;
+                config .centerLabel [1]                = Types .moneyD .toString (data .cats .reduce ((s,c) => {
+                  return s + (! c .blackout? c .amount: 0)
+                }, 0))
+              }
+            }
+          } else {
+            data = update .replace;
+            setDataset();
           }
-        } else {
-          data = dt .replace;
-          setDataset();
-        }
         chart .update();
       } else
         this .resetHtml();
@@ -669,26 +677,29 @@ class NavigateView extends Observable  {
       );
     }
     addTable ();
-    return data => {
+    return updates => {
       if (this._isVisible()) {
-        if (data .update) {
-          outerLoop: for (let g of dataset .groups)
-            for (let r of g .rows)
-              if (r .id == data .update .id) {
-                r .name    = data .update .name;
-                r .amounts = data .update .amounts;
-                var group = g;
-                var row   = r;
-                break outerLoop;
-              }
-          updateGroup (group);
-          updateRow   (row);
-          updateFoot();
-        } else {
-          dataset = data .replace;
-          container .empty();
-          addTable();
-        }
+        for (let update of updates)
+          if (update .update) {
+            outerLoop: for (let g of dataset .groups)
+              for (let r of g .rows)
+                if (r .id == update .update .id) {
+                  if (update .update .name != null)
+                    r .name    = update .update .name;
+                  if (update .update .amounts != null)
+                    r .amounts = update .update .amounts;
+                  var group = g;
+                  var row   = r;
+                  break outerLoop;
+                }
+            updateGroup (group);
+            updateRow   (row);
+            updateFoot();
+          } else {
+            dataset = update .replace;
+            container .empty();
+            addTable();
+          }
       } else
         this .resetHtml();
     }

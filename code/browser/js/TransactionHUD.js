@@ -129,6 +129,10 @@ class TransactionHUD extends TransactionTable {
   }
 
   *addHtml (toHtml, position) {
+    let ml = 500;
+    let po = toHtml .offset() .left;
+    if (po + position .left > ml)
+      position .left = ml - po;
     this._html = $('<div>', {class: this._view._name}) .appendTo (toHtml);
     this._html .mouseup (e => {
       if (this._view._options .readOnly) {

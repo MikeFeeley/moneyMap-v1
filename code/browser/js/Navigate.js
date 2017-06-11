@@ -15,6 +15,7 @@ class Navigate {
     this._parametersObserver = this._parameters    .addObserver (this, (e,d,a) => {this._onModelChange (e,d,a,null,{constructor: {name: 'Parameters'}})});
     this._accountsObserver   = this._accountsModel .addObserver (this, (e,d,a) => {this._onModelChange (e,d,a,null,{constructor: {name: 'Accounts'}})});
     this._accountsModel .observe ({});
+    NavigateInstance         = this;
   }
 
   delete() {
@@ -175,16 +176,26 @@ class Navigate {
             BudgetProgressHUD .show (id, arg .html, position, this._accounts, this._variance, arg .labelIndex < 12? dates .end: undefined);
           } else
             TransactionHUD .showCategory (arg .id, dates, this._accounts, this._variance, arg .html, {top: arg .position .top, left: 0}, im, iy, sel && sel .addCats);
-        } else
-          this._addMonthsGraph (arg .name, arg .view, [arg .id], true, arg .position, arg .html, im, iy, sel && sel .addCats);
+        } else {
+          if (arg .id .includes ('budget_')) {
+            let id   = arg .id .split ('_') .slice (-1) [0];
+            let date = arg .labelIndex < 12
+              ? Math .min(Types .date. today(), Types .date .monthEnd (Types .date .addMonthStart (this._budget .getStartDate(), arg . labelIndex)))
+              : undefined;
+            BudgetProgressHUD .show (id, arg .html, arg .position, this._accounts, this._variance, date);
+          } else
+            this._addMonthsGraph (arg .name, arg .view, [arg .id], true, arg .position, arg .html, im, iy, sel && sel .addCats);
+        }
       } else if (arg .name == '_budgetHistoryGraph' && arg .id .length >= 1 && arg .id [0]) {
         async (this, this._addHistoryGraph) ([] .concat (arg .id), true, arg .position, arg .view);
       }
 
     } else if (eventType == NavigateViewEvent .BUDGET_GRAPH_TITLE_CLICK && arg .id) {
+      /* Graph Title */
       BudgetProgressHUD .show (arg .id .split ('_') .slice (-1) [0], arg .html, arg .position, this._accounts, this._variance);
+
     } else if (eventType == NavigateViewEvent .BUDGET_TABLE_CLICK && arg .id) {
-      /* Monthly or History Table (Budget or Actual */
+      /* Monthly or History Table (Budget or Actual) */
       if (['_budgetTable', '_activityTable'] .includes (arg .name)) {
         if (arg .altClick) {
           let id = arg .id .split ('_') .slice (-1) [0];
@@ -539,37 +550,51 @@ class Navigate {
       highlight: cols .length > 1? cols .indexOf (Types .dateM .toString (Types .dateMY .today())): null,
       income:    this._getIncome (type),
       getUpdate: (eventType, model, eventIds) => {
+        let update = [];
         for (let g of groups) {
-          let update = g .getUpdate (eventType, model, eventIds);
-          if (update) {
-            if (update [0] .needReplace)
-              return [{replace: this._getData (type, dates, ids, allowLeaf, includeMonths, includeYears, addCats)}]
-            else
-              return update;
+          if (this._getModels (type) .includes (model) && eventIds .includes (g .id))
+            update .push ({update: {id: g .id, name: this._getName (type, g .id)}})
+          let u = g .getUpdate (eventType, model, eventIds);
+          if (u) {
+            if (u [0] .needReplace)
+              u = [{replace: this._getData (type, dates, ids, allowLeaf, includeMonths, includeYears, addCats)}]
+            update = update .concat (u);
           }
         }
+        return update;
       }
     }
+  }
+
+  _getMonthsData (type, dates, ids, allowLeaf, includeMonths, includeYears, addCats) {
+    let data = this._getData (type, dates, ids, allowLeaf, includeMonths, includeYears, addCats);
+    let parentUpdate = data .getUpdate;
+    data .getUpdate = (e,m,i) => {
+      return parentUpdate (e,m,i) .map (u => {
+        if (u .needUpdate)
+          return {needReplace: this._getData (type, dates, ids, allowLeaf, includeMonths, includeYears, addCats)}
+        else
+          return u;
+      })
+    }
+    return data;
   }
 
   /**
    * Add GRAPH (either budget or actual) showing children of specifie root list
    */
-  _addMonthsGraph (name, view, ids, popup, position, toHtml, includeMonths, includeYears, addCats) {
-    var dataset = this._getData (name .includes ('budget')? NavigateValueType .BUDGET_YR_AVE_ACT: NavigateValueType .ACTUALS_BUD, null, ids, true, includeMonths, includeYears, addCats);
+  _addMonthsGraph (name, view, ids, popup, position, toHtml, includeMonths, includeYears, addCats, toView = view) {
+    var type    = name .includes ('budget')? NavigateValueType .BUDGET_YR_AVE_ACT: NavigateValueType .ACTUALS_BUD;
+    var dataset = this._getMonthsData (type, null, ids, true, includeMonths, includeYears, addCats);
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       var updater = this._addUpdater (view, (eventType, model, ids) => {
         let update = dataset .getUpdate (eventType, model, ids);
-        if (update) {
-          if (update .find (u => {return u .needUpdate}))
-            update = [{needReplace: true}]
-          for (let u of update)
-            updateView (u);
-        }
+        if (update)
+          updateView (update);
       });
       var updateView = view .addMonthsGraph (name, dataset, popup, position, () => {
         this._deleteUpdater (view, updater);
-      }, toHtml);
+      }, toHtml, toView);
     }
   }
 
@@ -577,16 +602,12 @@ class Navigate {
    * Add TABLE (either budget or actual) showing children of specified root list
    */
   _addMonthsTable (name, view, ids, dates, skipFoot, popup, position, toHtml, col) {
-    var dataset = this._getData (name .includes ('budget')? NavigateValueType .BUDGET: NavigateValueType .ACTUALS, dates, ids, false);
+    var dataset = this._getMonthsData (name .includes ('budget')? NavigateValueType .BUDGET: NavigateValueType .ACTUALS, dates, ids, false);
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       var updater = this._addUpdater (view, (eventType, model, ids) => {
         let update = dataset .getUpdate (eventType, model, ids);
-        if (update) {
-          if (update .find (u => {return u .needUpdate}))
-            update = [{needReplace: true}]
-          for (let u of update)
-            updateView (u);
-        }
+        if (update)
+          updateView (update);
       });
       var updateView = view .addBudgetTable (name, dataset, dates, skipFoot, popup, position, toHtml, () => {
         this._deleteUpdater (view, updater);
@@ -602,7 +623,7 @@ class Navigate {
   /***************************************/
   /**** YEARLY BUDGET OR ACTUAL GRAPH ****/
 
-  _getYearData (type, id, blackouts) {
+  _getYearsData (type, id, blackouts) {
     var getBlackouts = (d) => {
       var boAmts  = blackouts .map (b => {return this._getAmounts (type, b._id, this._budget .isCredit (b), dates) [0]});
       var amts    = d .reduce ((s,c) => {return s + c .amounts[0] .value}, 0);
@@ -651,14 +672,12 @@ class Navigate {
   _addYearCategoriesGraph (name, id, blackouts, view, popup, position, direction) {
     if (! id .includes ('_')) {
       var type = name == '_budgetChart'? NavigateValueType .BUDGET: NavigateValueType .ACTUALS;
-      var data = this._getYearData (type, id, blackouts);
+      var data = this._getYearsData (type, id, blackouts);
       if (data .cats .length && (data .cats .length > 1 || ! data .cats [0] .id .includes ('leaf_'))) {
         let updater = this._addUpdater (view, (eventType, model, ids) => {
           let update = data .getUpdate (eventType, model, ids);
-          if (update) {
-            for (let u of update)
-              updateView (u);
-          }
+          if (update)
+            updateView (update);
         })
         var updateView = view .addDoughnut (data, name, popup, position, direction, () => {
           this._deleteUpdater (view, updater);
@@ -1019,7 +1038,7 @@ class Navigate {
   }
 
   *_updateHistoryView (parentIds, updateView) {
-    updateView ({replace: yield* this._getHistoryData (parentIds)})
+    updateView ([{replace: yield* this._getHistoryData (parentIds)}])
   }
 
   *_addHistoryGraph (parentIds, popup, position, view, dataset, toHtml) {
@@ -1210,7 +1229,21 @@ class Navigate {
         updater (eventType, model, ids);
   }
 
+
+
+
+
+
+  /**************************/
+  /***** STATIC METHODS *****/
+
+  static showActualMonthGraph (id, month, html, position, includeMonths=true, includeYears=true) {
+    if (NavigateInstance)
+      NavigateInstance._addMonthsGraph ('_activityMonthsGraph', NavigateInstance._progressView, [id], true, position, html, includeMonths, includeYears, [], true);
+  }
 }
+
+var NavigateInstance;
 
 const NavigateValueType = {
   BUDGET:            0,
