@@ -90,6 +90,8 @@ class Navigate {
 
   _onModelChange (eventType, doc, arg, source, model) {
     var modelName = model .constructor .name;
+    if (eventType == ModelEvent .INSERT && modelName == 'SchedulesModel' && doc .category)
+      return;
     switch (modelName) {
       case 'ActualsModel':
         var ids = (doc .category && [doc .category]) || [];
