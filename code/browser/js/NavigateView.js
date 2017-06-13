@@ -76,14 +76,20 @@ class NavigateView extends Observable  {
     return content;
   }
 
+  addProgressSidebar() {
+    this._content .remove();
+    this._content = this._html;
+    this._progressSidebar = $('<div>', {class: '_progressSidebar _sidebar_right'}) .appendTo (this._content);
+    $('<button>', {class: '_sidebar_right_hide_botton', click: () => {this._progressSidebar .hide()}, html: '&times;'}) .appendTo (this._progressSidebar);
+  }
+
   addProgressGraph (to, popup, position, onClose) {
     if (!this._progressGraphs) {
       this._progressGraphs = $('<div>', {class: '_progressGraphs'}) .appendTo (this._content);
-      $('<div>', {class: '_left'})   .appendTo (this._progressGraphs);
-      $('<div>', {class: '_right'})  .appendTo (this._progressGraphs);
-      $('<div>', {class: '_bottom'}) .appendTo (this._progressGraphs);
+      $('<button>', {class: '_sidebar_right_show_button', click: () => {this._progressSidebar .show()}, html: '&#9776;'}) .appendTo (this._progressGraphs);
+      this._container = this._progressGraphs;
     }
-    var container = typeof to == 'string'? this._progressGraphs .children ('._' + to): to;
+    var container = to || this._container;
     if (container .length) {
       var graph = $('<div>', {class: '_progressGraph' + (popup? ' _popup': '')}) .appendTo (container);
       if (popup) {

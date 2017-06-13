@@ -34,7 +34,8 @@ class Navigate {
     this._progressView .addObserver       (this, this._onViewChange);
     this._progressView .addHtml           (toHtml, () => {
       this._clearUpdatersForView (this._progressView);
-      this._addProgressGraphs ();
+      this._addProgressSidebar()
+      this._addProgressGraphs();
     })
   }
 
@@ -805,10 +806,19 @@ class Navigate {
     var roots      = [this._budget .getExpenseCategory(), this._budget .getSavingsCategory(), this._budget .getIncomeCategory()];
     var labelWidth = this._getProgressGraphLabels (roots);
     for (let root of roots)
-      this._addProgressGraph (root, 'bottom', false, undefined, labelWidth, true, true, true)
+      this._addProgressGraph (root, null, false, undefined, labelWidth, true, true, true)
   }
 
 
+
+
+
+  /****************************/
+  /***** PROGRESS SIDEBAR *****/
+
+  _addProgressSidebar (toHtml) {
+    this._progressView .addProgressSidebar();
+  }
 
 
 

@@ -27,9 +27,9 @@ class AccountBalance extends TuplePresenter {
         end:   Types .date .monthEnd   (Types .date .today())
       }
       if (arg .isCat)
-        TransactionHUD .showCategory (arg .id, dates, this._model, this._variance, arg .toHtml, arg .position)
+        TransactionHUD .showCategory (arg .id, dates, this._model, this._variance, arg .toHtml .parent(), {top: arg .position .top, right: 8})
       else
-        TransactionHUD .showAccount  (arg .id, dates, this._model, this._variance, arg .toHtml, arg. position);
+        TransactionHUD .showAccount  (arg .id, dates, this._model, this._variance, arg .toHtml .parent(), {top: arg. position .top, right: 8});
     } else
       super._onViewChange (eventType, arg);
   }

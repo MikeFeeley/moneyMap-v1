@@ -285,7 +285,55 @@ body {
 }
 
 ._Navigate {
+  position:   absolute;
+  height:     100%;
+  width:      100%;
+  clear:      all;
+  overflow-y: scroll;
+
+  ._progressGraphs {
+    height: calc(100% - 8px);
+    overflow: scroll;
+    margin-top: 0px;
+    position: relative;
+    > div {margin: 20px 50px 100px 50px}
+    > div > ._progressGraph:not(._popup) {
+      margin-bottom: 80px;
+      > div:not(:first-child) {
+        margin-right: 40px;
+        margin-left: 40px;
+      }
+    }
+    > ._popup {
+      @include light-popup();
+      width: 800px;
+      > ._text {
+        margin-top: 0px;
+      }
+      margin-bottom: 8px;
+    }
+    > ._TransactionHUD, ._activityMonthsGraph {
+      width: auto;
+      right: auto;
+    }
+    > ._progressGraph {
+      > ._heading {
+        font-size:     48px;
+        font-weight:   100;
+        margin-bottom: 24px;
+      }
+      > ._text {
+        font-size: 32px;
+        font-weight: 100;
+        margin-left: 20px;
+      }
+    }
+  }
+
   > ._list {
+    height: calc(100% - 8px);
+    clear: all;
+    overflow-y: scroll;
     position: relative;
     padding: 0px 40px;
     width: auto;
@@ -310,16 +358,6 @@ body {
     > * {
       margin-top:    50px;
       margin-bottom: 100px;
-    }
-    > ._progressGraphs {
-      margin-top: 0px;
-      > div > ._progressGraph:not(._popup) {
-         margin-bottom: 80px;
-         > div:not(:first-child) {
-           margin-right: 40px;
-           margin-left: 40px;
-         }
-      }
     }
     > ._budgetYearGraph {
       > div {
@@ -503,44 +541,6 @@ body {
         height: 200px;
       }
     }
-    > ._progressGraphs {
-      position: relative;
-      > ._left, > ._right, > ._bottom {
-        position: relative;
-        vertical-align: top;
-        display: inline-block;
-        &._left, &._right {
-          width: 50%;
-        }
-        &._bottom {
-          width: 100%;
-        }
-        &._left > ._progressGraph {
-          border-right: 1px dotted #ccc;
-        }
-        &._right > ._progressGraph {
-          margin-left: -1px;
-          border-left: 1px dotted #ccc;
-        }
-        > ._popup {
-          @include light-popup();
-          width: 800px;
-          > ._text {
-            margin-top: 0px;
-          }
-          margin-bottom: 8px;
-        }
-        > ._TransactionHUD, ._activityMonthsGraph {
-          width: auto;
-          right: auto;
-        }
-        > ._progressGraph {
-          > ._text {
-            margin-left: 20px;
-          }
-        }
-      }
-    }
   }
 }
 
@@ -613,6 +613,10 @@ body {
   }
 }
 
+._progressGraphs {
+  @include sidebar-right-main(1100px, 260px)
+}
 
-
-
+._progressSidebar {
+  @include sidebar-right-sidebar(1100px, 260px)
+}
