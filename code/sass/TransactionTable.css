@@ -509,14 +509,15 @@ div._TransactionHUD {
 }
 
 ._ImportTransactions {
+  $import-width:  1220px;
+  $sidebar-width: 200px;
   > ._AccountBalanceView {
-    @include sidebar-right-sidebar(1250px, 220px);
+    @include sidebar-right-sidebar($import-width, $sidebar-width);
   }
-  > ._import {
-    overflow-y: scroll;
-    @include sidebar-right-main(1250px, 220px)
+  > ._importParent {
+    @include sidebar-right-main($import-width, $sidebar-width)
   }
-  @include sidebar-right-show(1250px)
+  @include sidebar-right-show($import-width)
 }
 
 
@@ -527,14 +528,12 @@ div._TransactionHUD {
   clear:      all;
   overflow-y: scroll;
   > ._AccountBalanceView {
-    * {color: #777};
     &::-webkit-scrollbar { width: 0 !important };
     overflow-y: scroll;
   }
   > ._import {
     overflow-y: scroll;
     clear: all;
-    height: calc(100% - 8px);
     margin-left: 10px;
     padding-left: 8px;
     padding-top: 8px;

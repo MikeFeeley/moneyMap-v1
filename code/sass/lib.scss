@@ -55,30 +55,31 @@ $left-margin-sep: 20px;
 }
 
 ._sidebar_group {
-  margin: 25px 8px 25px 8px;
-  background-color: rgba(254,254,254,.8);
+  overflow: hidden;
+  margin: 25px 11px 25px 11px;
+  background-color: rgba(255,255,255,.8);
   border-radius: 12px;
-  box-shadow: 0px 0px 2px rgba(150,150,150,.6);
-  > * {
-    padding: 6px;
-  }
+  box-shadow: 0px 0px 1px rgba(0,0,0,.3), 0px 0px 3px rgba(0,0,0,.15);
   * {color: #777}
   > ._heading {
-    background-color: rgba(240,240,240,.8);
+    background-color: rgba(210,210,210,.4);
     font-size: 18px;
     font-weight: 300;
+    color: #444;
+    padding: 6px 8px 6px 8px;
   }
   > div:not(._heading) {
     font-size: 14px;
     font-weight: 100;
+    margin: 8px 8px 8px 8px;
   }
 }
 
 ._sidebar_right {
-  right: 0;
+  right: 0px;
   height:100%;
   z-index: 1;
-  background-color: rgba(235,235,235,.9);
+  background-color: rgba(80,80,80,.4);
   position:fixed!important;
   margin-top: 0px!important;
   overflow:hidden;
@@ -95,7 +96,7 @@ $left-margin-sep: 20px;
     white-space:nowrap;
     font-size: 40px;
     font-weight: 100;
-    color: #aaa;
+    color: #eee;
     cursor:pointer;
   }
 }
@@ -124,7 +125,7 @@ $left-margin-sep: 20px;
 
 @mixin sidebar-right-show($min-width) {
   ._sidebar_right_show_button {
-    @media (min-width: $min-width - 1px) {display:none}
+    @media (min-width: $min-width - 1px) {display: none}
   }
 }
 

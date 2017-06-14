@@ -103,10 +103,6 @@ body {
   }
 }
 
-/*._ScheduleEntry li ._error ._content, td ._content {*/
-/*  margin: 1px;*/
-/*}*/
-
 ._error_widget {
   ._content {
     color: red;
@@ -290,33 +286,28 @@ body {
   width:      100%;
   clear:      all;
   overflow-y: scroll;
+  overflow-x: hidden;
+
 
   ._progressGraphs {
-    height: calc(100% - 8px);
-    overflow: scroll;
+    overflow-y: scroll;
     margin-top: 0px;
     position: relative;
-    > div {margin: 20px 20px 100px 20px}
-    > div > ._progressGraph:not(._popup) {
-      margin-bottom: 80px;
-      > div:not(:first-child) {
-        margin-right: 40px;
-        margin-left: 40px;
-      }
-    }
     > ._popup {
       @include light-popup();
+      margin-left: 20px;
       width: 800px;
       > ._text {
         margin-top: 0px;
       }
       margin-bottom: 8px;
     }
-    > ._TransactionHUD, ._activityMonthsGraph {
+    > ._TransactionHUD, ._activityMonthsGraph, > ._BudgetProgressHUD {
+      margin-left: 20px;
       width: auto;
       right: auto;
     }
-    > ._progressGraph {
+    ._progressGraph {
       > ._heading {
         font-size:     48px;
         font-weight:   100;
@@ -328,10 +319,19 @@ body {
         margin-left: 20px;
       }
     }
+    > ._container {
+      > div {margin: 20px 20px 100px 20px}
+      > div > ._progressGraph:not(._popup) {
+        margin-bottom: 80px;
+        > div:not(:first-child) {
+          margin-right: 40px;
+          margin-left: 40px;
+        }
+      }
+    }
   }
 
   > ._list {
-    height: calc(100% - 8px);
     clear: all;
     overflow-y: scroll;
     position: relative;
@@ -551,7 +551,7 @@ body {
   > ._index {
     float: left;
     height: 100%;
-    overflow: scroll;
+    overflow-y: scroll;
     &::-webkit-scrollbar { width: 0 !important }
     border-right: $left-border;
     width: $left-width;
@@ -571,7 +571,7 @@ body {
   > ._index {
     position: absolute;
     height: 100%;
-    overflow: scroll;
+    overflow-y: scroll;
     &::-webkit-scrollbar { width: 0 !important }
     border-right: $left-border;
     width: $left-width;
@@ -613,10 +613,15 @@ body {
   }
 }
 
+$progress-min-width: 1100px;
+$sidebar-width:      260px;
 ._progressGraphs {
-  @include sidebar-right-main(1100px, 260px)
+  @include sidebar-right-show($progress-min-width);
+  > div {
+    @include sidebar-right-main($progress-min-width, $sidebar-width)
+  }
 }
 
 ._progressSidebar {
-  @include sidebar-right-sidebar(1100px, 260px)
+  @include sidebar-right-sidebar($progress-min-width, $sidebar-width)
 }

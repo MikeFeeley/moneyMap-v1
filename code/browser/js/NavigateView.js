@@ -80,7 +80,10 @@ class NavigateView extends Observable  {
     this._content .remove();
     this._content = this._html;
     this._progressSidebar = $('<div>', {class: '_progressSidebar _sidebar_right'}) .appendTo (this._content);
-    $('<button>', {class: '_sidebar_right_hide_botton', click: () => {this._progressSidebar .hide()}, html: '&times;'}) .appendTo (this._progressSidebar);
+    this._hideButton      = $('<button>', {class: '_sidebar_right_hide_botton', click: () => {
+      this._progressSidebar .hide();
+      this._showButton      .show();
+    }, html: '&times;'}) .appendTo (this._progressSidebar);
     let goals = $('<div>', {class: '_sidebar_group'})
       .appendTo (this._progressSidebar)
       .append   ($('<div>', {class: '_heading', text: 'Goals'}))
@@ -98,8 +101,11 @@ class NavigateView extends Observable  {
   addProgressGraph (to, popup, position, onClose) {
     if (!this._progressGraphs) {
       this._progressGraphs = $('<div>', {class: '_progressGraphs'}) .appendTo (this._content);
-      $('<button>', {class: '_sidebar_right_show_button', click: () => {this._progressSidebar .show()}, html: '&#9776;'}) .appendTo (this._progressGraphs);
-      this._container = this._progressGraphs;
+      this._showButton     = $('<button>', {class: '_sidebar_right_show_button', click: () => {
+        this._progressSidebar .show();
+        this._showButton      .hide();
+      }, html: '&#9776;'}) .appendTo (this._progressGraphs);
+      this._container = $('<div>', {class: '_container'}) .appendTo (this._progressGraphs);
     }
     var container = to || this._container;
     if (container .length) {

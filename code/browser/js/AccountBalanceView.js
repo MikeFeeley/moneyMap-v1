@@ -10,8 +10,14 @@ class AccountBalanceView extends TupleView {
   addHtml (toHtml) {
     super .addHtml (toHtml);
     this._html .addClass ('_sidebar_right');
-    $('<button>', {class: '_sidebar_right_hide_botton', click: () => {this._html .hide()}, html: '&times;'}) .appendTo (this._html);
-    $('<button>', {class: '_sidebar_right_show_button', click: () => {this._html .show()}, html: '&#9776;'}) .appendTo (this._html.parent());
+    this._hideButton = $('<button>', {class: '_sidebar_right_hide_botton', click: () => {
+      this._html       .hide();
+      this._showButton .show();
+    }, html: '&times;'}) .appendTo (this._html);
+    this._showButton = $('<button>', {class: '_sidebar_right_show_button', click: () => {
+      this._html       .show();
+      this._showButton .hide();
+    }, html: '&#9776;'}) .appendTo (this._html.parent());
   }
 
   addText (name, text) {
