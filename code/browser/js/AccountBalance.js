@@ -35,10 +35,10 @@ class AccountBalance extends TuplePresenter {
   }
 
   _addGroup (accountType, name) {
-    this._view .addText ('_groupName', name);
+    let g = this._view .addGroup (name);
     for (let acc of this._model .getAccounts())
       if (acc .trackBalance && acc .type == accountType)
-        this._addTuple (acc);
+        this._addTuple (acc, g);
   }
 
   _addNetToZero() {
@@ -50,7 +50,7 @@ class AccountBalance extends TuplePresenter {
   }
 
   _updateNetToZero() {
-    this._view .removeText ('_netZero');
+    this._view .removeGroup ('_netZero');
     for (let id of this._netZeroTuples)
       this._view .removeTuple (id);
     this._netZeroTuples = [];
@@ -58,7 +58,7 @@ class AccountBalance extends TuplePresenter {
     for (let child of cat .children || []) {
       var bal = this._actuals .getAmountRecursively (child, this._budget .getStartDate() ,this._budget .getEndDate());
       if (bal != 0) {
-        this._view .addText ('_groupName _netZero', child .name);
+        let g = this._view .addGroup (child .name, '_netZero');
         if (child .children)
           for (let c of child .children) {
             var b = this._actuals .getAmountRecursively (c, this._budget .getStartDate() ,this._budget .getEndDate());
@@ -68,7 +68,7 @@ class AccountBalance extends TuplePresenter {
                 _id:     c._id,
                 name:    c .name,
                 balance: -b
-              })
+              }, g)
               this._netZeroTuples .push (c._id);
             }
             bal -= b
@@ -79,7 +79,7 @@ class AccountBalance extends TuplePresenter {
             _id:     child._id,
             name:    'Other',
             balance: -bal
-          })
+          }, g)
           this._netZeroTuples .push (child._id);
         }
       }
@@ -89,7 +89,6 @@ class AccountBalance extends TuplePresenter {
   *addHtml (toHtml) {
     yield* this._model .find();
     this._view .addHtml (toHtml);
-    this._view .addText ('_title', 'Balances');
     this._addGroup (AccountType .DEPOSIT,     'Bank Accounts');
     this._addGroup (AccountType .CASH,        'Cash');
     this._addGroup (AccountType .CREDIT_CARD, 'Credit Cards');

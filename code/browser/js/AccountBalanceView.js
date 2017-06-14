@@ -22,7 +22,19 @@ class AccountBalanceView extends TupleView {
     this._html .find ('.' + name) .remove();
   }
 
+  addGroup (title, name) {
+    return $('<div>', {class: (name || '') + ' _sidebar_group _group'})
+      .appendTo (this._html)
+      .append   ($('<div>', {class: '_heading', text: title}));
+  }
+
+  removeGroup (name) {
+    this._html .find('.' + name) .remove();
+  }
+
   addTuple (data, tuple, getToHtml) {
+    if (tuple)
+      tuple = $('<div>') .appendTo (tuple);
     var tuple = super .addTuple (data, tuple, getToHtml);
     tuple .click (e => {
       var target   = $(e .target) .parent();
