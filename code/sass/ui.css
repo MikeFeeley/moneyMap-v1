@@ -85,7 +85,6 @@ body {
     height: 100%;
     > div {
       height: 100%;
-/*      overflow-y: scroll;*/
       > div.background {
         display: none;
       }
