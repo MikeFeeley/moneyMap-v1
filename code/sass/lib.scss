@@ -119,7 +119,7 @@ $left-margin-sep: 20px;
   @media (min-width: $min-width - 1px) {display:block!important}
   @media (max-width: $min-width)       {display:none}
   ._sidebar_right_hide_botton {
-    @media (min-width: $min-width) {display:none}
+    @media (min-width: $min-width - 1px) {display:none}
   }
 }
 

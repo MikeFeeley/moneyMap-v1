@@ -286,9 +286,6 @@ body {
   width:      100%;
   clear:      all;
   overflow-y: scroll;
-  overflow-x: hidden;
-
-
   ._progressGraphs {
     overflow-y: scroll;
     margin-top: 0px;
