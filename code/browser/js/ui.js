@@ -13,7 +13,8 @@ var ui = {
       // use timeout to ensure that this code doesn't run until after html has reappeared and thus has computed height
       let sp = $(getScrollParent (e [0], includeMargin));
       let st = sp .scrollTop();
-      let sc = e .offset() .top + e .outerHeight (includeMargin) - document .documentElement .clientHeight;
+      let sh = Math .max (document .documentElement .clientHeight, e .outerHeight (includeMargin) + sp .offset() .top);
+      let sc = e .offset() .top + e .outerHeight (includeMargin) - sh;
       if (sc > 0)
         sp .animate ({scrollTop: (st + sc)}, 200);
       }, 0);
