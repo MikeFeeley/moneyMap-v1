@@ -829,6 +829,7 @@ class Navigate {
 
   _addProgressSidebar (toHtml) {
     this._progressView .addProgressSidebar();
+    this._progressView .addProgressSidebarGroup('Over Budget Last Month');
   }
 
 

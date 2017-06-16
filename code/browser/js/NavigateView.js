@@ -85,18 +85,12 @@ class NavigateView extends Observable  {
       this._progressSidebar .hide();
       this._showButton      .show();
     }, html: '&times;'}) .appendTo (this._progressSidebar);
+  }
+
+  addProgressSidebarGroup (name) {
     let goals = $('<div>', {class: '_sidebar_group'})
-      .appendTo (this._progressSidebar)
-      .append   ($('<div>', {class: '_heading', text: 'Goals'}))
-      .append   ($('<div>', {text: 'line'}))
-      .append   ($('<div>', {text: 'line'}))
-      .append   ($('<div>', {text: 'line'}));
-    let issues = $('<div>', {class: '_sidebar_group'})
-      .appendTo (this._progressSidebar)
-      .append   ($('<div>', {class: '_heading', text: 'Issues'}))
-      .append   ($('<div>', {text: 'line'}))
-      .append   ($('<div>', {text: 'line'}))
-      .append   ($('<div>', {text: 'line'}));
+    .appendTo (this._progressSidebar)
+    .append   ($('<div>', {class: '_heading', text: name}))
   }
 
   addProgressGraph (to, popup, position, onClose) {

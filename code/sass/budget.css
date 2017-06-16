@@ -603,12 +603,12 @@ body {
   }
 }
 
-$progress-min-width: 1250px;
-$sidebar-width:      220px;
+$progress-min-width:     1024px;
+$progress-sidebar-width: 300px;
 ._progressContents {
-  @include sidebar-right-main($progress-min-width, $sidebar-width);
-  @include sidebar-right-show($progress-min-width);
+  @include sidebar-right-main($progress-min-width, $progress-sidebar-width);
+  @include sidebar-right-show($progress-min-width, $progress-sidebar-width);
 }
 ._progressSidebar {
-  @include sidebar-right-sidebar($progress-min-width, $sidebar-width);
+  @include sidebar-right-sidebar($progress-min-width, $progress-sidebar-width);
 }

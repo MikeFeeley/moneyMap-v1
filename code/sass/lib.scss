@@ -116,22 +116,22 @@ $left-margin-sep: 20px;
   cursor:pointer;
 }
 
-@mixin sidebar-right-sidebar($min-width, $width) {
-  width: $width;
-  @media (min-width: $min-width - 1px) {display:block!important}
-  @media (max-width: $min-width)       {display:none}
+@mixin sidebar-right-sidebar($min-main-width, $sidebar-width) {
+  width: $sidebar-width;
+  @media (min-width: $min-main-width + $sidebar-width - 1px) {display:block!important}
+  @media (max-width: $min-main-width + $sidebar-width)       {display:none}
   ._sidebar_right_hide_botton {
-    @media (min-width: $min-width - 1px) {display:none}
+    @media (min-width: $min-main-width + $sidebar-width - 1px) {display:none}
   }
 }
 
-@mixin sidebar-right-show($min-width) {
+@mixin sidebar-right-show($min-main-width, $sidebar-width) {
   ._sidebar_right_show_button {
-    @media (min-width: $min-width - 1px) {display: none}
+    @media (min-width: $min-main-width + $sidebar-width - 1px) {display: none}
   }
 }
 
-@mixin sidebar-right-main($min-width, $width) {
-  @media (min-width: $min-width) {width: calc(100% - #{$width})}
+@mixin sidebar-right-main($min-main-width, $sidebar-width) {
+  @media (min-width: $min-main-width + $sidebar-width) {width: calc(100% - #{$sidebar-width})}
 }
 
