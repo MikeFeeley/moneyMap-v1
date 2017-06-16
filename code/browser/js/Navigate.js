@@ -294,7 +294,7 @@ class Navigate {
               value: (a .month && a .month .amount || 0) * (isCredit? -1: 1)
             }
           });
-          if (dates .length == 12 || dates .length == 0) {
+          if (dates .length == 12 || dates .length == 1) {
             let yrAmount = this._budget .getAmount (cat, this._budget .getStartDate(), this._budget .getEndDate());
             amounts .push ({
               id:    cat._id,
@@ -303,6 +303,8 @@ class Navigate {
           }
           if (type == NavigateValueType .BUDGET_YR_AVE || type == NavigateValueType .BUDGET_YR_AVE_ACT)
             amounts [amounts .length -1] .value /= 12;
+          if (dates .length == 1)
+            amounts = [{id: cat._id, value: amounts [0] .value + amounts [1] .value}]
           return amounts;
         }
 
@@ -402,7 +404,7 @@ class Navigate {
     }
   }
 
-  _getChildrenData (type, id, dates, allowLeaf, includeMonths, includeYears, addCats) {
+  _getChildrenData (type, id, dates, allowLeaf, includeMonths = true, includeYears = true, addCats = []) {
     let isLeaf = (id .includes ('other_') || id .includes ('payee_') || this._getChildren (type, id) == 0);
     if (isLeaf && (! allowLeaf || id .includes ('leaf_')))
       return {data: []}
