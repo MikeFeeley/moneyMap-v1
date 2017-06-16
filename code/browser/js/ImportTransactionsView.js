@@ -19,6 +19,7 @@ class ImportTransactionsView extends View {
     });
     yield* (new AccountBalance (this._variance)) .addHtml (this._html);
     this._import = $('<div>', {class: '_import'})  .appendTo (this._html);
+    this._html .parent() .addClass ('_ImportTransactionsContents')
   }
 
   addText (name, text) {

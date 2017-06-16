@@ -79,12 +79,12 @@ body {
     }
   }
   > .contents {
-    clear: left;
-    position: relative;
-    z-index: 2;
-    height: 100%;
     > div {
-      height: 100%;
+      > div {
+        height:   100vh;
+        position: relative;
+        overflow-y: scroll;
+      }
       > div.background {
         display: none;
       }

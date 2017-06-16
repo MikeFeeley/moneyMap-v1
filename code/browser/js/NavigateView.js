@@ -77,6 +77,7 @@ class NavigateView extends Observable  {
   }
 
   addProgressSidebar() {
+    this._html .parent() .addClass ('_progressContents');
     this._content .remove();
     this._content = this._html;
     this._progressSidebar = $('<div>', {class: '_progressSidebar _sidebar_right'}) .appendTo (this._content);

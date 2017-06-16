@@ -281,14 +281,7 @@ body {
 }
 
 ._Navigate {
-  position:   absolute;
-  height:     100%;
-  width:      100%;
-  clear:      all;
-  overflow-y: scroll;
   ._progressGraphs {
-    overflow-y: scroll;
-    margin-top: 0px;
     position: relative;
     > ._popup {
       @include light-popup();
@@ -317,7 +310,7 @@ body {
       }
     }
     > ._container {
-      > div {margin: 20px 20px 100px 20px}
+      > div {padding: 20px 20px 100px 20px}
       > div > ._progressGraph:not(._popup) {
         margin-bottom: 80px;
         > div:not(:first-child) {
@@ -610,15 +603,12 @@ body {
   }
 }
 
-$progress-min-width: 1100px;
-$sidebar-width:      260px;
-._progressGraphs {
+$progress-min-width: 1250px;
+$sidebar-width:      220px;
+._progressContents {
+  @include sidebar-right-main($progress-min-width, $sidebar-width);
   @include sidebar-right-show($progress-min-width);
-  > div {
-    @include sidebar-right-main($progress-min-width, $sidebar-width)
-  }
 }
-
 ._progressSidebar {
-  @include sidebar-right-sidebar($progress-min-width, $sidebar-width)
+  @include sidebar-right-sidebar($progress-min-width, $sidebar-width);
 }

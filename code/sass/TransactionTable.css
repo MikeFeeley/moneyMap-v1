@@ -508,13 +508,14 @@ div._TransactionHUD {
   }
 }
 
-._ImportTransactions {
-  $import-width:  1340px;
-  $sidebar-width: 200px;
-  > ._AccountBalanceView {
-    @include sidebar-right-sidebar($import-width, $sidebar-width);
-  }
-  @include sidebar-right-main($import-width, $sidebar-width)
+$import-width:  1250px;
+$sidebar-width: 220px;
+._ImportTransactions > ._AccountBalanceView {
+  @include sidebar-right-sidebar($import-width, $sidebar-width);
+}
+._ImportTransactionsContents {
+  @include sidebar-right-main($import-width, $sidebar-width);
+  @include sidebar-right-show($import-width);
 }
 
 

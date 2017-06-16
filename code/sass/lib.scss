@@ -80,6 +80,8 @@ $left-margin-sep: 20px;
   height:100%;
   z-index: 1;
   background-color: rgba(80,80,80,.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   position:fixed!important;
   margin-top: 0px!important;
   overflow:hidden;
@@ -130,7 +132,6 @@ $left-margin-sep: 20px;
 }
 
 @mixin sidebar-right-main($min-width, $width) {
-  @media   (min-width: $min-width) {margin-right: $width}
-  @include sidebar-right-show($min-width)
+  @media (min-width: $min-width) {width: calc(100% - #{$width})}
 }
 
