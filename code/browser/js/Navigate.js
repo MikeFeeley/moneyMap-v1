@@ -311,7 +311,7 @@ class Navigate {
         let cat = this._categories .get (ida .slice (-1) [0]);
         if (type == NavigateValueType .ACTUALS_BUD && id .includes ('budget_')) {
           return (dates .filter (d => {return d .start <= Types .date .today()}) .map (date => {
-            let va = this._variance .getAmount (cat._id, date .start);
+            let va = this._variance .getAmount (cat._id, date .start - 1);
             let ma = includeMonths && va .month? va .month .amounts .available: 0;
             let ya = includeYears  && va .year?  va .year  .amounts .available: 0;
             return {id: id, value: ma + ya}
