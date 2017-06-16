@@ -83,7 +83,7 @@ body {
       > div {
         height:   100vh;
         position: relative;
-        overflow-y: scroll;
+        overflow: scroll;
       }
       > div.background {
         display: none;

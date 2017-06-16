@@ -262,7 +262,7 @@ body {
     margin-bottom: 8px;
   }
 }
-._progressGraphs > div, ._activityMonthsGraph {
+._progressGraphs > div, ._activityMonthsGraph, ._budgetMonthsGraph {
   > ._popup, &._popup {
     > ._heading {
       > ._heading {
