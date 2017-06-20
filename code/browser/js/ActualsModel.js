@@ -158,13 +158,12 @@ class Actuals {
     return ri;
   }
 
-  getAmountRecursively (cat, st = this._budget .getStartDate(), en = this._budget .getEndDate(), skip, includeMonths=true, includeYears=true, addCats=[]) {
-    console .assert (! addCats || addCats .length == 0);
+  getAmountRecursively (cat, st = this._budget .getStartDate(), en = this._budget .getEndDate(), skip, includeMonths=true, includeYears=true) {
     let type = this._budget .getCategories() .getType (cat);
     let include = (includeMonths && type == ScheduleType .MONTH) || (includeYears  && type == ScheduleType .YEAR) || type == ScheduleType .NONE;
     var amt = include? this .getAmount (cat, st, en, skip): 0;
     for (let child of (cat .children || []) .concat (cat .zombies || []))
-      amt += this .getAmountRecursively (child, st, en, skip, includeMonths, includeYears, addCats);
+      amt += this .getAmountRecursively (child, st, en, skip, includeMonths, includeYears);
     return amt;
   }
 

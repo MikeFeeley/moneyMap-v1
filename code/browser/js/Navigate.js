@@ -827,9 +827,29 @@ class Navigate {
   /****************************/
   /***** PROGRESS SIDEBAR *****/
 
+  _addTopVariance (title, choose, normalize) {
+    var roots = [this._budget .getExpenseCategory()];
+    var date  = Types .date .monthEnd (Types .date .addMonthStart (Types .date .today(), -1));
+    var variances = this._variance .getVarianceList (roots, date);
+
+    variances = variances
+      .filter (v => {return choose (v .amount)})
+      .map (v => {return {
+        id:          v .cat._id,
+        name:        v .cat .name,
+        nameTooltip: this._budget .getCategories() .getPathname (v .cat) .slice (1) .join (': '),
+        amount:      normalize (v .amount)
+      }})
+      .sort ((a,b) => {return a .amount > b .amount? -1: a .amount == b .amount? 0: 1})
+    this._progressView .addProgressSidebarGroup(title, variances);
+  }
+
   _addProgressSidebar (toHtml) {
     this._progressView .addProgressSidebar();
-    this._progressView .addProgressSidebarGroup('Over Budget Last Month');
+    this._progressView .addProgressSidebarGroup('Overall Spent Budget Picture', [{name: 'Blah', amount: 10000}]);
+    this._addTopVariance ('Over Spent Last Month', a => {return a < -50}, a => {return -a});
+    this._addTopVariance ('Unspent Last Month',    a => {return a >  50}, a => {return  a});
+    this._progressView .addProgressSidebarGroup('Unspent Last Month');
   }
 
 

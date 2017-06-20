@@ -87,10 +87,52 @@ class NavigateView extends Observable  {
     }, html: '&times;'}) .appendTo (this._progressSidebar);
   }
 
-  addProgressSidebarGroup (name) {
-    let goals = $('<div>', {class: '_sidebar_group'})
-    .appendTo (this._progressSidebar)
-    .append   ($('<div>', {class: '_heading', text: name}))
+  _addTooltip (element, text) {
+    var tt;
+    if (text) {
+      element .hover (
+        e => {
+          let toHtml = element .offsetParent();
+          tt = $('<div>', {
+            class: '_toolTipNoPosition',
+            text: text,
+          }) .appendTo (toHtml);
+          window .setTimeout (() => {
+            if (tt) {
+              tt .css (ui .calcPosition (element, toHtml, {top: -18, left: -2}, tt .width())) .fadeIn (120);
+            }
+          })
+        },
+        e => {
+          tt .remove();
+      });
+    }
+  }
+
+  addProgressSidebarGroup (name, list=[]) {
+    const shortListLength = 6;
+    var table;
+    var isShowingMore = false;
+    var buildTable = () => {
+      table = $('<table>') .appendTo (group)
+      for (let i = 0; i < Math .min (isShowingMore? list .length: shortListLength, list .length); i++) {
+        let item = list [i];
+        let tr = $ ('<tr>') .appendTo (table)
+        this._addTooltip ($('<td>', {text: item .name})                              .appendTo (tr), item .nameTooltip);
+        this._addTooltip ($('<td>', {text: Types .moneyDZ .toString (item .amount)}) .appendTo (tr), item .amountTooltip)
+      }
+      if (list .length > shortListLength)
+        $('<td>', {class: '_showMoreLess', html: isShowingMore? 'Show Less&#133;': 'Show More&#133;'}) .appendTo ($('<tr>') .appendTo (table)) .after ($('<td>'))
+    }
+    var group = $('<div>', {class: '_sidebar_group'})
+      .appendTo (this._progressSidebar)
+      .append   ($('<div>', {class: '_heading', text: name}))
+      .click (e => {
+        isShowingMore = ! isShowingMore;
+        table .remove();
+        buildTable();
+      })
+    buildTable();
   }
 
   addProgressGraph (to, popup, position, onClose) {

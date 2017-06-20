@@ -20,6 +20,17 @@ var ui = {
       }, 0);
   },
 
+  calcPosition (element, relativeToElement, position, width=0) {
+    let ep = element .offset();
+    let rp = relativeToElement .offset();
+    let cp = {top: position .top  + ep .top  - rp .top}
+    if (position .left !== undefined)
+      cp .left  = ep .left - rp .left + position .left - Math .max (0, ep .left + width - (document .body .clientWidth -8))
+    if (position .right !== undefined)
+      cp .right = (document .body .clientWidth - ep .left) - Math .max (0, (document .body .clientWidth - (rp .left + relativeToElement .width())))
+    return cp
+  },
+
   ModalStack: class {
 
     static _onMouseDown (e) {
