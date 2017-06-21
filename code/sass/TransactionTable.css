@@ -46,7 +46,7 @@ $table-stripe-backgroud: #f8f8f8;
       margin-left:  5px;
       margin-right: 3px;
     }
- }
+  }
   > tbody {
     > tr > td, tr > td > div > div > ._content {
       font-size: $body-font;
@@ -412,9 +412,8 @@ div._TransactionHUD {
     position: relative;
     > ._title {
       white-space: nowrap;
-      position: absolute;
-      top: 4px;
-      left: 12px;
+      position: relative;
+      left: 4px;
       font-size: 32px;
       font-weight: 100;
       max-width: 600px;
@@ -436,15 +435,13 @@ div._TransactionHUD {
       }
     }
     > ._body {
-      margin-top: 40px;
       > ._subtitle {
         font-size: 20px;
         font-weight: 100;
         margin-left: 6px;
-        margin-top: -4px;
-        margin-bottom: 8px;
       }
       > table {
+        margin-top: 16px;
         color: #444;
         width: 100%;
         font-size: 13px;
@@ -465,19 +462,7 @@ div._TransactionHUD {
               margin-bottom: 0px;
               padding-top: 0px;
               padding-bottom: 0px;
-              border: 0px;
-              border-left:  2px solid transparent;
-              border-right: 2px solid transparent;
               font-size: 13px;
-            }
-            > td:not(:last-child) {
-              border-right: 1px dotted #ccc;
-            }
-            > td:not(:first-child) {
-              padding-left: 2px;
-            }
-            > td:not(:last-child) {
-              padding-right: 2px;
             }
           }
         }

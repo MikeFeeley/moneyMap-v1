@@ -138,22 +138,30 @@ class TransactionHUD extends TransactionTable {
     let po = toHtml .offset() .left;
     if (po + position .left > ml)
       position .left = ml - po;
-    this._html    = $('<div>', {class: this._view._name}) .appendTo (toHtml);
+    this._html = $('<div>', {class: this._view._name}) .appendTo (toHtml);
+    this._html [0] .addEventListener ('webkitmouseforcewillbegin', e => {e .preventDefault()}, true)
     this._content = $('<div>', {class: '_hudcontent'}) .appendTo (this._html);
-    this._content .mouseup (e => {
+    this._content .on ('mouseup webkitmouseforceup', e => {
       if (this._view._options .readOnly) {
-        var target = $(e .target);
-        var field  = target .hasClass ('_content') && target .parent() .parent ('._field') .data ('field');
-        if (field) {
-          let selectedText = window.getSelection().toString();
-          let top          = e .pageY + this._html .offsetParent() .scrollTop() - this._html .offsetParent() .offset() .top;
-          TransactionHUD .showRefineByField (
-            this._title, JSON .parse (JSON .stringify (this._query)), field, selectedText, this._accounts, this._variance, this._html .offsetParent(),
-            {top: top, left: this._html .position() .left + 50, right: 'auto'},
-            () => {this._html .removeClass ('_occluded')},
-            this._monthStart, this._monthEnd
-          );
-          this._html .addClass ('_occluded');
+      var target = $(e .target);
+      var field  = target .hasClass ('_content') && target .parent() .parent ('._field') .data ('field');
+      if (field) {
+          if ((e .originalEvent .webkitForce > 1 || e .originalEvent .altKey) && field._name == 'category') {
+            let date     = $(e .target) .closest ('tr') .find ('._field_date') .data ('field')._value;
+            let html     = $(e .target) .offsetParent();
+            let position = ui .calcPosition ($(e .target), html, {top: 20, left: -470});
+            BudgetProgressHUD .show (field._value, html, position, this._accounts, this._variance, date);
+          } else {
+            let selectedText = window.getSelection().toString();
+            let top          = e .pageY + this._html .offsetParent() .scrollTop() - this._html .offsetParent() .offset() .top;
+            TransactionHUD .showRefineByField (
+              this._title, JSON .parse (JSON .stringify (this._query)), field, selectedText, this._accounts, this._variance, this._html .offsetParent(),
+              {top: top, left: this._html .position() .left + 50, right: 'auto'},
+              () => {this._html .removeClass ('_occluded')},
+              this._monthStart, this._monthEnd
+            );
+            this._html .addClass ('_occluded');
+          }
         }
         return false;
       }
@@ -162,7 +170,6 @@ class TransactionHUD extends TransactionTable {
       this._html .css ({top: position .top, right: position .right, left: position .left});
     $('<div>', {class: '_title', text: Array .isArray (this._title)? this._title[0]: this._title}) .appendTo (this._content)
       .on ('click',                     e => {this._toggleMonthYear()})
-      .on ('webkitmouseforcewillbegin', e => {e .preventDefault()})
       .on ('webkitmouseforcedown',      e => {this._calendarYear()})
     var buttons = $('<div>', {class: '_buttons'}) .appendTo (this._content);
     $('<button>', {html: '&lang;', class: '_prevButton'}) .appendTo (buttons) .click (e => {
