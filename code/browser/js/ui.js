@@ -13,13 +13,13 @@ var ui = {
       // use timeout to ensure that this code doesn't run until after html has reappeared and thus has computed height
       let sp = $(getScrollParent (e [0], includeMargin));
       let st = sp .scrollTop();
-      let sh = Math .max (document .documentElement .clientHeight, e .outerHeight (includeMargin) + sp .offset() .top);
-      let sc = Math .max (0, e .offset() .top + e .outerHeight (includeMargin) - sh);
-      let er = e .offset() .left + e .outerWidth (includeMargin);
       let sl = sp .scrollLeft();
-      let ml = Math .max (0, er - sp .innerWidth());
-      if (sc != 0 || ml != 0)
-        sp .animate ({scrollTop: (st + sc), scrollLeft: (sl + ml)}, 200);
+      let sh = Math .max (document .documentElement .clientHeight, e .outerHeight (includeMargin) + sp .offset() .top);
+      let sw = Math .max (sp .innerWidth(),                        e .outerWidth  (includeMargin) + sp .offset() .left);
+      let sy = Math .max (0, e .outerHeight (includeMargin) + e .offset() .top  - sh);
+      let sx = Math .max (0, e .outerWidth  (includeMargin) + e .offset() .left - sw);
+      if (sy != 0 || sx != 0)
+        sp .animate ({scrollTop: (st + sy), scrollLeft: (sl + sx)}, 200);
     }, 0);
   },
 
