@@ -36,6 +36,20 @@ $left-margin-sep: 20px;
   z-index: 2003;
 }
 
+@mixin popup-container() {
+  padding: 8px;
+  position: absolute;
+  z-index: 2003;
+}
+
+@mixin popup-content() {
+  padding: 6px;
+  background: rgba(255,255,255,.94);
+  border-radius: 6px;
+  box-shadow: $drop-shadow;
+  color: #555;
+}
+
 @mixin translucent-popup() {
   padding: 6px;
   position: absolute;
@@ -92,9 +106,9 @@ $left-margin-sep: 20px;
 }
 
 ._sidebar_right {
+  overflow-x: hidden;
   overflow-y: scroll;
   right: 0px;
-  height:100%;
   z-index: 1;
   height: calc(100% - 48px);
   background-color: rgba(80,80,80,.4);

@@ -132,7 +132,7 @@ $table-stripe-backgroud: #f8f8f8;
   }
 }
 
-._TransactionHUD > table, ._TransactionHUD > ._body > table {
+._TransactionHUD > ._hudcontent > table, ._TransactionHUD > ._hudcontent > ._body > table {
   @include transaction-table-base (18px, 13px, 18px);
 }
 
@@ -399,109 +399,105 @@ $table-stripe-backgroud: #f8f8f8;
 }
 
 div._TransactionHUD {
-  td {
-    white-space: nowrap;
-  }
-  width: auto;
-  min-width: 700px;
-  &:not(._TransactionEdit) {
-    @include dark-popup();
-    z-index: 5000;
-  }
-  &._TransactionEdit {
-    @include light-popup();
-    z-index: 5000;
-    > ._body > table {
-      color: #444;
+  @include popup-container();
+  padding: 8px;
+  margin-top: -8px;
+  > ._hudcontent {
+    @include popup-content();
+    td {
+      white-space: nowrap;
     }
-  }
-  position: relative;
-  > ._title {
-    white-space: nowrap;
-    position: absolute;
-    top: 4px;
-    left: 12px;
-    font-size: 32px;
-    font-weight: 100;
-    max-width: 600px;
-  }
-  > ._buttons {
-    position: absolute;
-    top:   6px;
-    right: 4px;
-    > button {
-      vertical-align: middle;
-    }
-    > ._prevButton, > ._nextButton {
-      font-weight: 800;
-      margin-left: 0;
-      margin-right: 0;
-    }
-    > ._editButton {
-      margin-left: 12px;
-    }
-  }
-  > ._body {
-    margin-top: 40px;
-    > ._subtitle {
-      font-size: 20px;
+    width: auto;
+    min-width: 700px;
+    position: relative;
+    > ._title {
+      white-space: nowrap;
+      position: absolute;
+      top: 4px;
+      left: 12px;
+      font-size: 32px;
       font-weight: 100;
-      margin-left: 6px;
-      margin-top: -4px;
-      margin-bottom: 8px;
+      max-width: 600px;
     }
-    > table {
-      width: 100%;
-      font-size: 13px;
-      > thead > tr > th {
-        border-bottom: 1px solid #888;
+    > ._buttons {
+      position: absolute;
+      top:   6px;
+      right: 4px;
+      > button {
+        vertical-align: middle;
       }
-      > tbody, > tfoot {
-        > tr {
-          > td:nth-child(1), > td:nth-child(3), > td:nth-child(4) {
-            text-align: right;
-          }
-        }
+      > ._prevButton, > ._nextButton {
+        font-weight: 800;
+        margin-left: 0;
+        margin-right: 0;
       }
-      > tbody {
-        > tr {
-          > td, > td > ._field > div > ._content {
-            margin-top: 0px;
-            margin-bottom: 0px;
-            padding-top: 0px;
-            padding-bottom: 0px;
-            border: 0px;
-            border-left:  2px solid transparent;
-            border-right: 2px solid transparent;
-            font-size: 13px;
-          }
-          > td:not(:last-child) {
-            border-right: 1px dotted #ccc;
-          }
-          > td:not(:first-child) {
-            padding-left: 2px;
-          }
-          > td:not(:last-child) {
-            padding-right: 2px;
-          }
-        }
+      > ._editButton {
+        margin-left: 12px;
       }
-      > tfoot > tr {
-        > td {
-          font-weight: bold;
-          border-top:  1px solid #888;
+    }
+    > ._body {
+      margin-top: 40px;
+      > ._subtitle {
+        font-size: 20px;
+        font-weight: 100;
+        margin-left: 6px;
+        margin-top: -4px;
+        margin-bottom: 8px;
+      }
+      > table {
+        color: #444;
+        width: 100%;
+        font-size: 13px;
+        > thead > tr > th {
+          border-bottom: 1px solid #888;
         }
-        > td._leftArrow {
-          color:       #888;
-          font-weight: 100;
-          font-style:  italic;
-          text-align:  left;
+        > tbody, > tfoot {
+          > tr {
+            > td:nth-child(1), > td:nth-child(3), > td:nth-child(4) {
+              text-align: right;
+            }
+          }
         }
-        > td._rightArrow {
-          color:       #888;
-          font-weight: 100;
-          font-style:  italic;
-          text-align:  right;
+        > tbody {
+          > tr {
+            > td, > td > ._field > div > ._content {
+              margin-top: 0px;
+              margin-bottom: 0px;
+              padding-top: 0px;
+              padding-bottom: 0px;
+              border: 0px;
+              border-left:  2px solid transparent;
+              border-right: 2px solid transparent;
+              font-size: 13px;
+            }
+            > td:not(:last-child) {
+              border-right: 1px dotted #ccc;
+            }
+            > td:not(:first-child) {
+              padding-left: 2px;
+            }
+            > td:not(:last-child) {
+              padding-right: 2px;
+            }
+          }
+        }
+        > tfoot > tr {
+          > td {
+            font-weight: bold;
+            border-top:  1px solid #888;
+          }
+          > td._leftArrow {
+            color:       #888;
+            font-weight: 100;
+            font-style:  italic;
+            text-align:  left;
+          }
+          > td._rightArrow {
+            color:       #888;
+            font-weight: 100;
+            font-style:  italic;
+            text-align:  right;
+          }
         }
       }
     }

@@ -14,16 +14,19 @@ var ui = {
       let sp = $(getScrollParent (e [0], includeMargin));
       let st = sp .scrollTop();
       let sh = Math .max (document .documentElement .clientHeight, e .outerHeight (includeMargin) + sp .offset() .top);
-      let sc = e .offset() .top + e .outerHeight (includeMargin) - sh;
-      if (sc > 0)
-        sp .animate ({scrollTop: (st + sc)}, 200);
-      }, 0);
+      let sc = Math .max (0, e .offset() .top + e .outerHeight (includeMargin) - sh);
+      let er = e .offset() .left + e .outerWidth (includeMargin);
+      let sl = sp .scrollLeft();
+      let ml = Math .max (0, er - sp .innerWidth());
+      if (sc != 0 || ml != 0)
+        sp .animate ({scrollTop: (st + sc), scrollLeft: (sl + ml)}, 200);
+    }, 0);
   },
 
   calcPosition (element, relativeToElement, position, width=0) {
     let ep = element .offset();
     let rp = relativeToElement .offset();
-    let cp = {top: position .top  + ep .top  - rp .top}
+    let cp = {top: position .top  + ep .top  - rp .top + relativeToElement .scrollTop()}
     if (position .left !== undefined)
       cp .left  = ep .left - rp .left + position .left - Math .max (0, ep .left + width - (document .body .clientWidth -8))
     if (position .right !== undefined)

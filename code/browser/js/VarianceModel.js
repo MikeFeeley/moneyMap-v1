@@ -319,7 +319,7 @@ class VarianceModel extends Observable {
     // incorporate amount from ancestor or use ancesor if this is budgetLess and skip
     var amountUp = this._getAmountUp (cat, period, skip);
     if (amount .isBudgetless && skip && amountUp .nearestCatWithType)
-      return this .getAmount (amountUp .nearestCatWithType._id, date, skip);
+      return this._getAmountUpDown (amountUp .nearestCatWithType, period, skip);
     for (let per of ['prev', 'cur'])
       amount [amount .type] .actual [per] += amountUp [per];
 
@@ -418,14 +418,17 @@ class VarianceModel extends Observable {
     let vs = []
     for (let cat of (cats && ([] .concat (cats)) || [])) {
       if (this._budget .getCategories() .getType (cat) != ScheduleType .NONE) {
-        let v = this._getAmountUpDown (cat, period) .amount;
+        let v   = this._getAmountUpDown (cat, period) .amount;
+        let amt = ['month', 'year'] .reduce ((total, per) => {
+          return total + ['prev', 'cur'] .reduce ((total, sch) => {
+            return total + (v [per]? v [per] .budget [sch] - v [per] .actual [sch]: 0);
+          }, 0)
+        }, 0)
+        if (this._budget .getCategories() .getType (cat) == ScheduleType .YEAR && amt > 0)
+          amt = Math .max (0, amt - this._budget .getAmount (cat, period .cur .end) .year .allocated)
         vs .push ({
           cat:    cat,
-          amount: ['month', 'year'] .reduce ((total, per) => {
-            return total + ['prev', 'cur'] .reduce ((total, sch) => {
-              return total + (v [per]? v [per] .budget [sch] - v [per] .actual [sch]: 0);
-            }, 0)
-          }, 0)
+          amount: amt
         })
       }
       vs = vs .concat (this._getVarianceListByPeriod (cat .children, period));

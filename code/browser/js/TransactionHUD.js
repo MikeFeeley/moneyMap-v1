@@ -23,6 +23,11 @@ class TransactionHUD extends TransactionTable {
     super .delete();
   }
 
+  *refreshHtml() {
+    yield* super .refreshHtml();
+    ui .scrollIntoView (this._html);
+  }
+
   *_getModelData() {
     var trans = yield* super._getModelData();
     this._tdebit  = trans .reduce ((s,t) => {s += t .debit  || 0; return s}, 0);
@@ -31,17 +36,17 @@ class TransactionHUD extends TransactionTable {
   }
 
   _toggleEdit() {
-    var button = this._html .find ('._editButton');
+    var button = this._content .find ('._editButton');
     if (button .text() == 'Edit') {
       button .text ('View');
-      this._html .addClass ('_TransactionEdit');
+      this._content .addClass ('_TransactionEdit');
       this._view._options .readOnly = false;
       (this._query .$options = this._query .$options || {}) .groupBy = 'group';
       async (this, this .refreshHtml)();
     } else {
       button .text ('Edit');
       this._view._clearSelectedTuple();
-      this._html .removeClass ('_TransactionEdit');
+      this._content .removeClass ('_TransactionEdit');
       this._view._options .readOnly = true;
       delete this._query .$options .groupBy;
       async (this, this .refreshHtml)();
@@ -65,7 +70,7 @@ class TransactionHUD extends TransactionTable {
       this._title [0] = t;
     else
       this._title = t;
-    this._html .find ('._title') .text (t);
+    this._content .find ('._title') .text (t);
   }
 
   _changeMonth (delta) {
@@ -133,8 +138,9 @@ class TransactionHUD extends TransactionTable {
     let po = toHtml .offset() .left;
     if (po + position .left > ml)
       position .left = ml - po;
-    this._html = $('<div>', {class: this._view._name}) .appendTo (toHtml);
-    this._html .mouseup (e => {
+    this._html    = $('<div>', {class: this._view._name}) .appendTo (toHtml);
+    this._content = $('<div>', {class: '_hudcontent'}) .appendTo (this._html);
+    this._content .mouseup (e => {
       if (this._view._options .readOnly) {
         var target = $(e .target);
         var field  = target .hasClass ('_content') && target .parent() .parent ('._field') .data ('field');
@@ -154,11 +160,11 @@ class TransactionHUD extends TransactionTable {
     });
     if (position)
       this._html .css ({top: position .top, right: position .right, left: position .left});
-    $('<div>', {class: '_title', text: Array .isArray (this._title)? this._title[0]: this._title}) .appendTo (this._html)
+    $('<div>', {class: '_title', text: Array .isArray (this._title)? this._title[0]: this._title}) .appendTo (this._content)
       .on ('click',                     e => {this._toggleMonthYear()})
       .on ('webkitmouseforcewillbegin', e => {e .preventDefault()})
       .on ('webkitmouseforcedown',      e => {this._calendarYear()})
-    var buttons = $('<div>', {class: '_buttons'}) .appendTo (this._html);
+    var buttons = $('<div>', {class: '_buttons'}) .appendTo (this._content);
     $('<button>', {html: '&lang;', class: '_prevButton'}) .appendTo (buttons) .click (e => {
       this._changeMonth (-1);
     });
@@ -168,16 +174,17 @@ class TransactionHUD extends TransactionTable {
     $('<button>', {text: 'Edit', class: '_editButton'}) .appendTo (buttons) .click (e => {
       this._toggleEdit();
     })
-    var body = $('<div>', {class: '_body'}) .appendTo (this._html);
+    var body = $('<div>', {class: '_body'}) .appendTo (this._content);
     if (Array .isArray (this._title))
       $('<div>', {text: this._title [1], class: '_subtitle'}) .appendTo (body);
     this._view._options .readOnly = true;
     this._setTitleDate();
     yield* super .addHtml (body);
     this._modalStackEntry = ui .ModalStack .add (
-      (e) => {return ! $.contains (this._html .get (0), e .target) && this._html .get (0) != e .target},
+      (e) => {return ! $.contains (this._content .get (0), e .target) && this._content .get (0) != e .target},
       ()  => {this .delete()}, true
     );
+    ui .scrollIntoView (this._html);
   }
 
   _showRefineByDateRange (start, end) {

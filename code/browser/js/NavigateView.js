@@ -11,7 +11,9 @@ class NavigateView extends Observable  {
       [113,64,158],
       [128,128,128]
     ];
-    this._idSeq = 0;
+    this._idSeq    = 0;
+    this._accounts = accounts;
+    this._variance = variance;
   }
 
   addHtml (toHtml, buildHtml) {
@@ -92,14 +94,14 @@ class NavigateView extends Observable  {
     if (text) {
       element .hover (
         e => {
-          let toHtml = element .offsetParent();
+          let toHtml = element .closest ('.contents');
           tt = $('<div>', {
             class: '_toolTipNoPosition',
             text: text,
           }) .appendTo (toHtml);
           window .setTimeout (() => {
             if (tt) {
-              tt .css (ui .calcPosition (element, toHtml, {top: -18, left: -2}, tt .width())) .fadeIn (120);
+              tt .css (ui .calcPosition (element, toHtml, {top: 30, left: -2}, tt .width())) .fadeIn (120);
             }
           })
         },
@@ -111,28 +113,42 @@ class NavigateView extends Observable  {
 
   addProgressSidebarGroup (name, list=[]) {
     const shortListLength = 6;
+    const categories      = this._variance .getBudget() .getCategories();
     var table;
     var isShowingMore = false;
     var buildTable = () => {
-      table = $('<table>') .appendTo (group)
+      table = $('<table>') .appendTo (group);
+      table [0] .addEventListener ('webkitmouseforcewillbegin', e => {e .preventDefault()}, true);
       for (let i = 0; i < Math .min (isShowingMore? list .length: shortListLength, list .length); i++) {
         let item = list [i];
         let tr = $ ('<tr>') .appendTo (table)
+          .on ('click webkitmouseforcedown', e => {
+            let id = list [i] .id
+            if (e .originalEvent .webkitForce > 1 || e .originalEvent .altKey)
+              id = categories .getPath (categories .get (id)) [1]._id;
+            let html = this._progressGraphs;
+            this._notifyObservers (NavigateViewEvent .PROGRESS_SIDEBAR_CLICK, {
+              id:       id,
+              html:     html,
+              position: ui .calcPosition (tr, html, {top: 0, left: -900}),
+              view:     this
+            })
+          })
         this._addTooltip ($('<td>', {text: item .name})                              .appendTo (tr), item .nameTooltip);
         this._addTooltip ($('<td>', {text: Types .moneyDZ .toString (item .amount)}) .appendTo (tr), item .amountTooltip)
       }
       if (list .length > shortListLength)
         $('<td>', {class: '_showMoreLess', html: isShowingMore? 'Show Less&#133;': 'Show More&#133;'}) .appendTo ($('<tr>') .appendTo (table)) .after ($('<td>'))
-    }
+          .click (e => {
+            isShowingMore = ! isShowingMore;
+            table .remove();
+            buildTable();
+          })
+   }
     var group = $('<div>', {class: '_sidebar_group'})
       .appendTo (this._progressSidebar)
       .append   ($('<div>', {class: '_heading', text: name}))
-      .click (e => {
-        isShowingMore = ! isShowingMore;
-        table .remove();
-        buildTable();
-      })
-    buildTable();
+     buildTable();
   }
 
   addProgressGraph (to, popup, position, onClose) {
@@ -146,7 +162,7 @@ class NavigateView extends Observable  {
     }
     var container = to || this._container;
     if (container .length) {
-      var graph = $('<div>', {class: '_progressGraph' + (popup? ' _popup': '')}) .appendTo (container);
+      var graph = $('<div>', {class: '_progressGraph' + (popup? ' _popup': '')}) .appendTo (container) .append ($('<div>'));
       if (popup) {
         graph .css (position);
         ui .ModalStack .add (
@@ -161,14 +177,14 @@ class NavigateView extends Observable  {
 
   addHeadingToProgressGraph (progressGraph, heading) {
     if (progressGraph)
-      $('<div>', {class: '_heading', text: heading}) .appendTo (progressGraph);
+      $('<div>', {class: '_heading', text: heading}) .appendTo (progressGraph .children());
   }
 
   addToProgressGraph (progressGraph, heading, data, labelWidth) {
     if (progressGraph) {
       if (heading)
         var head = $('<div>', {class: '_text', text: heading})
-          .appendTo (progressGraph)
+          .appendTo (progressGraph .children())
           .on ('click webkitmouseforcedown', e => {
             this._notifyObservers (NavigateViewEvent .PROGRESS_GRAPH_TITLE_CLICK, {
               data:     data,
@@ -183,7 +199,7 @@ class NavigateView extends Observable  {
       if (isPopup)
         progressGraph .removeClass ('hidden');
       var graph = new BudgetProgressGraph (
-        '', progressGraph, true, false,
+        '', progressGraph .children(), true, false,
         {barThickness: 24, barPercentage: .85, labelWidth: labelWidth}
       );
       graph .addObserver (this, (eventType, arg) => {
@@ -195,6 +211,8 @@ class NavigateView extends Observable  {
         }
       });
       graph .add (data);
+      if (isPopup)
+        ui .scrollIntoView (progressGraph, false);
       return (data, labelWidth, heading) => {
         if (this._isVisible) {
           if (heading)
@@ -302,12 +320,12 @@ class NavigateView extends Observable  {
       var container = $('<div>', {class: name + 's'});
       container .appendTo (this._content);
     }
-    var graph  = $('<div>', {class: name + (popup? ' _popup': '')}) .appendTo (container)
+    var graph  = $('<div>', {class: name + (popup? ' _popup': '')}) .appendTo (container) .append ($('<div>'))
     processDataset();
     if (popup) {
       if (data .length == 1) {
         let head = $('<div>', {class: '_heading'})
-          .appendTo (graph)
+          .appendTo (graph .children())
           .on ('click webkitmouseforcedown', e => {
             let position = graph .position();
             position .top  += 50;
@@ -331,7 +349,7 @@ class NavigateView extends Observable  {
           true
         );
     }
-    var canvas = $('<canvas>') .appendTo (graph);
+    var canvas = $('<canvas>') .appendTo (graph .children());
     if (data .length > 1) {
       var height = [[],[]];
       for (let i = 0; i < labels .length; i++)
@@ -404,7 +422,7 @@ class NavigateView extends Observable  {
     setDataset();
     chart = new Chart (canvas .get (0) .getContext ('2d'), config);
     if (popup)
-      ui .scrollIntoView (graph, true);
+      ui .scrollIntoView (graph, false);
     return (updates) => {
       if (onAlternateView || this._isVisible()) {
         for (let update of updates)
@@ -670,7 +688,7 @@ class NavigateView extends Observable  {
     var addTable = () => {
       groupTrs  = [];
       rowMap    = new Map();
-      var table = $('<table>', {class: name}) .appendTo (container);
+      var table = $('<table>', {class: name}) .appendTo (container .children());
       var thead = $('<thead>') .appendTo (table);
       var tbody = $('<tbody>') .appendTo (table);
       tfoot = $('<tfoot>') .appendTo (table);
@@ -686,11 +704,11 @@ class NavigateView extends Observable  {
         let html     = $(target) .closest ('.' + name + 's');
         let htmlo    = html .offset()
         let position = $(target) .offset();
-        position .top  -= htmlo .top - 20;
-        position .left -= htmlo .left;
+        position .top  -= htmlo .top - 12;
+        position .left -= htmlo .left + 8;
         if (dataset .cols .length && (col == -1 || col >= dataset .cols .length)) {
           let prev = $(target) .closest ('div.' + name);
-          position .left = (prev .length? prev .position() .left: 0) + 20;
+          position .left = (prev .length? prev .position() .left + (prev .hasClass ('_popup')? 8: 0): 0) + 12;
         }
         if (id)
           this._notifyObservers (NavigateViewEvent .BUDGET_TABLE_CLICK, {
@@ -720,6 +738,8 @@ class NavigateView extends Observable  {
         }
       }
       updateFoot();
+      if (popup)
+        ui .scrollIntoView (container);
     }
 
     /* addBudgetTable main */
@@ -728,7 +748,7 @@ class NavigateView extends Observable  {
       if (toHtml .length == 0)
         toHtml = $('<div>', {class: name + 's'}) .appendTo (this._content);
     }
-    var container = $('<div>', {class: name + (popup? ' _popup': '')}) .appendTo (toHtml);
+    var container = $('<div>', {class: name + (popup? ' _popup': '')}) .appendTo (toHtml) .append ('<div>');
     if (popup && position) {
       container .css (position);
       ui .ModalStack .add (
@@ -890,7 +910,8 @@ var NavigateViewEvent = Object.create (ViewEvent, {
   BUDGET_GRAPH_CLICK:         {value: 203},
   BUDGET_GRAPH_TITLE_CLICK:   {value: 204},
   BUDGET_TABLE_CLICK:         {value: 205},
-  PROGRESS_GRAPH_TITLE_CLICK: {value: 206}
+  PROGRESS_GRAPH_TITLE_CLICK: {value: 206},
+  PROGRESS_SIDEBAR_CLICKL:    {value: 207}
 });
 
 

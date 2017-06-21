@@ -149,7 +149,9 @@ class Navigate {
           this._addMonthsGraph ('_activityMonthsGraph', arg.view, [arg .id], true, arg .position, arg .html, ! sel .isYear, sel .isYear, sel .addCats);
       }
 
-    } else if (eventType == NavigateViewEvent .BUDGET_CHART_CLICK  && arg .id) { 
+    } else if (eventType == NavigateViewEvent .PROGRESS_SIDEBAR_CLICK) {
+      this._addMonthsGraph ('_activityMonthsGraph', arg.view, [arg .id], true, arg .position, arg .html);
+    } else if (eventType == NavigateViewEvent .BUDGET_CHART_CLICK  && arg .id) {
       /* Yearly Chart (Budget or Actual) */
       if (arg .altClick) {
         if (! arg .id .includes ('blackout_') && ! arg .id .includes ('unallocated_')) {
@@ -849,7 +851,6 @@ class Navigate {
     this._progressView .addProgressSidebarGroup('Overall Spent Budget Picture', [{name: 'Blah', amount: 10000}]);
     this._addTopVariance ('Over Spent Last Month', a => {return a < -50}, a => {return -a});
     this._addTopVariance ('Unspent Last Month',    a => {return a >  50}, a => {return  a});
-    this._progressView .addProgressSidebarGroup('Unspent Last Month');
   }
 
 

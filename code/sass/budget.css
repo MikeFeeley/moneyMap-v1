@@ -90,22 +90,11 @@ body {
   padding: 3px 6px;
   box-shadow:  0px 0px 2px rgba(0,0,0,.4);
   white-space: nowrap;
-  z-index: 100;
+  z-index: 9999;
   &._toolTip {
     left: 8px;
     top: -20px;
   }
-}
-
-._toolTipNew {
-  position: absolute;
-  z-index: 9999;
-  background: rgb(255,255,200);
-  color: rgb(0,0,35)!important;
-  font-size: 11px!important;
-  padding: 3px 6px;
-  box-shadow:  0px 0px 2px rgba(0,0,0,.4);
-  white-space: nowrap;
 }
 
 
@@ -266,53 +255,54 @@ body {
   }
 }
 
-._budgetMonthsGraph, ._budgetHistoryGraph, ._activityMonthsGraph {
-  position: relative;
-  > ._popup, &._popup {
-    @include light-popup();
-    > ._heading {
-      margin-top: 0px;
-      width: 800px;
-    }
-    margin-bottom: 8px;
-  }
-}
-._progressGraphs > div, ._activityMonthsGraph, ._budgetMonthsGraph {
-  > ._popup, &._popup {
-    > ._heading {
-      > ._heading {
-        font-size:     48px;
-        font-weight:   100;
-        margin-bottom: 24px;
-      }
-      > ._subheading {
-        color: #666;
-        margin-left: 20px;
-        font-size:   20px;
-        font-weight: 100;
-      }
-    }
-  }
-}
-
 ._Navigate {
-  ._progressGraphs {
+  div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._progressGraphs {
     position: relative;
-    > ._popup {
-      @include light-popup();
+    &._popup, & > ._popup {
+      @include popup-container();
       margin-left: 20px;
       width: 800px;
-      > ._text {
-        margin-top: 0px;
+      > div {
+        @include popup-content();
+        > ._heading {
+          margin-bottom: 24px;
+          > ._heading {
+            font-size:     48px;
+            font-weight:   100;
+          }
+          > ._subheading {
+            color: #666;
+            margin-left: 20px;
+            font-size:   20px;
+            font-weight: 100;
+          }
+        }
       }
-      margin-bottom: 8px;
     }
-    > ._TransactionHUD, ._activityMonthsGraph, > ._BudgetProgressHUD {
-      margin-left: 20px;
+  }
+
+  div._TransactionHUD, div._BudgetProgressHUD {
+    margin-left: 20px;
+    width: auto;
+    right: auto;
+  }
+
+  ._budgetTables, ._activityTables, ._budgetHistoryTables {
+    position: relative;
+  }
+
+  div._budgetTable, div._activityTable, div._budgetHistoryTable {
+    &._popup {
+      @include popup-container();
       width: auto;
-      right: auto;
+      > div {
+        @include popup-content();
+      }
     }
-    ._progressGraph {
+  }
+  
+  ._progressGraphs {
+    ._progressGraph > div {
       > ._heading {
         font-size:     48px;
         font-weight:   100;
@@ -326,8 +316,7 @@ body {
     }
     > ._container {
       > div {padding: 20px 20px 100px 20px}
-      > div > ._progressGraph:not(._popup) {
-        margin-bottom: 80px;
+      > div > ._progressGraph > div {
         > div:not(:first-child) {
           margin-right: 40px;
           margin-left: 40px;
@@ -383,17 +372,14 @@ body {
       margin-top: 0px;
       margin-bottom: 32px;
     }
-    > ._budgetTables > ._budgetTable > table > tbody > tr > td, > ._activityTables > ._activityTable > table > tbody > tr > td {
+    > ._budgetTables > ._budgetTable > div > table > tbody > tr > td, > ._activityTables > ._activityTable > div > table > tbody > tr > td {
       &:nth-child(14) {
         border-right: 1px solid #aaa;
       }
     }
-    > ._budgetTables, > ._activityTables {
-      margin-bottom: 600px;
-    }
-    > ._budgetTables > ._budgetTable > table,
-    > ._activityTables > ._activityTable > table,
-    > ._budgetHistoryTables > ._budgetHistoryTable > table,
+    > ._budgetTables > ._budgetTable > div > table,
+    > ._activityTables > ._activityTable > div > table,
+    > ._budgetHistoryTables > ._budgetHistoryTable > div > table,
     > ._netWorthTable {
       border-collapse: collapse;
       width: 100%;
@@ -525,15 +511,6 @@ body {
         }
       }
     }
-    > ._budgetTables, > ._activityTables, > ._budgetHistoryTables {
-      position: relative;
-      > ._budgetTable, > ._activityTable, > ._budgetHistoryTable {
-        &._popup {
-          @include light-popup();
-          width: auto;
-        }
-      }
-    }
     > ._budgetCharts, >._activityCharts {
       position: relative;
       > div:not(._popup):not(._TransactionHUD) {
@@ -625,7 +602,7 @@ body {
         text-align: right;
       }
       > tr > td._showMoreLess {
-        color: #aaa;
+        color: #bbb;
       }
     }
   }
