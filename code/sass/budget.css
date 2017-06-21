@@ -596,6 +596,7 @@ body {
 }
 
 ._progressSidebar {
+  @include user-select-none();
   > ._sidebar_group {
     > table {
       > tr > td:last-child {
