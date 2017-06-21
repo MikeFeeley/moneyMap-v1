@@ -26,10 +26,12 @@ class AccountBalance extends TuplePresenter {
         start: Types .date .monthStart (Types .date .today()),
         end:   Types .date .monthEnd   (Types .date .today())
       }
-      if (arg .isCat)
-        TransactionHUD .showCategory (arg .id, dates, this._model, this._variance, arg .toHtml .parent(), {top: arg .position .top, right: 8})
-      else
-        TransactionHUD .showAccount  (arg .id, dates, this._model, this._variance, arg .toHtml .parent(), {top: arg. position .top, right: 8});
+      if (arg .isCat) {
+        if (arg .name == 'Other')
+          arg .id = 'other_' + arg .id;
+        TransactionHUD .showCategory (arg .id, dates, this._model, this._variance, arg .toHtml, arg .position);
+      } else
+        TransactionHUD .showAccount  (arg .id, dates, this._model, this._variance, arg .toHtml, arg .position);
     } else
       super._onViewChange (eventType, arg);
   }

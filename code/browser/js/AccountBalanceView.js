@@ -43,14 +43,13 @@ class AccountBalanceView extends TupleView {
       tuple = $('<div>') .appendTo (tuple);
     var tuple = super .addTuple (data, tuple, getToHtml);
     tuple .click (e => {
-      var target   = $(e .target) .parent();
-      var position = target .position();
-      position .top += e .offsetY;
-      position .left = 16;
+      let target   = $(e .target) .parent();
+      let html     = target .offsetParent() .parent();
       this._notifyObservers (AccountBalanceViewEvent .CLICK, {
         id:       data._id,
-        toHtml:   target .offsetParent(),
-        position: position,
+        name:     data .name,
+        toHtml:   html,
+        position: {top: ui .calcPosition (target, html, {top: 0, left: 0}) .top, right: 50},
         isCat:    data .isCat
       });
     });
