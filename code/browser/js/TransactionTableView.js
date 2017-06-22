@@ -11,7 +11,7 @@ class TransactionTableView extends TableView {
     var catFormat = new ViewFormatOptions (
       value => {var cat = cats .get (value); return cat? cat.name: value},
       view  => {return view},
-      value => {return cats .getPathname (cats .get (value)) .join (': ')},
+      value => {return cats .getPathname (cats .get (value)) .join (' > ')},
       ()    => {return cats}
     );
     var getValue = (field, html) => {

@@ -61,7 +61,7 @@ class Organize {
         .map (c => {
           var pathname = this._categories .getPathname (c);
           if (pathname .length <= 3)
-            return [this._categories .getPathname (c) .slice (1) .join (': '), c._id]
+            return [this._categories .getPathname (c) .slice (1) .join (' > '), c._id]
           else
             return null
         })
@@ -72,7 +72,7 @@ class Organize {
         .map (c => {
           var pathname = this._categories .getPathname (c);
           if (pathname .length <= 3)
-            return [this._categories .getPathname (c) .slice (1) .join (': '), c._id]
+            return [this._categories .getPathname (c) .slice (1) .join (' > '), c._id]
           else
             return null
         })
@@ -115,7 +115,7 @@ class Organize {
     var catFormat = new ViewFormatOptions (
       value => {var cat = this._categories .get (value); return cat? cat.name: value},
       view  => {return view},
-      value => {return this._categories .getPathname (this._categories .get (value)) .join (': ')},
+      value => {return this._categories .getPathname (this._categories .get (value)) .join (' > ')},
       ()    => {return this._categories .getRoots() .map (c => {return c .name})}
     );
     var roots = [this._budget .getIncomeCategory(), this._budget .getSavingsCategory(), this._budget .getExpenseCategory()];
@@ -235,7 +235,7 @@ class Organize {
     var catFormat = new ViewFormatOptions (
       value => {var cat = this._categories .get (value); return cat? cat.name: value},
       view  => {var cat = this._categories .findBestMatch (view); return cat? cat._id: view},
-      value => {return this._categories .getPathname (this._categories .get (value)) .join (': ')},
+      value => {return this._categories .getPathname (this._categories .get (value)) .join (' > ')},
       ()    => {return this._categories .getRoots() .map (c => {return c .name})}
     );
     var fields = [

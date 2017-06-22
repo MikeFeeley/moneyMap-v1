@@ -839,7 +839,7 @@ class Navigate {
       .map (v => {return {
         id:          v .cat._id,
         name:        v .cat .name,
-        nameTooltip: this._budget .getCategories() .getPathname (v .cat) .slice (1) .join (': '),
+        nameTooltip: this._budget .getCategories() .getPathname (v .cat) .slice (1) .join (' > '),
         amount:      normalize (v .amount)
       }})
       .sort ((a,b) => {return a .amount > b .amount? -1: a .amount == b .amount? 0: 1})
