@@ -224,7 +224,7 @@ $indent:       24px;
 }
 
 ._ScheduleEntry {
-  @include schedule-entry (980px, 1180px, 30px, 24px, 15px, 13px);
+  @include schedule-entry (962px, 1138px, 30px, 24px, 15px, 13px);
   position: relative;
   ._field_scheduleLine {
      @include adaptive-width(465px, 590px);
