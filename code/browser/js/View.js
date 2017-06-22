@@ -276,6 +276,9 @@ class ViewField {
   isEnabled() {
     return ! this._html ._isDisabled;
   }
+  isEnableable() {
+    return true;
+  }
 
   setSelected() {}
   isSelected()  {return true;}
@@ -289,7 +292,7 @@ class ViewEmpty extends ViewField {
   _handleChange() {}
   _get()          {return ''}
   _set()          {}
-  isEnabled() {
+  isEnableable() {
     return false;
   }
 }
@@ -306,7 +309,7 @@ class ViewLabel extends ViewField {
   _set (val) {
     this._label.text (val);
   }
-  isEnabled() {
+  isEnableable() {
     return false;
   }
 }
