@@ -490,10 +490,16 @@ div._TransactionHUD {
   ._recategorizeDialogue {
     @include popup-container();
     > div {
-      width: 340px;
+      width: 316px;
       @include popup-content();
       > div {
-        font-size: 14px;
+        font-size: 11px!important;
+        &:first-child {
+          font-size: 14px!important;
+        }
+        &:not(:first-child) {
+          font-size: 11px!important;
+        }
         display: inline-block;
         &:not(:last-child) {
           margin-right: 8px;
@@ -501,6 +507,12 @@ div._TransactionHUD {
         ._BudgetProgressHUD {
           right: 150px!important;
         }
+        &._field_category > div > ._content {
+          width: 120px;
+        }
+      }
+      > button {
+        font-size: 11px!important;
       }
     }
   }

@@ -75,7 +75,7 @@ class TransactionHUD extends TransactionTable {
     );
     let dialogue = $('<div>', {class: '_recategorizeDialogue'})
       .appendTo (this._content)
-      .css      (ui .calcPosition (this._content .find ('._recategorizeButton'), this._content, {top: -16, left: -270}))
+      .css      (ui .calcPosition (this._content .find ('._recategorizeButton'), this._content, {top: -16, left: -250}))
       .append   ($('<div>') .append ($('<div>',   {text: 'New Category:'})));
     let field = edit .addHtml ('', this._view, dialogue .children());
     field .on ('mouseup webkitmouseforceup', e => {return false});
