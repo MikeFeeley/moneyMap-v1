@@ -1,7 +1,6 @@
 class Table extends TuplePresenter {
 
   constructor (model, view, query, sort, options, columns) {
-  if (sort == 140) console.trace('xxx');
     super (model, view, options);
     this._query   = query;
     this._sort    = sort;

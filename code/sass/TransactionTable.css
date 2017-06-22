@@ -430,8 +430,8 @@ div._TransactionHUD {
         margin-left: 0;
         margin-right: 0;
       }
-      > ._editButton {
-        margin-left: 12px;
+      > ._editButton, ._recategorizeButton {
+        margin-right: 12px;
       }
     }
     > ._body {
@@ -483,6 +483,23 @@ div._TransactionHUD {
             font-style:  italic;
             text-align:  right;
           }
+        }
+      }
+    }
+  }
+  ._recategorizeDialogue {
+    @include popup-container();
+    > div {
+      width: 340px;
+      @include popup-content();
+      > div {
+        font-size: 14px;
+        display: inline-block;
+        &:not(:last-child) {
+          margin-right: 8px;
+        }
+        ._BudgetProgressHUD {
+          right: 150px!important;
         }
       }
     }

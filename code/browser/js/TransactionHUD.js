@@ -23,6 +23,13 @@ class TransactionHUD extends TransactionTable {
     super .delete();
   }
 
+  _onViewChange (eventType, arg) {
+    if (eventType == ViewEvent .UPDATE && ! arg .id && this._recategorizeUpdate)
+      this._recategorizeUpdate();
+    else
+      super._onViewChange (eventType, arg);
+  }
+
   *refreshHtml() {
     yield* super .refreshHtml();
     ui .scrollIntoView (this._html);
@@ -51,6 +58,43 @@ class TransactionHUD extends TransactionTable {
       delete this._query .$options .groupBy;
       async (this, this .refreshHtml)();
     }
+  }
+
+  _showRecatorize() {
+    let cats   = this._variance .getBudget() .getCategories();
+    let format = new ViewFormatOptions (
+      value => {let cat = cats .get (value); return cat? cat.name: value},
+      view  => {return view},
+      value => {return cats .getPathname (cats .get (value)) .join (' > ')},
+      ()    => {return cats}
+    );
+    let edit = new ViewCategoryEdit ('category', format, '', '', 'Category',
+      () => {return Types .date .today()},
+      () => {return 0},
+      () => {return 0}
+    );
+    let dialogue = $('<div>', {class: '_recategorizeDialogue'})
+      .appendTo (this._content)
+      .css      (ui .calcPosition (this._content .find ('._recategorizeButton'), this._content, {top: -16, left: -270}))
+      .append   ($('<div>') .append ($('<div>',   {text: 'New Category:'})));
+    let field = edit .addHtml ('', this._view, dialogue .children());
+    field .on ('mouseup webkitmouseforceup', e => {return false});
+    let confirm = $('<button>', {text: 'Change All', prop: {disabled: true}, click: e => {
+      let cat = field .data ('field') .get();
+      let ul = Array .from (this._view._tuples .keys())
+        .filter (id => {return id})
+        .map    (id => {return {id: id, update: {category: cat}}})
+      async (this._model, this._model .updateList) (ul);
+      dialogue .remove();
+      ui .ModalStack .delete (modalEntry);
+    }}) .appendTo (dialogue .children());
+    this._recategorizeUpdate = () => {confirm .prop ({disabled: field .data ('field') .get() == ''})};
+    let modalEntry = ui .ModalStack .add (
+      e => {
+        return e && ! $.contains (dialogue [0], e .target) && dialogue [0] != e .target
+      },
+      () => {dialogue.remove(); this._recategorizeUpdate = null}, true
+    );
   }
 
   _setTitleDate() {
@@ -172,15 +216,18 @@ class TransactionHUD extends TransactionTable {
       .on ('click',                     e => {this._toggleMonthYear()})
       .on ('webkitmouseforcedown',      e => {this._calendarYear()})
     var buttons = $('<div>', {class: '_buttons'}) .appendTo (this._content);
+    $('<button>', {text: 'Recategorize', class: '_recategorizeButton'}) .appendTo (buttons) .click (e => {
+      this._showRecatorize();
+    })
+    $('<button>', {text: 'Edit', class: '_editButton'}) .appendTo (buttons) .click (e => {
+      this._toggleEdit();
+      })
     $('<button>', {html: '&lang;', class: '_prevButton'}) .appendTo (buttons) .click (e => {
       this._changeMonth (-1);
     });
     $('<button>', {html: '&rang;', class: '_nextButton'}) .appendTo (buttons) .click (e => {
       this._changeMonth (1);
     });
-    $('<button>', {text: 'Edit', class: '_editButton'}) .appendTo (buttons) .click (e => {
-      this._toggleEdit();
-    })
     var body = $('<div>', {class: '_body'}) .appendTo (this._content);
     if (Array .isArray (this._title))
       $('<div>', {text: this._title [1], class: '_subtitle'}) .appendTo (body);
