@@ -60,8 +60,15 @@ class TupleView extends View {
           });
           focus .field = $(focus .first? focusableFields [0] : focusableFields .slice (-1));
         }
-        if (focus .field && focus .field .length)
-          this._getFieldFromHtml (focus .field) .click();
+        if (focus .field && focus .field .length) {
+          let field = this._getFieldFromHtml (focus .field);
+          while (field && ! field .isEnabled()) {
+            focus .field = focus .field .prev();
+            field = this._getFieldFromHtml (focus .field);
+          }
+          if (field)
+           field .click();
+        }
       }
     }
     return selectionChange;

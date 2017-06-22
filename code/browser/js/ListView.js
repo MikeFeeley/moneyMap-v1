@@ -33,8 +33,16 @@ class ListView extends SortedTupleView {
           break;
         } else {
           next = cur .closest ('ul') .closest ('li');
-          if (next .find (targetField) .length && next .find (targetField) [0] != cur .find (targetField) [0])
+          let curTarget   = cur  .find (targetField) [0];
+          let nextTargets = next .find (targetField);
+          if (nextTargets .length && nextTargets [0] != curTarget) {
+            for (let n of nextTargets)
+              if (n == curTarget)
+                break;
+              else
+                next = $(n) .parent();
             break;
+          }
           cur  = next;
           next = next .prev();
         }
@@ -229,10 +237,21 @@ class ListView extends SortedTupleView {
       var line = $('<li>', {class: '_list_line_' + type, data: {lineType: type}});
       super .addTuple (data, data ._sort, line, toHtml);
       line .on ('click', e => {
-        this._selectTuple ($(e.currentTarget), {field: $(e.target) .closest ('._field')});
+        let target = $(e .target);
+        if (target [0] == line [0])
+          target = target .find ('._field');
+        let fieldHtml = target .closest ('._field');
+        if (fieldHtml .length == 0)
+          fieldHtml = target .find ('._field');
+        let field  = fieldHtml .data ('field');
+        let skip = false;
+        while (! skip && field && ! field .isEnabled()) {
+          fieldHtml = fieldHtml .prev();
+          field = fieldHtml .data ('field');
+        }
+        this._selectTuple ($(e.currentTarget), {field: fieldHtml});
         e.stopPropagation();
         let id     = $(e .currentTarget) .data ('id');
-        let field  = $(e .target) .parent() .data ('field');
         let name   = field && field._name;
         let pElmt  = field? $(e .target): $(e .currentTarget) .find ('._content');
         let html   = pElmt .offsetParent();

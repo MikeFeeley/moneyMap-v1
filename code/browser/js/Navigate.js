@@ -830,7 +830,7 @@ class Navigate {
   /***** PROGRESS SIDEBAR *****/
 
   _addTopVariance (title, choose, normalize) {
-    var roots = [this._budget .getExpenseCategory()];
+    var roots = [this._budget .getIncomeCategory()];
     var date  = Types .date .monthEnd (Types .date .addMonthStart (Types .date .today(), -1));
     var variances = this._variance .getVarianceList (roots, date);
 

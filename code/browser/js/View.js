@@ -289,6 +289,9 @@ class ViewEmpty extends ViewField {
   _handleChange() {}
   _get()          {return ''}
   _set()          {}
+  isEnabled() {
+    return false;
+  }
 }
 
 /**
@@ -302,6 +305,9 @@ class ViewLabel extends ViewField {
   }
   _set (val) {
     this._label.text (val);
+  }
+  isEnabled() {
+    return false;
   }
 }
 
