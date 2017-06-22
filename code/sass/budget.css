@@ -256,32 +256,32 @@ body {
   }
 }
 
-._Navigate {
-  div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._progressGraphs {
-    position: relative;
-    &._popup, & > ._popup {
-      @include popup-container();
-      margin-left: 20px;
-      width: 800px;
-      > div {
-        @include popup-content();
+div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._progressGraphs {
+  position: relative;
+  &._popup, & > ._popup {
+    @include popup-container();
+    margin-left: 20px;
+    width: 800px;
+    > div {
+      @include popup-content();
+      > ._heading {
+        margin-bottom: 24px;
         > ._heading {
-          margin-bottom: 24px;
-          > ._heading {
-            font-size:     48px;
-            font-weight:   100;
-          }
-          > ._subheading {
-            color: #666;
-            margin-left: 20px;
-            font-size:   20px;
-            font-weight: 100;
-          }
+          font-size:     48px;
+          font-weight:   100;
+        }
+        > ._subheading {
+          color: #666;
+          margin-left: 20px;
+          font-size:   20px;
+          font-weight: 100;
         }
       }
     }
   }
+}
 
+._Navigate {
   div._TransactionHUD, div._BudgetProgressHUD {
     margin-left: 20px;
     width: auto;
