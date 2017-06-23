@@ -829,8 +829,8 @@ class Navigate {
   /****************************/
   /***** PROGRESS SIDEBAR *****/
 
-  _addTopVariance (title, choose, normalize) {
-    var roots = [this._budget .getIncomeCategory()];
+  _addTopVariance (title, choose, normalize, flag) {
+    var roots = [this._budget .getExpenseCategory()];
     var date  = Types .date .monthEnd (Types .date .addMonthStart (Types .date .today(), -1));
     var variances = this._variance .getVarianceList (roots, date);
 
@@ -843,14 +843,14 @@ class Navigate {
         amount:      normalize (v .amount)
       }})
       .sort ((a,b) => {return a .amount > b .amount? -1: a .amount == b .amount? 0: 1})
-    this._progressView .addProgressSidebarGroup(title, variances);
+    this._progressView .addProgressSidebarGroup(title, variances, flag);
   }
 
   _addProgressSidebar (toHtml) {
     this._progressView .addProgressSidebar();
-    this._progressView .addProgressSidebarGroup('Overall Spent Budget Picture', [{name: 'Blah', amount: 10000}]);
-    this._addTopVariance ('Over Spent Last Month', a => {return a < -50}, a => {return -a});
-    this._addTopVariance ('Unspent Last Month',    a => {return a >  50}, a => {return  a});
+    this._progressView .addProgressSidebarGroup('Big Picture', [{name: 'Blah', amount: 10000}], '_flagInfo');
+    this._addTopVariance ('Over Last Month', a => {return a < -50}, a => {return -a}, '_flagBad');
+    this._addTopVariance ('Unspent Last Month',    a => {return a >  50}, a => {return  a}, '_flagGood');
   }
 
 

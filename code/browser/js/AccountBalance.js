@@ -36,8 +36,8 @@ class AccountBalance extends TuplePresenter {
       super._onViewChange (eventType, arg);
   }
 
-  _addGroup (accountType, name) {
-    let g = this._view .addGroup (name);
+  _addGroup (accountType, name, flag) {
+    let g = this._view .addGroup (name, flag);
     for (let acc of this._model .getAccounts())
       if (acc .trackBalance && acc .type == accountType)
         this._addTuple (acc, g);
@@ -60,7 +60,7 @@ class AccountBalance extends TuplePresenter {
     for (let child of cat .children || []) {
       var bal = this._actuals .getAmountRecursively (child, this._budget .getStartDate() ,this._budget .getEndDate());
       if (bal != 0) {
-        let g = this._view .addGroup (child .name, '_netZero');
+        let g = this._view .addGroup (child .name, '_netZero _flagInfo');
         if (child .children)
           for (let c of child .children) {
             var b = this._actuals .getAmountRecursively (c, this._budget .getStartDate() ,this._budget .getEndDate());
@@ -91,9 +91,9 @@ class AccountBalance extends TuplePresenter {
   *addHtml (toHtml) {
     yield* this._model .find();
     this._view .addHtml (toHtml);
-    this._addGroup (AccountType .DEPOSIT,     'Bank Accounts');
-    this._addGroup (AccountType .CASH,        'Cash');
-    this._addGroup (AccountType .CREDIT_CARD, 'Credit Cards');
+    this._addGroup (AccountType .DEPOSIT,     'Bank Accounts', '_flagGood');
+    this._addGroup (AccountType .CASH,        'Cash',          '_flagGood');
+    this._addGroup (AccountType .CREDIT_CARD, 'Credit Cards',  '_flagBad');
     this._addNetToZero();
   }
 }

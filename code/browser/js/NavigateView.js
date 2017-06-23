@@ -111,7 +111,7 @@ class NavigateView extends Observable  {
     }
   }
 
-  addProgressSidebarGroup (name, list=[]) {
+  addProgressSidebarGroup (name, list=[], flag) {
     const shortListLength = 6;
     const categories      = this._variance .getBudget() .getCategories();
     var table;
@@ -145,7 +145,7 @@ class NavigateView extends Observable  {
             buildTable();
           })
    }
-    var group = $('<div>', {class: '_sidebar_group'})
+    var group = $('<div>', {class: '_sidebar_group ' + (flag || '')})
       .appendTo (this._progressSidebar)
       .append   ($('<div>', {class: '_heading', text: name}))
      buildTable();

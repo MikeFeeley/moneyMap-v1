@@ -28,8 +28,8 @@ class AccountBalanceView extends TupleView {
     this._html .find ('.' + name) .remove();
   }
 
-  addGroup (title, name) {
-    return $('<div>', {class: (name || '') + ' _sidebar_group _group'})
+  addGroup (title, name='') {
+    return $('<div>', {class: name + ' _sidebar_group _group '})
       .appendTo (this._html)
       .append   ($('<div>', {class: '_heading', text: title}));
   }

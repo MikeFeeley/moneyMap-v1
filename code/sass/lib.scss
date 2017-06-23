@@ -75,6 +75,9 @@ $left-margin-sep: 20px;
   border-radius: 12px;
   box-shadow: 0px 0px 1px rgba(0,0,0,.3), 0px 0px 3px rgba(0,0,0,.15);
   * {color: #777}
+/*  &._flagInfo > ._heading {background-color: rgba(170,210,250,.4)};*/
+  &._flagGood > ._heading {background-color: rgba(180,220,180,.4)};
+  &._flagBad  > ._heading {background-color: rgba(230,180,180,.4)};
   > ._heading {
     background-color: rgba(210,210,210,.4);
     font-size: 18px;
