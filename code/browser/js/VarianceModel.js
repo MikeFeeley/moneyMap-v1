@@ -318,8 +318,6 @@ class VarianceModel extends Observable {
 
     // incorporate amount from ancestor or use ancesor if this is budgetLess and skip
     var amountUp = this._getAmountUp (cat, period, skip);
-if (cat.name == 'Groceries')
-  console.log(amountUp,amount);
     if (amount .isBudgetless && skip && amountUp .nearestCatWithType)
       return this._getAmountUpDown (amountUp .nearestCatWithType, period, skip);
     for (let per of ['prev', 'cur'])
