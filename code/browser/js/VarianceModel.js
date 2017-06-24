@@ -286,14 +286,14 @@ class VarianceModel extends Observable {
             //  proportionally
             var thisAlloc = totalAvail [per] != 0? Math .round (totalAlloc * thisAvail [per] / totalAvail [per]): 0;
           }
-          let equally   = 1.0 / children .length;
-          var overAlloc = totalBudget [per] != 0?  Math .round ((unalloc [per] - totalAlloc) * thisBudget [per] / totalBudget [per]): equally;
+          var overAlloc = Math .round (
+            (unalloc [per] - totalAlloc) * (totalBudget [per] != 0? thisBudget [per] / totalBudget [per]: 1.0 / children .length)
+          );
           return (o [per] = thisAlloc + overAlloc) != null && o;
         }, {})
         alloc .addCats = upAmount .addCats .concat (alloc .prev + alloc .cur != 0? [cat .parent ._id]: [])
       } else
         var alloc = {prev: 0, cur: 0, addCats: upAmount .addCats}
-
 
       // get nearest category with a non-null schedule
       alloc .nearestType        = this._getScheduleTypeName (cat .parent);
