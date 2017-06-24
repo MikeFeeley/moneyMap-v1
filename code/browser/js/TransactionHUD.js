@@ -185,11 +185,14 @@ class TransactionHUD extends TransactionTable {
     this._html = $('<div>', {class: this._view._name}) .appendTo (toHtml);
     this._html [0] .addEventListener ('webkitmouseforcewillbegin', e => {e .preventDefault()}, true)
     this._content = $('<div>', {class: '_hudcontent'}) .appendTo (this._html);
+    let mousedownFired;
+    this._content .on ('mousedown webkitmouseforcedown', () => {mousedownFired = true})
     this._content .on ('mouseup webkitmouseforceup', e => {
-      if (this._view._options .readOnly) {
-      var target = $(e .target);
-      var field  = target .hasClass ('_content') && target .parent() .parent ('._field') .data ('field');
-      if (field) {
+      if (this._view._options .readOnly && mousedownFired) {
+        mousedownFired = false;
+        var target = $(e .target);
+        var field  = target .hasClass ('_content') && target .parent() .parent ('._field') .data ('field');
+        if (field) {
           if ((e .originalEvent .webkitForce > 1 || e .originalEvent .altKey) && field._name == 'category') {
             let date     = $(e .target) .closest ('tr') .find ('._field_date') .data ('field')._value;
             let html     = $(e .target) .offsetParent();
