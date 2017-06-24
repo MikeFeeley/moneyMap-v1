@@ -1,7 +1,10 @@
+@import 'lib';
+
 body {
   margin: 0px;
 }
 .tabbed {
+  @include user-select(none);
   position: fixed;
   left: 0px;
   right: 0px;

@@ -132,6 +132,10 @@ $table-stripe-backgroud: #f8f8f8;
   }
 }
 
+._TransactionHUD:not(._TransactionEdit) {
+  @include user-select(auto);
+}
+
 ._TransactionHUD > ._hudcontent > table, ._TransactionHUD > ._hudcontent > ._body > table {
   @include transaction-table-base (18px, 13px, 18px);
 }

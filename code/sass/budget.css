@@ -281,7 +281,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
   }
 }
 
-._Navigate {
+._Navigate {  
   div._TransactionHUD, div._BudgetProgressHUD {
     margin-left: 20px;
     width: auto;
@@ -597,7 +597,6 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
 }
 
 ._progressSidebar {
-  @include user-select-none();
   > ._sidebar_group {
     > table {
       > tr > td:last-child {
