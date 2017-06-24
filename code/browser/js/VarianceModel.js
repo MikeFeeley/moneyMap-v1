@@ -286,7 +286,8 @@ class VarianceModel extends Observable {
             //  proportionally
             var thisAlloc = totalAvail [per] != 0? Math .round (totalAlloc * thisAvail [per] / totalAvail [per]): 0;
           }
-          var overAlloc = totalBudget [per] != 0?  Math .round ((unalloc [per] - totalAlloc) * thisBudget [per] / totalBudget [per]): 0;
+          let equally   = 1.0 / children .length;
+          var overAlloc = totalBudget [per] != 0?  Math .round ((unalloc [per] - totalAlloc) * thisBudget [per] / totalBudget [per]): equally;
           return (o [per] = thisAlloc + overAlloc) != null && o;
         }, {})
         alloc .addCats = upAmount .addCats .concat (alloc .prev + alloc .cur != 0? [cat .parent ._id]: [])
