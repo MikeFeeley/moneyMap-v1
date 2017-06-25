@@ -298,7 +298,7 @@ class VarianceModel extends Observable {
           let thisAlloc  = 0;
           let totalAlloc = [];
           for (let i = 0; i < 2; i++) {
-            totalAlloc [0] = Math .min (unalloc [per], totalAvail [i]);
+            totalAlloc [i] = Math .min (unalloc [per], totalAvail [i]);
             if (skip) {
               //  to other children first
               var otherAvail = totalAvail [i] - thisAvail [i];
@@ -308,10 +308,10 @@ class VarianceModel extends Observable {
               //  proportionally
               thisAlloc += totalAvail [i] != 0? Math .round (totalAlloc [i] * thisAvail [i] / totalAvail [i]): 0;
             }
-            unalloc [per]  -= totalAlloc [i];
+            thisAvail  [i] -= thisAlloc;
             totalAvail [i] -= totalAlloc [i];
           }
-          totalAlloc = totalAlloc [0] + totalAlloc [1];
+          totalAlloc    = totalAlloc [0] + totalAlloc [1];
           let overAlloc = totalBudget != 0?  Math .round ((unalloc [per] - totalAlloc) * thisBudget / totalBudget): 1.0 / children .length;
           return (o [per] = thisAlloc + overAlloc) != null && o;
         }, {})
@@ -326,8 +326,7 @@ class VarianceModel extends Observable {
         alloc .nearestType        = upAmount .nearestType;
         alloc .nearestCatWithType = upAmount .nearestCatWithType;
       }
-
-      return alloc;
+     return alloc;
 
     } else
       return {prev: 0, cur: 0, nearestType: 'none', addCats: []}
