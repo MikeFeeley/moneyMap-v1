@@ -11,7 +11,7 @@ body {
   display: none;
 }
 .negative {
-  color: #922
+  color: #922!important
 }
 
 ._PathPicker {

@@ -131,9 +131,12 @@ class NavigateView extends Observable  {
             })
           })
         this._addTooltip ($('<td>', {text: item .name}) .appendTo (tr), item .nameTooltip);
-        if (item .amount)
-          this._addTooltip ($('<td>', {text: Types .moneyDZ .toString (item .amount)})  .appendTo (tr), item .amountTooltip)
-        else if (list [i] .percent)
+        if (item .amount) {
+          this._addTooltip ($('<td>', {
+            text: Types .moneyDZ .toString (item .amount),
+            class: item .amount < 0? 'negative': ''
+          })  .appendTo (tr), item .amountTooltip)
+        } else if (list [i] .percent)
           this._addTooltip ($('<td>', {text: Types .percent .toString (item .percent)}) .appendTo (tr), item .amountTooltip);
       }
       if (list .length > shortListLength)
