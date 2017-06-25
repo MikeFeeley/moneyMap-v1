@@ -101,7 +101,7 @@ class NavigateView extends Observable  {
           }) .appendTo (toHtml);
           window .setTimeout (() => {
             if (tt) {
-              tt .css (ui .calcPosition (element, toHtml, {top: 30, left: -2}, tt .width())) .fadeIn (120);
+              tt .css (ui .calcPosition (element, toHtml, {top: 30, left: -8}, tt .width())) .fadeIn (120);
             }
           })
         },
@@ -111,19 +111,15 @@ class NavigateView extends Observable  {
     }
   }
 
-  addProgressSidebarGroup (name, list=[], flag) {
-    const shortListLength = 6;
-    const categories      = this._variance .getBudget() .getCategories();
-    var table;
-    var isShowingMore = false;
-    var buildTable = () => {
-      table = $('<table>') .appendTo (group);
-      table [0] .addEventListener ('webkitmouseforcewillbegin', e => {e .preventDefault()}, true);
+  addProgressSidebarGroup (name, tooltip, list=[], flag) {
+    var updateRows = () => {
+      table .empty();
       for (let i = 0; i < Math .min (isShowingMore? list .length: shortListLength, list .length); i++) {
         let item = list [i];
         let tr = $ ('<tr>') .appendTo (table)
-          .on ('click webkitmouseforcedown', e => {
-            let id = list [i] .id
+        if (item .id)
+          tr .on ('click webkitmouseforcedown', e => {
+            let id = item .id
             if (e .originalEvent .webkitForce > 1 || e .originalEvent .altKey)
               id = categories .getPath (categories .get (id)) [1]._id;
             let html = this._progressGraphs;
@@ -134,8 +130,11 @@ class NavigateView extends Observable  {
               view:     this
             })
           })
-        this._addTooltip ($('<td>', {text: item .name})                              .appendTo (tr), item .nameTooltip);
-        this._addTooltip ($('<td>', {text: Types .moneyDZ .toString (item .amount)}) .appendTo (tr), item .amountTooltip)
+        this._addTooltip ($('<td>', {text: item .name}) .appendTo (tr), item .nameTooltip);
+        if (item .amount)
+          this._addTooltip ($('<td>', {text: Types .moneyDZ .toString (item .amount)})  .appendTo (tr), item .amountTooltip)
+        else if (list [i] .percent)
+          this._addTooltip ($('<td>', {text: Types .percent .toString (item .percent)}) .appendTo (tr), item .amountTooltip);
       }
       if (list .length > shortListLength)
         $('<td>', {class: '_showMoreLess', html: isShowingMore? 'Show Less&#133;': 'Show More&#133;'}) .appendTo ($('<tr>') .appendTo (table)) .after ($('<td>'))
@@ -144,11 +143,26 @@ class NavigateView extends Observable  {
             table .remove();
             buildTable();
           })
+    }
+    const shortListLength = 6;
+    const categories      = this._variance .getBudget() .getCategories();
+    var table;
+    var isShowingMore = false;
+    var buildTable = () => {
+      table = $('<table>') .appendTo (group);
+      table [0] .addEventListener ('webkitmouseforcewillbegin', e => {e .preventDefault()}, true);
+      updateRows();
    }
     var group = $('<div>', {class: '_sidebar_group ' + (flag || '')})
-      .appendTo (this._progressSidebar)
-      .append   ($('<div>', {class: '_heading', text: name}))
+      .appendTo (this._progressSidebar);
+    let heading = $('<div>', {class: '_heading', text: name}) .appendTo (group);
+     if (tooltip && tooltip .length)
+       this._addTooltip (heading, tooltip);
      buildTable();
+     return (update) => {
+       list = update;
+       updateRows();
+     }
   }
 
   addProgressGraph (to, popup, position, onClose) {

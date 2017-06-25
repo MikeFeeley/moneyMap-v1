@@ -106,7 +106,7 @@ class Navigate {
         var ids = [doc._id] || [];
         break;
     }
-    this._update (eventType, modelName, ids);
+   this._update (eventType, modelName, ids, doc);
   }
 
 
@@ -829,28 +829,58 @@ class Navigate {
   /****************************/
   /***** PROGRESS SIDEBAR *****/
 
-  _addTopVariance (title, choose, normalize, flag) {
-    var roots = [this._budget .getExpenseCategory()];
-    var date  = Types .date .monthEnd (Types .date .addMonthStart (Types .date .today(), -1));
-    var variances = this._variance .getVarianceList (roots, date);
+  _addBigPicture() {
+    var getData = () => {
+      let sav = this._budget .getAmount (this._budget .getSavingsCategory()) .amount;
+      let inc = this._budget .getAmount (this._budget .getIncomeCategory())  .amount;
+      let exp = this._budget .getAmount (this._budget .getExpenseCategory()) .amount;
+      let una = -(inc + (sav + exp));
+      let list = [];
+      list .push ({name: 'Planned Savings', amount: sav})
+      if (una < -50 || una > 50)
+        list .push ({
+          name:        una > 0? 'Unallocated' : 'Over Allocated',
+          nameTooltip: una > 0? 'Planned income not allocated in a budget': 'Budget allocation exceeds planned income',
+          amount:      una
+        })
+      list .push ({name: 'Net Savings', amount: sav + una});
+      list .push ({name: 'Savings Rate',  percent: (sav + una) * 1.0 / (-inc)});
+      return list;
+    }
+    let updateView = this._progressView .addProgressSidebarGroup('Saving this Year', '', getData());
+    this._addUpdater (this._view, (eventType, model, ids) => {
+      updateView (getData());
+    })
+  }
 
-    variances = variances
-      .filter (v => {return choose (v .amount)})
-      .map (v => {return {
-        id:          v .cat._id,
-        name:        v .cat .name,
-        nameTooltip: this._budget .getCategories() .getPathname (v .cat) .slice (1) .join (' > '),
-        amount:      normalize (v .amount)
-      }})
-      .sort ((a,b) => {return a .amount > b .amount? -1: a .amount == b .amount? 0: 1})
-    this._progressView .addProgressSidebarGroup(title, variances, flag);
+  _addTopVariance (title, tooltip, dates, choose, normalize, flag) {
+    var getData = () => {
+      return this._variance .getVarianceList ([this._budget .getExpenseCategory()], dates)
+        .filter (v => {return choose (v)})
+        .map (v => {return {
+          id:          v .cat._id,
+          name:        v .cat .name,
+          nameTooltip: this._budget .getCategories() .getPathname (v .cat) .slice (1) .join (' > '),
+          amount:      normalize (v .amount)
+        }})
+        .sort ((a,b) => {return a .amount > b .amount? -1: a .amount == b .amount? 0: 1})
+    }
+    let updateView = this._progressView .addProgressSidebarGroup(title, tooltip, getData(), flag);
+    this._addUpdater (this._view, (eventType, model, ids) => {
+      updateView (getData());
+    })
   }
 
   _addProgressSidebar (toHtml) {
+    let lastMonthEnd   = Types .date .monthEnd (Types .date .addMonthStart (Types .date .today(), -1));
+    let nextMonthStart = Types .date .addMonthStart (Types .date .today(), 1);
     this._progressView .addProgressSidebar();
-    this._progressView .addProgressSidebarGroup('Big Picture', [{name: 'Blah', amount: 10000}], '_flagInfo');
-    this._addTopVariance ('Over Last Month', a => {return a < -50}, a => {return -a}, '_flagBad');
-    this._addTopVariance ('Unspent Last Month',    a => {return a >  50}, a => {return  a}, '_flagGood');
+    this._addBigPicture();
+    this._addTopVariance ('Budget Issues', 'Top over-budget amounts coming into this month',       {end:   lastMonthEnd},   v => {return v.amount < -50}, a => {return -a}, '_flagBad');
+    this._addTopVariance ('Savings Opportunities', 'Top unspent amounts coming into this month',   {end:   lastMonthEnd},   v => {return v.amount >  50}, a => {return  a}, '_flagGood');
+    this._addTopVariance ('Upcoming Spending', 'Top spending in future months this year',          {start: nextMonthStart}, v => {
+      return v.amount > 50 && this._categories .getType (v .cat) != ScheduleType .YEAR
+    }, a => {return  a}, '_flagGood');
   }
 
 
@@ -1268,10 +1298,10 @@ class Navigate {
     this._updaters .set (view, []);
   }
 
-  _update (eventType, model, ids) {
+  _update (eventType, model, ids, doc, arg) {
     for (let vu of this._updaters .values())
       for (let updater of vu)
-        updater (eventType, model, ids);
+        updater (eventType, model, ids, doc, arg);
   }
 
 

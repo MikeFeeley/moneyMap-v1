@@ -438,7 +438,7 @@ class VarianceModel extends Observable {
   /**
    * Helper for getVarialceList (Below)
    */
-  _getVarianceListByPeriod (cats, period) {
+  _getVarianceListByPeriod (cats, period, includeYear) {
     let vs = []
     for (let cat of (cats && ([] .concat (cats)) || [])) {
       if (this._budget .getCategories() .getType (cat) != ScheduleType .NONE) {
@@ -461,12 +461,16 @@ class VarianceModel extends Observable {
   }
 
   /**
-   * Returns a list of variances for all categories in the family headed by ids that have a budget as of specified date
+   * Returns a list of variances for all categories in the family headed by ids that have a budget as of specified date range
    */
-  getVarianceList (cats, date) {
+  getVarianceList (cats, dates) {
+    if (! dates .start)
+      dates .start = this._budget .getStartDate();
+    if (!dates .end)
+      dates .end    = this._budget .getEndDate();
     let period = {
-      prev: {start: this._budget .getStartDate(), end: Types .date .monthEnd (Types .date .addMonthStart (date, -1))},
-      cur:  {start: Types .date .monthStart (date), end: date}
+      prev: {start: dates .start, end: Types .date .monthEnd (Types .date .addMonthStart (dates .end, -1))},
+      cur:  {start: Types .date .monthStart (dates .end), end: dates .end}
     }
     return this._getVarianceListByPeriod (cats, period);
   }
