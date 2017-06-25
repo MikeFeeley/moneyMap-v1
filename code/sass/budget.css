@@ -262,7 +262,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
     @include popup-container();
     margin-left: 20px;
     width: 800px;
-    > div {
+    > div._popupContent {
       @include popup-content();
       > ._heading {
         margin-bottom: 24px;

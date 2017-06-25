@@ -162,7 +162,7 @@ class NavigateView extends Observable  {
     }
     var container = to || this._container;
     if (container .length) {
-      var graph = $('<div>', {class: '_progressGraph' + (popup? ' _popup': '')}) .appendTo (container) .append ($('<div>'));
+      var graph = $('<div>', {class: '_progressGraph' + (popup? ' _popup': '')}) .appendTo (container) .append ($('<div>', {class: '_popupContent'}));
       if (popup) {
         graph .css (position);
         ui .ModalStack .add (
@@ -320,7 +320,7 @@ class NavigateView extends Observable  {
       var container = $('<div>', {class: name + 's'});
       container .appendTo (this._content);
     }
-    var graph  = $('<div>', {class: name + (popup? ' _popup': '')}) .appendTo (container) .append ($('<div>'))
+    var graph  = $('<div>', {class: name + (popup? ' _popup': '')}) .appendTo (container) .append ($('<div>', {class: '_popupContent'}))
     processDataset();
     if (popup) {
       if (data .length == 1) {
