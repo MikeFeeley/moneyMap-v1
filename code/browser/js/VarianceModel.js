@@ -149,13 +149,14 @@ class VarianceModel extends Observable {
     var amount    = {};
     amount [type] = {actual: {prev: 0, cur: 0}, budget: {prev: 0, cur: 0}};
     for (let per in period) {
-      amount [type] .actual [per] = this._actuals .getAmount           (cat, period [per] .start, period [per] .end, skip);
+      amount [type] .actual [per] = this._actuals .getAmount (cat, period [per] .start, period [per] .end, skip);
       amount [type] .budget [per] = this._budget  .getIndividualAmount (cat, period [per] .start, period [per] .end) .amount;
     }
     if (type == 'month') {
       let budgetEndDate = this._budget .getEndDate();
-      if (period .cur .end != budgetEndDate)
-        amount .otherMonths = this._budget .getIndividualAmount (cat, Types .date .addMonthStart (period .cur .end, 1), budgetEndDate) .amount;
+      if (period .cur .end != budgetEndDate) {
+          amount .otherMonths = this._budget .getIndividualAmount (cat, Types .date .addMonthStart (period .cur .end, 1), budgetEndDate) .amount;
+      }
     }
     amount .isBudgetless = type == 'none';
     amount .isCredit     = isCredit;
@@ -223,9 +224,13 @@ class VarianceModel extends Observable {
    */
   _getAmountUp (cat, period, skip) {
     if (cat .parent) {
-
       // compute unallocated amount to distribute to children
-      var amount   = this._getAmount   (cat .parent, period, skip);
+      var amount = this._getAmount   (cat .parent, period, skip);
+      // subtract children if this is a yearly budget
+      if (this._budget .getCategories() .getType (cat .parent) == ScheduleType .YEAR)
+        amount .year .budget .prev = Math .max (0, amount .year .budget .prev - (cat .parent .children || []) .reduce ((t,c) => {
+          return t + this._budget .getIndividualAmount(c) .amount;
+        }, 0));
       var upAmount = this._getAmountUp (cat .parent, period, skip);
       var budget   = ['month', 'year'] .reduce ((t,sch) => {
         if (amount [sch])
@@ -252,47 +257,62 @@ class VarianceModel extends Observable {
         // compute total current budget, prorating year if not skip (i.e., proportional alloc)
         var monthsInPeriod = Types .date._difMonths (period .cur .end, period .prev .start);
         // compute children's budget, actual and available
-        var thisBudget, totalBudget=0, thisActual, totalActual=0, thisAvail, totalAvail=0;
+        var thisBudget, totalBudget=0, thisActual, totalActual=0, thisAvail=[], totalAvail=[0,0];
         for (let child of children) {
           var budget = ['month', 'year'] .reduce ((t, sch) => {
             if (child .amount [sch]) {
-              var a = child .amount [sch] .budget .prev;
+              var a = [child .amount [sch] .budget .prev, 0];
               if (sch == 'month')
-                a += child .amount [sch] .budget .cur;
-              else if (!skip && sch == 'year')
-                a = (a * monthsInPeriod) / 12;
+                a[0] += child .amount [sch] .budget .cur;
+              else if (!skip && sch == 'year') {
+                let pr = (a[0] * monthsInPeriod) / 12;
+                a[1] = a[0] - pr;
+                a[0] = pr;
+              }
             } else
-              var a = 0;
-            return t + a;
-          }, 0);
+              var a = [0,0];
+            t[0] += a[0];
+            t[1] += a[1];
+            return t;
+          }, [0,0]);
           var actual = ['prev', 'cur'] .reduce ((t, per) => {
             return t + ['none', 'month', 'year'] .reduce ((t, sch) => {
               return t + ((child .amount [sch] && child .amount [sch] .actual [per]) || 0);
             }, 0)
           }, 0);
-          var avail = Math .max (0, budget - actual);
+          var avail = [Math .max (0, budget[0] - actual), 0];
+          avail [1] = Math .max (budget[1] - Math .max (0, actual - budget[0]));
           if (child .cat == cat) {
-            thisBudget = budget;
+            thisBudget = budget[0];
             thisActual = actual;
             thisAvail  = avail;
           }
-          totalBudget += budget;
-          totalActual += actual;
-          totalAvail  += avail;
+          totalBudget    += budget[0];
+          totalActual    += actual;
+          totalAvail [0] += avail [0];
+          totalAvail [1] += avail [1];
         }
         // distributed unallocated amount to children
+        //   - for yearly amounts first try to fit pro-rated amount, then full year
         var alloc = ['prev', 'cur'] .reduce ((o, per) => {
-          var totalAlloc = Math .min (unalloc [per], totalAvail);
-          if (skip) {
-            //  to other children first
-            var otherAvail = totalAvail - thisAvail;
-            var otherAlloc = Math .min (unalloc [per], otherAvail);
-            var thisAlloc  = Math .min (thisAvail, unalloc [per] - otherAlloc);
-          } else {
-            //  proportionally
-            var thisAlloc = totalAvail != 0? Math .round (totalAlloc * thisAvail / totalAvail): 0;
+          let thisAlloc  = 0;
+          let totalAlloc = [];
+          for (let i = 0; i < 2; i++) {
+            totalAlloc [0] = Math .min (unalloc [per], totalAvail [i]);
+            if (skip) {
+              //  to other children first
+              var otherAvail = totalAvail [i] - thisAvail [i];
+              var otherAlloc = Math .min (unalloc [per], otherAvail);
+              thisAlloc     += Math .min (thisAvail [i], unalloc [per] - otherAlloc);
+            } else {
+              //  proportionally
+              thisAlloc += totalAvail [i] != 0? Math .round (totalAlloc [i] * thisAvail [i] / totalAvail [i]): 0;
+            }
+            unalloc [per]  -= totalAlloc [i];
+            totalAvail [i] -= totalAlloc [i];
           }
-          var overAlloc = totalBudget != 0?  Math .round ((unalloc [per] - totalAlloc) * thisBudget / totalBudget): 1.0 / children .length;
+          totalAlloc = totalAlloc [0] + totalAlloc [1];
+          let overAlloc = totalBudget != 0?  Math .round ((unalloc [per] - totalAlloc) * thisBudget / totalBudget): 1.0 / children .length;
           return (o [per] = thisAlloc + overAlloc) != null && o;
         }, {})
         alloc .addCats = upAmount .addCats .concat (alloc .prev + alloc .cur != 0? [cat .parent ._id]: [])
@@ -377,7 +397,7 @@ class VarianceModel extends Observable {
    *    skip = [[cat_id, date, amount]]
    *      if skip is non-null
    *        - amount is removed from actuals for specified cat and date
-   *        - parent amounts distriute to  other children first
+   *        - parent amounts distriute to other children first
    *        - budgetless categories report schedule of respoinsible parent
    *      if skip is null
    *        - parent amounts distriute proportionally
