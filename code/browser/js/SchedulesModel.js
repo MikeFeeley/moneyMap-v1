@@ -240,7 +240,8 @@ class SchedulesModel extends Observable {
           var amt                = Math [isCredit? 'min': 'max'] (am, ds .amount);
           rs .amount            += amt;
           rs .year               = (rs .year || {amount: 0, allocated: 0, unallocated: 0});
-          rs .year .amount      += amt - (((ds .month && ds .month .amount) || 0) + ((ds .otherMonths && ds .otherMonths) || 0));
+          rs .year .amount      += Math [isCredit? 'min': 'max'] (am, ds .amount + ((ds .otherMonths && ds .otherMonths) || 0))
+                                   - (((ds .month && ds .month .amount) || 0) + ((ds .otherMonths && ds .otherMonths) || 0));
           rs .year .allocated   += ds .amount + (ds .otherMonths || 0);
           rs .year .unallocated += am - (ds .amount + (ds .otherMonths || 0));
           if (ds .month) {
