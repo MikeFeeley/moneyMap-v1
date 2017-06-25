@@ -11,15 +11,18 @@ var ui = {
     }
     window .setTimeout (() => {
       // use timeout to ensure that this code doesn't run until after html has reappeared and thus has computed height
-      let sp = $(getScrollParent (e [0], includeMargin));
-      let st = sp .scrollTop();
-      let sl = sp .scrollLeft();
-      let sh = Math .max (document .documentElement .clientHeight, e .outerHeight (includeMargin) + sp .offset() .top);
-      let sw = Math .max (sp .innerWidth(),                        e .outerWidth  (includeMargin) + sp .offset() .left);
-      let sy = Math .max (0, e .outerHeight (includeMargin) + e .offset() .top  - sh);
-      let sx = Math .max (0, e .outerWidth  (includeMargin) + e .offset() .left - sw);
-      if (sy != 0 || sx != 0)
-        sp .animate ({scrollTop: (st + sy), scrollLeft: (sl + sx)}, 200);
+      let sp = getScrollParent (e [0], includeMargin);
+      if (sp) {
+        sp = $(sp);
+        let st = sp .scrollTop();
+        let sl = sp .scrollLeft();
+        let sh = Math .max (document .documentElement .clientHeight, e .outerHeight (includeMargin) + sp .offset() .top);
+        let sw = Math .max (sp .innerWidth(),                        e .outerWidth  (includeMargin) + sp .offset() .left);
+        let sy = Math .max (0, e .outerHeight (includeMargin) + e .offset() .top  - sh);
+        let sx = Math .max (0, e .outerWidth  (includeMargin) + e .offset() .left - sw);
+        if (sy != 0 || sx != 0)
+          sp .animate ({scrollTop: (st + sy), scrollLeft: (sl + sx)}, 200);
+      }
     }, 0);
   },
 
