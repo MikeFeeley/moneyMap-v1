@@ -383,11 +383,13 @@ var ViewScalable = Base => class extends Base {
       } else {
         this._html .find (':input') .blur();
         if (this._inputContainer) {
-          let value = this._inputContainer.data ().field && this._inputContainer.data ().field && this._inputContainer.data ().field .get();
-          if (value != null)
-            this._inputContainer .value = value;
           let c = this._inputContainer;
           let d = c .data();
+          if (d && d .field) {
+            let v = d .field .get();
+            if (v != null)
+              d .field._value = v;
+          }
           this._inputContainer .replaceWith (this._labelContainer);
           c .data (d);
         }
