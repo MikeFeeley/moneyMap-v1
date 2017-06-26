@@ -173,9 +173,8 @@ class DateType extends FieldType {
         return this._date (y, m, d);
       case 'MY':
       case 'MYorYear':
-        if (context)
           var sy = this._year  (context);
-        if (s .indexOf ('-') == -1 && s.length >= 4 && this._mthsLC .indexOf (s .slice (0, 3)) != 0)
+        if (s .indexOf ('-') == -1 && s.length >= 4 && this._mthsLC .indexOf (s .slice (0, 3)) != -1)
           s = s .slice (0,3) + '-' + s.slice (3);
         var dt = s .split (/[- ]/);
         if (dt.length==1) {

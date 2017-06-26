@@ -246,6 +246,7 @@ class ListView extends SortedTupleView {
         let skip = false;
         if (target [0] == line [0])
           target = target .find ('._field');
+        fieldHtml = target .closest ('._field');
         while (! skip && field && ! field .isEnableable()) {
           fieldHtml = fieldHtml .prev();
           field = fieldHtml .data ('field');

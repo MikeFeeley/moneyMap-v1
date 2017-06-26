@@ -841,7 +841,6 @@ class Navigate {
   _addBigPicture() {
     let updateView = this._progressView .addProgressSidebarGroup('Saving this Year', '');
     let update = varianceList => {
-    console.log('xxx');
       let sav = this._budget .getAmount (this._budget .getSavingsCategory()) .amount;
       let inc = this._budget .getAmount (this._budget .getIncomeCategory())  .amount;
       let exp = this._budget .getAmount (this._budget .getExpenseCategory()) .amount;
@@ -927,9 +926,8 @@ class Navigate {
       savingsUpdate    (toTodayVar);
       futureUpdate     (futureVar);
     }
-    console.log('aaa');
     update();
-    this._addUpdater (this._view, (e,m,i) => {
+    this._addUpdater (this._progressView, (e,m,i) => {
       update();
     })
   }
@@ -1350,9 +1348,13 @@ class Navigate {
   }
 
   _update (eventType, model, ids, doc, arg) {
-    for (let vu of this._updaters .values())
-      for (let updater of vu)
-        updater (eventType, model, ids, doc, arg);
+    for (let view of this._updaters .keys()) {
+      if (!view || !view .isVisible || view .isVisible()) {
+        for (let updater of this._updaters .get (view))
+          updater (eventType, model, ids, doc, arg);
+      } else
+        view .resetHtml();
+    }
   }
 
 
