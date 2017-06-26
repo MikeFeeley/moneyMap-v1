@@ -23,6 +23,7 @@ class CategoriesModel extends Observable {
 class Categories {
   constructor (docs, budget) {
     this._index = docs .reduce ((map, doc) => {map .set (doc._id, doc); return map;}, new Map());
+    this._budget = budget;
     for (let doc of docs)
       this._addParentLink (doc, 'parent', doc .budgets .includes (budget .getId())? 'children': 'zombies');
   }
@@ -55,6 +56,13 @@ class Categories {
         }
         if (arg [parent])
           this._addParentLink (cat, parent, children);
+        if (arg .budgets && parent == 'parent') {
+          if (! cat .budgets .includes (this._budget .getId())) {
+            this._removeParentLink (cat);
+            if (cat .parent)
+              cat .parent .zombies .push (cat);
+          }
+        }
         break;
       case ModelEvent.INSERT:
         this._index .set (doc._id, doc);
