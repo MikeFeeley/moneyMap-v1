@@ -91,7 +91,10 @@ class Navigate {
 
   _onModelChange (eventType, doc, arg, source, model) {
     var modelName = model .constructor .name;
-    if (eventType == ModelEvent .INSERT && modelName == 'SchedulesModel' && doc .category)
+    let skip =
+      (eventType == ModelEvent .INSERT && modelName == 'SchedulesModel' && doc .category) ||
+      (eventType == ModelEvent .UPDATE && modelName == 'SchedulesModel' && arg && arg .sort != null);
+    if (skip)
       return;
     switch (modelName) {
       case 'ActualsModel':
@@ -838,20 +841,15 @@ class Navigate {
   _addBigPicture() {
     let updateView = this._progressView .addProgressSidebarGroup('Saving this Year', '');
     let update = varianceList => {
+    console.log('xxx');
       let sav = this._budget .getAmount (this._budget .getSavingsCategory()) .amount;
       let inc = this._budget .getAmount (this._budget .getIncomeCategory())  .amount;
       let exp = this._budget .getAmount (this._budget .getExpenseCategory()) .amount;
       let ovp = varianceList .reduce ((t,v) => {return t + (v .prev < 0? v .prev: 0)}, 0)
-      let olp = varianceList
-        .filter (v => {return v .prev < 0})
-        .map    (v => {return {name: v .cat .name, amount: v .prev}})
       let ovc = varianceList .reduce ((t,v) => {
         let a = Math .max (0, v .prev) + v .cur;
         return t + (a < 0? a: 0)
       }, 0);
-      let olc = varianceList
-        .filter (v => {return Math .max (0, v .prev) + v .cur < 0})
-        .map    (v => {return {name: v .cat .name, amount: Math .max (0, v .prev) + v .cur}})
       let ovr = ovp + ovc;
       let una = -(inc + (sav + exp));
       let list = [];
@@ -929,6 +927,7 @@ class Navigate {
       savingsUpdate    (toTodayVar);
       futureUpdate     (futureVar);
     }
+    console.log('aaa');
     update();
     this._addUpdater (this._view, (e,m,i) => {
       update();
