@@ -238,14 +238,14 @@ class ListView extends SortedTupleView {
       super .addTuple (data, data ._sort, line, toHtml);
       line .on ('click', e => {
         let target = $(e .target);
-console.log ('xxx', target, target.find('._field'), target.find('._field').data('field'))
-        if (target [0] == line [0])
-          target = target .find ('._field');
         let fieldHtml = target .closest ('._field');
         if (fieldHtml .length == 0)
           fieldHtml = target .find ('._field');
         let field  = fieldHtml .data ('field');
+        let name   = field && field._name;
         let skip = false;
+        if (target [0] == line [0])
+          target = target .find ('._field');
         while (! skip && field && ! field .isEnableable()) {
           fieldHtml = fieldHtml .prev();
           field = fieldHtml .data ('field');
@@ -253,7 +253,6 @@ console.log ('xxx', target, target.find('._field'), target.find('._field').data(
         this._selectTuple ($(e.currentTarget), {field: fieldHtml});
         e.stopPropagation();
         let id     = $(e .currentTarget) .data ('id');
-        let name   = field && field._name;
         let pElmt  = field? $(e .target): $(e .currentTarget) .find ('._content');
         let html   = pElmt .offsetParent();
         let pos    = pElmt .position();
