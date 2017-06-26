@@ -60,6 +60,8 @@ class ScheduleEntry extends List {
             this._addTuple (cat);
         }
       }
+      if (eventType == ModelEvent .UPDATE && arg .start != null && doc._id)
+        this._setVisibility (doc._id, arg);
       if (this._options .setFocus) {
         this._view .selectTupleWithId (doc._id, {field: this._view._getFieldHtml (doc._id, 'name')});
         this._options .setFocus = false;
