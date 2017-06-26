@@ -254,7 +254,7 @@ class ListView extends SortedTupleView {
         this._selectTuple ($(e.currentTarget), {field: fieldHtml});
         e.stopPropagation();
         let id     = $(e .currentTarget) .data ('id');
-        let pElmt  = field? $(e .target): $(e .currentTarget) .find ('._content');
+        let pElmt  = $(e .currentTarget) .find ('._content');
         let html   = pElmt .offsetParent();
         let pos    = pElmt .position();
         pos .top  += e .originalEvent .offsetY;
