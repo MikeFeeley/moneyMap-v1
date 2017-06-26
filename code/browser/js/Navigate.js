@@ -299,7 +299,6 @@ class Navigate {
               value: (a .month && a .month .amount || 0) * (isCredit? -1: 1)
             }
           });
-          let hasMonths = amounts .find (a => {return a .value != 0})
           if (dates .length == 12 || dates .length == 1) {
             let yrAmount = this._budget .getAmount (cat, this._budget .getStartDate(), this._budget .getEndDate());
             amounts .push ({
@@ -307,7 +306,7 @@ class Navigate {
               value: (yrAmount .year && yrAmount .year .amount || 0) * (isCredit? -1: 1)
             })
           }
-          if ((type == NavigateValueType .BUDGET_YR_AVE || type == NavigateValueType .BUDGET_YR_AVE_ACT) && hasMonths)
+          if ((type == NavigateValueType .BUDGET_YR_AVE || type == NavigateValueType .BUDGET_YR_AVE_ACT))
             amounts [amounts .length -1] .value /= 12;
           if (dates .length == 1)
             amounts = [{id: cat._id, value: amounts [0] .value + amounts [1] .value}]
@@ -549,13 +548,20 @@ class Navigate {
         g .rows = g .rows .filter (r => {return ! r .id .includes ('budget_')})
         return g;
       })
-    let hasMonths = groups .find (g => {return g .rows .find (r => {return r .amounts .length == 13 && r .amounts .slice (0, -1) .find (a => {return a .value != 0})})});
     if (dates .length == 12 || dates .length == 0) {
-      let isBudget = type == NavigateValueType .BUDGET || type == NavigateValueType .BUDGET_YR_AVE;
-      if (isBudget && ! hasMonths)
-        cols .push ('Yr');
-      else if (isBudget && hasMonths)
-        cols .push ('Yr Ave')
+      if (type == NavigateValueType .BUDGET)
+        cols .push ('Yr')
+      else {
+        let hasMonths = groups .find (g => {return g .rows .find (r => {return r .amounts .length == 13 && r .amounts .slice (0, -1) .find (a => {return a .value != 0})})});
+        if (! hasMonths) {
+          for (let g of groups)
+            for (let r of g .rows)
+              if (r .amounts .length == 13)
+                r .amounts [12] .value *= 12;
+          cols .push ('Yr');
+        } else
+          cols .push ('Yr Ave')
+      }
     }
     return {
       cols:      cols,
@@ -830,57 +836,103 @@ class Navigate {
   /***** PROGRESS SIDEBAR *****/
 
   _addBigPicture() {
-    var getData = () => {
+    let updateView = this._progressView .addProgressSidebarGroup('Saving this Year', '');
+    let update = varianceList => {
       let sav = this._budget .getAmount (this._budget .getSavingsCategory()) .amount;
       let inc = this._budget .getAmount (this._budget .getIncomeCategory())  .amount;
       let exp = this._budget .getAmount (this._budget .getExpenseCategory()) .amount;
+      let ovp = varianceList .reduce ((t,v) => {return t + (v .prev < 0? v .prev: 0)}, 0)
+      let olp = varianceList
+        .filter (v => {return v .prev < 0})
+        .map    (v => {return {name: v .cat .name, amount: v .prev}})
+      let ovc = varianceList .reduce ((t,v) => {
+        let a = Math .max (0, v .prev) + v .cur;
+        return t + (a < 0? a: 0)
+      }, 0);
+      let olc = varianceList
+        .filter (v => {return Math .max (0, v .prev) + v .cur < 0})
+        .map    (v => {return {name: v .cat .name, amount: Math .max (0, v .prev) + v .cur}})
+      let ovr = ovp + ovc;
       let una = -(inc + (sav + exp));
       let list = [];
       list .push ({name: 'Planned Savings', amount: sav})
       if (una < -50 || una > 50)
         list .push ({
           name:        una > 0? 'Unallocated' : 'Over Allocated',
-          nameTooltip: una > 0? 'Planned income not allocated in a budget': 'Budget allocation exceeds planned income',
+          nameTooltip: una > 0? 'Planned income not allocated in a budget.': 'Budget allocation exceeds planned income.',
           amount:      una
         })
-      list .push ({name: 'Net Savings', amount: sav + una});
-      list .push ({name: 'Savings Rate',  percent: (sav + una) * 1.0 / (-inc)});
-      return list;
+      else
+        una = 0;
+      if (ovr < -50)
+        list .push ({
+          name: 'Over Budget',
+          nameTooltip:
+            'Over budget' +
+            (ovp < -50?              ' ' + Types .moneyDZ .toString (-ovp) + ' through last month': '') +
+            (ovp < -50 && ovc < -50? ' plus': '') +
+            (ovc < -50?              ' ' + Types .moneyDZ .toString (-ovc) + ' this month': '') + '.',
+          amount: ovr
+        })
+      else
+        ovr = 0;
+      list .push ({name: 'Net Savings', amount: sav + una + ovr});
+      list .push ({name: 'Savings Rate',  percent: (sav + una + ovr) * 1.0 / (-inc)});
+      updateView (list);
     }
-    let updateView = this._progressView .addProgressSidebarGroup('Saving this Year', '', getData());
-    this._addUpdater (this._view, (eventType, model, ids) => {
-      updateView (getData());
-    })
+    return update;
   }
 
-  _addTopVariance (title, tooltip, dates, choose, normalize, flag) {
-    var getData = () => {
-      return this._variance .getVarianceList ([this._budget .getExpenseCategory()], dates)
+  _addTopVariance (title, tooltip, choose, getAmount, flag) {
+    let updateView = this._progressView .addProgressSidebarGroup(title, tooltip, flag);
+    let update = varianceList => {
+      let list = varianceList
         .filter (v => {return choose (v)})
         .map (v => {return {
           id:          v .cat._id,
           name:        v .cat .name,
           nameTooltip: this._budget .getCategories() .getPathname (v .cat) .slice (1) .join (' > '),
-          amount:      normalize (v .amount)
+          amount:      getAmount (v)
         }})
         .sort ((a,b) => {return a .amount > b .amount? -1: a .amount == b .amount? 0: 1})
+      updateView (list);
     }
-    let updateView = this._progressView .addProgressSidebarGroup(title, tooltip, getData(), flag);
-    this._addUpdater (this._view, (eventType, model, ids) => {
-      updateView (getData());
-    })
+    return update;
   }
 
   _addProgressSidebar (toHtml) {
-    let lastMonthEnd   = Types .date .monthEnd (Types .date .addMonthStart (Types .date .today(), -1));
-    let nextMonthStart = Types .date .addMonthStart (Types .date .today(), 1);
     this._progressView .addProgressSidebar();
-    this._addBigPicture();
-    this._addTopVariance ('Budget Issues', 'Top over-budget amounts coming into this month',       {end:   lastMonthEnd},   v => {return v.amount < -50}, a => {return -a}, '_flagBad');
-    this._addTopVariance ('Savings Opportunities', 'Top unspent amounts coming into this month',   {end:   lastMonthEnd},   v => {return v.amount >  50}, a => {return  a}, '_flagGood');
-    this._addTopVariance ('Upcoming Spending', 'Top spending in future months this year',          {start: nextMonthStart}, v => {
-      return v.amount > 50 && this._categories .getType (v .cat) != ScheduleType .YEAR
-    }, a => {return  a}, '_flagGood');
+    let bigPictureUpdate = this._addBigPicture();
+    let issuesUpdate = this._addTopVariance (
+      'Budget Issues',
+      'Top over-budget amounts coming into this month.',
+      v => {return v .amount < -50}, v => {return - v .amount}, '_flagBad'
+    );
+    let savingsUpdate = this._addTopVariance (
+      'Savings Opportunities',
+      'Top unspent amounts coming into this month.',
+      v => {return v .amount >  50}, v => {return  v .amount}, '_flagGood'
+    );
+    let futureUpdate = this._addTopVariance (
+      'Upcoming Spending',
+      'Top spending in future months this year.',
+      v => {
+        return v .amount > 50 && this._categories .getType (v .cat) != ScheduleType .YEAR
+      }, v => {return  v .amount}, '_flagGood');
+    let update = () => {
+      let endOfLastMonth = Types .date .monthEnd (Types .date .addMonthStart (Types .date .today(), -1))
+      let toLastMonthVar = this._variance .getVarianceList ([this._budget .getExpenseCategory()], {end: endOfLastMonth});
+      let toTodayVar     = this._variance .getVarianceList ([this._budget .getExpenseCategory()], {end: Types .date .today()})
+      let futureVar      = this._variance .getVarianceList ([this._budget .getExpenseCategory()], {start: Types .date .addMonthStart (Types .date .today(), 1)});
+      bigPictureUpdate (toTodayVar);
+      issuesUpdate     (toLastMonthVar);
+      savingsUpdate    (toTodayVar);
+      futureUpdate     (futureVar);
+    }
+    update();
+    this._addUpdater (this._view, (e,m,i) => {
+      update();
+    })
   }
 
 

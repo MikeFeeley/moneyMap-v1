@@ -238,6 +238,7 @@ class ListView extends SortedTupleView {
       super .addTuple (data, data ._sort, line, toHtml);
       line .on ('click', e => {
         let target = $(e .target);
+console.log ('xxx', target, target.find('._field'), target.find('._field').data('field'))
         if (target [0] == line [0])
           target = target .find ('._field');
         let fieldHtml = target .closest ('._field');

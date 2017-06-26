@@ -90,6 +90,7 @@ class BudgetProgressHUDView extends View {
           animation: false,
           legend: {display: false},
           elements: {rectangle: {borderWidth: 1, borderSkipped: 'bottom'}},
+          events: ['mousemove', 'mouseout', 'click', 'touchstart', 'touchmove', 'webkitmouseforcedown'],
           onClick: (e) => {
             var element = chart .getElementAtEvent (e);
             if (element .length > 0) {
@@ -105,7 +106,8 @@ class BudgetProgressHUDView extends View {
                   name:     'months',
                   month:    month,
                   html:     canvas .parent(),
-                  position: {top: canvas .position() .top + 100, left: 0}
+                  position: {top: canvas .position() .top + 100, left: 0},
+                  altClick:   e .webkitForce > 1 || e .altKey,
                 })
               }
             }

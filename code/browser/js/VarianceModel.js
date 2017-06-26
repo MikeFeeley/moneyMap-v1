@@ -442,18 +442,17 @@ class VarianceModel extends Observable {
     let vs = []
     for (let cat of (cats && ([] .concat (cats)) || [])) {
       if (this._budget .getCategories() .getType (cat) != ScheduleType .NONE) {
-        let v   = this._getAmountUpDown (cat, period) .amount;
-        let amt = ['month', 'year'] .reduce ((total, per) => {
-          return total + ['prev', 'cur'] .reduce ((total, sch) => {
-            return total + (v [per]? v [per] .budget [sch] - v [per] .actual [sch]: 0);
-          }, 0)
-        }, 0)
-        if (this._budget .getCategories() .getType (cat) == ScheduleType .YEAR && amt > 0)
-          amt = Math .max (0, amt - this._budget .getAmount (cat, period .cur .end) .year .allocated)
-        vs .push ({
-          cat:    cat,
-          amount: amt
-        })
+        let amount   = this._getAmountUpDown (cat, period) .amount;
+        let variance = ['prev', 'cur'] .reduce ((o,per) => {
+          o [per] = ['month', 'year'] .reduce ((total, sch) => {
+            return total + (amount [sch]? amount [sch] .budget [per] - amount [sch] .actual [per]: 0);
+          }, 0);
+          return o;
+        }, {})
+        let a = variance .prev + variance .cur;
+        if (amount .year)
+          a = Math .max (0, a - this._budget .getAmount (cat, period .cur .end) .year .allocated);
+        vs .push ({cat: cat, amount: a, prev: variance .prev, cur: variance .cur});
       }
       vs = vs .concat (this._getVarianceListByPeriod (cat .children, period));
     }
@@ -464,14 +463,19 @@ class VarianceModel extends Observable {
    * Returns a list of variances for all categories in the family headed by ids that have a budget as of specified date range
    */
   getVarianceList (cats, dates) {
-    if (! dates .start)
-      dates .start = this._budget .getStartDate();
-    if (!dates .end)
-      dates .end    = this._budget .getEndDate();
-    let period = {
-      prev: {start: dates .start, end: Types .date .monthEnd (Types .date .addMonthStart (dates .end, -1))},
-      cur:  {start: Types .date .monthStart (dates .end), end: dates .end}
-    }
+     dates .start = dates .start || this._budget .getStartDate();
+     dates .end   = dates .end   || this._budget .getEndDate();
+     var period = {
+      prev: {
+        start: dates .start,
+        end:   Types .date .monthEnd (Types .date .addMonthStart (dates .end, -1))
+      }
+    };
+    period
+      .cur = {
+        start: Math .max (period .prev .start, Types .date .monthStart (dates .end)),
+        end:   Math .max (period .prev .start, dates .end)
+      }
     return this._getVarianceListByPeriod (cats, period);
   }
 }

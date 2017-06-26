@@ -111,9 +111,23 @@ class NavigateView extends Observable  {
     }
   }
 
-  addProgressSidebarGroup (name, tooltip, list=[], flag) {
-    var updateRows = () => {
-      table .empty();
+  addProgressSidebarGroup (name, tooltip, flag) {
+
+    const shortListLength = 6;
+    const categories      = this._variance .getBudget() .getCategories();
+    var isShowingMore     = false;
+    var table;
+    var list              = [];
+    var group             = $('<div>', {class: '_sidebar_group ' + (flag || '')}) .appendTo (this._progressSidebar);
+    let heading           = $('<div>', {class: '_heading', text: name}) .appendTo (group);
+    if (tooltip && tooltip .length)
+      this._addTooltip (heading, tooltip);
+
+    var buildTable = () => {
+      if (table)
+        table .remove();
+      table = $('<table>') .appendTo (group);
+      table [0] .addEventListener ('webkitmouseforcewillbegin', e => {e .preventDefault()}, true);
       for (let i = 0; i < Math .min (isShowingMore? list .length: shortListLength, list .length); i++) {
         let item = list [i];
         let tr = $ ('<tr>') .appendTo (table)
@@ -147,25 +161,11 @@ class NavigateView extends Observable  {
             buildTable();
           })
     }
-    const shortListLength = 6;
-    const categories      = this._variance .getBudget() .getCategories();
-    var table;
-    var isShowingMore = false;
-    var buildTable = () => {
-      table = $('<table>') .appendTo (group);
-      table [0] .addEventListener ('webkitmouseforcewillbegin', e => {e .preventDefault()}, true);
-      updateRows();
-   }
-    var group = $('<div>', {class: '_sidebar_group ' + (flag || '')})
-      .appendTo (this._progressSidebar);
-    let heading = $('<div>', {class: '_heading', text: name}) .appendTo (group);
-     if (tooltip && tooltip .length)
-       this._addTooltip (heading, tooltip);
-     buildTable();
-     return (update) => {
-       list = update;
-       updateRows();
-     }
+
+    return (update) => {
+      list = update;
+      buildTable();
+    }
   }
 
   addProgressGraph (to, popup, position, onClose) {

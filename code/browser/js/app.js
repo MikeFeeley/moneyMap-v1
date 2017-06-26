@@ -76,11 +76,11 @@ function* main() {
     async (it, it.addHtml) (html);
   }, true);
 
-  tabs .addTab ('Plan', html => {
+  tabs .addTab ('Budget', html => {
     na .addPlanHtml (html);
   })
 
-  tabs. addTab ('Schedule', html => {
+  tabs. addTab ('Plan', html => {
     se .addHtml (html);
   });
 
