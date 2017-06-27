@@ -180,6 +180,7 @@ class BudgetProgressGraph extends Observable {
           position:        position,
           altClick:        e .webkitForce > 1 || e .altKey
         })
+        e .stopPropagation();
         return false;
       },
       tooltips: {

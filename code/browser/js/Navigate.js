@@ -147,6 +147,7 @@ class Navigate {
         }
         let sel = arg .data .find (d => {return d._id == arg .id});
         if (arg .altClick)
+//          this._addMonthsGraph ('_budgetMonthsGraph', arg.view, [arg .id], true, arg .position, arg .html, ! sel .isYear, sel .isYear, sel .addCats);
           TransactionHUD .showCategory (arg .id, dates, this._accounts, this._variance, arg .html, {top: arg .position .top, left: 0}, ! sel .isYear, sel .isYear, sel .addCats);
         else
           this._addMonthsGraph ('_activityMonthsGraph', arg.view, [arg .id], true, arg .position, arg .html, ! sel .isYear, sel .isYear, sel .addCats);
@@ -857,9 +858,9 @@ class Navigate {
       list .push ({name: 'Planned Savings', amount: sav})
       if (una < -50 || una > 50)
         list .push ({
-          name:        una > 0? 'Unallocated' : 'Over Allocated',
-          nameTooltip: una > 0? 'Planned income not allocated in a budget.': 'Budget allocation exceeds planned income.',
-          amount:      una
+          name:    una > 0? 'Unallocated' : 'Over Allocated',
+          tooltip: una > 0? 'Planned income not allocated in a budget.': 'Budget allocation exceeds planned income.',
+          amount:  una
         })
       else
         una = 0;
@@ -875,8 +876,15 @@ class Navigate {
         })
       else
         ovr = 0;
-      list .push ({name: 'Net Savings', amount: sav + una + ovr});
-      list .push ({name: 'Savings Rate',  percent: (sav + una + ovr) * 1.0 / (-inc)});
+      let stc = this._budget .getStartCashBalance();
+      if (stc < -50 || stc > 50)
+        list .push ({
+          name:    'Starting Year Cash',
+          amount:  stc,
+          tooltip: 'Projecting that you will end the year with ' + Types .moneyDZ .toString (stc + una + ovr) + '.'
+        });
+      list .push ({name: 'Net Savings',          amount: sav + una + ovr + stc});
+      list .push ({name: 'Savings Rate',         percent: (sav + una + ovr + stc) * 1.0 / (-inc)});
       updateView (list);
     }
     return update;
@@ -1370,6 +1378,10 @@ class Navigate {
   static showActualMonthGraph (id, month, html, position, includeMonths=true, includeYears=true) {
     if (NavigateInstance)
       NavigateInstance._addMonthsGraph ('_activityMonthsGraph', NavigateInstance._progressView, [id], true, position, html, includeMonths, includeYears, [], true);
+  }
+  static showBudgetMonthGraph (id, month, html, position, includeMonths=true, includeYears=true) {
+    if (NavigateInstance)
+      NavigateInstance._addMonthsGraph ('_budgetMonthsGraph', NavigateInstance._progressView, [id], true, position, html, includeMonths, includeYears, [], true);
   }
 }
 

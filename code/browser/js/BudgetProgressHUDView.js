@@ -49,6 +49,15 @@ class BudgetProgressHUDView extends View {
         (e) => {return ! $.contains (this._html .get (0), e .target) && this._html .get (0) != e .target},
         ()  => {this .delete()}, true
       );
+    this._html .on ('click webkitmouseforcedown', e => {
+      this._notifyObservers (BudgetProgressHUDViewEvent .BODY_CLICK, {
+        html:     this._html,
+        position: ui .calcPosition ($(e .target), this._html, {top: 20, left: 0}),
+        altClick: e .originalEvent .webkitForce > 1 || e .altKey
+      });
+      e .stopPropagation();
+      return false;
+    })
   }
 
   addGroup (name, toGroup) {
@@ -109,9 +118,10 @@ class BudgetProgressHUDView extends View {
                   position: {top: canvas .position() .top + 100, left: 0},
                   altClick:   e .webkitForce > 1 || e .altKey,
                 })
-              }
+                e.stopPropagation();
+                return false;
+             }
             }
-            return false;
           },
           tooltips: {
             backgroundColor: 'rgba(0,0,0,0.6)',
@@ -222,7 +232,7 @@ class BudgetProgressHUDNameView extends View {
       if (e .keyCode == 8 && e .metaKey)
         return false;
     });
-    this._html .on ('click', e => {return false})
+    this._html .on ('click', e => {ce.stopPropagation(); return false})
     if (this._setFocus) {
       this._html .find ('input') .focus();
       this._setFocus = false;
@@ -250,10 +260,17 @@ class BudgetProgressCategoryTitleView extends View {
       if (e .keyCode == 8 && e .metaKey)
         return false;
     })
+    this .getHtml() .on ('click', e => {
+      if ($(e .target) .hasClass ('_content')) {
+        e .stopPropagation();
+        return false;
+      }
+    })
   }
 }
 
 var BudgetProgressHUDViewEvent = Object.create (ViewEvent, {
-  GRAPH_CLICK: {value: 200}
+  GRAPH_CLICK: {value: 200},
+  BODY_CLICK:  {value: 201}
 });
 

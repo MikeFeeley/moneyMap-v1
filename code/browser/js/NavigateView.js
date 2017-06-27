@@ -131,6 +131,7 @@ class NavigateView extends Observable  {
       for (let i = 0; i < Math .min (isShowingMore? list .length: shortListLength, list .length); i++) {
         let item = list [i];
         let tr = $ ('<tr>') .appendTo (table)
+        this._addTooltip (tr, item .tooltip);
         if (item .id)
           tr .on ('click webkitmouseforcedown', e => {
             let id = item .id
@@ -142,7 +143,9 @@ class NavigateView extends Observable  {
               html:     html,
               position: ui .calcPosition (tr, html, {top: 0, left: -900}),
               view:     this
-            })
+            });
+            e .stopPropagation();
+            return false;
           })
         this._addTooltip ($('<td>', {text: item .name}) .appendTo (tr), item .nameTooltip);
         if (item .amount) {
@@ -159,6 +162,8 @@ class NavigateView extends Observable  {
             isShowingMore = ! isShowingMore;
             table .remove();
             buildTable();
+            e .stopPropagation();
+            return false;
           })
     }
 
@@ -174,6 +179,8 @@ class NavigateView extends Observable  {
       this._showButton     = $('<button>', {class: '_sidebar_right_show_button', click: () => {
         this._progressSidebar .show();
         this._showButton      .hide();
+        e .stopPropagation();
+        return false;
       }, html: '&#9776;'}) .appendTo (this._progressGraphs);
       this._container = $('<div>', {class: '_container'}) .appendTo (this._progressGraphs);
     }
@@ -209,6 +216,7 @@ class NavigateView extends Observable  {
               position: {top: 50, left: 50},
               view:     this
             });
+            e .stopPropagation();
             return false;
           })
       head [0] .addEventListener ('webkitmouseforcewillbegin', e => {e .preventDefault()}, true)
@@ -348,7 +356,9 @@ class NavigateView extends Observable  {
               id:       data [0] .id,
               position: position,
               html:     container .closest ('div:not(._popup)')
-            })
+            });
+            e .stopPropagation();
+            return false;
           })
         head [0] .addEventListener ('webkitmouseforcewillbegin', e => {e .preventDefault()}, true)
         $('<span>', {class: '_heading', text: [] .concat (data [0] .name)}) .appendTo (head);
@@ -408,6 +418,7 @@ class NavigateView extends Observable  {
               view:       this
             })
           }
+          e .stopPropagation();
           return false;
         },
         tooltips: {
@@ -546,7 +557,8 @@ class NavigateView extends Observable  {
               direction: direction,
               altClick:  e .webkitForce > 1 || e .altKey,
               view:      this
-            })
+            });
+          e .stopPropagation();
           return false;
         },
         tooltips: {
@@ -728,6 +740,7 @@ class NavigateView extends Observable  {
             altClick: e .originalEvent && (e .originalEvent .webkitForce > 1 || e .originalEvent .altKey),
             view:     this
           })
+          e .stopPropagation();
           return false;
       });
       var headTr = $('<tr>') .appendTo (thead);
@@ -910,7 +923,7 @@ var NavigateViewEvent = Object.create (ViewEvent, {
   BUDGET_GRAPH_TITLE_CLICK:   {value: 204},
   BUDGET_TABLE_CLICK:         {value: 205},
   PROGRESS_GRAPH_TITLE_CLICK: {value: 206},
-  PROGRESS_SIDEBAR_CLICKL:    {value: 207}
+  PROGRESS_SIDEBAR_CLICK:     {value: 207}
 });
 
 

@@ -33,18 +33,23 @@ class BudgetProgressHUD {
   }
 
   _onViewChange (eventType, arg) {
+    let dates = {
+      start: Types .dateMY .monthStart (this._date),
+      end:   Types .dateMY .monthEnd   (this._date)
+    }
     if (eventType == BudgetProgressHUDViewEvent .GRAPH_CLICK && (arg .name != 'monthly' || arg .month)) {
-      if (!arg .month) {
-        arg .month  = {
-          start: Types .dateMY .monthStart (this._date),
-          end:   Types .dateMY .monthEnd   (this._date)
-        }
-      }
       arg .position .left = Math .min (0, ($(document) .width() - 1000) - arg .html .offset() .left);
       if (arg .altClick)
-        TransactionHUD .showCategory (this._id, arg .month, this._accounts, this._variance, arg .html, arg .position);
+        TransactionHUD .showCategory (this._id, arg .month || dates, this._accounts, this._variance, arg .html, arg .position);
       else
         Navigate .showActualMonthGraph (this._id, arg .month, arg .html, arg .position, arg .name == '_month', arg .name == '_year');
+    } else if (eventType == BudgetProgressHUDViewEvent .BODY_CLICK) {
+      if (arg .altClick) {
+        let parent = this._variance .getBudget() .getCategories() .get(this._id) .parent;
+        if (parent)
+          BudgetProgressHUD .show (parent._id, arg .html, arg .position, this._accounts, this._variance, this._date);
+      } else
+        Navigate .showBudgetMonthGraph (this._id, dates, arg .html, arg .position);
     }
   }
 
