@@ -554,7 +554,7 @@ class Navigate {
     if (dates .length == 12 || dates .length == 0) {
       if (type == NavigateValueType .BUDGET)
         cols .push ('Yr')
-      else {
+      else if (type == NavigateValueType .BUDGET_YR_AVE || type == NavigateValueType .BUDGET_YR_AVE_ACT) {
         let hasMonths = groups .find (g => {return g .rows .find (r => {return r .amounts .length == 13 && r .amounts .slice (0, -1) .find (a => {return a .value != 0})})});
         if (! hasMonths) {
           for (let g of groups)
@@ -608,7 +608,7 @@ class Navigate {
   /**
    * Add GRAPH (either budget or actual) showing children of specifie root list
    */
-  _addMonthsGraph (name, view, ids, popup, position, toHtml, includeMonths, includeYears, addCats, toView = view) {
+  _addMonthsGraph (name, view, ids, popup, position, toHtml, includeMonths, includeYears, addCats) {
     var type    = name .includes ('budget')? NavigateValueType .BUDGET_YR_AVE_ACT: NavigateValueType .ACTUALS_BUD;
     var dataset = this._getMonthsData (type, null, ids, true, includeMonths, includeYears, addCats);
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
@@ -619,7 +619,7 @@ class Navigate {
       });
       var updateView = view .addMonthsGraph (name, dataset, popup, position, () => {
         this._deleteUpdater (view, updater);
-      }, toHtml, toView);
+      }, toHtml);
     }
   }
 

@@ -281,7 +281,7 @@ class VarianceModel extends Observable {
             }, 0)
           }, 0);
           var avail = [Math .max (0, budget[0] - actual), 0];
-          avail [1] = Math .max (budget[1] - Math .max (0, actual - budget[0]));
+          avail [1] = Math .max (0, budget[1] - Math .max (0, actual - budget[0]));
           if (child .cat == cat) {
             thisBudget = budget[0];
             thisActual = actual;
@@ -308,11 +308,10 @@ class VarianceModel extends Observable {
               //  proportionally
               thisAlloc += totalAvail [i] != 0? Math .round (totalAlloc [i] * thisAvail [i] / totalAvail [i]): 0;
             }
-            thisAvail  [i] -= thisAlloc;
-            totalAvail [i] -= totalAlloc [i];
+            unalloc [per] -= totalAlloc [i];
           }
           totalAlloc    = totalAlloc [0] + totalAlloc [1];
-          let overAlloc = totalBudget != 0?  Math .round ((unalloc [per] - totalAlloc) * thisBudget / totalBudget): 1.0 / children .length;
+          let overAlloc = totalBudget != 0?  Math .round (unalloc [per] * thisBudget / totalBudget): 1.0 / children .length;
           return (o [per] = thisAlloc + overAlloc) != null && o;
         }, {})
         alloc .addCats = upAmount .addCats .concat (alloc .prev + alloc .cur != 0? [cat .parent ._id]: [])
