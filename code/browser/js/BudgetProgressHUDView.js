@@ -49,15 +49,6 @@ class BudgetProgressHUDView extends View {
         (e) => {return ! $.contains (this._html .get (0), e .target) && this._html .get (0) != e .target},
         ()  => {this .delete()}, true
       );
-    this._html .on ('click webkitmouseforcedown', e => {
-      this._notifyObservers (BudgetProgressHUDViewEvent .BODY_CLICK, {
-        html:     this._html,
-        position: ui .calcPosition ($(e .target), this._html, {top: 20, left: 0}),
-        altClick: e .originalEvent .webkitForce > 1 || e .originalEvent .altKey
-      });
-      e .stopPropagation();
-      return false;
-    })
   }
 
   addGroup (name, toGroup) {
@@ -245,8 +236,9 @@ class BudgetProgressHUDNameView extends View {
 }
 
 class BudgetProgressCategoryTitleView extends View {
-  constructor (name, fields) {
+  constructor (name, fields, parentView) {
     super (name, fields);
+    this._parentView = parentView;
   }
 
   addHtml (name, toHtml) {
@@ -260,11 +252,15 @@ class BudgetProgressCategoryTitleView extends View {
       if (e .keyCode == 8 && e .metaKey)
         return false;
     })
-    this .getHtml() .on ('click', e => {
-      if ($(e .target) .hasClass ('_content')) {
-        e .stopPropagation();
-        return false;
-      }
+    this .getHtml() .on ('click webkitmouseforcedown', e => {
+      if (! $(e .target) .hasClass ('_content'))
+        this._parentView._notifyObservers (BudgetProgressHUDViewEvent .BODY_CLICK, {
+          html:     this._parentView .getHtml(),
+          position: {top: 40, left: 20},
+          altClick: e .originalEvent .webkitForce > 1 || e .originalEvent .altKey
+        });
+      e .stopPropagation();
+      return false;
     })
   }
 }

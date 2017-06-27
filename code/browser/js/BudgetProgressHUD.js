@@ -82,7 +82,7 @@ class BudgetProgressHUD {
   }
 
   _addTitle() {
-    this._title = new BudgetProgressCategoryTitle (this._variance);
+    this._title = new BudgetProgressCategoryTitle (this._variance, this._view);
     this._view .addTitle (this._title);
   }
 
@@ -307,10 +307,10 @@ class BudgetProgressHUDName extends Presenter {
  * Title at top of HUD
  */
 class BudgetProgressCategoryTitle extends Presenter {
-  constructor (variance) {
+  constructor (variance, parentView) {
     super (
       variance .getBudget() .getSchedulesModel(),
-      new BudgetProgressCategoryTitleView ('_title', [new ViewTextbox ('name', ViewFormats ('string'))])
+      new BudgetProgressCategoryTitleView ('_title', [new ViewTextbox ('name', ViewFormats ('string'))], parentView)
     );
     this._modelObserver = this._model .addObserver (this, this._onModelChange);
   }
