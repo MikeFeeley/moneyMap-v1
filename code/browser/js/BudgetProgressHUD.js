@@ -321,7 +321,7 @@ class BudgetProgressCategoryTitle extends Presenter {
  }
 
   _onModelChange (eventType, doc, arg, source) {
-    if (doc._id == this._category._id && arg && arg .name)
+    if (this._category && doc._id == this._category._id && arg && arg .name)
       this._view .updateField (this._category._id, 'name', this._category .name);
   }
 
