@@ -134,15 +134,13 @@ class NavigateView extends Observable  {
         this._addTooltip (tr, item .tooltip);
         if (item .id)
           tr .on ('click webkitmouseforcedown', e => {
-            let id = item .id
-            if (e .originalEvent .webkitForce > 1 || e .originalEvent .altKey)
-              id = categories .getPath (categories .get (id)) [1]._id;
             let html = this._progressGraphs;
             this._notifyObservers (NavigateViewEvent .PROGRESS_SIDEBAR_CLICK, {
-              id:       id,
+              id:       item .id,
               html:     html,
               position: ui .calcPosition (tr, html, {top: 0, left: -900}),
-              view:     this
+              view:     this,
+              altClick: e .originalEvent .webkitForce > 1 || e .originalEvent .altKey
             });
             e .stopPropagation();
             return false;
@@ -353,9 +351,13 @@ class NavigateView extends Observable  {
             position .top  += 50;
             position .left += 50;
             this._notifyObservers (NavigateViewEvent .BUDGET_GRAPH_TITLE_CLICK, {
+              name:     name,
               id:       data [0] .id,
+              data:     data,
               position: position,
-              html:     container .closest ('div:not(._popup)')
+              html:     container .closest ('div:not(._popup)'),
+              view:     this,
+              altClick: e .originalEvent .webkitForce > 1 || e . originalEvent .altKey
             });
             e .stopPropagation();
             return false;

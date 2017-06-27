@@ -53,7 +53,7 @@ class BudgetProgressHUDView extends View {
       this._notifyObservers (BudgetProgressHUDViewEvent .BODY_CLICK, {
         html:     this._html,
         position: ui .calcPosition ($(e .target), this._html, {top: 20, left: 0}),
-        altClick: e .originalEvent .webkitForce > 1 || e .altKey
+        altClick: e .originalEvent .webkitForce > 1 || e .originalEvent .altKey
       });
       e .stopPropagation();
       return false;

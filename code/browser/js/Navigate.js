@@ -147,14 +147,16 @@ class Navigate {
         }
         let sel = arg .data .find (d => {return d._id == arg .id});
         if (arg .altClick)
-//          this._addMonthsGraph ('_budgetMonthsGraph', arg.view, [arg .id], true, arg .position, arg .html, ! sel .isYear, sel .isYear, sel .addCats);
           TransactionHUD .showCategory (arg .id, dates, this._accounts, this._variance, arg .html, {top: arg .position .top, left: 0}, ! sel .isYear, sel .isYear, sel .addCats);
         else
           this._addMonthsGraph ('_activityMonthsGraph', arg.view, [arg .id], true, arg .position, arg .html, ! sel .isYear, sel .isYear, sel .addCats);
       }
 
     } else if (eventType == NavigateViewEvent .PROGRESS_SIDEBAR_CLICK) {
-      this._addMonthsGraph ('_activityMonthsGraph', arg.view, [arg .id], true, arg .position, arg .html);
+      if (arg .altClick)
+        this._addMonthsGraph ('_budgetMonthsGraph', arg.view, [arg .id], true, arg .position, arg .html);
+      else
+        this._addMonthsGraph ('_activityMonthsGraph', arg.view, [arg .id], true, arg .position, arg .html);
     } else if (eventType == NavigateViewEvent .BUDGET_CHART_CLICK  && arg .id) {
       /* Yearly Chart (Budget or Actual) */
       if (arg .altClick) {
@@ -204,7 +206,16 @@ class Navigate {
 
     } else if (eventType == NavigateViewEvent .BUDGET_GRAPH_TITLE_CLICK && arg .id) {
       /* Graph Title */
-      BudgetProgressHUD .show (arg .id .split ('_') .slice (-1) [0], arg .html, arg .position, this._accounts, this._variance);
+      if (arg .altClick) {
+        let parent = this._categories .get (arg .id) .parent;
+        if (parent) {
+          let sel = arg .data [0] .rows [1];
+          let im  = !sel || sel .isYear === undefined || ! sel.isYear;
+          let iy  = !sel || sel .isYear === undefined || sel .isYear;
+          this._addMonthsGraph (arg .name, arg .view, [parent._id], true, arg .position, arg .html, im, iy, sel && sel .addCats);
+        }
+      } else
+        BudgetProgressHUD .show (arg .id .split ('_') .slice (-1) [0], arg .html, arg .position, this._accounts, this._variance);
 
     } else if (eventType == NavigateViewEvent .BUDGET_TABLE_CLICK && arg .id) {
       /* Monthly or History Table (Budget or Actual) */
@@ -390,7 +401,7 @@ class Navigate {
   _getNote (type, id, includeMonths, includeYears) {
     switch (type) {
       case NavigateValueType .BUDGET: case NavigateValueType .BUDGET_YR_AVE: case NavigateValueType .BUDGET_YR_AVE_ACT:
-        return '';
+        return 'Budget';
 
       case NavigateValueType .ACTUALS: case NavigateValueType .ACTUALS_BUD:
         let getRoot  = c => {return c.parent? getRoot (c .parent): c}
