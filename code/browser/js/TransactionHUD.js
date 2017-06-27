@@ -87,6 +87,8 @@ class TransactionHUD extends TransactionTable {
       async (this._model, this._model .updateList) (ul);
       dialogue .remove();
       ui .ModalStack .delete (modalEntry);
+      e .stopPropagation();
+      return false;
     }}) .appendTo (dialogue .children());
     this._recategorizeUpdate = () => {confirm .prop ({disabled: field .data ('field') .get() == ''})};
     let modalEntry = ui .ModalStack .add (
@@ -216,20 +218,28 @@ class TransactionHUD extends TransactionTable {
     if (position)
       this._html .css ({top: position .top, right: position .right, left: position .left});
     $('<div>', {class: '_title', text: Array .isArray (this._title)? this._title[0]: this._title}) .appendTo (this._content)
-      .on ('click',                     e => {this._toggleMonthYear()})
-      .on ('webkitmouseforcedown',      e => {this._calendarYear()})
+      .on ('click',                     e => {this._toggleMonthYear(); e .stopPropagation(); return false})
+      .on ('webkitmouseforcedown',      e => {this._calendarYear(); e .stopPropagation(); return false})
     var buttons = $('<div>', {class: '_buttons'}) .appendTo (this._content);
     $('<button>', {text: 'Recategorize', class: '_recategorizeButton'}) .appendTo (buttons) .click (e => {
       this._showRecatorize();
+      e .stopPropagation();
+      return false;
     })
     $('<button>', {text: 'Edit', class: '_editButton'}) .appendTo (buttons) .click (e => {
       this._toggleEdit();
+      e .stopPropagation();
+      return false;
       })
     $('<button>', {html: '&lang;', class: '_prevButton'}) .appendTo (buttons) .click (e => {
       this._changeMonth (-1);
+      e .stopPropagation();
+      return false;
     });
     $('<button>', {html: '&rang;', class: '_nextButton'}) .appendTo (buttons) .click (e => {
       this._changeMonth (1);
+      e .stopPropagation();
+      return false;
     });
     var body = $('<div>', {class: '_body'}) .appendTo (this._content);
     if (Array .isArray (this._title))
