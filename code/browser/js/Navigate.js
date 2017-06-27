@@ -683,7 +683,9 @@ class Navigate {
         if (update) {
           let nu = [];
           for (let u of update)
-            if (u .needUpdate && u .affected .startsWith ('blackout_')) {
+            if (u .needReplace) {
+              nu .push ({replace: this._getYearsData (type, id, blackouts)})
+            } else if (u .needUpdate && u .affected .startsWith ('blackout_')) {
               let bo = getBlackouts (this._getChildrenData (type, id, dates) .data);
               nu .push ({update: bo [0]}, {update: bo [1]})
             } else

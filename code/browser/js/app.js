@@ -76,6 +76,10 @@ function* main() {
     async (it, it.addHtml) (html);
   }, true);
 
+  tabs .addTab ('Activity', html => {
+    na .addRealityHtml (html);
+  })
+
   tabs .addTab ('Budget', html => {
     na .addPlanHtml (html);
   })
@@ -90,10 +94,6 @@ function* main() {
 
   tabs .addTab ('Wealth', html => {
     async (na, na .addNetWorthHtml) (html);
-  })
-
-  tabs .addTab ('Activity', html => {
-    na .addRealityHtml (html);
   })
 
   tabs .addTab ('Settings', html => {

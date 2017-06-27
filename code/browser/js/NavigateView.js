@@ -785,7 +785,7 @@ class NavigateView extends Observable  {
           updateFoot();
         } else {
           dataset = update .replace;
-          container .empty();
+          container .children() .empty();
           addTable();
         }
     }
