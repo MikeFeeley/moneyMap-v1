@@ -79,6 +79,7 @@ class TransactionHUD extends TransactionTable {
       .append   ($('<div>') .append ($('<div>',   {text: 'New Category:'})));
     let field = edit .addHtml ('', this._view, dialogue .children());
     field .on ('mouseup webkitmouseforceup', e => {return false});
+    field .find (':input') .focus();
     let confirm = $('<button>', {text: 'Change All', prop: {disabled: true}, click: e => {
       let cat = field .data ('field') .get();
       let ul = Array .from (this._view._tuples .keys())

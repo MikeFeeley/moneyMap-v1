@@ -542,6 +542,7 @@ $import-sidebar-width: 220px;
     overflow-y: scroll;
   }
   > ._import {
+    height: 100%;
     overflow-y: scroll;
     clear: all;
     margin-left: 10px;
@@ -558,9 +559,6 @@ $import-sidebar-width: 220px;
     }
     ._import_status {
       color: #888;
-    }
-    > div:last-child {
-      margin-bottom: 1000px;  /* hack to handle pop-ups at bottom of screen gracefully */
     }
   }
 }

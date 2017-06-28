@@ -55,6 +55,7 @@ class CategoryPicker {
       this._show                      (id);
       this._budgetProgressHUD .update (id);
       this._onSelect                  (id);
+      this._view .updateHeight();
     }
   }
 
@@ -69,6 +70,7 @@ class CategoryPicker {
       this._view .addHtml (toHtml, (id) => {this._select (id)});
       this._view .show();
       this._budgetProgressHUD .show (id, date, debit, credit, toHtml, {right: 130});
+      this._view .updateHeight();
     }
   }
 

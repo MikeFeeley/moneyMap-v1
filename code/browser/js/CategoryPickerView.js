@@ -13,6 +13,7 @@ class CategoryPickerView extends View {
   }
 
   addHtml (toHtml, onSelect) {
+    this._placeHolder = $('<div>', {class: '_invisiblePlaceHolder'}) .appendTo (toHtml);
     this._html .appendTo (toHtml);
     this._html .on ('click', e => {
       onSelect ($(e.target) .data('id'));
@@ -45,8 +46,19 @@ class CategoryPickerView extends View {
   }
 
   hide() {
+    this._placeHolder .remove();
     this._html .slideUp('fast', () => {
-      this._html .remove();
+      this._html        .remove();
     });
+  }
+
+  updateHeight() {
+    window .setTimeout(() => {
+      this._placeHolder .height (Math .max(
+        this._placeHolder .height(),
+        this._html        .outerHeight(),
+        this._html        .next ('._BudgetProgressHUD') .outerHeight()
+      ));
+    })
   }
 }
