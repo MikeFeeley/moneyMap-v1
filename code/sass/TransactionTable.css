@@ -406,6 +406,15 @@ div._TransactionHUD {
   @include popup-container();
   padding: 8px;
   margin-top: -8px;
+  > ._hudcontent:not(._TransactionEdit) > ._body > table > tbody > tr {
+    > td, > td > ._field > div > ._content {
+      margin-top: 0px;
+      margin-bottom: 0px;
+      padding-top: 0px;
+      padding-bottom: 0px;
+      font-size: 13px;
+    }
+  }
   > ._hudcontent {
     @include popup-content();
     td {
@@ -456,17 +465,6 @@ div._TransactionHUD {
           > tr {
             > td:nth-child(1), > td:nth-child(3), > td:nth-child(4) {
               text-align: right;
-            }
-          }
-        }
-        > tbody {
-          > tr {
-            > td, > td > ._field > div > ._content {
-              margin-top: 0px;
-              margin-bottom: 0px;
-              padding-top: 0px;
-              padding-bottom: 0px;
-              font-size: 13px;
             }
           }
         }
