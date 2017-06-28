@@ -80,6 +80,8 @@ class DateType extends FieldType {
     super (format);
     this._months    = ['January', 'February', 'March', 'April', 'May', 'June',
                        'July', 'August', 'September', 'October', 'November', 'December']
+    this._monthsLC  = ['january', 'february', 'march', 'april', 'may', 'june',
+                       'july', 'august', 'september', 'october', 'november', 'december']
     this._mths      = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     this._mthsLC    = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
     this._monthDays = [31,28,31,30,31,30,31,31,31,31,30,31];
@@ -173,8 +175,8 @@ class DateType extends FieldType {
         return this._date (y, m, d);
       case 'MY':
       case 'MYorYear':
-          var sy = this._year  (context);
-        if (s .indexOf ('-') == -1 && s.length >= 4 && this._mthsLC .indexOf (s .slice (0, 3)) != -1)
+        var sy = this._year  (context);
+        if (s .indexOf ('-') == -1 && s.length >= 4 && this._mthsLC .indexOf (s .slice (0, 3)) != -1 && this._monthsLC .indexOf (s) == -1)
           s = s .slice (0,3) + '-' + s.slice (3);
         var dt = s .split (/[- ]/);
         if (dt.length==1) {
@@ -188,7 +190,7 @@ class DateType extends FieldType {
               return ! sy || y >= sy? y: undefined;
             }
           }
-          var m = this._mthsLC .indexOf (s) + 1;
+          var m = this._mthsLC .indexOf (s .slice (0,3)) + 1;
           if (m != 0 && sy) {
             var sm = this._month (context);
             return this._date (m >= sm? sy: sy + 1, m , 1)
