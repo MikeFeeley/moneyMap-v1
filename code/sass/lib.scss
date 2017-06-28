@@ -49,6 +49,7 @@ $left-margin-sep: 20px;
   border-radius: 6px;
   box-shadow: $drop-shadow;
   color: #555;
+  position: relative;
 }
 
 @mixin translucent-popup() {
