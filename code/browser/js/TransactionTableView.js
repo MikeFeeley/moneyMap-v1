@@ -196,7 +196,7 @@ class ViewCategoryEdit extends ViewTextbox {
       this._view._categoryPicker .filter (super._get())
     });
     input .on ('keydown', e  => {
-      if (e .keyCode == 8 && e .metaKey)
+      if (e .keyCode == 8 && e .metaKey && this._isOpen)
         return false;
       switch (e.keyCode) {
         case 13: /* return */
