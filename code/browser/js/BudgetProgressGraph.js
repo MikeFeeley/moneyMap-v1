@@ -31,6 +31,7 @@ class BudgetProgressGraph extends Observable {
     var red             = '#ff9999';
     var darkRed         = '#ff7777';
     var lightGreen      = '#eeffee';
+    var medLitGreen     = '#ccffcc';
     var medGreen        = '#bbffbb';
     var green           = '#88ff88';
     var darkGreen       = '#66dd66';
@@ -85,7 +86,7 @@ class BudgetProgressGraph extends Observable {
       ['This Month within Budget',  'curBudgetedActual',   green,           green],
       ['This Transaction (Credit)', 'thisCreditBudgeted',  lightGreyRed,    greyRed],
       ['Over in Prior Months',      'preOverActual',       medGreen,        medGreen],
-      ['Over Budget',               'curOverActual',       medGreen,        medGreen],
+      ['Over Budget',               'curOverActual',       medLitGreen,     medLitGreen],
       ['This Transaction (Credit)', 'thisCreditOver',      lightGreyRed,    greyRed],
       ['This Transaction',          'thisBudgeted',        lightGreen,      green],
       ['This Transaction',          'thisOver',            lightGreen,      green],
@@ -115,7 +116,7 @@ class BudgetProgressGraph extends Observable {
       this._chart .data .linePosition = this._data [0] .percentComplete;
     else {
       var max = this._data .reduce ((m,d) => {return Math .max (m, d .total)}, 0) + 5000;
-      this._chart .data .linePosition = this._data .map (d => {return d .total * d .percentComplete / max});
+      this._chart .data .linePosition = this._data .map (d => {return d .total * d .percentComplete * d .percentInBudget / max});
       this._chart .options .scales .xAxes [0] .ticks .max = max;
     }
     this._chart .data .ids = this._data .map (d => {return d._id});

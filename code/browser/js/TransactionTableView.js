@@ -158,7 +158,7 @@ class ViewCategoryEdit extends ViewTextbox {
         e .one ('focus', () => {this._close()})
       this._view._categoryPicker .show (this._value, date, debit, credit, this._html, id => {
         $(this._html .find ('input') [0]) .focus();
-        $(this._html .find ('input') [0]) .val(' '); // XXX workaround to clear placeholder in Safari 10.0.3
+        $(this._html .find ('input') [0]) .val(' '); // XXX workaround to clear placeholder in Safari 10.1.1
         this .set (id)
       });
       this._isOpen = true;

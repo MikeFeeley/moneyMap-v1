@@ -77,7 +77,7 @@ class VarianceModel extends Observable {
       var cAvl     = Math .max (0, amount .budget .cur - pOver + pAvlForC);
       var avl      = Math .max (0, (amount .budget .prev + amount .budget .cur) - (amount .actual .prev + amount .actual .cur))
       var pAvl     = isYear? 0: Math .max (0, amount .budget .prev - amount .actual .prev - amount .actual .cur);
-      return {
+      let variance = {
         amounts: {
           preBudgetedActual: isYear? Math .max (0, amount .budget .prev - pAvlForC): Math .min (pOver, amount .budget .cur),
           curBudgetedActual: Math .max (0, Math .min (amount .actual .cur, cAvl)),
@@ -87,10 +87,14 @@ class VarianceModel extends Observable {
           curAvailable:      Math .max (0, avl - pAvl),
           available:         avl
         },
-        isCredit: isCredit,
-        isGoal:   isGoal,
-        isYear:   isYear
+        isCredit:        isCredit,
+        isGoal:          isGoal,
+        isYear:          isYear,
       }
+      let total = Object .keys (variance .amounts) .reduce ((t,k) => {return t + (k!='available'? variance .amounts [k]: 0)}, 0)
+      let over  = variance .amounts .preOverActual + variance .amounts .curOverActual;
+      variance .percentInBudget = 1 - (total== 0? 0: over / total);
+      return variance;
     }
   }
 

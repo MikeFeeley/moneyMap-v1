@@ -797,6 +797,7 @@ class Navigate {
           isCredit:        a .amount [type] .isCredit,
           isGoal:          a .amount [type] .isGoal,
           percentComplete: a .amount [type] .percentComplete,
+          percentInBudget: a .amount [type] .percentInBudget,
           isYear:          type == 'year',
           amounts:         a .amount [type] .amounts,
           addCats:         a .amount .addCats
