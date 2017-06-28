@@ -41,8 +41,10 @@ class BudgetProgressHUD {
       arg .position .left = Math .min (0, ($(document) .width() - 1000) - arg .html .offset() .left);
       if (arg .altClick)
         TransactionHUD .showCategory (this._id, arg .month || dates, this._accounts, this._variance, arg .html, arg .position);
-      else
-        Navigate .showActualMonthGraph (this._id, arg .month, arg .html, arg .position, arg .name == '_month', arg .name == '_year');
+      else {
+        let isMonth = arg .name == 'months' || arg .name == '_month';
+        Navigate .showActualMonthGraph (this._id, arg .month, arg .html, arg .position, isMonth, ! isMonth);
+      }
     } else if (eventType == BudgetProgressHUDViewEvent .BODY_CLICK) {
       if (arg .altClick) {
         let parent = this._variance .getBudget() .getCategories() .get(this._id) .parent;
