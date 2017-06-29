@@ -90,7 +90,7 @@ $table-stripe-backgroud: #f8f8f8;
   }
 }
 
-@mixin transaction-table ($head-font, $body-font, $height, $stCol, $gx0, $gx1, $gx2, $gx3, $gi0, $gi1, $gi2, $gi3, $ge0, $ge1, $ge2) {
+@mixin transaction-table ($head-font, $body-font, $height, $stCol, $gx0, $gx1, $gx2, $gx3, $gi0, $gi1, $gi2, $gi3, $gi4, $ge0, $ge1, $ge2) {
   @include transaction-table-base ($head-font, $body-font, $height);
   > tbody {
     > tr._group {
@@ -123,7 +123,7 @@ $table-stripe-backgroud: #f8f8f8;
       }
       &._last {
         > td {
-          &:nth-child(#{$gi0}), &:nth-child(#{$gi1}), &:nth-child(#{$gi2}), &:nth-child(#{$gi3}) {
+          &:nth-child(#{$gi0}), &:nth-child(#{$gi1}), &:nth-child(#{$gi2}), &:nth-child(#{$gi3}), &:nth-child(#{$gi4}) {
             border-bottom: $group-border;
           }
         }
@@ -141,13 +141,16 @@ $table-stripe-backgroud: #f8f8f8;
 }
 
 ._TransactionEdit > table, ._TransactionEdit > ._body > table {
-  @include transaction-table (18px, 13px, 26px, 0, 1, 2, 5, 5, 3, 4, 6, 7, 3, 5, 6);
+  @include transaction-table (18px, 13px, 26px, 0, 1, 2, 5, 5, 3, 4, 6, 7, 7, 3, 5, 6);
 }
 ._ImportTransactionsTable {
-  @include transaction-table (18px, 13px, 26px, 1, 1, 2, 3, 6, 4, 5, 7, 8, 4, 6, 7);
+  &:not(._needsAttention) {
+    @include transaction-table (18px, 13px, 26px, 1, 1, 2, 3, 6, 4, 5, 7, 8, 8, 4, 6, 7);
+  }
   margin-top: 24px;
   margin-bottom: 32px;
   &._needsAttention {
+    @include transaction-table (18px, 13px, 26px, 1, 1, 2, 3, 6, 4, 5, 7, 8, 9, 4, 6, 7);
     > tbody > tr > td:last-child,  > thead > tr > th:last-child {
       color: #aaa;
     }

@@ -299,6 +299,8 @@ class TimeType extends DateType {
     this._timeFormat = f [1];
   }
   toString (t) {
+    if (!t)
+      return '';
     var dt = new Date (t);
     var yr = dt .getFullYear();
     var mo = dt .getMonth() + 1;
