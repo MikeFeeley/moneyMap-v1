@@ -1221,6 +1221,7 @@ class Navigate {
     for (let g of dataset .groups)
       for (let r of g .rows)
         r .amounts = r .amounts .slice (this._historySliderLeft || 0, this._historySliderRight || r .amounts .length);
+    dataset .highlight -= this._historySliderLeft || 0;
     return dataset;
   }
 
@@ -1404,8 +1405,14 @@ class Navigate {
   _addNetWorthGraph (view, dataset, toHtml) {
     var homeTypes = [AccountType .HOME, AccountType .MORTGAGE];
     dataset = {
-      cols: dataset .cols .map (c => {return c}),
-      rows: dataset .rows .map (r => {r = Object .assign ({}, r); r .amounts = r .amounts .map (a => {return a}); return r})
+      cols:      dataset .cols .map (c => {return c}),
+      rows:      dataset .rows .map (r => {r = Object .assign ({}, r); r .amounts = r .amounts .map (a => {return a}); return r}),
+      highlight: {
+        column:          dataset .highlight,
+        percentComplete:
+          (Types .date .subDays (Types .date .today(), this._budget .getStartDate()) + 1) /
+          (Types .date .subDays (this._budget .getEndDate(), this._budget .getStartDate()) + 1)
+      }
     }
     var equity = dataset .rows .reduce ((s,r) => {
       return homeTypes .includes (r.type)? r .amounts .map ((a,i) => {return (s [i] || 0) + a}): s

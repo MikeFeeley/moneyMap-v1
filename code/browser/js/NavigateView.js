@@ -489,11 +489,61 @@ class NavigateView extends Observable  {
       },
       data: {}
     };
+    if (dataset .highlight != null) {
+      var updating, needRedraw;
+      var drawHighlightBox = (percent) => {
+        let ctx          = chart .ctx;
+        let chartArea    = chart .chartArea;
+        let scale        = chart .scales ['x-axis-0'];
+        let tickWidth    = scale .width / scale .ticks .length;
+        let gco          = ctx .globalCompositeOperation;
+        let margin       = 4;
+        let boxWidth     = (tickWidth - margin * 2);
+        let startX       = scale .left + dataset .highlight * tickWidth + (tickWidth/2) - boxWidth/2;
+        ctx .beginPath();
+        ctx .rect (startX, 0, boxWidth, scale .bottom);
+        ctx .lineWidth   = 3;
+        ctx .strokeStyle = 'rgba(255,0,0,'+(percent * 0.3)+')';
+        ctx .globalCompositeOperation = 'destination-over';
+        ctx .stroke();
+        ctx .globalCompositeOperation = gco;
+        needRedraw       = false;
+      }
+      config .options .animation = {
+        onProgress: (ani) => {
+          if (updating) {
+            const start = 0.3;
+            let   percent = ani .currentStep / ani .numSteps;
+            if (percent > start)
+              drawHighlightBox (Math .min (1, (percent - start) / (1 - start)));
+          }
+        },
+        onComplete: () => {
+          updating = false;
+        }
+      };
+      config .plugins = [{
+        beforeDatasetsUpdate: () => {updating = true},
+        afterDatasetsDraw: (chart, complete) => {
+          if (! updating)
+            drawHighlightBox (1);
+        },
+        resize: () => {
+          needRedraw = true;
+        },
+        afterDraw: () => {
+          if (needRedraw) {
+            drawHighlightBox (1);
+            needRedraw = false;
+          }
+        }
+      }];
+    }
     setDataset();
     chart = new Chart (canvas .get (0) .getContext ('2d'), config);
     if (popup)
       ui .scrollIntoView (graph, false);
-    var colsCopy, datasetsCopy;
+    var highlightCopy, colsCopy, datasetsCopy;
     return (updates) => {
       for (let update of updates)
 
@@ -509,15 +559,17 @@ class NavigateView extends Observable  {
             graph .find ('span._heading') .text (update .update .name)
 
         } else if (update .filterCols) {
-          if (!colsCopy)
-            colsCopy = dataset .cols .map (c => {return c});
-          if (!datasetsCopy)
-            datasetsCopy = datasets .map (ds => {
+          if (colsCopy == null) {
+            highlightCopy = dataset .highlight;
+            colsCopy      = dataset .cols .map (c => {return c});
+            datasetsCopy  = datasets .map (ds => {
               ds = Object .assign ({}, ds);
               ds .data = ds .data .map (d => {return d});
               return ds;
             });
-
+          }
+          if (highlightCopy != null)
+            dataset .highlight = highlightCopy - update .filterCols .start;
           if (update .filterCols .start > startCol) {
             /* remove from front */
             config .data .labels .splice (0, update .filterCols .start - startCol);
@@ -892,6 +944,9 @@ class NavigateView extends Observable  {
     }
   }
 
+  /**
+   * addNetWorthGraph
+   */
   addNetWorthGraph (dataset, toHtml, onClose) {
     var options = {
       legend: {display: false},
@@ -932,19 +987,69 @@ class NavigateView extends Observable  {
         return ds;
       })
     }
-    var colsCopy;
-    var datasetsCopy;
     var container = $('<div>', {class: '_netWorthGraphContainer'});
     if (toHtml)
       container .insertAfter (toHtml)
     else
       container .appendTo (this._content);
     var canvas = $('<canvas>', {class: '_netWorthGraph'}) .appendTo (container)
-    var chart = new Chart (canvas .get (0). getContext ('2d'), {
+    var config = {
       type:    'line',
       data:    data,
       options: options
-    });
+    };
+    if (dataset .highlight != null) {
+      var updating, needRedraw;
+      var drawHighlightBox = (percent) => {
+        let hColumn      = dataset .highlight .column != null? dataset .highlight .column: dataset .highlight;
+        let hScale       = dataset .highlight .column != null? dataset .highlight .percentComplete : 1;
+        let ctx          = chart .ctx;
+        let chartArea    = chart .chartArea;
+        let scale        = chart .scales ['x-axis-0'];
+        let tickWidth    = scale .width / (scale .ticks .length - 1);
+        let gco          = ctx .globalCompositeOperation;
+        let startX       = scale .left + hColumn * tickWidth - tickWidth * (1 - hScale);
+        ctx .beginPath();
+        ctx .moveTo (startX, 0);
+        ctx .lineTo (startX, scale .bottom);
+        ctx .lineWidth   = 3;
+        ctx .strokeStyle = 'rgba(255,0,0,'+(percent * 0.3)+')';
+        ctx .globalCompositeOperation = 'destination-over';
+        ctx .stroke();
+        ctx .globalCompositeOperation = gco;
+        needRedraw       = false;
+      }
+      config .options .animation = {
+        onProgress: (ani) => {
+          if (updating) {
+            const start = 0.3;
+            let   percent = ani .currentStep / ani .numSteps;
+            if (percent > start)
+              drawHighlightBox (Math .min (1, (percent - start) / (1 - start)));
+          }
+        },
+        onComplete: () => {
+          updating = false;
+        }
+      };
+      config .plugins = [{
+        beforeDatasetsUpdate: () => {updating = true},
+        afterDatasetsDraw: (chart, complete) => {
+          if (! updating)
+            drawHighlightBox (1);
+        },
+        resize: () => {
+          needRedraw = true;
+        },
+        afterDraw: () => {
+          if (needRedraw) {
+            drawHighlightBox (1);
+            needRedraw = false;
+          }
+        }
+      }];
+    }
+    var chart = new Chart (canvas .get (0). getContext ('2d'), config);
     var cur   = $('<div>', {class: '_curNetWorth'}) .appendTo (container);
     $('<div>', {text: Types .dateLong .toString (Types .date .today()), class:'_text'}) .appendTo (cur);
     var table = $('<table>') .appendTo (cur)
@@ -966,17 +1071,25 @@ class NavigateView extends Observable  {
     }
     var startCol = 0;
     var endCol   = dataset .cols .length - 1;
+    var highlightCopy, colsCopy, datasetsCopy;
     return updates => {
       for (let update of updates) {
         if (update .filterCols) {
-          if (!colsCopy)
-            colsCopy = data .labels .map (l => {return l});
-          if (!datasetsCopy)
-            datasetsCopy = data. datasets .map (ds => {
+          if (colsCopy == null) {
+            highlightCopy = dataset .highlight .column != null? Object .assign ({}, dataset .highlight): dataset .highlight;
+            colsCopy      = dataset .cols .map (c => {return c});
+            datasetsCopy  = data. datasets .map (ds => {
               ds = Object .assign ({}, ds);
               ds .data = ds .data .map (d => {return d});
               return ds;
             });
+          }
+          if (highlightCopy != null) {
+            if (highlightCopy .column)
+              dataset .highlight .column = highlightCopy .column - update .filterCols .start;
+            else
+              dataset .highlight = highlightCopy - update .filterCols .start;
+          }
           let config = chart .config;
           if (update .filterCols .start > startCol) {
             /* remove from front */
@@ -1073,6 +1186,10 @@ var NavigateViewEvent = Object.create (ViewEvent, {
   PROGRESS_SIDEBAR_CLICK:     {value: 207}
 });
 
+
+
+/*******************************/
+/***** CHART JS EXTENSIONS *****/
 
 var baseDoughnutController = Chart .controllers .doughnut;
 
