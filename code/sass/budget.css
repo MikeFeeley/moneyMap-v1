@@ -453,7 +453,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
           > td {
             min-width: 50px;
           }
-          &:nth-child(1) {
+          &:nth-child(2) {
             color: #bbb;
           }
         }
