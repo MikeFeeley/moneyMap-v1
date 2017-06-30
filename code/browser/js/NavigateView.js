@@ -502,7 +502,7 @@ class NavigateView extends Observable  {
         let startX       = scale .left + dataset .highlight * tickWidth + (tickWidth/2) - boxWidth/2;
         ctx .beginPath();
         ctx .rect (startX, 0, boxWidth, scale .bottom);
-        ctx .lineWidth   = 3;
+        ctx .lineWidth   = 4;
         ctx .strokeStyle = 'rgba(255,0,0,'+(percent * 0.3)+')';
         ctx .globalCompositeOperation = 'destination-over';
         ctx .stroke();
@@ -1012,7 +1012,7 @@ class NavigateView extends Observable  {
         ctx .beginPath();
         ctx .moveTo (startX, 0);
         ctx .lineTo (startX, scale .bottom);
-        ctx .lineWidth   = 3;
+        ctx .lineWidth   = 4;
         ctx .strokeStyle = 'rgba(255,0,0,'+(percent * 0.3)+')';
         ctx .globalCompositeOperation = 'destination-over';
         ctx .stroke();
