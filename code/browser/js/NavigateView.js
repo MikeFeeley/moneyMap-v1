@@ -64,17 +64,56 @@ class NavigateView extends Observable  {
     this._colorIndex = (this._colorIndex + 1) % this._colors .length;
   }
 
-  addHeading (text) {
+  addHeading (text, name='', toHtml = this._content) {
     var id      = this._name + '_' + this._idSeq++;
     var anchors = [];
-    var content = $('<div>', {class: '_heading', text: text, attr: {id: id}}) .appendTo (this._content);
+    var content = $('<div>', {class: '_heading ' + name, text: text, attr: {id: id}}) .appendTo (toHtml);
     return content;
   }
 
-  addSubHeading (text) {
+  addContainer (name='', toHtml = this._content) {
+    return $('<div>', {class: name}) .appendTo (toHtml);
+  }
+
+  addSlider (options, toHtml) {
+    $('<div>', {class: '_sliderFill', text: ' '}) .appendTo (toHtml);
+    let slider = $('<div>', {class: '_slider'}) .appendTo (toHtml) [0];
+    slider .addEventListener ('webkitmouseforcedown', e => {e .preventDefault(); e .stopPropagation(); e .stopImmediatePropagation(); return false}, true);
+    let so = {
+      range:   {min: 0, max: 0},
+      start:   [],
+      connect: true,
+      step:    1
+    };
+    let stop   = [];
+    let values = [];
+    if (options .left) {
+      so .range .min = options .left .min;
+      so .range .max = options .left .max;
+      so .start .push (options .left .start);
+      stop   .push (options .left .max);
+    }
+    if (options .right) {
+      so .range .min = Math .min (so .range .min, options .right .min);
+      so .range .max = Math .max (so .range .max, options .right .max);
+      so .start .push (options .right .start);
+      stop   .push (options .right .min);
+    }
+    noUiSlider .create (slider, so);
+    slider .noUiSlider .on ('update', (values, handle) => {
+      if (stop [0] !== undefined && values [0] > stop [0])
+        slider .noUiSlider .set ([stop [0], values [1]]);
+      else if (stop [1] !== undefined && values [1] < stop [1])
+        slider .noUiSlider .set ([values [0], stop [1]]);
+      else
+        options .onChange (values, handle)
+    });
+  }
+
+  addSubHeading (text, name = '', toHtml = this._content) {
     var id      = this._name + '_' + this._idSeq++;
     var anchors = [];
-    var content = $('<div>', {class: '_text', text: text, attr: {id: id}}) .appendTo (this._content);
+    var content = $('<div>', {class: '_text', html: text, attr: {id: id}}) .appendTo (toHtml);
     return content;
   }
 
@@ -284,7 +323,11 @@ class NavigateView extends Observable  {
    */
 
   _addBudgetGraph (name, dataset, popup, position, onClose, toHtml) {
-
+    var startCol, endCol;
+    dataset       = Object .assign ({}, dataset);
+    dataset .cols = dataset .cols .map (c => {return c});
+    var colsCopy  = dataset .cols .map (c => {return c});
+    var datasetsCopy;
     var processDataset = () => {
       labels = dataset .cols;
       data   = dataset .groups;
@@ -322,11 +365,18 @@ class NavigateView extends Observable  {
         }
       }
       datasets = groups .length > 1? groups [0] .concat (groups [2]) .concat (groups [1]): groups [0];
+      startCol = 0;
+      endCol   = dataset .cols .length - 1;
     }
 
     var setDataset = () => {
       config .data .labels   = labels;
       config .data .datasets = datasets;
+      datasetsCopy = datasets .map (ds => {
+        ds = Object .assign ({}, ds);
+        ds .data = ds .data .map (d => {return d});
+        return ds;
+      });
     }
 
     var datasets;
@@ -452,6 +502,7 @@ class NavigateView extends Observable  {
       ui .scrollIntoView (graph, false);
     return (updates) => {
       for (let update of updates)
+
         if (update .update) {
           var ds = config .data .datasets .find (d => {return d .id == update .update .id});
           if (ds) {
@@ -462,6 +513,38 @@ class NavigateView extends Observable  {
           }
           if (data [0] .id == update .update .id && update .update .name)
             graph .find ('span._heading') .text (update .update .name)
+
+        } else if (update .filterCols) {
+          if (update .filterCols .start > startCol) {
+            /* remove from front */
+            config .data .labels .splice (0, update .filterCols .start - startCol);
+            for (let ds of config .data .datasets)
+              ds .data .splice (0, update .filterCols .start - startCol);
+          } else
+            /* add to front */
+            for (let c = startCol - 1; c >= update .filterCols .start; c--) {
+              config .data .labels .splice (0, 0, colsCopy [c]);
+              for (let i = 0; i < config .data .datasets .length; i++) {
+                config .data .datasets [i] .data .splice (0, 0, datasetsCopy [i] .data [c]);
+              }
+            }
+          if (update .filterCols .end < endCol) {
+            /* remove from end */
+            let deleteCount = endCol - update .filterCols .end;
+            let spliceStart = config .data .labels .length - deleteCount;
+            config .data .labels .splice (spliceStart, deleteCount);
+            for (let ds of config .data .datasets)
+              ds .data .splice (spliceStart, deleteCount);
+          } else
+            /* add to end */
+            for (let c = endCol + 1; c <= update .filterCols .end; c++) {
+              config .data .labels .push (colsCopy [c]);
+              for (let i = 0; i < config .data .datasets .length; i++)
+                config .data .datasets [i] .data .push (datasetsCopy [i] .data [c]);
+            }
+          startCol = update .filterCols .start;
+          endCol   = update .filterCols .end;
+
         } else if (update .replace) {
           dataset = update .replace;
           processDataset();
@@ -798,7 +881,7 @@ class NavigateView extends Observable  {
           updateGroup (group);
           updateRow   (row);
           updateFoot();
-        } else {
+        } else if (update .replace) {
           dataset = update .replace;
           container .children() .empty();
           addTable();
@@ -846,6 +929,13 @@ class NavigateView extends Observable  {
         return ds;
       })
     }
+    console.log(data);
+    var colsCopy = data .labels .map (l => {return l});
+    var datasetsCopy = data. datasets .map (ds => {
+      ds = Object .assign ({}, ds);
+      ds .data = ds .data .map (d => {return d});
+      return ds;
+    });
     var container = $('<div>', {class: '_netWorthGraphContainer'});
     if (toHtml)
       container .insertAfter (toHtml)
@@ -876,7 +966,45 @@ class NavigateView extends Observable  {
       for (let v of fv)
         $('<td>', {text: v}) .appendTo (tr);
     }
-    return data => {}
+    var startCol = 0;
+    var endCol   = dataset .cols .length - 1;
+    return updates => {
+      for (let update of updates) {
+        if (update .filterCols) {
+          let config = chart .config;
+          if (update .filterCols .start > startCol) {
+            /* remove from front */
+            config .data .labels .splice (0, update .filterCols .start - startCol);
+            for (let ds of config .data .datasets)
+              ds .data .splice (0, update .filterCols .start - startCol);
+          } else
+            /* add to front */
+            for (let c = startCol - 1; c >= update .filterCols .start; c--) {
+              config .data .labels .splice (0, 0, colsCopy [c]);
+              for (let i = 0; i < config .data .datasets .length; i++) {
+                config .data .datasets [i] .data .splice (0, 0, datasetsCopy [i] .data [c]);
+              }
+            }
+          if (update .filterCols .end < endCol) {
+            /* remove from end */
+            let deleteCount = endCol - update .filterCols .end;
+            let spliceStart = config .data .labels .length - deleteCount;
+            config .data .labels .splice (spliceStart, deleteCount);
+            for (let ds of config .data .datasets)
+              ds .data .splice (spliceStart, deleteCount);
+          } else
+            /* add to end */
+            for (let c = endCol + 1; c <= update .filterCols .end; c++) {
+              config .data .labels .push (colsCopy [c]);
+              for (let i = 0; i < config .data .datasets .length; i++)
+                config .data .datasets [i] .data .push (datasetsCopy [i] .data [c]);
+            }
+          startCol = update .filterCols .start;
+          endCol   = update .filterCols .end;
+        }
+      }
+      chart .update();
+    }
   }
 
   addNetWorthTable (dataset, toHtml, onClose) {
@@ -885,36 +1013,47 @@ class NavigateView extends Observable  {
       table .insertAfter (toHtml);
     else
       table .appendTo (this._content);
-    var thead = $('<thead>') .appendTo (table);
-    var tbody = $('<tbody>') .appendTo (table);
-    var tfoot = $('<tfoot>') .appendTo (table);
-    var tr    = $('<tr>') .appendTo (thead);
-    var cols  = ['Account'] .concat (dataset .cols);
-    for (let i=0; i<cols.length; i++)
-      $('<th>', {text: cols [i], class: dataset .highlight == i - 1? '_highlight': ''}) .appendTo (tr);
-    var liquid = [];
-    var net    = [];
-    for (let row of dataset .rows) {
-      var tr = $('<tr>') .appendTo (tbody);
-      let vs = [row .name] .concat (
-        row .amounts .map (a => {return Types .moneyK .toString (a)})
-      )
-      net = row .amounts .map ((a,i) => {return a + (net [i] || 0)});
-      if (! [AccountType .MORTGAGE, AccountType .HOME] .includes (row .type))
-        liquid = row .amounts .map ((a,i) => {return a + (liquid [i] || 0)});
-      for (let i=0; i<vs.length; i++)
-        $('<td>', {text: vs [i], class: dataset .highlight == i - 1? '_highlight': ''}) .appendTo (tr);
+    var buildTable = () => {
+      table.empty();
+      var thead = $('<thead>') .appendTo (table);
+      var tbody = $('<tbody>') .appendTo (table);
+      var tfoot = $('<tfoot>') .appendTo (table);
+      var tr    = $('<tr>') .appendTo (thead);
+      var cols  = ['Account'] .concat (dataset .cols);
+      for (let i=0; i<cols.length; i++)
+        $('<th>', {text: cols [i], class: dataset .highlight == i - 1? '_highlight': ''}) .appendTo (tr);
+      var liquid = [];
+      var net    = [];
+      for (let row of dataset .rows) {
+        var tr = $('<tr>') .appendTo (tbody);
+        let vs = [row .name] .concat (
+          row .amounts .map (a => {return Types .moneyK .toString (a)})
+        )
+        net = row .amounts .map ((a,i) => {return a + (net [i] || 0)});
+        if (! [AccountType .MORTGAGE, AccountType .HOME] .includes (row .type))
+          liquid = row .amounts .map ((a,i) => {return a + (liquid [i] || 0)});
+        for (let i=0; i<vs.length; i++)
+          $('<td>', {text: vs [i], class: dataset .highlight == i - 1? '_highlight': ''}) .appendTo (tr);
+      }
+      var vss = [
+        ['Liquid'] .concat (liquid .map (a => {return Types .moneyK .toString (a)})),
+        ['TOTAL']  .concat (net    .map (a => {return Types .moneyK .toString (a)}))
+      ]
+      for (let vs of vss) {
+        var tr = $('<tr>') .appendTo (tfoot);
+        for (let i=0; i<vs.length; i++)
+          $('<td>', {text: vs [i], class: dataset .highlight == i - 1? '_highlight': ''}) .appendTo (tr);
+      }
     }
-    var vss = [
-      ['Liquid'] .concat (liquid .map (a => {return Types .moneyK .toString (a)})),
-      ['TOTAL']  .concat (net    .map (a => {return Types .moneyK .toString (a)}))
-    ]
-    for (let vs of vss) {
-      var tr = $('<tr>') .appendTo (tfoot);
-      for (let i=0; i<vs.length; i++)
-        $('<td>', {text: vs [i], class: dataset .highlight == i - 1? '_highlight': ''}) .appendTo (tr);
+    buildTable();
+    return updates => {
+      for (let update of updates) {
+        if (update .replace) {
+          dataset = update .replace;
+          buildTable();
+        }
+      }
     }
-    return data => {}
   }
 }
 

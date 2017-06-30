@@ -63,30 +63,64 @@ class Navigate {
     })
   }
 
-  *_aph() {
-    this._clearUpdatersForView           (this._perspectiveView);
-    var ds = yield* this._getHistoryData ();
-    yield* this._addHistoryGraph         (undefined, undefined, undefined, this._perspectiveView, ds);
-    yield* this._addHistoryTable         (undefined, undefined, undefined, undefined, this._perspectiveView, ds);
+  *_getModelValues() {
+    yield* this._actuals .findHistory ();
+    if (this._historicBudgets === undefined)
+      this._historicBudgets = (yield* this._budget  .getHistoricBudgets()) || null;
+    if (this._noTranAmounts === undefined) {
+      this._noTranAmounts = (yield* this._history .find()) || null;
+      for (let nta of this._noTranAmounts || [])
+        nta .category = this._categories .get (nta .category);
+    }
+    if (this._historicBalances === undefined)
+      this._historicBalances = (yield* this._balances .find()) || null
+    if (this._rates === undefined)
+      this._rates = (yield* this._parameters .find ({name: 'rates'})) [0] || {apr: 0, inflation: 0, presentValue: false}
   }
 
-  *addPerspectiveHtml (toHtml) {
+
+  *_aph() {
+    yield* this._getModelValues();
+    this._clearUpdatersForView                      (this._perspectiveView);
+    let sc = this._perspectiveView .addContainer    ('_sliderHeader');
+    this._perspectiveView .addHeading               ('Compare Years', '', sc);
+    let lv = this._perspectiveView .addSubHeading   ('', '', sc);
+    this._perspectiveView .addSubHeading            ('&ndash;', '', sc);
+    let rv = this._perspectiveView .addSubHeading   ('', '', sc);
+    let ds = this._getHistoryData                   ();
+    this._addHistorySlider (
+      this._perspectiveView, ds, sc, lv, rv,
+      this._addHistoryGraph (undefined, undefined, undefined, this._perspectiveView, ds),
+      this._addHistoryTable (undefined, undefined, undefined, undefined, this._perspectiveView, ds)
+    );
+  }
+
+  addPerspectiveHtml (toHtml) {
     this._perspectiveView = new NavigateView (this._accounts, this._variance);
     this._perspectiveView .addObserver       (this, this._onViewChange);
     this._perspectiveView .addHtml (toHtml, () => {async (this, this._aph) ()})
   }
 
   *_anwh() {
-    this._clearUpdatersForView            (this._newWorthView);
-    var ds = yield* this._getNetWorthData ();
-    this._addNetWorthGraph                (this._newWorthView, ds);
-    this._addNetWorthTable                (this._newWorthView, ds);
+    yield* this._getModelValues();
+    var ds = this._getNetWorthData ();
+    this._clearUpdatersForView                   (this._newWorthView);
+    let sc = this._netWorthView .addContainer    ('_sliderHeader');
+    this._netWorthView .addHeading               ('Net Worth', '', sc);
+    let lv = this._netWorthView .addSubHeading   ('', '', sc);
+    this._netWorthView .addSubHeading            ('&ndash;', '', sc);
+    let rv = this._netWorthView .addSubHeading   ('', '', sc);
+    this._addNetworthSlider (
+      this._netWorthView, ds, sc, lv, rv,
+      this._addNetWorthGraph                (this._netWorthView, ds),
+      this._addNetWorthTable                (this._netWorthView, ds)
+    );
   }
 
-  *addNetWorthHtml (toHtml) {
-    this._newWorthView = new NavigateView (this._accounts, this._variance);
-    this._newWorthView .addObserver       (this, this._onViewChange);
-    this._newWorthView .addHtml           (toHtml, () => {async (this, this._anwh) ()})
+  addNetWorthHtml (toHtml) {
+    this._netWorthView = new NavigateView (this._accounts, this._variance);
+    this._netWorthView .addObserver       (this, this._onViewChange);
+    this._netWorthView .addHtml           (toHtml, () => {async (this, this._anwh) ()})
   }
 
   _onModelChange (eventType, doc, arg, source, model) {
@@ -201,7 +235,7 @@ class Navigate {
             this._addMonthsGraph (arg .name, arg .view, [arg .id], true, arg .position, arg .html, true, iy, sel && sel .addCats);
         }
       } else if (arg .name == '_budgetHistoryGraph' && arg .id .length >= 1 && arg .id [0]) {
-        async (this, this._addHistoryGraph) ([] .concat (arg .id), true, arg .position, arg .view);
+        this._addHistoryGraph ([] .concat (arg .id), true, arg .position, arg .view);
       }
 
     } else if (eventType == NavigateViewEvent .BUDGET_GRAPH_TITLE_CLICK && arg .id) {
@@ -234,7 +268,7 @@ class Navigate {
         } else
           this._addMonthsTable (arg .name, arg .view, [arg .id], arg .date, true, true, arg .position, arg .html);
       } else if (arg .name == '_budgetHistoryTable' && arg .id .length >= 1 && arg .id [0])
-        async (this, this._addHistoryTable) ([] .concat (arg .id), true, true, arg .position, arg .view);
+        this._addHistoryTable ([] .concat (arg .id), true, true, arg .position, arg .view);
 
     } else if (eventType == NavigateViewEvent .PROGRESS_GRAPH_TITLE_CLICK && arg .data .length) {
       /* Progress Graph Title */
@@ -871,7 +905,7 @@ class Navigate {
       if (una < -50 || una > 50)
         list .push ({
           name:    una > 0? 'Unallocated' : 'Over Allocated',
-          tooltip: una > 0? 'Planned income not allocated in a budget.': 'Budget allocation exceeds planned income.',
+          tooltip: una > 0? 'Planned income not allocated in budget.': 'Budget allocation exceeds planned income.',
           amount:  una
         })
       else
@@ -975,16 +1009,13 @@ class Navigate {
    *     }]
    *   }
    */
-  *_getHistoryData (parentIds) {
-    yield* this._actuals .findHistory ();
+  _getHistoryData (parentIds) {
     var defaultParents  = [this._budget .getIncomeCategory(), this._budget .getSavingsCategory(), this._budget .getExpenseCategory()];
     parentIds           = parentIds || (defaultParents .map (p => {return p._id}));
     var parents         = parentIds .map (pid => {return this._categories .get (pid)});
     // get historic amounts
-    var historicBudgets = yield* this._budget  .getHistoricBudgets();
-    var noTranAmounts   = yield* this._history .find();
     var historicAmounts = [];
-    for (let budget of historicBudgets)
+    for (let budget of this._historicBudgets)
       if (budget .hasTransactions) {
         // get actual amount from transaction history
         historicAmounts .push (parents .map (parent => {
@@ -1024,9 +1055,8 @@ class Navigate {
         }))
       } else {
         // get summary amount from history model
-        let a = noTranAmounts
+        let a = this._noTranAmounts
           .filter (e => {return e .budget == budget._id})
-          .map    (e => {e .category = this._categories .get (e .category); return e})
         historicAmounts .push (parents .map (parent => {
           let isCredit = this._budget .isCredit (parent);
           let isGoal   = this._budget .isGoal   (parent);
@@ -1096,7 +1126,7 @@ class Navigate {
       }
     }
     // combine history and future and normalize to category name
-    budgets       = historicBudgets .concat (budgets);
+    budgets       = this._historicBudgets .concat (budgets);
     budgetAmounts = historicAmounts .concat (budgetAmounts);
     budgetAmounts = budgetAmounts .map (ba => {
       return Array .from (ba .reduce ((m, a) => {
@@ -1132,10 +1162,10 @@ class Navigate {
         }, new Map());
     });
     // compute return values
-    return {
+    return this._filterHistoryBySlider ({
       cols:      budgets .map (b => {return b .name}),
-      highlight: historicBudgets .length,
-      startBal:  (historicBudgets .sort ((a,b) => {return a.start<b.start? -1: 1}) [0] || {}) .startCashBalance || 0,
+      highlight: this._historicBudgets .length,
+      startBal:  (this._historicBudgets .sort ((a,b) => {return a.start<b.start? -1: 1}) [0] || {}) .startCashBalance || 0,
       groups: parentIds .map ((pid, i) => {
         for (let ba of budgetAmounts) {
           var parent = ba .find (as => {return as .id == pid && as .name});
@@ -1174,21 +1204,84 @@ class Navigate {
           })
         }
       })
-    }
+    })
   }
 
   _budgetHistoryUpdater (eventType, model, ids, dataset, parentIds, includeYearly, updateView) {
     var defaultRoots = [this._budget .getIncomeCategory(), this._budget .getSavingsCategory(), this._budget .getExpenseCategory()];
     if (model == 'SchedulesModel')
-      async (this, this._updateHistoryView) (parentIds, updateView);
+      this._updateHistoryView (parentIds, updateView);
   }
 
-  *_updateHistoryView (parentIds, updateView) {
-    updateView ([{replace: yield* this._getHistoryData (parentIds)}])
+  _updateHistoryView (parentIds, updateView) {
+    updateView ([{replace: this._getHistoryData (parentIds)}])
   }
 
-  *_addHistoryGraph (parentIds, popup, position, view, dataset, toHtml) {
-    dataset = dataset || (yield* this._getHistoryData (parentIds));
+  _filterHistoryBySlider (dataset) {
+    dataset .cols = dataset .cols .slice (this._historySliderLeft || 0, this._historySliderRight || dataset .cols .length);
+    for (let g of dataset .groups)
+      for (let r of g .rows)
+        r .amounts = r .amounts .slice (this._historySliderLeft || 0, this._historySliderRight || r .amounts .length);
+    return dataset;
+  }
+
+  _addHistorySlider (view, dataset, toHtml, leftValue, rightValue, graphUpdater, tableUpdater) {
+    let cbi = dataset .cols .indexOf (this._budget .getName());
+    if (cbi < 0)
+      cbi = 0;
+    view .addSlider ({
+      left:     {min: 0,     max: cbi,                     start: Math .max (cbi-5, 0)},
+      right:    {min: cbi+1, max: dataset .cols .length-1, start: Math .min (cbi+5, dataset .cols .length-1)},
+      onChange: (values, handle) => {
+        this._historySliderLeft = Math .floor (values [0]);
+        this._historySliderRight = Math .floor (values [1]);
+        leftValue  .text (dataset .cols [this._historySliderLeft]);
+        rightValue .text (dataset .cols [this._historySliderRight]);
+        let rds = Object .assign ({}, dataset);
+        rds .cols = rds .cols .slice (this._historySliderLeft, this._historySliderRight + 1);
+        rds .groups = rds .groups .map (g => {
+          g = Object .assign ({}, g);
+          g .rows = g .rows .map (r => {
+            r = Object .assign({}, r);
+            r .amounts = r .amounts .slice (this._historySliderLeft, this._historySliderRight + 1);
+            return r;
+          });
+          return g;
+        });
+        rds .highlight -= this._historySliderLeft;
+        graphUpdater ([{filterCols: {start: this._historySliderLeft, end: this._historySliderRight}}]);
+        tableUpdater ([{replace: rds}]);
+      }
+    }, toHtml)
+  }
+
+  _addNetworthSlider (view, dataset, toHtml, leftValue, rightValue, graphUpdater, tableUpdater) {
+    let cbi = dataset .cols .indexOf (Types .dateMY .toString (this._budget .getEndDate()));
+    if (cbi < 0)
+      cbi = 0;
+    view .addSlider ({
+      left:     {min: 0,     max: cbi,                     start: Math .max (cbi-5, 0)},
+      right:    {min: cbi+1, max: dataset .cols .length-1, start: Math .min (cbi+10, dataset .cols .length-1)},
+      onChange: (values, handle) => {
+        this._netWorthSliderLeft = Math .floor (values [0]);
+        this._netWorthSliderRight = Math .floor (values [1]);
+        leftValue  .text (dataset .cols [this._netWorthSliderLeft]);
+        rightValue .text (dataset .cols [this._netWorthSliderRight]);
+        let rds = Object .assign ({}, dataset);
+        rds .cols = rds .cols .slice (this._netWorthSliderLeft, this._netWorthSliderRight + 1);
+        rds .rows = rds .rows .map (r => {
+          r = Object .assign ({}, r);
+          r .amounts = r .amounts .slice (this._netWorthSliderLeft, this._netWorthSliderRight + 1);
+          return r;
+        })
+        rds .highlight -= this._netWorthSliderLeft;
+        graphUpdater ([{filterCols: {start: this._netWorthSliderLeft, end: this._netWorthSliderRight}}]);
+        tableUpdater ([{replace: rds}]);
+      }
+    }, toHtml)
+  }
+
+  _addHistoryGraph (parentIds, popup, position, view, dataset = this._getHistoryData(parentIds), toHtml) {
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       var updater = this._addUpdater (view, (eventType, model, ids) => {
         this._budgetHistoryUpdater (eventType, model, ids, dataset, parentIds, false, updateView)
@@ -1196,19 +1289,21 @@ class Navigate {
       var updateView = view .addHistoryGraph (dataset, popup, position, () => {
         this._deleteUpdater (view, updater);
       }, toHtml);
+      return updateView;
     }
   }
 
-  *_addHistoryTable (parentIds, skipFoot, popup, position, view, dataset, toHtml) {
-    dataset = dataset || (yield* this._getHistoryData (parentIds));
+  _addHistoryTable (parentIds, skipFoot, popup, position, view, dataset = this._getHistoryData (parentIds), toHtml) {
+    dataset = Object .assign ({}, dataset);
     dataset .cols = dataset .cols .map (c => {return c .slice (-4)})
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       var updater = this._addUpdater (view, (eventType, model, ids) => {
         this._budgetHistoryUpdater (eventType, model, ids, dataset, parentIds, true, updateView)
       });
-      var updateView = view .addHistoryTable (dataset, skipFoot, popup, position, () => {
+      var updateView = view .addHistoryTable (dataset, false, skipFoot, popup, position, () => {
         this._deleteUpdater (view, updater);
       }, toHtml);
+      return updateView;
     }
   }
 
@@ -1228,8 +1323,8 @@ class Navigate {
    *   }]
    * }
    */
-  *_getNetWorthData() {
-    var accounts  = [
+  _getNetWorthData() {
+  var accounts  = [
       [AccountType .PENSION,    'Pension'],
       [AccountType .RRSP,       'RRSP'],
       [AccountType .RESP,       'RESP'],
@@ -1239,10 +1334,10 @@ class Navigate {
       [AccountType .MORTGAGE,   'Mortgage']
     ];
     var order = accounts .map (a => {return a[0]});
-    var param  = (yield* this._parameters .find ({name: 'rates'})) [0] || {apr: 0, inflation: 0, presentValue: false};
-    var hisBud = yield* this._budget .getHistoricBudgets();
+    var param  = this._rates;
+    var hisBud = this._historicBudgets;
     var futBud = this._budget .getFutureBudgets();
-    var his    = yield* this._balances .find ();
+    var his    = this._historicBalances;
     return {
       cols: hisBud
         .map    (b => {return Types .dateMY. toString (b .end)})
@@ -1310,8 +1405,8 @@ class Navigate {
   _addNetWorthGraph (view, dataset, toHtml) {
     var homeTypes = [AccountType .HOME, AccountType .MORTGAGE];
     dataset = {
-      cols: dataset .cols,
-      rows: dataset .rows
+      cols: dataset .cols .map (c => {return c}),
+      rows: dataset .rows .map (r => {r = Object .assign ({}, r); r .amounts = r .amounts .map (a => {return a}); return r})
     }
     var equity = dataset .rows .reduce ((s,r) => {
       return homeTypes .includes (r.type)? r .amounts .map ((a,i) => {return (s [i] || 0) + a}): s
@@ -1333,6 +1428,7 @@ class Navigate {
     let updateView = view .addNetWorthGraph (dataset, toHtml, () => {
       this._deleteUpdater (view, updater);
     });
+    return updateView;
   }
 
   _addNetWorthTable (view, dataset, toHtml) {
@@ -1343,6 +1439,7 @@ class Navigate {
     let updateView = view .addNetWorthTable (dataset, toHtml, () => {
       this._deleteUpdater (view, updater);
     });
+    return updateView;
   }
 
 

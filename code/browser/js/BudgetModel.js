@@ -45,7 +45,7 @@ class BudgetModel extends Observable {
       else
         return String (Number (n[0]) + y)
     }
-    return [1,2,3,4,5,6,7,8] .map (y => {
+    return [1,2,3,4,5,6,7,8,9,10,11,12,14,15,16,17,18,19,20] .map (y => {
       return {
         name:  addYearToName           (y),
         start: Types .dateDMY .addYear (this._budget .start, y),

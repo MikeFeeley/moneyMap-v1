@@ -89,11 +89,11 @@ function* main() {
   });
 
   tabs .addTab ('Perspective', html => {
-    async (na, na .addPerspectiveHtml) (html);
+    na .addPerspectiveHtml (html);
   })
 
   tabs .addTab ('Wealth', html => {
-    async (na, na .addNetWorthHtml) (html);
+    na .addNetWorthHtml (html);
   })
 
   tabs .addTab ('Settings', html => {

@@ -80,11 +80,12 @@ var ui = {
     }
 
     static _onMouseUp (e) {
-      if (ui .ModalStack._stopRemainingMouseEvents) {
-        e .stopPropagation()
-        e .stopImmediatePropagation();
-        e .preventDefault();
-      }
+// removed due to conflict with slider ... wait to see if it breaks anything before deleting  XXX
+//      if (ui .ModalStack._stopRemainingMouseEvents) {
+//        e .stopPropagation()
+//        e .stopImmediatePropagation();
+//        e .preventDefault();
+//      }
     }
 
     static add (guard, action, remove) {

@@ -497,6 +497,8 @@ div._TransactionHUD {
     > div {
       width: 316px;
       @include popup-content();
+      border-radius: 0px;
+      box-shadow: none;
       > div {
         font-size: 11px!important;
         &:first-child {
