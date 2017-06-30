@@ -763,7 +763,7 @@ class NavigateView extends Observable  {
    *     }]
    *   }
    */
-  addBudgetTable (name, dataset, skipHead, skipFoot, popup, position, toHtml, onClose, totalRows) {
+  addBudgetTable (name, dataset, skipHead, skipFoot, popup, position, toHtml, onClose = () => {}, totalRows) {
 
     var groupTrs = [];
     var rowMap   = new Map();
@@ -874,7 +874,7 @@ class NavigateView extends Observable  {
           this._notifyObservers (NavigateViewEvent .BUDGET_TABLE_CLICK, {
             name:     name,
             id:       id,
-            date:     col >= 0 && col < dataset .dates .length? dataset .dates [col]: col >= 0 && col < dataset .cols .length? []: null,
+            date:     dataset .dates && (col >= 0 && col < dataset .dates .length? dataset .dates [col]: col >= 0 && col < dataset .cols .length? []: null),
             html:     html,
             position: position,
             altClick: e .originalEvent && (e .originalEvent .webkitForce > 1 || e .originalEvent .altKey),
