@@ -326,8 +326,6 @@ class NavigateView extends Observable  {
     var startCol, endCol;
     dataset       = Object .assign ({}, dataset);
     dataset .cols = dataset .cols .map (c => {return c});
-    var colsCopy  = dataset .cols .map (c => {return c});
-    var datasetsCopy;
     var processDataset = () => {
       labels = dataset .cols;
       data   = dataset .groups;
@@ -372,11 +370,6 @@ class NavigateView extends Observable  {
     var setDataset = () => {
       config .data .labels   = labels;
       config .data .datasets = datasets;
-      datasetsCopy = datasets .map (ds => {
-        ds = Object .assign ({}, ds);
-        ds .data = ds .data .map (d => {return d});
-        return ds;
-      });
     }
 
     var datasets;
@@ -500,6 +493,7 @@ class NavigateView extends Observable  {
     chart = new Chart (canvas .get (0) .getContext ('2d'), config);
     if (popup)
       ui .scrollIntoView (graph, false);
+    var colsCopy, datasetsCopy;
     return (updates) => {
       for (let update of updates)
 
@@ -515,6 +509,15 @@ class NavigateView extends Observable  {
             graph .find ('span._heading') .text (update .update .name)
 
         } else if (update .filterCols) {
+          if (!colsCopy)
+            colsCopy = dataset .cols .map (c => {return c});
+          if (!datasetsCopy)
+            datasetsCopy = datasets .map (ds => {
+              ds = Object .assign ({}, ds);
+              ds .data = ds .data .map (d => {return d});
+              return ds;
+            });
+
           if (update .filterCols .start > startCol) {
             /* remove from front */
             config .data .labels .splice (0, update .filterCols .start - startCol);
@@ -929,13 +932,8 @@ class NavigateView extends Observable  {
         return ds;
       })
     }
-    console.log(data);
-    var colsCopy = data .labels .map (l => {return l});
-    var datasetsCopy = data. datasets .map (ds => {
-      ds = Object .assign ({}, ds);
-      ds .data = ds .data .map (d => {return d});
-      return ds;
-    });
+    var colsCopy;
+    var datasetsCopy;
     var container = $('<div>', {class: '_netWorthGraphContainer'});
     if (toHtml)
       container .insertAfter (toHtml)
@@ -971,6 +969,14 @@ class NavigateView extends Observable  {
     return updates => {
       for (let update of updates) {
         if (update .filterCols) {
+          if (!colsCopy)
+            colsCopy = data .labels .map (l => {return l});
+          if (!datasetsCopy)
+            datasetsCopy = data. datasets .map (ds => {
+              ds = Object .assign ({}, ds);
+              ds .data = ds .data .map (d => {return d});
+              return ds;
+            });
           let config = chart .config;
           if (update .filterCols .start > startCol) {
             /* remove from front */
