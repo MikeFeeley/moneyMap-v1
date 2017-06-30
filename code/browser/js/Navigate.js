@@ -901,7 +901,6 @@ class Navigate {
       let ovr = ovp + ovc;
       let una = -(inc + (sav + exp));
       let list = [];
-      list .push ({name: 'Planned Savings', amount: sav})
       if (una < -50 || una > 50)
         list .push ({
           name:    una > 0? 'Unallocated' : 'Over Allocated',
