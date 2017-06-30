@@ -545,7 +545,7 @@ class NavigateView extends Observable  {
       ui .scrollIntoView (graph, false);
     var highlightCopy, colsCopy, datasetsCopy;
     return (updates) => {
-      for (let update of updates)
+      for (let update of updates || [])
 
         if (update .update) {
           var ds = config .data .datasets .find (d => {return d .id == update .update .id});
@@ -718,7 +718,7 @@ class NavigateView extends Observable  {
     setDataset();
     var chart = new Chart (canvas .get (0). getContext ('2d'), config);
     return updates => {
-      for (let update of updates)
+      for (let update of updates || [])
         if (update .update) {
           var ds = data .cats .find (d => {return d .id == update .update .id});
           if (ds) {
@@ -920,7 +920,7 @@ class NavigateView extends Observable  {
     }
     addTable ();
     return updates => {
-      for (let update of updates)
+      for (let update of updates || [])
         if (update .update) {
           outerLoop: for (let g of dataset .groups)
             for (let r of g .rows)
@@ -1073,7 +1073,7 @@ class NavigateView extends Observable  {
     var endCol   = dataset .cols .length - 1;
     var highlightCopy, colsCopy, datasetsCopy;
     return updates => {
-      for (let update of updates) {
+      for (let update of updates || []) {
         if (update .filterCols) {
           if (colsCopy == null) {
             highlightCopy = dataset .highlight .column != null? Object .assign ({}, dataset .highlight): dataset .highlight;
@@ -1166,7 +1166,7 @@ class NavigateView extends Observable  {
     }
     buildTable();
     return updates => {
-      for (let update of updates) {
+      for (let update of updates || []) {
         if (update .replace) {
           dataset = update .replace;
           buildTable();
