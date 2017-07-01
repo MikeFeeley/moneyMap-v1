@@ -280,7 +280,7 @@ class Navigate {
         title = 'Activity for ';
       }
       title += this._budget .getNameForBudgetByDate (arg .date);
-      this._addMonthsTable (name, arg.view, undefined, arg .date, true, true, arg .position, arg .html, undefined, title);
+      this._addMonthsTable (name, arg.view, undefined, arg .date, false, true, arg .position, arg .html, undefined, title);
 
     } else if (eventType == NavigateViewEvent .PROGRESS_GRAPH_TITLE_CLICK && arg .data .length) {
       /* Progress Graph Title */
@@ -697,7 +697,7 @@ class Navigate {
       });
       var updateView = view .addBudgetTable (name, dataset, dataset .cols .length == 1, skipFoot, popup, position, toHtml, () => {
         this._deleteUpdater (view, updater);
-      }, ! dates, title);
+      }, ! dates || ! skipFoot, title);
     }
   }
 
