@@ -1217,10 +1217,12 @@ class Navigate {
   }
 
   _filterHistoryBySlider (dataset) {
-    dataset .cols = dataset .cols .slice (this._historySliderLeft || 0, this._historySliderRight || dataset .cols .length);
+    let first = this._historySliderLeft || 0;
+    let last  = this._historySliderRight? this._historySliderRight + 1: dataset .cols .length;
+    dataset .cols = dataset .cols .slice (first, last);
     for (let g of dataset .groups)
       for (let r of g .rows)
-        r .amounts = r .amounts .slice (this._historySliderLeft || 0, this._historySliderRight || r .amounts .length);
+        r .amounts = r .amounts .slice (first, last);
     dataset .highlight -= this._historySliderLeft || 0;
     return dataset;
   }
