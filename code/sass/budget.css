@@ -260,6 +260,10 @@ body {
   }
 }
 
+div._budgetHistoryTables {
+  position: relative;
+}
+
 div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._progressGraphs {
   position: relative;
   &._popup, & > ._popup {
@@ -383,6 +387,12 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
       font-weight: 100;
       margin-top: 16px;
     }
+    ._tableTitle {
+      font-size: 32px;
+      font-weight: 100;
+      margin-bottom: 8px;
+      margin-left: 8px;
+    }
     > * {
       margin-top:    50px;
       margin-bottom: 100px;
@@ -406,15 +416,15 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
       margin-top: 0px;
       margin-bottom: 32px;
     }
-    > ._budgetTables > ._budgetTable > div > table > tbody > tr > td, > ._activityTables > ._activityTable > div > table > tbody > tr > td {
+    ._budgetTable > div > table > tbody > tr > td, ._activityTable > div > table > tbody > tr > td {
       &:nth-child(14) {
         border-right: 1px solid #aaa;
       }
     }
-    > ._budgetTables > ._budgetTable > div > table,
-    > ._activityTables > ._activityTable > div > table,
-    > ._budgetHistoryTables > ._budgetHistoryTable > div > table,
-    > ._netWorthTable {
+    ._budgetTable > div > table,
+    ._activityTable > div > table,
+    ._budgetHistoryTable > div > table,
+    ._netWorthTable {
       border-collapse: collapse;
       width: 100%;
       padding: 0px 4px;
@@ -432,6 +442,8 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
         font-size: 18px;
         color: #444;
         border-bottom: 1px solid #aaa;
+        padding-left: 4px;
+        padding-right: 4px;
       }
       > tfoot, > tbody > tr._subtotal {
         border-top: 1px solid #aaa;

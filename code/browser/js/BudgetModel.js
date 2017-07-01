@@ -54,6 +54,14 @@ class BudgetModel extends Observable {
     })
   }
 
+  getNameForBudgetByDate (date) {
+    let sy = Types .date._year (date .start);
+    if (this._budget .name .includes ('/'))
+      return sy + '/'+ ((sy % 10) + 1)
+    else
+      return sy .toString();
+  }
+
   getCategories() {
     return this._schModel .getCategories();
   }

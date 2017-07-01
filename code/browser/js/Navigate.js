@@ -91,7 +91,7 @@ class Navigate {
     this._addHistorySlider (
       this._perspectiveView, ds, sc, lv, rv,
       this._addHistoryGraph (undefined, undefined, undefined, this._perspectiveView, ds),
-      this._addHistoryTable (undefined, undefined, undefined, undefined, this._perspectiveView, ds)
+      this._addHistoryTable (undefined, undefined, undefined, undefined, undefined, this._perspectiveView, ds)
     );
   }
 
@@ -268,7 +268,19 @@ class Navigate {
         } else
           this._addMonthsTable (arg .name, arg .view, [arg .id], arg .date, true, true, arg .position, arg .html);
       } else if (arg .name == '_budgetHistoryTable' && arg .id .length >= 1 && arg .id [0])
-        this._addHistoryTable ([] .concat (arg .id), true, true, arg .position, arg .view);
+        this._addHistoryTable ([] .concat (arg .id), arg .date, true, true, arg .position, arg .view);
+
+    } else if (eventType == NavigateViewEvent .BUDGET_TABLE_TITLE_CLICK && arg .name == '_budgetHistoryTable') {
+      let name, title;
+      if (arg .date .start >= this._budget .getStartDate()) {
+        name  = '_budgetTable';
+        title = 'Budget for ';
+      } else {
+        name  = '_activityTable';
+        title = 'Activity for ';
+      }
+      title += this._budget .getNameForBudgetByDate (arg .date);
+      this._addMonthsTable (name, arg.view, undefined, arg .date, true, true, arg .position, arg .html, undefined, title);
 
     } else if (eventType == NavigateViewEvent .PROGRESS_GRAPH_TITLE_CLICK && arg .data .length) {
       /* Progress Graph Title */
@@ -570,10 +582,11 @@ class Navigate {
     includeYears  = true,
     addCats       = []
   ) {
-    var st     = this._budget .getStartDate();
-    if (!dates) {
+    if (!dates || (dates .start && dates .end != Types .date .monthEnd (dates .start))) {
+      var st     = dates? dates .start: this._budget .getStartDate();
+      var en     = dates? dates .end:   this._budget .getEndDate();
       var dates  = [];
-      while (st <= this._budget .getEndDate()) {
+      while (st <= en) {
         dates .push ({start: st, end: Types .dateMY .monthEnd (st)});
         st = Types .dateMY .addMonthStart (st, 1);
       }
@@ -612,13 +625,15 @@ class Navigate {
           cols .push ('Yr Ave')
       }
     }
+    let today     = Types .date .today()
+    let highlight = (dates || []) .findIndex (d => {return today >= d .start && today <= d .end});
     return {
       cols:      cols,
       dates:     dates,
       months:    months,
       groups:    groups,
       startBal:  this._budget .getStartCashBalance(),
-      highlight: cols .length > 1? cols .indexOf (Types .dateM .toString (Types .dateMY .today())): null,
+      highlight: highlight > 0? highlight: undefined,
       income:    this._getIncome (type),
       getUpdate: (eventType, model, eventIds) => {
         let update = [];
@@ -672,7 +687,7 @@ class Navigate {
   /**
    * Add TABLE (either budget or actual) showing children of specified root list
    */
-  _addMonthsTable (name, view, ids, dates, skipFoot, popup, position, toHtml, col) {
+  _addMonthsTable (name, view, ids, dates, skipFoot, popup, position, toHtml, col, title) {
     var dataset = this._getMonthsData (name .includes ('budget')? NavigateValueType .BUDGET: NavigateValueType .ACTUALS, dates, ids, false);
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       var updater = this._addUpdater (view, (eventType, model, ids) => {
@@ -680,9 +695,9 @@ class Navigate {
         if (update)
           updateView (update);
       });
-      var updateView = view .addBudgetTable (name, dataset, dates, skipFoot, popup, position, toHtml, () => {
+      var updateView = view .addBudgetTable (name, dataset, dataset .cols .length == 1, skipFoot, popup, position, toHtml, () => {
         this._deleteUpdater (view, updater);
-      }, ! dates);
+      }, ! dates, title);
     }
   }
 
@@ -997,6 +1012,7 @@ class Navigate {
    * Get a budget data for root and its children
    *   returns {
    *     cols:   array of column headers
+   *     dates:  date ranges for each column
    *     groups: [{
    *       name: name for this group
    *       rows: [{
@@ -1008,7 +1024,7 @@ class Navigate {
    *     }]
    *   }
    */
-  _getHistoryData (parentIds) {
+  _getHistoryData (parentIds, date) {
     var defaultParents  = [this._budget .getIncomeCategory(), this._budget .getSavingsCategory(), this._budget .getExpenseCategory()];
     parentIds           = parentIds || (defaultParents .map (p => {return p._id}));
     var parents         = parentIds .map (pid => {return this._categories .get (pid)});
@@ -1161,8 +1177,9 @@ class Navigate {
         }, new Map());
     });
     // compute return values
-    return this._filterHistoryBySlider ({
+    let result = this._filterHistoryBySlider ({
       cols:      budgets .map (b => {return b .name}),
+      dates:     budgets .map (b => {return {start: b .start, end: b .end}}),
       highlight: this._historicBudgets .length,
       startBal:  (this._historicBudgets .sort ((a,b) => {return a.start<b.start? -1: 1}) [0] || {}) .startCashBalance || 0,
       groups: parentIds .map ((pid, i) => {
@@ -1204,6 +1221,17 @@ class Navigate {
         }
       })
     })
+    // filter by selected date range if any
+    if (date) {
+      let sc = result .dates .findIndex (r => {return r .start == date .start && r .end == date .end});
+      result .cols  = [result .cols [sc]];
+      result .dates = [result .dates [sc]];
+      result .highlight = undefined;
+      for (let g of result .groups)
+        for (let r of g .rows)
+          r .amounts = [r .amounts [sc]];
+    }
+    return result;
   }
 
   _budgetHistoryUpdater (eventType, model, ids, dataset, parentIds, includeYearly, updateView) {
@@ -1219,7 +1247,8 @@ class Navigate {
   _filterHistoryBySlider (dataset) {
     let first = this._historySliderLeft || 0;
     let last  = this._historySliderRight? this._historySliderRight + 1: dataset .cols .length;
-    dataset .cols = dataset .cols .slice (first, last);
+    dataset .cols  = dataset .cols .slice (first, last);
+    dataset .dates = dataset .dates .slice (first, last);
     for (let g of dataset .groups)
       for (let r of g .rows)
         r .amounts = r .amounts .slice (first, last);
@@ -1241,7 +1270,8 @@ class Navigate {
         leftValue  .text (dataset .cols [this._historySliderLeft]);
         rightValue .text (dataset .cols [this._historySliderRight]);
         let rds = Object .assign ({}, dataset);
-        rds .cols = rds .cols .slice (this._historySliderLeft, this._historySliderRight + 1);
+        rds .cols  = rds .cols . slice (this._historySliderLeft, this._historySliderRight + 1);
+        rds .dates = rds .dates .slice (this._historySliderLeft, this._historySliderRight + 1);
         rds .groups = rds .groups .map (g => {
           g = Object .assign ({}, g);
           g .rows = g .rows .map (r => {
@@ -1297,14 +1327,14 @@ class Navigate {
     }
   }
 
-  _addHistoryTable (parentIds, skipFoot, popup, position, view, dataset = this._getHistoryData (parentIds), toHtml) {
+  _addHistoryTable (parentIds, date, skipFoot, popup, position, view, dataset = this._getHistoryData (parentIds, date), toHtml) {
     dataset = Object .assign ({}, dataset);
     dataset .cols = dataset .cols .map (c => {return c .slice (-4)})
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       var updater = this._addUpdater (view, (eventType, model, ids) => {
         this._budgetHistoryUpdater (eventType, model, ids, dataset, parentIds, true, updateView)
       });
-      var updateView = view .addHistoryTable (dataset, false, skipFoot, popup, position, () => {
+      var updateView = view .addHistoryTable (dataset, dataset .cols .length == 1, skipFoot, popup, position, () => {
         this._deleteUpdater (view, updater);
       }, toHtml);
       return updateView;

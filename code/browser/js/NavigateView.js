@@ -777,7 +777,7 @@ class NavigateView extends Observable  {
    *     }]
    *   }
    */
-  addBudgetTable (name, dataset, skipHead, skipFoot, popup, position, toHtml, onClose = () => {}, totalRows) {
+  addBudgetTable (name, dataset, skipHead, skipFoot, popup, position, toHtml, onClose = () => {}, totalRows, title = '') {
 
     var groupTrs = [];
     var rowMap   = new Map();
@@ -862,8 +862,21 @@ class NavigateView extends Observable  {
     var addTable = () => {
       groupTrs  = [];
       rowMap    = new Map();
+      if (title && popup)
+        $('<div>', {class: '_tableTitle', text: title}) .appendTo (container .children());
       var table = $('<table>', {class: name}) .appendTo (container .children());
-      var thead = $('<thead>') .appendTo (table);
+      var thead = $('<thead>') .appendTo (table)
+        .on ('click webkitmouseforcedown', e => {
+          let target = $(e .originalEvent .target);
+          let html   = target .offsetParent();
+          this._notifyObservers (NavigateViewEvent .BUDGET_TABLE_TITLE_CLICK, {
+            name:     name,
+            date:     dataset .dates && dataset .dates [target .index() - 1],
+            html:     html,
+            position: {top: 20, left: 20},
+            view:     this
+          })
+        })
       var tbody = $('<tbody>') .appendTo (table);
       tfoot = $('<tfoot>') .appendTo (table);
       table [0] .addEventListener ('webkitmouseforcewillbegin', e => {e .preventDefault()}, true)
@@ -875,7 +888,7 @@ class NavigateView extends Observable  {
           col    = 0;
           target = $(target) .next() [0];
         }
-        let html     = $(target) .closest ('.' + name + 's');
+        let html     = $(target) .offsetParent();
         let htmlo    = html .offset()
         let position = $(target) .offset();
         position .top  -= htmlo .top - 12;
@@ -1196,8 +1209,9 @@ var NavigateViewEvent = Object.create (ViewEvent, {
   BUDGET_GRAPH_CLICK:         {value: 203},
   BUDGET_GRAPH_TITLE_CLICK:   {value: 204},
   BUDGET_TABLE_CLICK:         {value: 205},
-  PROGRESS_GRAPH_TITLE_CLICK: {value: 206},
-  PROGRESS_SIDEBAR_CLICK:     {value: 207}
+  BUDGET_TABLE_TITLE_CLICK:   {value: 206},
+  PROGRESS_GRAPH_TITLE_CLICK: {value: 207},
+  PROGRESS_SIDEBAR_CLICK:     {value: 208}
 });
 
 
