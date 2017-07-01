@@ -85,28 +85,42 @@ class NavigateView extends Observable  {
       connect: true,
       step:    1
     };
-    let stop   = [];
     let values = [];
     if (options .left) {
       so .range .min = options .left .min;
       so .range .max = options .left .max;
       so .start .push (options .left .start);
-      stop   .push (options .left .max);
     }
     if (options .right) {
-      so .range .min = Math .min (so .range .min, options .right .min);
-      so .range .max = Math .max (so .range .max, options .right .max);
+      if (options .right .min)
+        so .range .min = so .range .min? Math .min (so .range .min, options .right .min): options .right .min;
+      if (options .right .max)
+        so .range .max = so .range .max? Math .max (so .range .max, options .right .max): options .right .max;
       so .start .push (options .right .start);
-      stop   .push (options .right .min);
     }
     noUiSlider .create (slider, so);
+    let lastValues = {
+      left:  options .left .start,
+      right: options .right .start
+    }
     slider .noUiSlider .on ('update', (values, handle) => {
-      if (stop [0] !== undefined && values [0] > stop [0])
-        slider .noUiSlider .set ([stop [0], values [1]]);
-      else if (stop [1] !== undefined && values [1] < stop [1])
-        slider .noUiSlider .set ([values [0], stop [1]]);
-      else
-        options .onChange (values, handle)
+      if (values [0] != lastValues .left) {
+        if (values [0] > options .keep .value [0] || lastValues .right - values [0] < options .keep .count) {
+          lastValues .left = Math .min (options .keep .value [0], lastValues .right - options .keep .count + 1);
+          slider .noUiSlider .set ([lastValues .left, lastValues .right]);
+          return;
+        }
+        lastValues .left = values [0];
+      }
+      if (values [0] == lastValues .left && values [1] != lastValues .right) {
+        if (values [1] < options .keep .value [1] || values [1] - lastValues .left < options .keep .count) {
+          lastValues .right = Math .max (options .keep .value [1], lastValues .left + options .keep .count - 1);
+          slider .noUiSlider .set ([lastValues .left, lastValues .right]);
+          return;
+        }
+        lastValues .right = values [1];
+      }
+      options .onChange (values, handle)
     });
   }
 

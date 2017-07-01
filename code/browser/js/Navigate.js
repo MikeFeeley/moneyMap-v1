@@ -1232,8 +1232,9 @@ class Navigate {
     if (cbi < 0)
       cbi = 0;
     view .addSlider ({
-      left:     {min: 0,     max: cbi,                     start: Math .max (cbi-5, 0)},
-      right:    {min: cbi+1, max: dataset .cols .length-1, start: Math .min (cbi+5, dataset .cols .length-1)},
+      left:  {min:   0,                       start: Math .max (cbi-5, 0)},
+      right: {max:   dataset .cols .length-1, start: Math .min (cbi+5, dataset .cols .length-1)},
+      keep:  {value: [cbi,cbi],               count: 2},
       onChange: (values, handle) => {
         this._historySliderLeft = Math .floor (values [0]);
         this._historySliderRight = Math .floor (values [1]);
@@ -1258,12 +1259,13 @@ class Navigate {
   }
 
   _addNetworthSlider (view, dataset, toHtml, leftValue, rightValue, graphUpdater, tableUpdater) {
-    let cbi = dataset .cols .indexOf (Types .dateMY .toString (this._budget .getEndDate()));
+    let cbi = dataset .cols .indexOf (Types .dateMY .toString (this._budget .getEndDate())) - 1;
     if (cbi < 0)
       cbi = 0;
     view .addSlider ({
-      left:     {min: 0,     max: cbi,                     start: Math .max (cbi-5, 0)},
-      right:    {min: cbi+1, max: dataset .cols .length-1, start: Math .min (cbi+10, dataset .cols .length-1)},
+      left:     {min: 0,                       start: Math .max (cbi-5, 0)},
+      right:    {max: dataset .cols .length-1, start: Math .min (cbi+10, dataset .cols .length-1)},
+      keep:     {value: [cbi,cbi+1],           count: 2},
       onChange: (values, handle) => {
         this._netWorthSliderLeft = Math .floor (values [0]);
         this._netWorthSliderRight = Math .floor (values [1]);
