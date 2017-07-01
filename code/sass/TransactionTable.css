@@ -238,7 +238,7 @@ $table-stripe-backgroud: #f8f8f8;
         }
         legend {
           span   {font-size: 24px; vertical-align: 20%}
-          *      {color: #666}
+          *:not(button)      {color: #666}
           button {vertical-align: 50%}
         }
       }
