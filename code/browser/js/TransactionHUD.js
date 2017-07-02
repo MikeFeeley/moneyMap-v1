@@ -1,11 +1,16 @@
-class TransactionHUD extends TransactionTable {
+class TransactionHUD extends TransactionAndRulesTable {
   constructor (title, query, accounts, variance, onClose, monthStart, monthEnd) {
     var name    = '_TransactionHUD';
     var sort    = (a,b) => {return a.date < b.date? -1: a.date == b.date? 0: 1}
     var columns = ['date','payee','debit','credit','account','category','description'];
     var options = {readOnly: false, noGrouping: true};
     var view    = new TransactionTableView (name, columns, options, accounts, variance);
-    super (name, query, sort, options, columns, accounts, variance, view);
+//    super (name, query, sort, options, columns, accounts, variance, view);
+
+
+
+    super (query, 'Title', parent, name, columns, undefined)
+
     this._title      = title;
     this._onClose    = onClose;
     this._monthStart = monthStart;

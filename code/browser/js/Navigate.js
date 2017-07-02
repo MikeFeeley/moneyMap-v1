@@ -903,7 +903,7 @@ class Navigate {
   /***** PROGRESS SIDEBAR *****/
 
   _addBigPicture() {
-    let updateView = this._progressView .addProgressSidebarGroup('Saving this Year', '');
+    let updateView = this._progressView .addProgressSidebarGroup('Savings this Year', '');
     let update = varianceList => {
       let sav = this._budget .getAmount (this._budget .getSavingsCategory()) .amount;
       let inc = this._budget .getAmount (this._budget .getIncomeCategory())  .amount;
@@ -918,7 +918,7 @@ class Navigate {
       let list = [];
       if (una < -50 || una > 50)
         list .push ({
-          name:    una > 0? 'Unallocated' : 'Over Allocated',
+          name:    una > 0? 'Unallocated Income' : 'Over-Allocated Income',
           tooltip: una > 0? 'Planned income not allocated in budget.': 'Budget allocation exceeds planned income.',
           amount:  una
         })
