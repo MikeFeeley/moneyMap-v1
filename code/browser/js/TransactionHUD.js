@@ -1,11 +1,8 @@
-class TransactionHUD extends TransactionTable {
+class TransactionHUD extends TransactionAndRulesTable {
   constructor (title, query, accounts, variance, onClose, monthStart, monthEnd) {
-    var name    = '_TransactionHUD';
-    var sort    = (a,b) => {return a.date < b.date? -1: a.date == b.date? 0: 1}
-    var columns = ['date','payee','debit','credit','account','category','description'];
-    var options = {readOnly: false, noGrouping: true};
-    var view    = new TransactionTableView (name, columns, options, accounts, variance);
-    super (name, query, sort, options, columns, accounts, variance, view);
+    let columns      = ['date','payee','debit','credit','account','category','description'];
+    let options      = {readOnly: false, noGrouping: true};
+    super (query, null, undefined, '', undefined, undefined, options);
     this._title      = title;
     this._onClose    = onClose;
     this._monthStart = monthStart;
@@ -46,14 +43,14 @@ class TransactionHUD extends TransactionTable {
     var button = this._content .find ('._editButton');
     if (button .text() == 'Edit') {
       button .text ('View');
-      this._content .addClass ('_TransactionEdit');
+      this._content .removeClass ('_TransactionReadOnly');
       this._view._options .readOnly = false;
       (this._query .$options = this._query .$options || {}) .groupBy = 'group';
       async (this, this .refreshHtml)();
     } else {
       button .text ('Edit');
       this._view._clearSelectedTuple();
-      this._content .removeClass ('_TransactionEdit');
+      this._content .addClass ('_TransactionReadOnly');
       this._view._options .readOnly = true;
       delete this._query .$options .groupBy;
       async (this, this .refreshHtml)();
@@ -163,16 +160,17 @@ class TransactionHUD extends TransactionTable {
     this._view .addFooterRow ({
       nop0:    '',
       nop1:    '',
+      nop2:    '',
       tdebit:  total >= 0? Types .moneyDCZ .toString (total): 'net -->',
       tcredit: total < 0?  Types .moneyDCZ .toString (-total): '<-- net',
-      nop2:    '',
       nop3:    '',
-      nop4:    ''
+      nop4:    '',
+      nop5:    ''
     });
     if (total >= 0)
-      $(this._view._tfoot .find ('td') [3]) .addClass ('_leftArrow');
+      $(this._view._tfoot .find ('td') [4]) .addClass ('_leftArrow');
     else
-      $(this._view._tfoot .find ('td') [2]) .addClass ('_rightArrow');
+      $(this._view._tfoot .find ('td') [3]) .addClass ('_rightArrow');
   }
 
   *_addModelData() {
@@ -185,9 +183,9 @@ class TransactionHUD extends TransactionTable {
     let po = toHtml .offset() .left;
     if (po + position .left > ml)
       position .left = ml - po;
-    this._html = $('<div>', {class: this._view._name}) .appendTo (toHtml);
+    this._html = $('<div>', {class: '_TransactionHUD'}) .appendTo (toHtml);
     this._html [0] .addEventListener ('webkitmouseforcewillbegin', e => {e .preventDefault()}, true)
-    this._content = $('<div>', {class: '_hudcontent'}) .appendTo (this._html);
+    this._content = $('<div>', {class: '_hudcontent _TransactionReadOnly'}) .appendTo (this._html);
     let mousedownFired;
     this._content .on ('mousedown webkitmouseforcedown', () => {mousedownFired = true})
     this._content .on ('mouseup webkitmouseforceup', e => {

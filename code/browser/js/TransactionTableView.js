@@ -45,6 +45,8 @@ class TransactionTableView extends TableView {
                     new ViewLabel                ('nop3',        ViewFormats ('string'))],
       nop4:        [new ViewLabel                ('nop4',        ViewFormats ('string')),
                     new ViewLabel                ('nop4',        ViewFormats ('string'))],
+      nop5:        [new ViewLabel                ('nop5',        ViewFormats ('string')),
+                    new ViewLabel                ('nop5',        ViewFormats ('string'))],
       tdebit:      [new ViewLabel                ('tdebit',      ViewFormats ('string')),
                     new ViewLabel                ('tdebit',      ViewFormats ('string'))],
       tcredit:     [new ViewLabel                ('tcredit',     ViewFormats ('string')),

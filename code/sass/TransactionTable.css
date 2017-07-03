@@ -132,29 +132,13 @@ $table-stripe-backgroud: #f8f8f8;
   }
 }
 
-._TransactionHUD:not(._TransactionEdit) {
+._TransactionReadOnly {
   @include user-select(auto);
 }
 
-._TransactionHUD > ._hudcontent > table, ._TransactionHUD > ._hudcontent > ._body > table {
-  @include transaction-table-base (18px, 13px, 18px);
-}
-
-._TransactionEdit > table, ._TransactionEdit > ._body > table {
-  @include transaction-table (18px, 13px, 26px, 0, 1, 2, 5, 5, 3, 4, 6, 7, 7, 3, 5, 6);
-}
 ._ImportTransactionsTable {
-  &:not(._needsAttention) {
-    @include transaction-table (18px, 13px, 26px, 1, 1, 2, 3, 6, 4, 5, 7, 8, 8, 4, 6, 7);
-  }
   margin-top: 24px;
   margin-bottom: 32px;
-  &._needsAttention {
-    @include transaction-table (18px, 13px, 26px, 1, 1, 2, 3, 6, 4, 5, 7, 8, 9, 4, 6, 7);
-    > tbody > tr > td:last-child,  > thead > tr > th:last-child {
-      color: #aaa;
-    }
-  }
   width: 1000px;
   clear: left;
   > ._title {
@@ -173,6 +157,24 @@ $table-stripe-backgroud: #f8f8f8;
   > table {
     clear: left;
   }
+}
+
+div._TransactionHUD > ._TransactionReadOnly > ._body > ._TransactionAndRulesTable > table {
+  @include transaction-table-base (18px, 13px, 18px);
+  tr > td:first-child, tr > th:first-child {display: none}
+}
+div._TransactionHUD > :not(._TransactionReadOnly) > ._body > ._TransactionAndRulesTable > table,
+table._ImportTransactionsTable._TransactionAndRulesTable:not(._needsAttention) {
+  @include transaction-table (18px, 13px, 26px, 1, 1, 2, 3, 6, 4, 5, 7, 8, 8, 4, 6, 7);
+}
+table._ImportTransactionsTable._TransactionAndRulesTable._needsAttention {
+    @include transaction-table (18px, 13px, 26px, 1, 1, 2, 3, 6, 4, 5, 7, 8, 9, 4, 6, 7);
+    > tbody > tr > td:last-child,  > thead > tr > th:last-child {
+      color: #aaa;
+    }
+}
+
+table._TransactionAndRulesTable {
   td ._field_rules {
     * {
       font-weight: 100;
@@ -183,7 +185,7 @@ $table-stripe-backgroud: #f8f8f8;
       color: #bbb;
     }
     &._not_empty {
-      background-color: #bbb;
+      background-color: #ddd;
       color: white;
     }
   }
@@ -409,20 +411,25 @@ div._TransactionHUD {
   @include popup-container();
   padding: 8px;
   margin-top: -8px;
-  > ._hudcontent:not(._TransactionEdit) > ._body > table > tbody > tr {
-    > td, > td > ._field > div > ._content {
-      margin-top: 0px;
-      margin-bottom: 0px;
-      padding-top: 0px;
-      padding-bottom: 0px;
-      font-size: 13px;
+  > ._TransactionReadOnly > ._body > div > table {
+    border-collapse: collapse;
+  }
+  > ._TransactionReadOnly > ._body > div > table > tbody > tr {
+    border: 0px!important;
+    margin-top: 0px!important;
+    margin-bottom: 0px!important;
+    padding-top: 0px!important;
+    padding-bottom: 0px!important;
+    > td, > td > ._field > div > ._content, td > ._field > ._content {
+      margin-top: 0px!important;
+      margin-bottom: 0px!important;
+      padding-top: 0px!important;
+      padding-bottom: 0px!important;
+      border: 0px!important;
     }
   }
   > ._hudcontent {
     @include popup-content();
-    td {
-      white-space: nowrap;
-    }
     width: auto;
     min-width: 700px;
     position: relative;
@@ -456,20 +463,13 @@ div._TransactionHUD {
         font-weight: 100;
         margin-left: 6px;
       }
-      > table {
+      > div > table {
         margin-top: 16px;
         color: #444;
         width: 100%;
         font-size: 13px;
         > thead > tr > th {
           border-bottom: 1px solid #888;
-        }
-        > tbody, > tfoot {
-          > tr {
-            > td:nth-child(1), > td:nth-child(3), > td:nth-child(4) {
-              text-align: right;
-            }
-          }
         }
         > tfoot > tr {
           > td {

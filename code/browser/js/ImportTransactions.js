@@ -1,4 +1,5 @@
 var ImportTransactions_MANUAL_IMPORT_TIME_RESOLUTION = 60 * 60 * 1000;
+var ImportTransactionsInstance;
 
 class ImportTransactions extends Observable {
 
@@ -6,10 +7,11 @@ class ImportTransactions extends Observable {
     super();
     this._view = new ImportTransactionsView (undefined, undefined, variance);
     this._view .addObserver (this, this._onViewChange);
-    this._accounts         = accounts;
-    this._transactions     = new Model ('transactions');
-    this._importRulesModel = new ImportRulesModel();
-    this._variance         = variance;
+    this._accounts             = accounts;
+    this._transactions         = new Model ('transactions');
+    this._importRulesModel     = new ImportRulesModel();
+    this._variance             = variance;
+    ImportTransactionsInstance = this;
   }
 
   delete() {
@@ -28,11 +30,16 @@ class ImportTransactions extends Observable {
   *addHtml (toHtml) {
     yield* this._view .addHtml (toHtml);
     this._view .addText ('_import_status', 'Drag banking files here to import them ...');
-    yield* this._importRulesModel .find();
+    yield* this .getModelData();
     this._lastImport = new ImportBatchTable (this);
     this._attention  = new NeedsAttentionTable (this);
     yield* this._view .addTable (this._attention);
     yield* this._view .addTable (this._lastImport);
+  }
+
+  *getModelData() {
+    if (! this._importRulesModel .entriesHaveBeenFound())
+      yield* this._importRulesModel .find();
   }
 
   *_importFile (file) {
@@ -92,15 +99,24 @@ class ImportTransactions extends Observable {
 }
 
 class TransactionAndRulesTable extends TransactionTable {
-
-  constructor (query, title, parent, nameSuffix, columns, view) {
-    var name    = '_ImportTransactionsTable' + (nameSuffix? ' ' + nameSuffix: '');
-    var sort    = (a,b) => {return a .date < b .date? -1: a .date == b .date? 0: 1};
-    var options = {};
-    var columns = columns || ['rules', 'date','payee','debit','credit','account','category','description'];
-    super (name, query, sort, options, columns, parent ._accounts, parent ._variance,
-      view || new ImportedTransactionTableView (name, columns, options, parent ._accounts, parent ._variance, e => {this._toggleRule (e)}));
+  constructor (
+    query,
+    title,
+    parent      = ImportTransactionsInstance,
+    name        = '_ImportTransactionsTable',
+    columns     = ['rules', 'date','payee','debit','credit','account','category','description'],
+    view,
+    options     = {}
+  )
+  {
+    console.assert(parent);
+    name = '_TransactionAndRulesTable ' + name;
+    let sort = (a,b) => {return a .date < b .date? -1: a .date == b .date? 0: 1};
+    if (! view)
+      view = new ImportedTransactionTableView (name, columns, options, parent ._accounts, parent ._variance, e => {this._toggleRule (e)});
+    super (name, query, sort, options, columns, parent ._accounts, parent ._variance, view);
     this._title            = title;
+    this._hasTitle         = title != null;
     this._importRulesModel = parent ._importRulesModel;
     this._importRules      = new Map();
     this._importRulesModelObserver = this._importRulesModel .addObserver (this, this._onRulesModelChange);
@@ -162,6 +178,7 @@ class TransactionAndRulesTable extends TransactionTable {
   }
 
   *_getModelData() {
+    yield* this._parent .getModelData();
     return (yield* super._getModelData()) .map (t => {
       this._updateModelData (t);
       return t;
@@ -169,7 +186,8 @@ class TransactionAndRulesTable extends TransactionTable {
   }
 
   _setTitle() {
-    this._view .updateText ('_title', this._title);
+    if (this._hasTitle)
+      this._view .updateText ('_title', this._title);
   }
 
   _toggleRule (id) {
@@ -196,7 +214,8 @@ class TransactionAndRulesTable extends TransactionTable {
 
   *addHtml (toHtml) {
     this._view .addHtml (toHtml);
-    this._view .addText ('_title', this._title);
+    if (this._hasTitle)
+      this._view .addText ('_title', this._title);
     yield* super .addHtml (toHtml);
   }
 
@@ -282,7 +301,7 @@ class ImportBatchTable extends TransactionAndRulesTable {
 class NeedsAttentionTable extends TransactionAndRulesTable {
   constructor (parent) {
     var nameSuffix = '_needsAttention';
-    var name    = '_ImportTransactionsTable' + (nameSuffix? ' ' + nameSuffix: '');
+    var name    = '_ImportTransactionsTable _TransactionAndRulesTable' + (nameSuffix? ' ' + nameSuffix: '');
     var query = {$or: [{category: null}, {category: ''}, {description: {$regex: '[?]\s*$'}}], $options: {updateDoesNotRemove: true}};
     var title = 'Transactions that Require Attention';
     var columns = ['rules', 'date','payee','debit','credit','account','category','description','importTime'];

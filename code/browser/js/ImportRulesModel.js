@@ -3,8 +3,6 @@ class ImportRulesModel extends Observable {
     super();
     this._model     = new Model ('importRules');
     this._tranModel = new Model ('transactions');
-    this._entries   = new Map();
-    this._rules     = new Map();
     this._model .addObserver (this, this._onModelChange);
   }
 
@@ -56,8 +54,13 @@ class ImportRulesModel extends Observable {
   }
 
   *find() {
-    this._entries .clear();
-    this._rules   .clear();
+    if (!this._entries) {
+      this._entries   = new Map();
+      this._rules     = new Map();
+    } else {
+      this._entries .clear();
+      this._rules   .clear();
+    }
     for (let r of yield* this._model .find()) {
       this._entries .set (r._id, r);
       if (r .type == ImportRulesModelType .PREDICATE)
@@ -71,6 +74,10 @@ class ImportRulesModel extends Observable {
     for (let r of this._rules .values())
       if (r .children)
         r .children .sort ((a,b) => {return this._compare (a,b)})
+  }
+
+  entriesHaveBeenFound() {
+    return this._entries;
   }
 
   *update (id, update, source) {
