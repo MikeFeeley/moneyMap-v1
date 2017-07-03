@@ -41,9 +41,9 @@ function* main() {
     yield* accModel .find ();
 
     // Presenters
+    it = new ImportTransactions (accModel, varModel);
     na = new Navigate (accModel, varModel);
     se = new IndexedScheduleEntry ('_CategoryMenu', '_ScheduleEntry', accModel, varModel);
-    it = new ImportTransactions (accModel, varModel);
     or = new Organize (accModel, varModel);
 
 // this exists for changing budgets ... will redo soon
