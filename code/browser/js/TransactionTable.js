@@ -39,7 +39,7 @@ class TransactionTable extends Table {
     this._view  .delete();
     this._accounts                                   .deleteObserver (this._accountsObserver);
     this._variance .getBudget() .getSchedulesModel() .deleteObserver (this._schedulesObserver);
-  }
+  }  
 
   _resetIfChanged (eventType, doc, arg, fieldName) {
     if (eventType == ModelEvent .UPDATE && arg .name)

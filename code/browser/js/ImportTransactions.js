@@ -109,7 +109,6 @@ class TransactionAndRulesTable extends TransactionTable {
     options     = {}
   )
   {
-    console.assert(parent);
     name = '_TransactionAndRulesTable ' + name;
     let sort = (a,b) => {return a .date < b .date? -1: a .date == b .date? 0: 1};
     if (! view)

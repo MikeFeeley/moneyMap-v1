@@ -64,12 +64,12 @@ class ImportRules extends TuplePresenter {
           return c .type == ImportRulesModelType .SPLIT && (eventType != ImportRulesViewEvent .REMOVE || c._id != arg)
         })
         var amounts = splits .map (s => {
-            return ['debit', 'credit'] .reduce ((r,a) => {
-              var f = this._view._getField (s._id, a);
-              var v = eventType == ImportRulesViewEvent .UPDATE && s._id == arg .id? arg .value: f .hasError()? f .get(): s [a]
-              return r? r: v;
-            }, '')
-          })
+          return ['debit', 'credit'] .reduce ((r,a) => {
+            var f = this._view._getField (s._id, a);
+            var v = eventType == ImportRulesViewEvent .UPDATE && s._id == arg .id? arg .value: f .hasError()? f .get(): s [a]
+            return r? r: v;
+          }, '')
+        })
         var [isOkay, errMessage] = this._isSplitValid (amounts);
         if (!isOkay) {
           if (eventType == ImportRulesViewEvent .UPDATE)
@@ -128,6 +128,8 @@ class ImportRules extends TuplePresenter {
   }
 
   _isSplitValid (amounts) {
+    if (amounts .length == 0)
+      return [true];
     var hasRemaining;
     var hasDuplicateRemaining
     var hasPercent;

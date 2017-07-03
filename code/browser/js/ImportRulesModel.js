@@ -77,7 +77,7 @@ class ImportRulesModel extends Observable {
   }
 
   entriesHaveBeenFound() {
-    return this._entries;
+    return this._entries != null;
   }
 
   *update (id, update, source) {

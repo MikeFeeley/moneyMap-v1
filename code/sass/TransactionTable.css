@@ -94,14 +94,14 @@ $table-stripe-backgroud: #f8f8f8;
   @include transaction-table-base ($head-font, $body-font, $height);
   > tbody {
     > tr._group {
-      $group-border-color: #ccc;
-      $group-border: 1px solid $group-border-color;
+      $group-border-color: #ddd;
+      $group-border: 2px solid $group-border-color;
       & > td:last-child {
         border-right: $group-border;
       }
       &._leader {
         > td:first-child {border-left: 2px solid $group-border-color};
-        border-top:  $group-border;
+        > td {border-top:  $group-border}
         > td {
           &:nth-child(#{$gx0}), &:nth-child(#{$gx1}), &:nth-child(#{$gx2}), &:nth-child(#{$gx3}) {
             border-bottom: $group-border;
