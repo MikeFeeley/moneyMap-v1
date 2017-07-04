@@ -7,7 +7,8 @@ class Observable {
     return o;
   }
   deleteObserver (o) {
-    this._observers .delete (o);
+    if (this._observers)
+      this._observers .delete (o);
   }
   deleteObservers() {
     this._observers = undefined;
