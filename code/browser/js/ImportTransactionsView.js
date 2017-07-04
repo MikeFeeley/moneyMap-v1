@@ -43,19 +43,31 @@ class ImportRulesField extends ViewLabel {
       value => {}
     ))
   }
+  _setState() {
+    if (this._value) {
+      this._html .addClass ('_not_empty');
+      if (this._ruleIsShowing)
+        this._html .addClass ('_showing');
+      else
+        this._html .removeClass ('_showing');
+    } else {
+      this._html .removeClass ('_not_empty');
+      this._html .removeClass ('_showing');
+    }
+  }
   _addHtml (value) {
     super._addHtml (value);
+    this._ruleIsShowing = false;
     this._label .click (e => {
       var tuple = $(e .currentTarget) .closest ('._tuple');
       this._view._toggleRule (tuple .data ('id'));
+      this._ruleIsShowing = ! this._ruleIsShowing;
+      this._setState();
     });
   }
   set (value) {
     super .set (value);
-    if (value)
-      this._html .addClass ('_not_empty');
-    else
-      this._html .removeClass ('_not_empty');
+    this._setState();
   }
 }
 

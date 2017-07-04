@@ -184,8 +184,12 @@ table._TransactionAndRulesTable {
     &:not(._not_empty) {
       color: #bbb;
     }
-    &._not_empty {
+    &._not_empty:not(._showing) {
       background-color: #ddd;
+      color: white;
+    }
+    &._showing {
+      background-color: #bbb;
       color: white;
     }
   }
@@ -266,7 +270,7 @@ table._TransactionAndRulesTable {
           padding: 0px 2px;
         }
         > td:not(:last-child):not(:first-child) {
-          border-right: 1px dotted #bbb;
+          border-right: 1px dotted #ddd;
         }
         > td:last-child  {border-right: 1px solid transparent}
         > td:first-child {border-left:  2px solid transparent; border-right: 1px solid transparent}
@@ -278,7 +282,7 @@ table._TransactionAndRulesTable {
       margin-right: -28px;
       tr:nth-child(2), tr:nth-child(3) {
         > td:nth-child(1) ._content
-          {width: 8px}
+          {width: 11px}
         > td:nth-child(2) ._content
           {width: 48px;}
         > td:nth-child(3) ._content
@@ -286,7 +290,7 @@ table._TransactionAndRulesTable {
         > td:nth-child(8) ._content
           {width: 220px;}
         > td:nth-child(4) ._content, > td:nth-child(5) ._content
-          {width: 72px;}
+          {width: 73px;}
         > td:nth-child(6) ._content
           {width: 96px}
         > td:nth-child(7) > ._content
@@ -303,7 +307,7 @@ table._TransactionAndRulesTable {
       > tbody > tr:nth-child(2) {
         /* almost same as above ... consolidate later */
         > td:nth-child(1) ._content
-          {width: 8px}
+          {width: 11px}
         > td:nth-child(2) ._content
           {width: 48px;}
         > td:nth-child(3) ._content
@@ -328,7 +332,7 @@ table._TransactionAndRulesTable {
       > tbody > tr {
         /* almost same as above ... consolidate later */
         > td:nth-child(1) ._content
-          {width: 8px}
+          {width: 11px}
         > td:nth-child(2) ._content
           {width: 48px;}
         > td:nth-child(3) ._content
@@ -353,7 +357,7 @@ table._TransactionAndRulesTable {
       > tbody > tr {
         /* almost same as above ... consolidate later */
         > td:nth-child(1) ._content
-          {width: 8px}
+          {width: 11px}
         > td:nth-child(2) ._content
           {width: 48px;}
         > td:nth-child(3) ._content
