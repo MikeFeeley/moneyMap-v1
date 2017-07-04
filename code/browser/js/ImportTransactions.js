@@ -33,7 +33,9 @@ class ImportTransactions extends Observable {
     yield* this .getModelData();
     this._lastImport = new ImportBatchTable (this);
     this._attention  = new NeedsAttentionTable (this);
+    if (!this._view || ! this._view .addTable) {console.log('DEBUG', this, this._view)}
     yield* this._view .addTable (this._attention);
+    if (!this._view || ! this._view .addTable) {console.log('DEBUG', this, this._view)}
     yield* this._view .addTable (this._lastImport);
   }
 

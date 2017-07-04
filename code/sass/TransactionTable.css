@@ -1,6 +1,7 @@
 @import 'lib';
 
 $table-stripe-backgroud: #f8f8f8;
+$table-stripe-backgroud-occluded: rgba(248,248,248,.1);
 
 @mixin transaction-table-base ($head-font, $body-font, $height) {
   position: relative;
@@ -52,7 +53,7 @@ $table-stripe-backgroud: #f8f8f8;
       font-size: $body-font;
     }
     > tr:nth-child(even) {
-      background: $table-stripe-backgroud;
+      background: $table-stripe-backgroud
     }
     > tr {
       > td {
@@ -412,6 +413,17 @@ table._TransactionAndRulesTable {
 }
 
 div._TransactionHUD {
+  &._occluded {
+    * {color: #bbb!important};
+    > div {
+      background-color: rgba(255,255,255,.1)!important;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+    tr:nth-child(even) {
+      background: $table-stripe-backgroud-occluded!important;
+    }
+  }
   @include popup-container();
   padding: 8px;
   margin-top: -8px;
