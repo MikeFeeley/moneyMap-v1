@@ -240,7 +240,12 @@ class Navigate {
             this._addMonthsGraph (arg .name, arg .view, [arg .id], true, arg .position, arg .html, true, iy, sel && sel .addCats);
         }
       } else if (arg .name == '_budgetHistoryGraph' && arg .id .length >= 1 && arg .id [0]) {
-        this._addHistoryGraph ([] .concat (arg .id), true, arg .position, arg .view, undefined, arg .html);
+        if (arg .altClick) {
+          let activeId = arg .id .find (i => {let cat= this._categories .get (i); return cat && cat .budgets .includes (this._budget .getId())})
+          if (activeId)
+            BudgetProgressHUD .show (activeId, arg .html, arg .position, this._accounts, this._variance, arg .date && arg .date .end);
+        } else
+          this._addHistoryGraph ([] .concat (arg .id), true, arg .position, arg .view, undefined, arg .html);
       }
 
     } else if (eventType == NavigateViewEvent .BUDGET_GRAPH_TITLE_CLICK && arg .id) {
@@ -272,8 +277,14 @@ class Navigate {
           }
         } else
           this._addMonthsTable (arg .name, arg .view, [arg .id], arg .date, true, true, arg .position, arg .html);
-      } else if (arg .name == '_budgetHistoryTable' && arg .id .length >= 1 && arg .id [0])
-        this._addHistoryTable ([] .concat (arg .id), arg .date, true, true, arg .position, arg .view, undefined, arg .html);
+      } else if (arg .name == '_budgetHistoryTable' && arg .id .length >= 1 && arg .id [0]) {
+        if (arg .altClick) {
+          let activeId = arg .id .find (i => {let cat= this._categories .get (i); return cat && cat .budgets .includes (this._budget .getId())})
+          if (activeId)
+            BudgetProgressHUD .show (activeId, arg .html, arg .position, this._accounts, this._variance, arg .date && arg .date .end);
+        } else
+          this._addHistoryTable ([] .concat (arg .id), arg .date, true, true, arg .position, arg .view, undefined, arg .html);
+      }
 
     } else if (eventType == NavigateViewEvent .BUDGET_TABLE_TITLE_CLICK && arg .name == '_budgetHistoryTable') {
       let name, title;

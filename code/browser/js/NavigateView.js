@@ -471,6 +471,7 @@ class NavigateView extends Observable  {
               label:      labels   [element [0] ._index],
               labelIndex: element [0] ._index,
               data:       data,
+              date:       dataset .dates && dataset .dates [element [0] ._index + startCol],
               position:   position,
               html:       container .closest ('div:not(._popup)'),
               altClick:   e .webkitForce > 1 || e .altKey,
