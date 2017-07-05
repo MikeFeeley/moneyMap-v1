@@ -1204,12 +1204,10 @@ class Navigate {
           name: parent .name,
           rows: Array .from (cats [i] .values()) .sort ((a,b) => {return a.sort==null? 1: b.sort==null? -1: a.sort<b.sort? -1: 1}) .map (cat => {
             var ids = Array .from (budgetAmounts .reduce ((s,ba) => {
-              return ba .reduce ((s,g) => {
-                return g .amounts .reduce ((s,a) => {
-                  if (a .name == cat .name)
-                    s .add (a .id);
-                  return s;
-                }, s)
+              return ba [i] .amounts .reduce ((s,a) => {
+                if (a .name == cat .name)
+                  s .add (a .id);
+                return s;
               }, s)
             }, new Set()));
             return {
