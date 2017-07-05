@@ -755,7 +755,7 @@ class NavigateView extends Observable  {
     }
   }
 
-  addHistoryTable (dataset, skipHead, skipFoot, popup, position, toHtml, onClose) {
+  addHistoryTable (dataset, skipHead, skipFoot, popup, position, onClose, toHtml) {
     return this .addBudgetTable ('_budgetHistoryTable', dataset, skipHead, skipFoot, popup, position, toHtml, onClose, false);
   }
 
@@ -795,7 +795,7 @@ class NavigateView extends Observable  {
             return a + (total [i] || 0)
           })
         }, []);
-        var curBal = dataset .startBal || 0;
+        var curBal = ([] .concat (dataset .startBal)) [0] || 0;
         var balance = totals .map (a => {curBal += a; return curBal});
         var grandTotal = totals .reduce ((s,a) => {return s + a}, 0);
         totals = totals .concat (totalRows? [grandTotal / dataset .months, grandTotal]: []);

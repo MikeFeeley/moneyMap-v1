@@ -87,6 +87,8 @@ class Navigate {
     let lv = this._perspectiveView .addSubHeading   ('', '', sc);
     this._perspectiveView .addSubHeading            ('&ndash;', '', sc);
     let rv = this._perspectiveView .addSubHeading   ('', '', sc);
+    this._historySliderLeft  = undefined;
+    this._historySliderRight = undefined;
     let ds = this._getHistoryData                   ();
     this._addHistorySlider (
       this._perspectiveView, ds, sc, lv, rv,
@@ -103,6 +105,8 @@ class Navigate {
 
   *_anwh() {
     yield* this._getModelValues();
+    this._netWorthSliderLeft  = undefined;
+    this._netWorthSliderRight = undefined;
     var ds = this._getNetWorthData ();
     this._clearUpdatersForView                   (this._newWorthView);
     let sc = this._netWorthView .addContainer    ('_sliderHeader');
@@ -236,7 +240,7 @@ class Navigate {
             this._addMonthsGraph (arg .name, arg .view, [arg .id], true, arg .position, arg .html, true, iy, sel && sel .addCats);
         }
       } else if (arg .name == '_budgetHistoryGraph' && arg .id .length >= 1 && arg .id [0]) {
-        this._addHistoryGraph ([] .concat (arg .id), true, arg .position, arg .view);
+        this._addHistoryGraph ([] .concat (arg .id), true, arg .position, arg .view, undefined, arg .html);
       }
 
     } else if (eventType == NavigateViewEvent .BUDGET_GRAPH_TITLE_CLICK && arg .id) {
@@ -269,7 +273,7 @@ class Navigate {
         } else
           this._addMonthsTable (arg .name, arg .view, [arg .id], arg .date, true, true, arg .position, arg .html);
       } else if (arg .name == '_budgetHistoryTable' && arg .id .length >= 1 && arg .id [0])
-        this._addHistoryTable ([] .concat (arg .id), arg .date, true, true, arg .position, arg .view);
+        this._addHistoryTable ([] .concat (arg .id), arg .date, true, true, arg .position, arg .view, undefined, arg .html);
 
     } else if (eventType == NavigateViewEvent .BUDGET_TABLE_TITLE_CLICK && arg .name == '_budgetHistoryTable') {
       let name, title;
@@ -940,12 +944,18 @@ class Navigate {
       else
         ovr = 0;
       let stc = this._budget .getStartCashBalance();
-      if (stc < -50 || stc > 50)
+      if (stc < -50 || stc > 50) {
+        let tt =
+            'You will end the year with a ' +
+            Types .moneyDZ .toString (Math .abs (stc + una + ovr)) +
+            ' cash-flow ' +
+            (stc + una + ovr < 0? ' deficit.': stc + una + ovr == 0? 'balance.': 'surplus.');
         list .push ({
           name:    'Starting Year Cash',
           amount:  stc,
-          tooltip: 'Projecting that you will end the year with ' + Types .moneyDZ .toString (stc + una + ovr) + '.'
+          tooltip: tt
         });
+      }
       list .push ({name: 'Net Savings',          amount: sav + una + ovr + stc});
       list .push ({name: 'Savings Rate',         percent: (sav + una + ovr + stc) * 1.0 / (-inc)});
       updateView (list);
@@ -1180,11 +1190,10 @@ class Navigate {
         }, new Map());
     });
     // compute return values
-    let result = this._filterHistoryBySlider ({
+    let result = {
       cols:      budgets .map (b => {return b .name}),
       dates:     budgets .map (b => {return {start: b .start, end: b .end}}),
       highlight: this._historicBudgets .length,
-      startBal:  (this._historicBudgets .sort ((a,b) => {return a.start<b.start? -1: 1}) [0] || {}) .startCashBalance || 0,
       groups: parentIds .map ((pid, i) => {
         for (let ba of budgetAmounts) {
           var parent = ba .find (as => {return as .id == pid && as .name});
@@ -1223,7 +1232,15 @@ class Navigate {
           })
         }
       })
-    })
+    }
+    result .startBal = [this._historicBudgets [0] .startCashBalance];
+    for (let i = 1; i < result .cols .length; i++)
+      result .startBal [i] = result .startBal [i-1] + result .groups .reduce ((t,g) => {
+        return t + g .rows .reduce ((t,r) => {
+          return t + r .amounts [i-1] .value * (r .isCredit? 1: -1)
+        }, 0)
+      }, 0)
+    result = this._filterHistoryBySlider (result);
     // filter by selected date range if any
     if (date) {
       let sc = result .dates .findIndex (r => {return r .start == date .start && r .end == date .end});
@@ -1250,8 +1267,9 @@ class Navigate {
   _filterHistoryBySlider (dataset) {
     let first = this._historySliderLeft || 0;
     let last  = this._historySliderRight? this._historySliderRight + 1: dataset .cols .length;
-    dataset .cols  = dataset .cols .slice (first, last);
-    dataset .dates = dataset .dates .slice (first, last);
+    dataset .cols     = dataset .cols .slice  (first, last);
+    dataset .dates    = dataset .dates .slice (first, last);
+    dataset .startBal = dataset .startBal .slice (first, last);
     for (let g of dataset .groups)
       for (let r of g .rows)
         r .amounts = r .amounts .slice (first, last);
@@ -1272,9 +1290,10 @@ class Navigate {
         this._historySliderRight = Math .floor (values [1]);
         leftValue  .text (dataset .cols [this._historySliderLeft]);
         rightValue .text (dataset .cols [this._historySliderRight]);
-        let rds = Object .assign ({}, dataset);
-        rds .cols  = rds .cols . slice (this._historySliderLeft, this._historySliderRight + 1);
-        rds .dates = rds .dates .slice (this._historySliderLeft, this._historySliderRight + 1);
+        let rds       = Object .assign ({}, dataset);
+        rds .cols     = rds .cols . slice (this._historySliderLeft, this._historySliderRight + 1);
+        rds .dates    = rds .dates .slice (this._historySliderLeft, this._historySliderRight + 1);
+        rds .startBal = rds .startBal .slice (this._historySliderLeft, this._historySliderRight + 1);
         rds .groups = rds .groups .map (g => {
           g = Object .assign ({}, g);
           g .rows = g .rows .map (r => {
