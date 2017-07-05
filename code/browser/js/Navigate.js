@@ -127,6 +127,7 @@ class Navigate {
     var modelName = model .constructor .name;
     let skip =
       (eventType == ModelEvent .INSERT && modelName == 'SchedulesModel' && doc .category) ||
+      (eventType == ModelEvent .INSERT && modelName == 'ActualsModel') ||
       (eventType == ModelEvent .UPDATE && modelName == 'SchedulesModel' && arg && arg .sort != null);
     if (skip)
       return;
@@ -514,7 +515,9 @@ class Navigate {
         getUpdate: (eventType, model, ids) => {
           let needReplace = {needReplace: true};
           if (this._getModels (type) .includes (model)) {
-            if (eventType == ModelEvent .UPDATE && ids .length == 1) {
+            if (eventType == ModelEvent .UPDATE && ids .length == 0)
+              return
+            else if (eventType == ModelEvent .UPDATE && ids .length == 1) {
               let eid = ids [0];
               let aff = data .filter (e => {
                 let i =  e. id .split ('_') .slice (-1) [0];

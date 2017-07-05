@@ -264,7 +264,7 @@ div._budgetHistoryTables {
   position: relative;
 }
 
-div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._progressGraphs {
+div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._progressGraph {
   position: relative;
   &._popup, & > ._popup {
     @include popup-container();
