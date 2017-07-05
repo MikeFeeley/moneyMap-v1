@@ -227,7 +227,7 @@ class NavigateView extends Observable  {
   addProgressGraph (to, popup, position, onClose) {
     if (!this._progressGraphs) {
       this._progressGraphs = $('<div>', {class: '_progressGraphs'}) .appendTo (this._content);
-      this._showButton     = $('<button>', {class: '_sidebar_right_show_button', click: () => {
+      this._showButton     = $('<button>', {class: '_sidebar_right_show_button', click: e => {
         this._progressSidebar .show();
         this._showButton      .hide();
         e .stopPropagation();

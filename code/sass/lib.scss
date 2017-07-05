@@ -150,6 +150,7 @@ $left-margin-sep: 20px;
   font-weight: 100;
   color: #ddd;
   cursor:pointer;
+  z-index: 9999;
 }
 
 @mixin sidebar-right-sidebar($min-main-width, $sidebar-width) {
