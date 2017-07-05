@@ -243,7 +243,7 @@ class Navigate {
         if (arg .altClick) {
           let activeId = arg .id .find (i => {let cat= this._categories .get (i); return cat && cat .budgets .includes (this._budget .getId())})
           if (activeId && arg .date && arg .date .end && arg .date .end > this._budget .getStartDate())
-            BudgetProgressHUD .show (activeId, arg .html, arg .position, this._accounts, this._variance, arg .date .end);
+            BudgetProgressHUD .show (activeId, arg .html, arg .position, this._accounts, this._variance);
         } else
           this._addHistoryGraph ([] .concat (arg .id), true, arg .position, arg .view, undefined, arg .html);
       }
@@ -281,7 +281,7 @@ class Navigate {
         if (arg .altClick) {
           let activeId = arg .id .find (i => {let cat= this._categories .get (i); return cat && cat .budgets .includes (this._budget .getId())})
           if (activeId && arg .date && arg .date .end && arg .date .end > this._budget .getStartDate())
-            BudgetProgressHUD .show (activeId, arg .html, arg .position, this._accounts, this._variance, arg .date .end);
+            BudgetProgressHUD .show (activeId, arg .html, arg .position, this._accounts, this._variance);
         } else
           this._addHistoryTable ([] .concat (arg .id), arg .date, true, true, arg .position, arg .view, undefined, arg .html);
       }
