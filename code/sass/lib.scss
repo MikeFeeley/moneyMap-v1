@@ -46,6 +46,8 @@ $left-margin-sep: 20px;
 @mixin popup-content() {
   padding: 6px;
   background: rgba(255,255,255,.94);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   border-radius: 6px;
   box-shadow: $drop-shadow;
   color: #555;
