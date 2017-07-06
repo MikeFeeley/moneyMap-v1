@@ -48,6 +48,7 @@ class CategoryPicker {
         row .push (col [i] || {name: ''});
       this._view .addRow (row);
     }
+    this._view .updateHeight();
   }
 
   _select (id) {
@@ -55,7 +56,6 @@ class CategoryPicker {
       this._show                      (id);
       this._budgetProgressHUD .update (id);
       this._onSelect                  (id);
-      this._view .updateHeight();
     }
   }
 
