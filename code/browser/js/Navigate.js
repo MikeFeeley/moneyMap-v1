@@ -258,8 +258,12 @@ class Navigate {
           let iy  = !sel || sel .isYear === undefined || sel .isYear;
           this._addMonthsGraph (arg .name, arg .view, [parent._id], true, arg .position, arg .html, im, iy, sel && sel .addCats);
         }
-      } else
-        BudgetProgressHUD .show (arg .id .split ('_') .slice (-1) [0], arg .html, arg .position, this._accounts, this._variance);
+      } else {
+        if (Array .isArray (arg .id))
+          arg .id = arg .id .find (i => {let cat = this._categories .get(i); return cat && cat .budgets .includes (this._budget .getId())});
+        if (arg .id)
+          BudgetProgressHUD .show (arg .id .split ('_') .slice (-1) [0], arg .html, arg .position, this._accounts, this._variance);
+      }
 
     } else if (eventType == NavigateViewEvent .BUDGET_TABLE_CLICK && arg .id) {
       /* Monthly or History Table (Budget or Actual) */
@@ -1013,11 +1017,12 @@ class Navigate {
     let update = () => {
       let endOfLastMonth = Types .date .monthEnd (Types .date .addMonthStart (Types .date .today(), -1))
       let toLastMonthVar = this._variance .getVarianceList ([this._budget .getExpenseCategory()], {end: endOfLastMonth});
-      let toTodayVar     = this._variance .getVarianceList ([this._budget .getExpenseCategory()], {end: Types .date .today()})
+      let toTodayVar     = this._variance .getVarianceList ([this._budget .getExpenseCategory()], {end: Types .date .today()});
+      let savings        = toTodayVar .map (v => {return {cat: v .cat, amount: v .prev + (v .cur < 0? v .cur: 0)}});
       let futureVar      = this._variance .getVarianceList ([this._budget .getExpenseCategory()], {start: Types .date .addMonthStart (Types .date .today(), 1)});
       bigPictureUpdate (toTodayVar);
       issuesUpdate     (toLastMonthVar);
-      savingsUpdate    (toTodayVar);
+      savingsUpdate    (savings);
       futureUpdate     (futureVar);
     }
     update();
@@ -1206,13 +1211,18 @@ class Navigate {
       dates:     budgets .map (b => {return {start: b .start, end: b .end}}),
       highlight: this._historicBudgets .length,
       groups: parentIds .map ((pid, i) => {
+        let parent = new Map();
+
+// XXX PARENT is not real parent when there are multple different ones with same name in different years
+
         for (let ba of budgetAmounts) {
-          var parent = ba .find (as => {return as .id == pid && as .name});
-          if (parent)
-            break;
+          let p = (ba .find (as => {return as .id == pid && as .name}));
+          if (p)
+            parent .set (p .id, p .name);
         }
         return {
-          name: parent .name,
+          name: Array .from (parent .values()) [0],
+          id:   Array .from (parent .keys()),
           rows: Array .from (cats [i] .values()) .sort ((a,b) => {return a.sort==null? 1: b.sort==null? -1: a.sort<b.sort? -1: 1}) .map (cat => {
             var ids = Array .from (budgetAmounts .reduce ((s,ba) => {
               return ba [i] .amounts .reduce ((s,a) => {

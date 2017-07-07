@@ -439,11 +439,12 @@ class VarianceModel extends Observable {
   }
 
   /**
-   * Helper for getVarialceList (Below)
+   * Helper for getVarianceList (Below)
    */
   _getVarianceListByPeriod (cats, period, includeYear) {
     let vs = []
     for (let cat of (cats && ([] .concat (cats)) || [])) {
+      let children = this._getVarianceListByPeriod (cat .children, period);
       if (this._budget .getCategories() .getType (cat) != ScheduleType .NONE) {
         let amount   = this._getAmountUpDown (cat, period) .amount;
         let variance = ['prev', 'cur'] .reduce ((o,per) => {
@@ -455,9 +456,14 @@ class VarianceModel extends Observable {
         let a = variance .prev + variance .cur;
         if (amount .year)
           a = Math .max (0, a - this._budget .getAmount (cat, period .cur .end) .year .allocated);
-        vs .push ({cat: cat, amount: a, prev: variance .prev, cur: variance .cur});
+        let ch = children .reduce ((t,c) => {
+          t .prev   += c .prev;
+          t .cur    += c .cur;
+          return t;
+        }, {amount: 0, prev: 0, cur: 0});
+        vs .push ({cat: cat, amount: a - ch .amount, prev: variance .prev - ch .prev, cur: variance .cur - ch .cur});
       }
-      vs = vs .concat (this._getVarianceListByPeriod (cat .children, period));
+      vs = vs .concat (children);
     }
     return vs;
   }
