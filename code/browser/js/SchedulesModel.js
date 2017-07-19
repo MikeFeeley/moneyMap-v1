@@ -227,9 +227,12 @@ class SchedulesModel extends Observable {
           if (inRange)
             am += (isCredit? -1: 1) * inRange * (sch .amount || 0);
           else if (getOtherMonths) {
+            let fyStart = Types .dateFY .getFYStart (start, this._budget .getStartDate(), this._budget .getEndDate());
+            let fyEnd   = Types .dateFY .getFYEnd   (start, this._budget .getStartDate(), this._budget .getEndDate());
             let inRange = Types .dateMYorYear .inRange (
               sch .start, sch .end, sch .repeat, sch .limit,
-              this._budget .getStartDate(), this._budget .getEndDate(), this._budget .getStartDate(), this._budget .getEndDate()
+              fyStart, fyEnd,
+              this._budget .getStartDate(), this._budget .getEndDate()
             );
             if (inRange)
               om += (isCredit? -1: 1) * inRange * (sch .amount || 0);

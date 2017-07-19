@@ -74,6 +74,12 @@ class FiscalYearDateType extends FieldType {
       return s + '/' + e .slice (i);
     }
   }
+  getFYStart (d, bs, be) {
+    return this._dateType ._yearStart (this._fiscalYear (d, bs, be), bs, be)
+  }
+  getFYEnd (d, bs, be) {
+    return this._dateType ._yearEnd (this._fiscalYear (d, bs, be), bs, be)
+  }
 }
 
 class DateType extends FieldType {
@@ -225,6 +231,13 @@ class DateType extends FieldType {
   isMonth (d) {
     return d != '' && d > 9999;
   }
+
+  /**
+   * Determine whether date is in range of a budget schedule
+   *  st0, en0, rp, lm: budget schedule range description
+   *  st1, en1:         date range to test against schedule
+   *  stY, enY:         current fiscal year start and end
+   */
   inRange (st0, en0, rp, lm, st1, en1, stY, enY) {
     if (this .isBlank (st0))
       return 0;

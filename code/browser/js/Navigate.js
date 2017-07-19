@@ -381,7 +381,9 @@ class Navigate {
             }
           });
           if (dates .length == 12 || dates .length == 1) {
-            let yrAmount = this._budget .getAmount (cat, this._budget .getStartDate(), this._budget .getEndDate());
+            let st = Types .dateFY .getFYStart (dates[0] .start, this._budget .getStartDate(), this._budget .getEndDate());
+            let en = Types .dateFY .getFYEnd   (dates[0] .start, this._budget .getStartDate(), this._budget .getEndDate());
+            let yrAmount = this._budget .getAmount (cat, st, en);
             amounts .push ({
               id:    cat._id,
               value: (yrAmount .year && yrAmount .year .amount || 0) * (isCredit? -1: 1)
@@ -709,7 +711,7 @@ class Navigate {
   /**
    * Add TABLE (either budget or actual) showing children of specified root list
    */
-  _addMonthsTable (name, view, ids, dates, skipFoot, popup, position, toHtml, col, title) {
+  _addMonthsTable (name, view, ids, dates, skipFoot, popup, position, toHtml, col, title, includeMonths, includeYears) {
     var dataset = this._getMonthsData (name .includes ('budget')? NavigateValueType .BUDGET: NavigateValueType .ACTUALS, dates, ids, false);
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       var updater = this._addUpdater (view, (eventType, model, ids) => {
