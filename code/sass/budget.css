@@ -426,7 +426,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
     ._budgetHistoryTable > div > table,
     ._netWorthTable {
       border-collapse: collapse;
-      width: 100%;
+/*      width: 100%;*/
       padding: 0px 4px;
       color: #222;
       > thead, > tbody, > tfoot {
@@ -494,11 +494,13 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
               color: #222;
               font-weight: 400;
               background-color: white;
+              padding-right: 10px;
             }
             &:nth-child(1) {
               border-right: 1px solid #aaa;
             }
             &:not(:first-child) {
+              min-width: 70px;
               text-align: right;
               border-top: 1px dotted #aaa;
               border-bottom: 1px dotted #aaa;
@@ -508,13 +510,12 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
         }
       }
     }
-    > ._netWorthTable > thead > tr > th {
-      font-size: 16px;
+    > ._budgetHistoryTables > div._budgetHistoryTable > div > table {
+      > tbody > tr > td:not(:first-child) {
+        min-width: 80px!important;
+      }
     }
-    > ._budgetHistoryTables > ._budgetHistoryTable > table > tbody > tr > td,
-    > table._netWorthTable > tbody > tr > td {
-      font-size: 11px;
-    }
+
     > ._netWorthGraphContainer {
       position: relative;
       > ._curNetWorth {
@@ -538,7 +539,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
           margin-bottom: 10px;
         }
         > table {
-          width: 100%;
+/*          width: 100%;*/
           border-collapse: collapse;
           tr {
             > td {padding: 2px}
