@@ -54,11 +54,12 @@ class CategoryPickerView extends View {
 
   updateHeight() {
     window .setTimeout(() => {
-      this._placeHolder .height (Math .max(
-        this._placeHolder .height(),
-        this._html        .outerHeight(),
-        this._html        .next ('._BudgetProgressHUD') .outerHeight()
-      ));
+      if (this._placeHolder)
+        this._placeHolder .height (Math .max(
+          this._placeHolder .height(),
+          this._html        .outerHeight(),
+          this._html        .next ('._BudgetProgressHUD') .outerHeight()
+        ));
     })
   }
 }
