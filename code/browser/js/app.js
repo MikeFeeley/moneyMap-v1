@@ -2,6 +2,8 @@ $(document) .ready (() => {
   async (main) ();
 });
 
+class
+
 function* main() {
   Model .setDatabase (__DATABASE__ || 'production');
 
