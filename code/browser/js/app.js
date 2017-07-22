@@ -2,7 +2,34 @@ $(document) .ready (() => {
   async (main) ();
 });
 
-class
+class App {
+  static *main () {
+    let app = new App();
+    app .start();
+  }
+  start() {
+    this._login = new LoginSignup();
+    this._login .addObserver (this, this._loginChange);
+    this._login .login();
+  }
+  _loginChange() {
+    let uid = this._login .getUserId();
+    if (uid)
+      
+    else
+
+    Model .setDatabase (this._login .getUserId());
+    for (model of this._models || [])
+      model .delete();
+    this._budModel = new BudgetModel   ();
+    this._actModel = new ActualsModel  (this._budModel);
+    this._varModel = new VarianceModel (this._budModel, this._actModel);
+    this._accModel = new AccountsModel ();
+    this._models = [this._budModel, this._actModel, this._varModel, this._accModel];
+    this._accounts = this._accModel .find();
+
+  }
+}
 
 function* main() {
   Model .setDatabase (__DATABASE__ || 'production');

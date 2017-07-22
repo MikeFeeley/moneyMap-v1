@@ -1,15 +1,19 @@
-class Configuration extends Observable {
+class User extends Observable {
+
   login() {
     this._notifyObservers (LoginSignupEvent .STATE_CHANGE)
   }
+
+  logout() {
+
+  }
+
   getUserId() {
     return 'production';
   }
-  getConfigId() {
-    return 'production';
-  }
-  logout() {
 
+  getId() {
+    return 'production';
   }
 }
 

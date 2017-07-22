@@ -1,3 +1,0 @@
-class ConfigurationView extends View {
-  
-}

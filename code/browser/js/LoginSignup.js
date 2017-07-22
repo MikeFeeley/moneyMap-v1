@@ -1,3 +1,0 @@
-class LoginSignup extends Observable {
-  
-}

@@ -1,3 +1,0 @@
-class LoginSignupView extends View {
-  
-}
