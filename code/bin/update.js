@@ -22,11 +22,6 @@ function* checkUpdate (collection, id, update) {
     return true;
 }
 
-function checkRemoveInstead (collection, id, update) {
-  // this was proactive garbage collection, but doesn't work with undo: client thinks it updated and so undoes update even if it was a remove
-  return collection == 'categories' && update .budgets && update .budgets .length == 0;
-}
-
 function* updateOne (req, res, next) {
   try {
     if (!req.body.update)

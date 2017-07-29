@@ -121,17 +121,14 @@ var ui = {
         .appendTo (tabs);
       var rightMatter = $('<div>', {class: '_login _nonTab'}) .appendTo (tabs);
       var db = Model .getDatabase();
-      var production  = $('<span>', {text: db=='production'? '': db}) .appendTo (rightMatter);
-      $('<span>', {text: 'login'})  .appendTo (rightMatter);
-      $('<span>', {text: 'signup'}) .appendTo (rightMatter);
       var clickable    = true;
       var pendingClick;
       var tabMap = new Map();
 
       Object.assign (this, {
 
-        addTool (content) {
-          content .insertAfter (rightMatter .children() .get (0));
+        addTool (name, onClick) {
+          $('<div>', {text: name}) .appendTo (rightMatter) .on ('click', onClick);
         },
 
         updateTab (name, addContent) {
@@ -196,13 +193,7 @@ var ui = {
               d .addClass ('background');
           else
             handleClick();
-        },
-
-        selectTab (name) {
-          var tab = tabMap .get (name);
-          console.log ('xxx', tab);  // XXX  maybe
         }
-
       })
     }
   }

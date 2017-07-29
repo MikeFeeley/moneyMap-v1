@@ -54,9 +54,9 @@ router.get('/', function(req, res, next) {
       'NavigateView',
       'Organize',
       'OrganizeView',
-      'LoginSignup',
-      'LoginSignupView',
-      'app'
+      'UserView',
+      'User',
+      'App'
       ],
     jsurls: [],
     csss: [

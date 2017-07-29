@@ -7,20 +7,21 @@ class Model extends Observable {
   /**
    * collectionName
    */
-  constructor (collectionName) {
+  constructor (collectionName, database) {
     super()
     this._ids        = new Set();
     this._groups     = new Map();
-    this._collection = _Collection .getInstanceForModel (collectionName, this);
+    this._collection = _Collection .getInstanceForModel (collectionName, database || _default_database_id);
     this._observer   = this._collection .addObserver (this, this._handleCollectionEvent);
   }
 
   static setDatabase (database) {
-    _db .setDatabase (database);
+    _default_database_id = database;
+    _Collection._resetUndo();
   }
 
   static getDatabase() {
-    return _db .getDatabase();
+    return _default_database_id;
   }
 
   static newUndoGroup() {
@@ -250,6 +251,18 @@ class Model extends Observable {
     return ok;
   }
 
+  static *login (username, password) {
+    return yield* _Collection .login (username, password);
+  }
+
+  static *signup (data) {
+    return yield* _Collection .signup (data);
+  }
+
+  static *updateUser (id, accessCap, update) {
+    return yield* _Collection .updateUser (id, accessCap, update);
+  }
+
   /**
    * Delete this model from collection; stops callbacks.
    */
@@ -275,6 +288,7 @@ var ModelEvent = {
 
 var _db          = new RemoteDBAdaptor();
 var _collections = new Map();
+var _default_database_id;
 var _tid;
 var _undoLog;
 var _redoLog;
@@ -285,10 +299,11 @@ var _redoLog;
  */
 class _Collection extends Observable {
 
-  constructor (name) {
+  constructor (name, database) {
     super();
-    this._name = name;
-    this._docs = new Map();
+    this._name     = name;
+    this._docs     = new Map();
+    this._database = database;
     if (! _tid) {
       _tid     = 1;
       _undoLog = [];
@@ -303,17 +318,13 @@ class _Collection extends Observable {
     }
   }
 
-  static getInstanceForModel (name, model) {
-    var c = _collections.get (name);
-    if (!c) {
-      c = new _Collection (name);
-      _collections.set (name, c);
-    }
-    return c;
+  static getInstanceForModel (name, database) {
+    let cd = _collections .get (name)     || _collections .set (name,     new Map())                        .get (name);
+    return   cd           .get (database) || cd           .set (database, new _Collection (name, database)) .get (database);
   }
 
   *find (query) {
-    var docs = yield* _db .perform (DatabaseOperation .FIND, {collection: this._name, query: query});
+    var docs = yield* _db .perform (DatabaseOperation .FIND, {database: this._database, collection: this._name, query: query});
     if (docs)
       for (let doc of docs)
         this._docs .set (doc._id, doc);
@@ -340,7 +351,7 @@ class _Collection extends Observable {
       var orig = {}
       for (let f in update)
         orig [f] = doc [f];
-      var ok  = yield* _db .perform (DatabaseOperation .UPDATE_ONE, {collection: this._name, id: id, update: update})
+      var ok  = yield* _db .perform (DatabaseOperation .UPDATE_ONE, {database: this._database, collection: this._name, id: id, update: update})
       if (ok) {
         var undo = Object .keys (update) .reduce ((o,f) => {o [f] = doc [f] || ''; return o}, {})
         _Collection._logUndo (this, this .update, [id, undo], isUndo, tid);
@@ -367,7 +378,7 @@ class _Collection extends Observable {
       origs .push (orig);
       docs  .push (doc);
     }
-    var ok  = yield* _db .perform (DatabaseOperation .UPDATE_LIST, {collection: this._name, list: list});
+    var ok  = yield* _db .perform (DatabaseOperation .UPDATE_LIST, {database: this._database, collection: this._name, list: list});
     if (ok) {
       var undo = []
       for (let item of list) {
@@ -388,11 +399,11 @@ class _Collection extends Observable {
   *checkUpdateList (list, source, isUndo, tid) {
     if (list .length == 0)
       return true;
-    return yield* _db .perform (DatabaseOperation .CHECK_UPDATE_LIST, {collection: this._name, list: list});
+    return yield* _db .perform (DatabaseOperation .CHECK_UPDATE_LIST, {database: this._database, collection: this._name, list: list});
   }
 
   *insert (insert, source, isUndo, tid) {
-    var result = yield* _db .perform (DatabaseOperation .INSERT_ONE, {collection: this._name, insert: insert});
+    var result = yield* _db .perform (DatabaseOperation .INSERT_ONE, {database: this._database, collection: this._name, insert: insert});
     if (result) {
       _Collection._logUndo (this, this .remove, [result._id], isUndo, tid);
       for (let f of Object .keys (result) .filter (f => {return f .startsWith ('_')}))
@@ -404,7 +415,7 @@ class _Collection extends Observable {
   }
 
   *insertList (list, source, isUndo, tid) {
-    var results = yield* _db .perform (DatabaseOperation .INSERT_LIST, {collection: this._name, list: list})
+    var results = yield* _db .perform (DatabaseOperation .INSERT_LIST, {database: this._database, collection: this._name, list: list})
     var undo    = [];
     for (let i = 0; i < list .length; i++)
       if (results [i]) {
@@ -421,7 +432,7 @@ class _Collection extends Observable {
   }
 
   *remove (id, source, isUndo, tid) {
-    var ok  = yield* _db .perform (DatabaseOperation .REMOVE_ONE, {collection: this._name, id: id});
+    var ok  = yield* _db .perform (DatabaseOperation .REMOVE_ONE, {database: this._database, collection: this._name, id: id});
     if (ok) {
       var doc = this._docs .get (id);
       _Collection._logUndo (this, this .insert, [doc], isUndo, tid);
@@ -432,7 +443,7 @@ class _Collection extends Observable {
   }
 
   *removeList (list, source, isUndo, tid) {
-    var results = yield* _db .perform (DatabaseOperation .REMOVE_LIST, {collection: this._name, list: list})
+    var results = yield* _db .perform (DatabaseOperation .REMOVE_LIST, {database: this._database, collection: this._name, list: list})
     var undo    = [];
     for (let i = 0; i < list .length; i++)
       if (results [i]) {
@@ -444,6 +455,18 @@ class _Collection extends Observable {
       if (undo .length)
         _Collection._logUndo (this, this .insertList, [undo], isUndo, tid);
     return results;
+  }
+
+  static *login (username, password) {
+    return yield* _db .perform (DatabaseOperation .LOGIN, {username: username, password: password});
+  }
+
+  static *signup (data) {
+    return yield* _db .perform (DatabaseOperation .SIGNUP, data);
+  }
+
+  static *updateUser (id, accessCap, update) {
+    return yield* _db .perform (DatabaseOperation .UPDATE_USER, {id: id, accessCap: accessCap, update: update});
   }
 
   static newUndoGroup() {
@@ -470,6 +493,11 @@ class _Collection extends Observable {
 
   static *_redo() {
     yield* _Collection ._processLog (false);
+  }
+
+  static _resetUndo() {
+    _redoLog = [];
+    _undoLog = []
   }
 }
 

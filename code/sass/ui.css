@@ -3,6 +3,105 @@
 body {
   margin: 0px;
 }
+
+._login_dialogue {
+  @include user-select (none);
+  margin-left: auto;
+  margin-right: auto;
+  > ._login_heading {
+    padding-top: 20px;
+    padding-bottom: 60px;
+    font-size: 160px;
+    color: #33b1ff;
+    text-align: center;
+    > span:nth-child(1) {font-weight: 100; font-style: italic; padding-right: 32px}
+    > span:nth-child(2) {font-weight: 600}
+  }
+  > ._login_body {
+    margin-left: auto;
+    margin-right: auto;
+    width: 300px;
+    box-shadow: $drop-shadow;
+    border-radius: 6px;
+    padding: 30px 40px;
+    text-align:center;
+    > div {
+      margin-top: 10px;
+      > span:nth-child(2) {
+        font-weight: 100;
+      }
+    }
+    > div:first-child {
+      font-size: 32px;
+      font-width: 200;
+      color: #33b1ff;
+      padding-bottom: 40px;
+    }
+    > div > input {
+      font-size: 20px;
+      color: #555;
+    }
+    > div:last-child {
+      font-size: 20px;
+      font-weight: 200;
+      margin-top: 40px;
+      color: rgb(200,0,0);
+    }
+  }
+}
+
+._user_menu_head {
+  position:   absolute;
+  z-index:    9999;
+  color:      white;
+  background: #008ee6;
+  height:     38px;
+  padding-left: 10px;
+  padding-right: 10px;
+  font-weight: 300;
+  @media (min-width: 1300px) {
+    padding-top: 14px;
+    font-size: 20px;
+  }
+  @media (min-width: 1130px) and (max-width: 1299px) {
+    padding-top: 16px;
+    font-size: 18px;
+  }
+  @media (max-width: 1129px) {
+    padding-top: 18px;
+    font-size: 15px;
+  }
+}
+
+._user_menu {
+  position: absolute;
+  z-index: 9999;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  background: rgba(255,255,255,.80);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border-radius: 0px 0px 6px 6px;
+  box-shadow: 0px 4px 4px rgba(0,0,0,.4);
+  color: #555;
+  > div {
+    padding-left: 10px;
+    width: 200px;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 3px solid transparent;
+    border-bottom: 3px solid transparent;
+  }
+  > div:hover {
+    background: #008ee6;
+    color:      white;
+    border-left: 6px solid #008ee6;
+    border-right: 6px solid #008ee6;
+    border-top: 3px solid #008ee6;
+    border-bottom: 3px solid #008ee6;
+  }
+}
+
 .tabbed {
   @include user-select(none);
   position: fixed;
@@ -48,21 +147,17 @@ body {
       }
       margin-left: 12px;
     }
-    ._login {
+    > div._login {
       float: right;
-      color: #80ceff;
-      padding-top: 14px;
-      font-weight: 300;
-      span:nth-child(1), span:nth-child(2) {
+      > ._menu_showing {
+        color: #33b1ff;
         font-weight: 500;
-        color: #e6f5ff;
+        background: rgba(255,255,255,.80);
+        height: 100%;
       }
-      span:not(:nth-child(4)) {
-        margin-right: 20px;
-      }
-      margin-right: 12px;
+      margin-right: 20px!important;
     }
-    > div:not(._nonTab), ._login  {
+    > div:not(._appName) {
       @media (min-width: 1300px) {
         padding-top: 14px;
         margin-right: 22px;
@@ -78,11 +173,12 @@ body {
         margin-right: 12px;
         font-size: 15px;
       }
-      font-weight: 500;
+      &._login       {font-weight: 300}
+      &:not(._login) {font-weight: 500}
       position: relative;
-      &.background {color: #80ceff}
-      &:not(.background) {color: white}
     }
+    > div:not(._nonTab).background                     {color: #80ceff}
+    > div._login, > div:not(._nonTab):not(.background) {color: white}
   }
   > .contents {
     > div {

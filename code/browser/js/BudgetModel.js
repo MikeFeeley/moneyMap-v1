@@ -21,19 +21,25 @@ class BudgetModel extends Observable {
     this._notifyObservers (eventType, doc, arg, source, model);
   }
 
-  *find (budQuery, catQuery, schQuery) {
-    this._budget = (yield* this._budModel .find (budQuery)) [0];
+  *find (id) {
+    let today = Types .date .today();
+    this._budgets = yield* this._budModel .find ({start: {$lte: today}, end: {$gte: today}});
+    this._budget  = this._budgets .find (b => {return b._id == id});
     if (this._schModel)
       this._schModel .delete();
     this._schModel = new SchedulesModel (this);
     this._schModel .addObserver (this, this._onSchedulesModelChange);
-    yield* this._schModel .find (catQuery, schQuery);
+    yield* this._schModel .find ();
   }
 
   *getHistoricBudgets() {
     return (yield* this._budModel .find ())
       .filter (b     => {return b .end < this._budget .start})
       .sort   ((a,b) => {return a .start < b .start? -1: a .start == b .start? 0: 1})
+  }
+
+  getActiveBudgets() {
+    return this._budgets;
   }
 
   getFutureBudgets() {
@@ -54,7 +60,7 @@ class BudgetModel extends Observable {
     })
   }
 
-  getNameForBudgetByDate (date) {
+  getLabel (date = {start: this._budget .start, end: this._budget .end}) {
     let sy = Types .date._year (date .start);
     if (this._budget .name .includes ('/'))
       return sy + '/'+ ((sy % 10) + 1)
@@ -64,6 +70,10 @@ class BudgetModel extends Observable {
 
   getCategories() {
     return this._schModel .getCategories();
+  }
+
+  getActiveBudgets() {
+
   }
 
   getId() {

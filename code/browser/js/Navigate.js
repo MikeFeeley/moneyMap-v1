@@ -299,7 +299,7 @@ class Navigate {
         name  = '_activityTable';
         title = 'Activity for ';
       }
-      title += this._budget .getNameForBudgetByDate (arg .date);
+      title += this._budget .getLabel (arg .date);
       this._addMonthsTable (name, arg.view, undefined, arg .date, false, true, arg .position, arg .html, undefined, title);
 
     } else if (eventType == NavigateViewEvent .PROGRESS_GRAPH_TITLE_CLICK && arg .data .length) {
@@ -974,7 +974,8 @@ class Navigate {
         });
       }
       list .push ({name: 'Net Savings',          amount: sav + una + ovr + stc});
-      list .push ({name: 'Savings Rate',         percent: (sav + una + ovr + stc) * 1.0 / (-inc)});
+      if (inc != 0)
+        list .push ({name: 'Savings Rate',         percent: (sav + una + ovr + stc) * 1.0 / (-inc)});
       updateView (list);
     }
     return update;
@@ -1134,7 +1135,7 @@ class Navigate {
       }
     // compute future budgets
     var budgets = [{
-      name:  this._budget .getName(),
+      name:  this._budget .getLabel(),
       start: this._budget .getStartDate(),
       end:   this._budget .getEndDate()
     }] .concat (this._budget .getFutureBudgets());
@@ -1299,7 +1300,7 @@ class Navigate {
   }
 
   _addHistorySlider (view, dataset, toHtml, leftValue, rightValue, graphUpdater, tableUpdater) {
-    let cbi = dataset .cols .indexOf (this._budget .getName());
+    let cbi = dataset .cols .indexOf (this._budget .getLabel());
     if (cbi < 0)
       cbi = 0;
     view .addSlider ({

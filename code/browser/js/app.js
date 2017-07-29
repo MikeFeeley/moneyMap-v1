@@ -1,141 +1,63 @@
 $(document) .ready (() => {
-  async (main) ();
+  let app = new App();
+  app .start();
 });
 
 class App {
-  static *main () {
-    let app = new App();
-    app .start();
-  }
+
   start() {
-    this._login = new LoginSignup();
-    this._login .addObserver (this, this._loginChange);
-    this._login .login();
-  }
-  _loginChange() {
-    let uid = this._login .getUserId();
-    if (uid)
-      
-    else
-
-    Model .setDatabase (this._login .getUserId());
-    for (model of this._models || [])
-      model .delete();
-    this._budModel = new BudgetModel   ();
-    this._actModel = new ActualsModel  (this._budModel);
-    this._varModel = new VarianceModel (this._budModel, this._actModel);
-    this._accModel = new AccountsModel ();
-    this._models = [this._budModel, this._actModel, this._varModel, this._accModel];
-    this._accounts = this._accModel .find();
-
-  }
-}
-
-function* main() {
-  Model .setDatabase (__DATABASE__ || 'production');
-
-  // Models
-  var budModel;
-  var actModel;
-  var varModel;
-  var accModel;
-
-  // Queries
-  var accounts;
-
-  // Presenters
-  var na, se, it, or;
-  var cols = ['date','payee','debit','credit','account','category','description'];
-  var tsort = (a,b) => {return a .date < b .date? -1: a .date == b .date? 0: 1};
-
-  var tabs;
-
-  var setBudget = function* (budget) {
-
     ui .ModalStack .init();
-  
-    for (let e of [budModel, accModel, varModel, accModel, accounts, na, se, it])
-      if (e && e .delete)
-        e .delete();
-
-    budModel = new BudgetModel   ();
-    actModel = new ActualsModel  (budModel);
-    varModel = new VarianceModel (budModel, actModel);
-    accModel = new AccountsModel ();
-
-    // Queries
-    accounts = accModel .find ();
-    yield* budModel .find ({name: budget});
-    yield* actModel .find ();
-    yield* accModel .find ();
-
-    // Presenters
-    it = new ImportTransactions (accModel, varModel);
-    na = new Navigate (accModel, varModel);
-    se = new IndexedScheduleEntry ('_CategoryMenu', '_ScheduleEntry', accModel, varModel);
-    or = new Organize (accModel, varModel);
-
-// this exists for changing budgets ... will redo soon
-//    if (tabs) {
-//      tabs .updateTab ('Navigate', html => {
-//        async (na, na .addHtml) (html);
-//      });
-//      tabs .updateTab ('Categorize', html => {
-//        async (it, it.addHtml) (html);
-//      })
-//      tabs. updateTab ('Plan', html => {
-//        se .addHtml (html);
-//      });
-//      tabs .updateTab ('Organize', html => {
-//        async (or, or .addHtml) (html);
-//      })
-//    }
+    this._user = new User();
+    this._user .addObserver (null, e => {async (this, this._configurationChange) (e)});
+    this._user .login();
   }
 
-  yield* setBudget ('2016/7');
+  _deleteModels() {
+    for (let model of this._models || [])
+      model .delete();
+    this._models = [];
+  }
 
-  // Tabs
-  tabs = new ui.Tabs ($('body'));
+  *_configurationChange (eventType) {
+    if (eventType == UserEvent .NEW_CONFIGURATION) {
 
-  tabs .addTab ('Progress', html => {
-    na .addProgressHtml (html);
-  })
+      /* models */
+      Model .setDatabase (this._user .getDatabaseName());
+      this._deleteModels();
+      this._budModel = new BudgetModel   ();
+      this._actModel = new ActualsModel  (this._budModel);
+      this._varModel = new VarianceModel (this._budModel, this._actModel);
+      this._accModel = new AccountsModel ();
+      this._models   = [this._budModel, this._actModel, this._varModel, this._accModel];
 
-  tabs .addTab ('Transactions', html => {
-    async (it, it.addHtml) (html);
-  }, true);
+      /* queries */
+      this._accounts = this._accModel .find();
+      yield* this._budModel .find (this._user .getBudgetId());
+      yield* this._actModel .find ();
+      yield* this._accModel .find ();
 
-  tabs .addTab ('Activity', html => {
-    na .addRealityHtml (html);
-  })
+      /* presenters */
+      let it = new ImportTransactions   (this._accModel, this._varModel);
+      let na = new Navigate             (this._accModel, this._varModel);
+      let se = new IndexedScheduleEntry ('_CategoryMenu', '_ScheduleEntry', this._accModel, this._varModel);
+      let or = new Organize             (this._accModel, this._varModel);
 
-  tabs .addTab ('Budget', html => {
-    na .addPlanHtml (html);
-  })
+      /* tabs */
+      let tabs = new ui.Tabs ($('body'));
+      tabs .addTab  ('Progress',                         html => {na .addProgressHtml     (html)});
+      tabs .addTab  ('Transactions',                     html => {async (it, it.addHtml)  (html)}, true);
+      tabs .addTab  ('Activity',                         html => {na .addRealityHtml      (html)});
+      tabs .addTab  ('Budget',                           html => {na .addPlanHtml         (html)});
+      tabs. addTab  ('Plan',                             html => {se .addHtml             (html)});
+      tabs .addTab  ('Perspective',                      html => {na .addPerspectiveHtml  (html)});
+      tabs .addTab  ('Wealth',                           html => {na .addNetWorthHtml     (html)});
+      tabs .addTab  ('Settings',                         html => {async (or, or .addHtml) (html)});
+      tabs .addTool (this._user .getConfigurationName(), e    => {this._user .showMenu    ($(e .target))})
 
-  tabs. addTab ('Plan', html => {
-    se .addHtml (html);
-  });
-
-  tabs .addTab ('Perspective', html => {
-    na .addPerspectiveHtml (html);
-  })
-
-  tabs .addTab ('Wealth', html => {
-    na .addNetWorthHtml (html);
-  })
-
-  tabs .addTab ('Settings', html => {
-    async (or, or .addHtml) (html);
-  });
-
-  var budgetSetter = $('<span>', {text: '2016/7'}) .click (e => {
-    if (budgetSetter .text() == '2015/6')
-      budgetSetter .text ('2016/7');
-    else
-      budgetSetter .text ('2015/6');
-    async (null, setBudget) (budgetSetter .text());
-  })
-  tabs .addTool (budgetSetter);
-}
+   } else if (eventType == UserEvent .LOGOUT) {
+     $('body') .empty();
+     this._user .login();
+   }
+  }
+}//
 

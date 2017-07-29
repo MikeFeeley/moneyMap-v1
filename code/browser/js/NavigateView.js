@@ -179,43 +179,47 @@ class NavigateView extends Observable  {
     var buildTable = () => {
       if (table)
         table .remove();
-      table = $('<table>') .appendTo (group);
-      table [0] .addEventListener ('webkitmouseforcewillbegin', e => {e .preventDefault()}, true);
-      for (let i = 0; i < Math .min (isShowingMore? list .length: shortListLength, list .length); i++) {
-        let item = list [i];
-        let tr = $ ('<tr>') .appendTo (table)
-        this._addTooltip (tr, item .tooltip);
-        if (item .id)
-          tr .on ('click webkitmouseforcedown', e => {
-            let html = this._progressGraphs;
-            this._notifyObservers (NavigateViewEvent .PROGRESS_SIDEBAR_CLICK, {
-              id:       item .id,
-              html:     html,
-              position: ui .calcPosition (tr, html, {top: 0, left: -900}),
-              view:     this,
-              altClick: e .originalEvent .webkitForce > 1 || e .originalEvent .altKey
-            });
-            e .stopPropagation();
-            return false;
-          })
-        this._addTooltip ($('<td>', {text: item .name}) .appendTo (tr), item .nameTooltip);
-        if (item .amount) {
-          this._addTooltip ($('<td>', {
-            text: Types .moneyDZ .toString (item .amount),
-            class: item .amount < 0? 'negative': ''
-          })  .appendTo (tr), item .amountTooltip)
-        } else if (list [i] .percent)
-          this._addTooltip ($('<td>', {text: Types .percent .toString (item .percent)}) .appendTo (tr), item .amountTooltip);
+      if (list .filter (e => {return e .amount != 0}) .length == 0)
+        group. css ('display', 'none');
+      else {
+        table = $('<table>') .appendTo (group);
+        table [0] .addEventListener ('webkitmouseforcewillbegin', e => {e .preventDefault()}, true);
+        for (let i = 0; i < Math .min (isShowingMore? list .length: shortListLength, list .length); i++) {
+          let item = list [i];
+          let tr = $ ('<tr>') .appendTo (table)
+          this._addTooltip (tr, item .tooltip);
+          if (item .id)
+            tr .on ('click webkitmouseforcedown', e => {
+              let html = this._progressGraphs;
+              this._notifyObservers (NavigateViewEvent .PROGRESS_SIDEBAR_CLICK, {
+                id:       item .id,
+                html:     html,
+                position: ui .calcPosition (tr, html, {top: 0, left: -900}),
+                view:     this,
+                altClick: e .originalEvent .webkitForce > 1 || e .originalEvent .altKey
+              });
+              e .stopPropagation();
+              return false;
+            })
+          this._addTooltip ($('<td>', {text: item .name}) .appendTo (tr), item .nameTooltip);
+          if (item .amount) {
+            this._addTooltip ($('<td>', {
+              text: Types .moneyDZ .toString (item .amount),
+              class: item .amount < 0? 'negative': ''
+            })  .appendTo (tr), item .amountTooltip)
+          } else if (list [i] .percent)
+            this._addTooltip ($('<td>', {text: Types .percent .toString (item .percent)}) .appendTo (tr), item .amountTooltip);
+        }
+        if (list .length > shortListLength)
+          $('<td>', {class: '_showMoreLess', html: isShowingMore? 'Show Less&#133;': 'Show More&#133;'}) .appendTo ($('<tr>') .appendTo (table)) .after ($('<td>'))
+            .click (e => {
+              isShowingMore = ! isShowingMore;
+              table .remove();
+              buildTable();
+              e .stopPropagation();
+              return false;
+            })
       }
-      if (list .length > shortListLength)
-        $('<td>', {class: '_showMoreLess', html: isShowingMore? 'Show Less&#133;': 'Show More&#133;'}) .appendTo ($('<tr>') .appendTo (table)) .after ($('<td>'))
-          .click (e => {
-            isShowingMore = ! isShowingMore;
-            table .remove();
-            buildTable();
-            e .stopPropagation();
-            return false;
-          })
     }
 
     return (update) => {

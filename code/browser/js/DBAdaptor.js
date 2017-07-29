@@ -10,6 +10,9 @@ var DatabaseOperation = {
   INSERT_LIST:       4,
   REMOVE_ONE:        5,
   REMOVE_LIST:       6,
-  CHECK_UPDATE_LIST: 7
+  CHECK_UPDATE_LIST: 7,
+  LOGIN:             8,
+  SIGNUP:            9,
+  UPDATE_USER:      10
 }
 
