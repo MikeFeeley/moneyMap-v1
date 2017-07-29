@@ -60,7 +60,7 @@ class Categories {
           if (! cat .budgets .includes (this._budget .getId())) {
             this._removeParentLink (cat);
             if (cat .parent)
-              cat .parent .zombies .push (cat);
+              cat .parent .zombies = (cat .parent .zombies || []) .concat (cat);
           }
         }
         break;
