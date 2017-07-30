@@ -71,6 +71,12 @@ class NavigateView extends Observable  {
     return content;
   }
 
+  addHelp (text) {
+    let help = $('<div>') .appendTo ($('<div>', {class: '_helpInline'}) .appendTo (this._content));
+    for (let t of text)
+      $('<div>', {text: t}) .appendTo (help);
+  }
+
   addContainer (name='', toHtml = this._content) {
     return $('<div>', {class: name}) .appendTo (toHtml);
   }

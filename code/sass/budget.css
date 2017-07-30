@@ -18,6 +18,25 @@ body {
   background: rgba(90,151,243,.75);
 }
 
+._helpInline {
+  text-align: center;
+  > div {
+    padding: 32px;
+    box-shadow: $drop-shadow;
+    display: inline-block;
+    background: #ffffcc;
+    border-radius: 16px;
+    border: 4px solid #cc9900;
+    margin-top: 128px;
+    > div {
+      text-align: center;
+      font-size: 32px;
+      color: #cc9900;
+      &:not(:last-child) {margin-bottom: 16px}
+    }
+  }
+}
+
 ._PathPicker {
   font-size: 13px;
   display: none;

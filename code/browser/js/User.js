@@ -179,12 +179,18 @@ class User extends Observable {
   showMenu (toHtml) {
     let html = $('body');
     this._view .addMenu (html, {top: 48, right: 10}, toHtml, {top: 0, right: 10});
-    this._addMenuItem ('Account', () => {});
+    this._addMenuItem ('Account', () => {this._showAccountEdit()});
     this._addMenuItem ('Logout',  () => {this .logout()});
   }
 
-  addAccountEdit (toHtml) {
-
+  _showAccountEdit() {
+    if (!this._accountEdit) {
+      this._tabbedContents = $('body') .find ('.contents > div');
+      this._accountEdit = $('<div>', {class: 'background'}) .appendTo (this._tabbedContents);
+      $('<div>', {text: 'hello'}) .appendTo (this._accountEdit)
+    }
+    this._tabbedContents .find ('> :not(.background)') .addClass ('background');
+    this._accountEdit .removeClass ('background');
   }
 }
 

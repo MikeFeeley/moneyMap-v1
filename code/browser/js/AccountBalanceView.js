@@ -38,6 +38,10 @@ class AccountBalanceView extends TupleView {
     this._html .find('.' + name) .remove();
   }
 
+  setGroupVisible (group, isVisible) {
+    group [isVisible? 'removeClass': 'addClass'] ('hidden');
+  }
+
   addTuple (data, tuple, getToHtml) {
     if (tuple)
       tuple = $('<div>') .appendTo (tuple);

@@ -32,7 +32,7 @@ class BudgetYearGraph {
   }
 
   _setDataset() {
-    var data      = this._getData();
+    var data = this._getData();
     var variance  = data [0] .amount - (data [1] .amount + data [2] .amount);
     var max       = Math .max (data [0] .amount, data [1] .amount + data [2] .amount);
     var norm      = data .map (d => {return Math .round (d .amount * 98 / max)});
@@ -47,7 +47,7 @@ class BudgetYearGraph {
       }
     })
     this._config .data .datasets = [datasets [0], datasets [2], datasets [1]];
-    this._suffix .html ((variance < 0? "You're Over": 'Unallocated') +'<br/>'+ Types .moneyD .toString (Math .abs (variance)));
+    this._suffix .html ((variance < 0? "You're Over": variance > 0? 'Unallocated': '') +'<br/>'+ Types .moneyD .toString (Math .abs (variance)));
     if (variance < 0)
       this._suffix .addClass ('negative');
     else

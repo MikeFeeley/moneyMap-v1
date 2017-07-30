@@ -753,7 +753,9 @@ class Navigate {
     var data  = this._getChildrenData (type, id, dates);
     if (blackouts) {
       let bo = getBlackouts (data .data);
-      data .data .push (bo [0], bo [1]);
+      for (let i=0; i<2; i++)
+        if (bo [i] .amounts [0] .value != 0)
+          data .data .push (bo [i]);
     }
     return {
       name: this._categories .get (id .split ('_') .slice (-1) [0]) .name,
@@ -915,8 +917,11 @@ class Navigate {
     var date       = Types .dateMY .today();
     var roots      = [this._budget .getExpenseCategory(), this._budget .getSavingsCategory(), this._budget .getIncomeCategory()];
     var labelWidth = this._getProgressGraphLabels (roots);
+    let added      = false;
     for (let root of roots)
-      this._addProgressGraph (root, null, false, undefined, labelWidth, true, true, true)
+      added |= this._addProgressGraph (root, null, false, undefined, labelWidth, true, true, true);
+    if (! added)
+      this._progressView .addHelp (['Use "Plan" to start planning a budget.', 'Then you will see your budget progress here.']);
   }
 
 
@@ -1255,7 +1260,7 @@ class Navigate {
         }
       })
     }
-    result .startBal = [this._historicBudgets [0] .startCashBalance];
+    result .startBal = [(this .historicBudgets && this._historicBudgets [0] && this._historicBudgets [0] .startCashBalance) || 0];
     for (let i = 1; i < result .cols .length; i++)
       result .startBal [i] = result .startBal [i-1] + result .groups .reduce ((t,g) => {
         return t + g .rows .reduce ((t,r) => {
@@ -1326,8 +1331,10 @@ class Navigate {
           return g;
         });
         rds .highlight -= this._historySliderLeft;
-        graphUpdater ([{filterCols: {start: this._historySliderLeft, end: this._historySliderRight}}]);
-        tableUpdater ([{replace: rds}]);
+        if (graphUpdater)
+          graphUpdater ([{filterCols: {start: this._historySliderLeft, end: this._historySliderRight}}]);
+        if (tableUpdater)
+          tableUpdater ([{replace: rds}]);
       }
     }, toHtml)
   }

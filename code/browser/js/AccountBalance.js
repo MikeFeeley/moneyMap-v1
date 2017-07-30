@@ -37,10 +37,12 @@ class AccountBalance extends TuplePresenter {
   }
 
   _addGroup (accountType, name, flag) {
-    let g = this._view .addGroup (name, flag);
-    for (let acc of this._model .getAccounts())
+    let g        = this._view .addGroup (name, flag);
+    let accounts = this._model .getAccounts();
+    for (let acc of accounts)
       if (acc .trackBalance && acc .type == accountType)
         this._addTuple (acc, g);
+    this._view .setGroupVisible (g, accounts .length > 0);
   }
 
   _addNetToZero() {
