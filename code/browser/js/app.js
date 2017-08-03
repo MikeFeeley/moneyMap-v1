@@ -52,7 +52,11 @@ class App {
       tabs .addTab  ('Perspective',                      html => {na .addPerspectiveHtml  (html)});
       tabs .addTab  ('Wealth',                           html => {na .addNetWorthHtml     (html)});
       tabs .addTab  ('Settings',                         html => {async (or, or .addHtml) (html)});
-      tabs .addTool (this._user .getConfigurationName(), e    => {this._user .showMenu    ($(e .target))})
+      let tl = tabs .addTool (this._user .getLabel (l => {
+        tabs .changeToolName (tl, l);
+      }), e => {this._user .showMenu    ($(e .target))})
+
+      this._user .newConfigurationAccepted();
 
    } else if (eventType == UserEvent .LOGOUT) {
      $('body') .empty();

@@ -259,8 +259,8 @@ class Model extends Observable {
     return yield* _Collection .signup (data);
   }
 
-  static *updateUser (id, accessCap, update) {
-    return yield* _Collection .updateUser (id, accessCap, update);
+  static *updateUser (id, accessCap, update, password) {
+    return yield* _Collection .updateUser (id, accessCap, update, password);
   }
 
   /**
@@ -465,8 +465,8 @@ class _Collection extends Observable {
     return yield* _db .perform (DatabaseOperation .SIGNUP, data);
   }
 
-  static *updateUser (id, accessCap, update) {
-    return yield* _db .perform (DatabaseOperation .UPDATE_USER, {id: id, accessCap: accessCap, update: update});
+  static *updateUser (id, accessCap, update, password) {
+    return yield* _db .perform (DatabaseOperation .UPDATE_USER, {id: id, accessCap: accessCap, update: update, password: password});
   }
 
   static newUndoGroup() {

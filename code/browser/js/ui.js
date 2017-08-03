@@ -128,7 +128,11 @@ var ui = {
       Object.assign (this, {
 
         addTool (name, onClick) {
-          $('<div>', {text: name}) .appendTo (rightMatter) .on ('click', onClick);
+          return $('<div>', {text: name}) .appendTo (rightMatter) .on ('click', onClick);
+        },
+
+        changeToolName (tool, name) {
+          tool .text (name);
         },
 
         updateTab (name, addContent) {

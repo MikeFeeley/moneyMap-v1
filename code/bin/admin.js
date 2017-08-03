@@ -38,7 +38,7 @@ function* signup (req, res, next) {
       });
     }
   } catch (e) {
-    console .log ('login: ', e, req.body);
+    console .log ('signup: ', e, req.body);
     next (e);
   }
 }
@@ -48,17 +48,31 @@ function* updateUser (req, res, next) {
     if (!req .body .update)
       throw 'Update missing';
     else {
-      var result = yield (yield dbPromise) .collection ('users')
-        .update (
-          {_id: req .body .id, accessCap: req .body .accessCap},
-          {$set: req .body .update}
-        );
+      var query = {_id: req .body .id, accessCap: req .body .accessCap};
+      if (req .body .update .password) {
+        var user = yield (yield dbPromise) .collection ('users') .find (query) .toArray();
+        if (! user)
+          throw 'Invalid user update attempted';
+        else user = user [0];
+        if (user .password != req .body .password) {
+          res .json ({passwordMismatch: true});
+          return;
+        }
+      }
+      if (req .body .update .username) {
+        var u = yield (yield dbPromise) .collection ('users') .find ({username: req .body .update .username}) .toArray();
+        if (u) {
+          res .json ({alreadyExists: true});
+          return;
+        }
+      }
+      var result = yield (yield dbPromise) .collection ('users') .update (query, {$set: req .body .update});
       if (!result || !result .result .ok)
         throw 'Invalid user update attempted';
       res.json ({ok: true});
     }
   } catch (e) {
-    console .log ('login: ', e, req.body);
+    console .log ('updateUser: ', e, req.body);
     next (e);
   }
 }

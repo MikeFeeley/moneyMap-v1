@@ -4,6 +4,126 @@ body {
   margin: 0px;
 }
 
+._accountEdit {
+  width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+  > ._group {
+    margin-top: 32px;
+    ._title {
+      font-size: 32px;
+      color: #33b1ff;
+      font-width: 100;
+      margin-bottom: 8px;
+    }
+    > ._content._dark {background: #fafafa}
+    > ._content {
+      > ._line {
+        &:not(:last-child) {margin-bottom: 16px}
+        > div {
+          font-size: 18px;
+          color:     #aaa;
+        }
+        > input {
+          margin-right: 8px;
+        }
+        > button {
+          background: #33b1ff;
+          color:      white;
+          border:     4px solid #33b1ff;
+        }
+        > ._errorMessage {
+          font-size: 20px;
+          display: inline-block;
+          margin-left: 16px;
+          color: #33b1ff;
+        }
+      }
+      padding: 12px;
+      border: solid 0.1px #aaa;
+      * {
+        color: #555;
+        font-size: 20px;
+      }
+    }
+  }
+  ._tabGroup {
+    ._field_c_name  ._content {width: 222px}
+    ._field_b_name  ._content {width: 222px}
+    ._field_b_start ._content {width: 140px}
+    ._field_b_end   ._content {width: 140px}
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    ._tabGroupTabs {
+      display: flex;
+      flex-direction: column;
+      ._tab {
+        padding: 8px;
+        min-height: 64px;
+      }
+      ._tab._selected {
+        border-top:    0.5px solid #aaa;
+        border-bottom: 0.5px solid #aaa;
+        border-left:   0.5px solid #aaa;
+        background: white;
+      }
+      ._tab:not(._selected), ._filler {
+        border-right: 0.5px solid #aaa;
+        background: #fafafa;
+        color: #aaa;
+        min-height: 0px!important;
+      }
+      ._tab:not(._selected)._add {
+        color: #33b1ff;
+      }
+      ._filler {
+        flex: 1;
+      }
+     }
+    ._tabGroupContents {
+      border-top:    0.5px solid #aaa;
+      border-bottom: 0.5px solid #aaa;
+      border-right:  0.5px solid #aaa;
+      background: white;
+      > ._content {
+        background: white;
+        padding-left: 16px;
+        padding-bottom: 12px;
+        > ._heading {
+          padding-top: 6px;
+          font-size: 28px;
+          color: #33b1ff;
+          font-width: 100;
+          padding-bottom: 8px;
+        }
+        > ._contentGroup {
+          background: #fafafa;
+          padding: 12px;
+          border: solid 0.1px #aaa;
+          margin-right: 12px;
+        }
+        > ._line {
+          display: flex;
+          margin-top: 12px;
+          > button {
+            background: #33b1ff;
+            color:      white;
+            border:     4px solid #33b1ff;
+          }
+        }
+        > ._labeledField, > ._line > ._labeledField {
+          margin-right: 12px;
+          > ._label {
+            font-size: 18px;
+            color:     #aaa;
+          }
+        }
+      }
+    }
+  }
+}
+
 ._login_dialogue {
   @include user-select (none);
   margin-left: auto;
@@ -55,25 +175,28 @@ body {
   z-index:    9999;
   color:      white;
   background: #008ee6;
-  height:     38px;
   padding-left: 10px;
   padding-right: 10px;
   font-weight: 300;
   @media (min-width: 1300px) {
+    height: 48px - 14px;
     padding-top: 14px;
     font-size: 20px;
   }
   @media (min-width: 1130px) and (max-width: 1299px) {
+    height: 48px - 16px;
     padding-top: 16px;
     font-size: 18px;
   }
   @media (max-width: 1129px) {
+    height: 48px - 18px;
     padding-top: 18px;
     font-size: 15px;
   }
 }
 
 ._user_menu {
+  @include user-select (none);
   position: absolute;
   z-index: 9999;
   padding-top: 6px;

@@ -32,7 +32,7 @@ class UserView extends View {
       .append ($('<span>', {text: 'Login'}))
       .append ($('<span>', {text: ' or Signup'}));
     $('<div>') .appendTo (body)
-      .append ($('<input>',  {type: 'text', id: 'username', placeholder: 'Email Address'}));
+      .append ($('<input>',  {type: 'text', id: 'username', placeholder: 'Email'}));
     $('<div>') .appendTo (body)
       .append ($('<input>',  {type: 'password', id: 'password', placeholder: 'Password'}));
     this._loginErr = $('<div>') .appendTo (body);
@@ -66,7 +66,7 @@ class UserView extends View {
           let username = this._login .find ('#username') .val();
           let name     = this._login .find ('#name')     .val();
           let password = this._login .find ('#password') .val();
-          let confirm  = this._login .find ('#confirm') .val()
+          let confirm  = this._login .find ('#confirm')  .val()
           this._notifyObservers (UserViewEvent .SIGNUP, {username: username, name: name, password: password, confirm: confirm});
         }
       })
@@ -105,6 +105,86 @@ class UserView extends View {
 
   addMenuItem (name, action) {
     $('<div>', {text: name}) .appendTo (this._menu) .click (e => {action(); e .stopPropagation(); return false});
+  }
+
+  addAccountEdit() {
+    this._tabs           = $('body') .find ('> .tabbed > .tabs');
+    this._tabbedContents = $('body') .find ('> .tabbed > .contents > div');
+    this._tabs .find           ('> div:not(._nonTab):not(.background)') .addClass ('background');
+    this._tabbedContents .find ('> :not(.background)') .addClass ('background');
+    if (this._accountEdit)
+      this._accountEdit .remove();
+    this._accountEdit = $('<div>')                          .appendTo (this._tabbedContents);
+    let content       = $('<div>', {class: '_accountEdit'}) .appendTo (this._accountEdit);
+    return content;
+  }
+
+  addGroup (title, toHtml, additionalClass) {
+    let g = $('<div>', {class: '_group'})                     .appendTo (toHtml);
+    $('<div>', {class: '_title', text: title})                .appendTo (g);
+    return $('<div>', {class: '_content ' + additionalClass}) .appendTo (g);
+  }
+
+  addLine (toGroup) {
+    return $('<div>', {class: '_line'}) .appendTo (toGroup);
+  }
+
+  addLabel (text, toLine, type) {
+    return $('<div>', {text: text, class: type}) .appendTo (toLine);
+  }
+
+  addField (field, id, value, toHtml, label) {
+    let f = field .newInstance (id);
+    if (label) {
+      toHtml = $('<div>', {class: '_labeledField'}) .appendTo (toHtml);
+      $('<div>', {class: '_label', text: label}) .appendTo (toHtml);
+    }
+    f .addHtml (value, this, toHtml);
+  }
+
+  setLabel (label, text) {
+    label .html (text);
+  }
+
+  addInput (name, value, toLine, type = 'text') {
+    return $('<input>', {type: type, value: value, placeholder: name}) .appendTo (toLine);
+  }
+
+  addButton (text, onClick, toLine) {
+    let b = $('<button>', {text: text}) .appendTo (toLine) .click (() => {
+      onClick ((b .closest ('._group') .find ('input') .toArray()) .map (v => {return $(v) .val()}))
+    });
+    return b;
+  }
+
+  addTabGroup (toHtml) {
+    return $('<div>', {class: '_tabGroup'}) .appendTo (toHtml)
+      .append ($('<div>', {class: '_tabGroupTabs'}) .append ($('<div>', {class: '_filler', html: '&nbsp;'})))
+      .append ($('<div>', {class: '_tabGroupContents'}))
+  }
+
+  addTab (toGroup, subType='', noContent, text = '') {
+    let t = $('<div>', {class: '_tab ' + subType, text: text}) .insertBefore (toGroup .find ('> ._tabGroupTabs > div:last-child'));
+    let c = ! noContent && $('<div>', {class: '_content'})     .appendTo     (toGroup .find ('> ._tabGroupContents'));
+    return {tab: t, content: c}
+  }
+
+  setSelectedTab (tab) {
+    let tabGroup = tab .tab .closest  ('._tabGroup');
+    tabGroup .find ('div') .removeClass ('_selected');
+    tab .tab     .addClass ('_selected');
+    tab .content .addClass ('_selected');
+  }
+
+  addTabContentGroup (heading, toHtml) {
+    $('<div>', {class: '_heading', text: heading}) .appendTo (toHtml);
+    return $('<div>', {class: '_contentGroup'})    .appendTo (toHtml);
+  }
+
+  showAccountEdit() {
+    this._tabs .find               ('> div:not(._nonTab):not(.background)') .addClass ('background');
+    this._tabbedContents .find     ('> :not(.background)') .addClass ('background');
+    this._accountEdit .removeClass ('background');
   }
 }
 
