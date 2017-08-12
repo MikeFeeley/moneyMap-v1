@@ -50,9 +50,9 @@ class UserView extends View {
       .append ($('<input>', {type: 'text', id: 'name', placeholder: 'Name'}));
     $('<div>') .insertAfter (this._login .find ('._login_body div:nth-child(4)'))
       .append ($('<input>', {type: 'password', id: 'confirm', placeholder: 'Re-Enter Password'}));
-    this._login .find ('input')
-      .off()
-      .keypress (e => {
+    $('body')
+      .off ('keypress')
+      .on  ('keypress', e => {
         if (e .originalEvent .key == 'Enter') {
           this .loginError ('');
           let username = this._login .find ('#username') .val();
