@@ -59,7 +59,7 @@ class UserView extends View {
           let name     = this._login .find ('#name')     .val();
           let password = this._login .find ('#password') .val();
           let confirm  = this._login .find ('#confirm')  .val()
-          this._notifyObservers (UserViewEvent .SIGNUP, {username: username, name: name, password: password, confirm: confirm});
+          this._notifyObservers (UserViewEvent .SIGNUP, {username: username, name: name, password: password, confirm: confirm, remember: remember});
         }
       })
   }
