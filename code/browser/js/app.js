@@ -19,7 +19,24 @@ class App {
   }
 
   *_configurationChange (eventType) {
-    if (eventType == UserEvent .NEW_CONFIGURATION) {
+  
+    if (eventType == UserEvent .NEW_USER) {
+
+      this._tabs = new ui.Tabs ($('body'));
+      this._proT = this._tabs .addTab  ('Progress');
+      this._traT = this._tabs .addTab  ('Transactions');
+      this._actT = this._tabs .addTab  ('Activity');
+      this._budT = this._tabs .addTab  ('Budget');
+      this._plaT = this._tabs. addTab  ('Plan');
+      this._perT = this._tabs .addTab  ('Perspective');
+      this._weaT = this._tabs .addTab  ('Wealth');
+      this._setT = this._tabs .addTab  ('Settings');
+      this._tabs .addTool (this._user .getLabel (l => {
+        this._tabs .changeToolName (tl, l);
+      }), e => {this._user .showMenu ($(e .target))})
+    }
+
+    if (eventType == UserEvent .NEW_USER || eventType == UserEvent .NEW_CONFIGURATION) {
 
       /* models */
       Model .setDatabase (this._user .getDatabaseName());
@@ -43,18 +60,14 @@ class App {
       let or = new Organize             (this._accModel, this._varModel);
 
       /* tabs */
-      let tabs = new ui.Tabs ($('body'));
-      tabs .addTab  ('Progress',                         html => {na .addProgressHtml     (html)});
-      tabs .addTab  ('Transactions',                     html => {async (it, it.addHtml)  (html)}, true);
-      tabs .addTab  ('Activity',                         html => {na .addRealityHtml      (html)});
-      tabs .addTab  ('Budget',                           html => {na .addPlanHtml         (html)});
-      tabs. addTab  ('Plan',                             html => {se .addHtml             (html)});
-      tabs .addTab  ('Perspective',                      html => {na .addPerspectiveHtml  (html)});
-      tabs .addTab  ('Wealth',                           html => {na .addNetWorthHtml     (html)});
-      tabs .addTab  ('Settings',                         html => {async (or, or .addHtml) (html)});
-      let tl = tabs .addTool (this._user .getLabel (l => {
-        tabs .changeToolName (tl, l);
-      }), e => {this._user .showMenu    ($(e .target))})
+      this._tabs .setTab  (this._proT, html => {na .addProgressHtml     (html)});
+      this._tabs .setTab  (this._traT, html => {async (it, it.addHtml)  (html)}, true);
+      this._tabs .setTab  (this._actT, html => {na .addRealityHtml      (html)});
+      this._tabs .setTab  (this._budT, html => {na .addPlanHtml         (html)});
+      this._tabs. setTab  (this._plaT, html => {se .addHtml             (html)});
+      this._tabs .setTab  (this._perT, html => {na .addPerspectiveHtml  (html)});
+      this._tabs .setTab  (this._weaT, html => {na .addNetWorthHtml     (html)});
+      this._tabs .setTab  (this._setT, html => {async (or, or .addHtml) (html)});
 
       this._user .newConfigurationAccepted();
 

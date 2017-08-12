@@ -5,23 +5,6 @@ class UserView extends View {
     $(window) .resize (e => {this .removeMenu()});
   }
 
-  _setLoginButtonActions() {
-    this._login .find ('#login')
-      .off()
-      .click (e => {
-        this .loginError ('');
-        let username = this._login .find ('#username') .val();
-        let password = this._login .find ('#password') .val();
-        this._notifyObservers (UserViewEvent .LOGIN, {username: username, password: password});
-      })
-    this._login .find ('#submit')
-      .off()
-      .click (e => {
-        this .loginError ('');
-        this._notifyObservers (UserViewEvent .SIGNUP_ASK);
-      })
-  }
-
   addLogin (toHtml) {
     this._login = $('<div>', {class: '_login_dialogue'}) .appendTo (toHtml);
     $('<div>', {class: '_login_heading'})       .appendTo (this._login)
@@ -35,14 +18,23 @@ class UserView extends View {
       .append ($('<input>',  {type: 'text', id: 'username', placeholder: 'Email'}));
     $('<div>') .appendTo (body)
       .append ($('<input>',  {type: 'password', id: 'password', placeholder: 'Password'}));
-    this._loginErr = $('<div>') .appendTo (body);
-    this._login .find ('input')
+    this._loginErr = $('<div>', {class: '_loginError'}) .appendTo (body);
+    $('<label>') .appendTo ($('<div>', {class: '_remember'}) .appendTo(body))
+      .append ($('<input>', {type: 'checkbox', id: 'remember'})
+        .change (e => {
+          let input = e .target;
+          $(input) .closest ('label') .find ('span') [input .checked? 'addClass': 'removeClass'] ('_checked');
+        })
+      )
+      .append ($('<span>',  {text: 'Remember me on this computer'}))
+    $('body')
       .keypress (e => {
         if (e .originalEvent .key == 'Enter') {
           this .loginError ('');
           let username = this._login .find ('#username') .val();
           let password = this._login .find ('#password') .val();
-          this._notifyObservers (UserViewEvent .LOGIN, {username: username, password: password});
+          let remember = this._login .find ('#remember') [0] .checked;
+          this._notifyObservers (UserViewEvent .LOGIN, {username: username, password: password, remember: remember});
         }
       })
     body.find ('> div > span:nth-child(2)')
@@ -74,6 +66,7 @@ class UserView extends View {
 
   removeLogin (toHtml) {
     this._login .remove();
+    $('body') .off ('keypress');
   }
 
   loginError (err) {
@@ -94,6 +87,33 @@ class UserView extends View {
     this._menuButton = menuButton;
   }
 
+  addSubMenu (name, items) {
+    let inSubMenu, subMenu;
+    let subMenuHead = $('<div>', {text: name}) .appendTo (this._menu)
+      .on ('mouseover', e => {
+        subMenuHead .addClass ('_selected');
+        subMenu = $('<div>', {class: '_subMenu'})
+          .on ('mouseout',  e => {
+            if (! $.contains (subMenu [0], e .originalEvent .toElement)) {
+              subMenu .remove();
+            }
+          })
+          .appendTo (this._menu)
+          .css      ({top: $(e .originalEvent .target) .position() .top, right: 222});
+        for (let item of items) {
+          let i = $('<div>', {text: item .name}) .appendTo (subMenu)
+            .on ('click',     e => {item .action (e)})
+            .on ('mouseover', () => {i .addClass    ('_selected')})
+            .on ('mouseout',  () => {i .removeClass ('_selected')})
+        }
+      })
+      .on ('mouseout',  e => {
+        if (! $.contains (subMenu [0], e .originalEvent .toElement))
+          subMenu .remove();
+        subMenuHead .removeClass ('_selected');
+      })
+  }
+
   removeMenu() {
     if (this._menu) {
       this._menu     .remove();
@@ -103,8 +123,12 @@ class UserView extends View {
     }
   }
 
-  addMenuItem (name, action) {
-    $('<div>', {text: name}) .appendTo (this._menu) .click (e => {action(); e .stopPropagation(); return false});
+  addMenuItem (name, action, addClass='') {
+    let item = $('<div>', {text: name, class: addClass}) .appendTo (this._menu)
+      .on ('click', e => {action(); e .stopPropagation(); return false})
+      .on ('mouseover', () => {item .addClass    ('_selected')})
+      .on ('mouseout',  () => {item .removeClass ('_selected')})
+
   }
 
   addAccountEdit() {
@@ -157,21 +181,32 @@ class UserView extends View {
     return b;
   }
 
-  addTabGroup (toHtml) {
-    return $('<div>', {class: '_tabGroup'}) .appendTo (toHtml)
-      .append ($('<div>', {class: '_tabGroupTabs'}) .append ($('<div>', {class: '_filler', html: '&nbsp;'})))
+  addTabGroup (name, toHtml) {
+    let g = $('<div>', {class: '_tabGroup', data: {name: name}}) .appendTo (toHtml);
+    let f = $('<div>', {class: '_filler', html: '&nbsp;'});
+    f .click (() => {this._notifyObservers (UserViewEvent .TAB_CLICK, {name: name})});
+    return g
+      .append ($('<div>', {class: '_tabGroupTabs'}) .append (f))
       .append ($('<div>', {class: '_tabGroupContents'}))
   }
 
   addTab (toGroup, subType='', noContent, text = '') {
-    let t = $('<div>', {class: '_tab ' + subType, text: text}) .insertBefore (toGroup .find ('> ._tabGroupTabs > div:last-child'));
+    let sib = toGroup .find ('> ._tabGroupTabs > div');
+    let ib  = $(sib [sib .length - Math .min (2, sib .length)])
+    let t = $('<div>', {class: '_tab ' + subType, text: text}) .insertBefore (ib);
     let c = ! noContent && $('<div>', {class: '_content'})     .appendTo     (toGroup .find ('> ._tabGroupContents'));
+    let r = noContent? {name: toGroup .data ('name')} : {tab: t, content: c};
+    t .click (() => {this._notifyObservers (UserViewEvent .TAB_CLICK, r)})
     return {tab: t, content: c}
   }
 
-  setSelectedTab (tab) {
+  selectTab (tab) {
     let tabGroup = tab .tab .closest  ('._tabGroup');
-    tabGroup .find ('div') .removeClass ('_selected');
+    let cs = tabGroup .find ('> ._tabGroupTabs > ._tab._selected ._field') .data ('field');
+    if (cs)
+      cs .setSelected (false);
+    tab .tab .find ('._field') .data('field') .setSelected (true);
+    tabGroup .find ('> ._tabGroupTabs > ._tab, > ._tabGroupContents > ._content') .removeClass ('_selected');
     tab .tab     .addClass ('_selected');
     tab .content .addClass ('_selected');
   }
@@ -191,5 +226,6 @@ class UserView extends View {
 var UserViewEvent = {
   LOGIN: 0,
   SIGNUP_ASK: 1,
-  SIGNUP: 2
+  SIGNUP: 2,
+  TAB_CLICK: 3
 }

@@ -128,11 +128,11 @@ var ui = {
       Object.assign (this, {
 
         addTool (name, onClick) {
-          return $('<div>', {text: name}) .appendTo (rightMatter) .on ('click', onClick);
+          return $('<div>', {html: name}) .appendTo (rightMatter) .on ('click', onClick);
         },
 
         changeToolName (tool, name) {
-          tool .text (name);
+          tool .html (name);
         },
 
         updateTab (name, addContent) {
@@ -146,7 +146,19 @@ var ui = {
             addContent (content);
         },
 
-        addTab (name, addContent, addNow) {
+        setTab (name, addContent, addNow) {
+          let t       = tabMap .get (name);
+          let content = t .tab .data ('content');
+          content .empty();
+          content .data({hidden: null, visible: null});
+          if (addNow || ! t .tab .hasClass ('background')) {
+            addContent (content);
+            addContent = null;
+          }
+          tabMap .set (name, {tab: t .tab, addContent: addContent});
+        },
+
+        addTab (name) {
 
           function handleClick() {
 
@@ -166,22 +178,22 @@ var ui = {
 
           var content = $('<div>')                                                                .appendTo (contents);
           var tab     = $('<div>', {data: {content: content}}) .append ($('<div>', {text: name})) .appendTo (tabs);
-          if (addNow) {
-            addContent (content);
-            addContent = null;
-          }
-          tabMap .set (name, {tab: tab, addContent: addContent});
+          tabMap .set (name, {tab: tab});
 
           tab .on ('click', e => {
 
             function click() {
+              let prevContent = contents .find ('> :not(.background)');
               for (let d of [tabs, contents])
                 d .children() .each ((_,c) => {$(c) .addClass ('background')});
               for (let d of [tab, tab .data ('content')])
                 d .removeClass ('background');
               let visible = tab .data ('content') .data ('visible');
+              let hidden  = prevContent .data ('hidden');
               if (visible)
                 visible();
+              if (hidden)
+                hidden();
               handleClick();
               pendingClick = null;
             }
@@ -197,8 +209,11 @@ var ui = {
               d .addClass ('background');
           else
             handleClick();
+
+          return name;
         }
       })
+
     }
   }
 

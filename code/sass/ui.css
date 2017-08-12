@@ -5,11 +5,12 @@ body {
 }
 
 ._accountEdit {
-  width: 900px;
+  width: 940px;
   margin-left: auto;
   margin-right: auto;
   > ._group {
     margin-top: 32px;
+    margin-bottom: 32px;
     ._title {
       font-size: 32px;
       color: #33b1ff;
@@ -59,25 +60,34 @@ body {
       display: flex;
       flex-direction: column;
       ._tab {
-        padding: 8px;
-        min-height: 64px;
+        padding: 12px;
       }
       ._tab._selected {
         border-top:    0.5px solid #aaa;
         border-bottom: 0.5px solid #aaa;
         border-left:   0.5px solid #aaa;
+        border-right:  0.5px solid transparent;
         background: white;
       }
       ._tab:not(._selected), ._filler {
+        border-top:    0.5px solid transparent;
+        border-bottom: 0.5px solid transparent;
+        border-left:   0.5px solid transparent;
         border-right: 0.5px solid #aaa;
         background: #fafafa;
         color: #aaa;
-        min-height: 0px!important;
+        > ._field > div > div._content {
+          margin-top: 2px;
+          margin-bottom: 2px;
+          border: 2px solid transparent;
+          padding: 1px;
+        }
       }
       ._tab:not(._selected)._add {
         color: #33b1ff;
       }
       ._filler {
+        min-height: 0px!important;
         flex: 1;
       }
      }
@@ -86,6 +96,9 @@ body {
       border-bottom: 0.5px solid #aaa;
       border-right:  0.5px solid #aaa;
       background: white;
+      > ._content:not(._selected) {
+        display: none;
+      }
       > ._content {
         background: white;
         padding-left: 16px;
@@ -161,11 +174,23 @@ body {
       font-size: 20px;
       color: #555;
     }
-    > div:last-child {
+    > ._loginError {
       font-size: 20px;
       font-weight: 200;
-      margin-top: 40px;
+      margin-top:    30px;
+      margin-bottom: 30px;
       color: rgb(200,0,0);
+    }
+    > ._remember {
+      > label > input {
+        margin-right: 8px;
+      }
+      > label > span {
+        font-size: 16;
+        font-weight: 100;
+        &._checked       {color: #777}
+        &:not(._checked) {color: #ddd}
+      }
     }
   }
 }
@@ -207,7 +232,7 @@ body {
   border-radius: 0px 0px 6px 6px;
   box-shadow: 0px 4px 4px rgba(0,0,0,.4);
   color: #555;
-  > div {
+  > div:not(._subMenu) {
     padding-left: 10px;
     width: 200px;
     border-left: 6px solid transparent;
@@ -215,13 +240,42 @@ body {
     border-top: 3px solid transparent;
     border-bottom: 3px solid transparent;
   }
-  > div:hover {
+  > div:not(._subMenu)._selected {
     background: #008ee6;
     color:      white;
     border-left: 6px solid #008ee6;
     border-right: 6px solid #008ee6;
     border-top: 3px solid #008ee6;
     border-bottom: 3px solid #008ee6;
+  }
+  > ._subMenu {
+    position: absolute;
+    z-index: 9999;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    background: rgba(255,255,255,.80);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border-radius: 6px;
+    box-shadow: 0px 0px 8px rgba(0,0,0,.4);
+    color: #555;
+    width: auto;
+    > div {
+      padding-left: 12px;
+      padding-right: 12px;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 3px solid transparent;
+      border-bottom: 3px solid transparent;
+    }
+    > div._selected {
+      background: #008ee6;
+      color:      white;
+      border-left: 6px solid #008ee6;
+      border-right: 6px solid #008ee6;
+      border-top: 3px solid #008ee6;
+      border-bottom: 3px solid #008ee6;
+    }
   }
 }
 
