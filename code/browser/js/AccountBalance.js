@@ -6,13 +6,20 @@ class AccountBalance extends TuplePresenter {
     this._budget          = variance .getBudget();
     this._categories      = this._budget .getCategories();
     this._netZeroTuples   = [];
+    this._budgetObserver  = this._budget  .addObserver (this, this._onBudgetChange);
     this._actualsObserver = this._actuals .addObserver (this, this._onActualsChange);
   }
 
   delete() {
     super       .delete();
     this._model .delete();
+    this._budget  .removeObserver (this._budgetObserver);
     this._actuals .removeObserver (this._actualsObserver);
+  }
+
+  _onBudgetChange (eventType, doc, arg, source, model) {
+    if (model instanceof SchedulesModel && this._isNetZeroCategory (doc._id))
+      this._updateNetToZero();
   }
 
   _onActualsChange (eventType, doc, arg) {
