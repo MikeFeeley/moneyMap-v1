@@ -790,6 +790,7 @@ class NavigateView extends Observable  {
    */
   addBudgetTable (name, dataset, skipHead, skipFoot, popup, position, toHtml, onClose = () => {}, totalRows, title = '') {
 
+    var table, tableTitle;
     var groupTrs = [];
     var rowMap   = new Map();
     var tfoot ;
@@ -874,8 +875,8 @@ class NavigateView extends Observable  {
       groupTrs  = [];
       rowMap    = new Map();
       if (title && popup)
-        $('<div>', {class: '_tableTitle', text: title}) .appendTo (container .children());
-      var table = $('<table>', {class: name}) .appendTo (container .children());
+        tableTitle = $('<div>', {class: '_tableTitle', text: title}) .appendTo (container .children());
+      table = $('<table>', {class: name}) .appendTo (container .children());
       var thead = $('<thead>') .appendTo (table)
         .on ('click webkitmouseforcedown', e => {
           let target = $(e .originalEvent .target);
@@ -976,7 +977,9 @@ class NavigateView extends Observable  {
           updateFoot();
         } else if (update .replace) {
           dataset = update .replace;
-          container .children() .empty();
+          table .remove();
+          if (tableTitle)
+            tableTitle .remove();
           addTable();
         }
     }
