@@ -454,7 +454,7 @@ class VarianceModel extends Observable {
           return o;
         }, {})
         let a = variance .prev + variance .cur;
-        if (amount .year)
+        if (amount .year && a > 0)
           a = Math .max (0, a - this._budget .getAmount (cat, period .cur .end) .year .allocated);
         let ch = children .reduce ((t,c) => {
           t .prev   += c .prev;
@@ -482,8 +482,8 @@ class VarianceModel extends Observable {
     };
     period
       .cur = {
-        start: Math .max (period .prev .start, Types .date .monthStart (dates .end)),
-        end:   Math .max (period .prev .start, dates .end)
+        start: Math .max (dates .start, Types .date .monthStart (dates .end)),
+        end:   dates.end
       }
     return this._getVarianceListByPeriod (cats, period);
   }
