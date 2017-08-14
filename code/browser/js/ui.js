@@ -19,6 +19,9 @@ var ui = {
         let sh = Math .max (document .documentElement .clientHeight, e .outerHeight (includeMargin) + sp .offset() .top);
         let sw = Math .max (sp .innerWidth(),                        e .outerWidth  (includeMargin) + sp .offset() .left);
         let sy = Math .max (0, e .outerHeight (includeMargin) + e .offset() .top  - sh);
+        let tp = e .offset() .top;
+        if (tp < 0)
+          sy = tp - sp .offset() .top;
         let sx = Math .max (0, e .outerWidth  (includeMargin) + e .offset() .left - sw);
         if (sy != 0 || sx != 0)
           sp .animate ({scrollTop: (st + sy), scrollLeft: (sl + sx)}, 200);
