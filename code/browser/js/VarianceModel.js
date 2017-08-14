@@ -441,12 +441,12 @@ class VarianceModel extends Observable {
   /**
    * Helper for getVarianceList (Below)
    */
-  _getVarianceListByPeriod (cats, period, includeYear) {
+  _getVarianceListByPeriod (cats, period, transactionFocused) {
     let vs = []
     for (let cat of (cats && ([] .concat (cats)) || [])) {
-      let children = this._getVarianceListByPeriod (cat .children, period);
-      if (this._budget .getCategories() .getType (cat) != ScheduleType .NONE) {
-        let amount   = this._getAmountUpDown (cat, period) .amount;
+      let children = this._getVarianceListByPeriod (cat .children, period, transactionFocused);
+      if (transactionFocused || this._budget .getCategories() .getType (cat) != ScheduleType .NONE) {
+        let amount   = transactionFocused? this._getAmountDown (cat, period): this._getAmountUpDown (cat, period) .amount;
         let variance = ['prev', 'cur'] .reduce ((o,per) => {
           o [per] = ['month', 'year'] .reduce ((total, sch) => {
             return total + (amount [sch]? amount [sch] .budget [per] - amount [sch] .actual [per]: 0);
@@ -471,7 +471,7 @@ class VarianceModel extends Observable {
   /**
    * Returns a list of variances for all categories in the family headed by ids that have a budget as of specified date range
    */
-  getVarianceList (cats, dates) {
+  getVarianceList (cats, dates, transactionFocused = false) {
      dates .start = dates .start || this._budget .getStartDate();
      dates .end   = dates .end   || this._budget .getEndDate();
      var period = {
@@ -485,6 +485,6 @@ class VarianceModel extends Observable {
         start: Math .max (dates .start, Types .date .monthStart (dates .end)),
         end:   dates.end
       }
-    return this._getVarianceListByPeriod (cats, period);
+    return this._getVarianceListByPeriod (cats, period, transactionFocused);
   }
 }

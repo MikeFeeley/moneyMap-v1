@@ -937,7 +937,7 @@ class Navigate {
       let sav = this._budget .getAmount (this._budget .getSavingsCategory()) .amount;
       let inc = this._budget .getAmount (this._budget .getIncomeCategory())  .amount;
       let exp = this._budget .getAmount (this._budget .getExpenseCategory()) .amount;
-      let ovp = varianceList .reduce ((t,v) => {return t + (v .prev < 0? v .prev: 0)}, 0)
+      let ovp = varianceList .reduce ((t,v) => {return t + (v .prev < 0? v .prev: 0)}, 0);
       let ovc = varianceList .reduce ((t,v) => {
         let a = Math .max (0, v .prev) + v .cur;
         return t + (a < 0? a: 0)
@@ -1008,7 +1008,7 @@ class Navigate {
     let bigPictureUpdate = this._addBigPicture();
     let issuesUpdate = this._addTopVariance (
       'Budget Issues',
-      'Top over-budget amounts coming into this month.',
+      'Top over-budget amounts this month and last.',
       v => {return v .amount < -50}, v => {return - v .amount}, '_flagBad'
     );
     let savingsUpdate = this._addTopVariance (
@@ -1024,7 +1024,14 @@ class Navigate {
       }, v => {return  v .amount}, '_flagGood');
     let update = () => {
       let endOfLastMonth = Types .date .monthEnd (Types .date .addMonthStart (Types .date .today(), -1))
-      let toLastMonthVar = this._variance .getVarianceList ([this._budget .getExpenseCategory()], {end: endOfLastMonth});
+      let toLastMonthVar = Array .from (this._variance .getVarianceList ([this._budget .getExpenseCategory()], {end: endOfLastMonth},       true)
+        .concat           (this._variance .getVarianceList ([this._budget .getExpenseCategory()], {end: Types .date .today()}, true))
+        .filter           (v => {return v .amount < 50})
+        .reduce ((m,v) => {
+          let e = m .get (v .cat._id);
+          m .set (v .cat._id, {cat: v .cat, amount: Math .min (v .amount, e? e .amount: 0)});
+          return m;
+        }, new Map()) .values())
       let toTodayVar     = this._variance .getVarianceList ([this._budget .getExpenseCategory()], {end: Types .date .today()});
       let savings        = toTodayVar .map (v => {return {cat: v .cat, amount: v .prev + (v .cur < 0? v .cur: 0)}});
       let futureVar      = this._variance .getVarianceList ([this._budget .getExpenseCategory()], {start: Types .date .addMonthStart (Types .date .today(), 1)});
