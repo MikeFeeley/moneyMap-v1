@@ -44,7 +44,6 @@ class BudgetModel extends Observable {
   }
 
   getFutureBudgets() {
-    // XXX Assuming budget name is #### or ####/#
     var addYearToName = y => {
       var n = this .getLabel() .split ('/');
       if (n .length == 2)

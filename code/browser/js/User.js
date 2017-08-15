@@ -101,6 +101,8 @@ class User extends Observable {
           this._configs    = (yield* this._configModel .find());
           this._budgets    = (yield* this._budgetModel .find());
           this._bid        = this._configs .find (c => {return c._id == this._cid}) .curBudget;
+          if (! this._budgets .find (b => {return b._id == this._bid}))
+            this._bid = this._budgets [0]._id;
           if (arg .remember)
             this._addCookie();
           this._view .removeLogin();
@@ -336,7 +338,7 @@ class User extends Observable {
   showMenu (toHtml) {
     let html = $('body');
     this._view .addMenu (html, {top: 48, right: 10}, toHtml, {top: 0, right: 10});
-    this._addMenuItem ('Edit Account', () => {async (this, this._showAccountEdit) ()});
+    this._addMenuItem ('Edit Profile', () => {async (this, this._showAccountEdit) ()});
     if (this._configs .length > 1) {
       let items = this._configs
         .filter (c => {return c._id != this._cid})
@@ -382,7 +384,7 @@ class User extends Observable {
   }
 
   _addUserEdit (ae) {
-    let ag = this._view .addGroup ('Account', ae);
+    let ag = this._view .addGroup ('Profile', ae);
     let email    = this._view .addLine (ag);
     let password = this._view .addLine (ag);
     let name     = this._view .addLine (ag);
@@ -395,7 +397,7 @@ class User extends Observable {
     this._view .addInput    ('New Password',     '', password, 'password');
     this._view .addInput    ('Confirm Password', '', password, 'password');
     this._view .addInput    ('Name',             this._name, name);
-    this._view .addButton   ('Update Account',   async (this, this._updateAccount), update);
+    this._view .addButton   ('Update Profile',   async (this, this._updateAccount), update);
     this._accountEditError = this._view .addLabel ('', update, '_errorMessage');
   }
 
@@ -460,7 +462,7 @@ class User extends Observable {
     let password = undefined;
     if (newPassword) {
       if (newPassword != confirmPassword) {
-        this._view .setLabel (this._accountEditError, 'Account not updated &mdash; New and confirm passwords do not match');
+        this._view .setLabel (this._accountEditError, 'Profile not updated &mdash; New and confirm passwords do not match');
         return;
       } else {
         password         = oldPassword;
@@ -469,16 +471,16 @@ class User extends Observable {
     }
     let result = yield* Model .updateUser (this._uid, this._accessCap, update, password);
     if (result .passwordMismatch)
-      this._view .setLabel (this._accountEditError, 'Account not updated &mdash; Old password does not match');
+      this._view .setLabel (this._accountEditError, 'Profile not updated &mdash; Old password does not match');
     else if (result .alreadyExists)
-      this._view .setLabel (this._accountEditError, 'Account not updated &mdash; Another user with that email already exists');
+      this._view .setLabel (this._accountEditError, 'Profile not updated &mdash; Another user with that email already exists');
     if (result .ok) {
       this._username = email;
       this._name     = name;
       if (this._onLabelChange)
         this._onLabelChange (this .getLabel())
       this._updateCookie();
-      this._view .setLabel (this._accountEditError, 'Account Updated');
+      this._view .setLabel (this._accountEditError, 'Profile Updated');
     }
   }
 

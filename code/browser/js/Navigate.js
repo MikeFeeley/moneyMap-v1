@@ -66,7 +66,7 @@ class Navigate {
   *_getModelValues() {
     yield* this._actuals .findHistory ();
     if (this._historicBudgets === undefined)
-      this._historicBudgets = (yield* this._budget  .getHistoricBudgets()) || null;
+      this._historicBudgets = (yield* this._budget .getHistoricBudgets()) || null;
     if (this._noTranAmounts === undefined) {
       this._noTranAmounts = (yield* this._history .find()) || null;
       for (let nta of this._noTranAmounts || [])

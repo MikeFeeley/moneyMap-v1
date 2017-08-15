@@ -65,7 +65,7 @@ class AccountBalance extends TuplePresenter {
     for (let id of this._netZeroTuples)
       this._view .removeTuple (id);
     this._netZeroTuples = [];
-    var cat    = this._budget .getSuspenseCategory();
+    var cat = this._budget .getSuspenseCategory();
     for (let child of cat .children || []) {
       var bal = this._actuals .getAmountRecursively (child, this._budget .getStartDate() ,this._budget .getEndDate());
       if (bal != 0) {

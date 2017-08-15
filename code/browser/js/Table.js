@@ -8,7 +8,7 @@ class Table extends TuplePresenter {
   }
 
   _onModelChange (eventType, doc, arg, source) {
-    if (eventType == ModelEvent .INSERT && source != this._view && ! this._options .noKeepSorted) {
+    if (eventType == ModelEvent .INSERT && source != this._view && ! this._options .noKeepSorted && this._sort) {
       var match = (this._view .getTuples() || [])
         .map    (t     => {return this._model .get (t._id)})
         .filter (t     => {return this._sort (doc, t) < 0})
