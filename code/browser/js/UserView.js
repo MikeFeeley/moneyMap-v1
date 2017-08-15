@@ -201,14 +201,16 @@ class UserView extends View {
   }
 
   selectTab (tab) {
-    let tabGroup = tab .tab .closest  ('._tabGroup');
-    let cs = tabGroup .find ('> ._tabGroupTabs > ._tab._selected ._field') .data ('field');
-    if (cs)
-      cs .setSelected (false);
-    tab .tab .find ('._field') .data('field') .setSelected (true);
-    tabGroup .find ('> ._tabGroupTabs > ._tab, > ._tabGroupContents > ._content') .removeClass ('_selected');
-    tab .tab     .addClass ('_selected');
-    tab .content .addClass ('_selected');
+    if (! tab .tab .hasClass ('_selected')) {
+      let tabGroup = tab .tab .closest  ('._tabGroup');
+      let cs = tabGroup .find ('> ._tabGroupTabs > ._tab._selected ._field') .data ('field');
+      if (cs)
+        cs .setSelected (false);
+      tab .tab .find ('._field') .data('field') .setSelected (true);
+      tabGroup .find ('> ._tabGroupTabs > ._tab, > ._tabGroupContents > ._content') .removeClass ('_selected');
+      tab .tab     .addClass ('_selected');
+      tab .content .addClass ('_selected');
+    }
   }
 
   addTabContentGroup (heading, toHtml) {

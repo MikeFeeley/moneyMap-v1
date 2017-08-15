@@ -5,7 +5,7 @@ var router  = express.Router();
 
 function* login (req, res, next) {
   try {
-    var u = yield (yield dbPromise) .collection ('users') .find ({username: req .body .username}) .toArray();
+    var u = yield (yield req .dbPromise) .collection ('users') .find ({username: req .body .username}) .toArray();
     if (u .length == 0)
       res .json ({noUser: true})
     else if (u [0] .password != req .body .password)
@@ -20,11 +20,11 @@ function* login (req, res, next) {
 
 function* signup (req, res, next) {
   try {
-    var u = yield (yield dbPromise) .collection ('users') .find ({username: req .body .username}) .toArray();
+    var u = yield (yield req .dbPromise) .collection ('users') .find ({username: req .body .username}) .toArray();
     if (u .length != 0)
       res .json ({alreadyExists: true})
     else {
-      var doc = yield (yield dbPromise) .collection ('users') .insert ({
+      var doc = yield (yield req .dbPromise) .collection ('users') .insert ({
         _id:       new ObjectID() .toString(),
         username:  req .body .username,
         password:  req .body .password,
@@ -50,7 +50,7 @@ function* updateUser (req, res, next) {
     else {
       var query = {_id: req .body .id, accessCap: req .body .accessCap};
       if (req .body .update .password) {
-        var user = yield (yield dbPromise) .collection ('users') .find (query) .toArray();
+        var user = yield (yield req .dbPromise) .collection ('users') .find (query) .toArray();
         if (! user)
           throw 'Invalid user update attempted';
         else user = user [0];
@@ -60,13 +60,13 @@ function* updateUser (req, res, next) {
         }
       }
       if (req .body .update .username) {
-        var u = yield (yield dbPromise) .collection ('users') .find ({username: req .body .update .username}) .toArray();
+        var u = yield (yield req .dbPromise) .collection ('users') .find ({username: req .body .update .username}) .toArray();
         if (u) {
           res .json ({alreadyExists: true});
           return;
         }
       }
-      var result = yield (yield dbPromise) .collection ('users') .update (query, {$set: req .body .update});
+      var result = yield (yield req .dbPromise) .collection ('users') .update (query, {$set: req .body .update});
       if (!result || !result .result .ok)
         throw 'Invalid user update attempted';
       res.json ({ok: true});

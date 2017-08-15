@@ -1,6 +1,7 @@
 var fs    = require('fs');
 var http  = require('http');
 var https = require('https');
+var async = require ('../lib/async.js');
 var credentials = {
   key:  fs.readFileSync ('../ssl/key.pem', 'utf8'),
   cert: fs.readFileSync ('../ssl/cert.pem', 'utf8')
@@ -23,9 +24,12 @@ app .use ((req, res, next) => {
 });
 app .use (express.static ('browser'));
 
-db        = require ('mongodb') .MongoClient;
-dbPromise = undefined;
-dbName    = undefined;
+db      = require ('mongodb') .MongoClient;
+dbCache = new Map();
+
+function getDB (name) {
+  return dbCache .get (name) || dbCache .set (name, db .connect ('mongodb://localhost:27017/' + name)) .get (name);
+}
 
 app.get ('/debug', function (req, res, next) {
   req .url = '/';
@@ -44,10 +48,7 @@ app.use(function (req, res, next) {
   } else {
     if (req .url .startsWith ('/admin/'))
       database = 'admin';
-    if (!dbPromise || dbName != database) {
-      dbPromise = db .connect ('mongodb://localhost:27017/' + database);
-      dbName    = database;
-    }
+    req .dbPromise = getDB (database);
     if (! req.url .startsWith ('/transaction/')) {
       if ((req .body .collection == 'transactions' && req .url != '/find'))
         req .url = '/transaction' + req.url;

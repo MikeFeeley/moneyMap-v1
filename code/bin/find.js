@@ -18,7 +18,7 @@ function notregexReplace (obj) {
 function* find (req, res, next) {
   try {
     notregexReplace (req.body.query);
-    res.json (yield (yield dbPromise) .collection (req.body.collection) .find (req.body.query, req.body.projection) .sort (req.body.sort) .toArray());
+    res.json (yield (yield req .dbPromise) .collection (req.body.collection) .find (req.body.query, req.body.projection) .sort (req.body.sort) .toArray());
   } catch (e) {
     console .log ('find: ', e, req.body);
     next (e);

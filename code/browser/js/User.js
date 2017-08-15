@@ -6,27 +6,79 @@ class User extends Observable {
     this._view .addObserver (null, (e,a) => {async (this, this._onViewChange) (e,a)});
   }
 
-  _onConfigModelChange (eventType, doc, arg, source) {
-    switch (eventType) {
-      case ModelEvent .INSERT:
-        this._insertConfig (doc);
-        break;
-      case ModelEvent .REMOVE:
-        break;
-      case ModelEvent .UPDATE:
-        break;
+  *_onConfigModelChange (eventType, doc, arg, source) {
+    if (this._configTabs) {
+      if (eventType == ModelEvent .INSERT) {
+        let ids = this._configTabs .find ('> ._tabGroupTabs > ._tab > ._field') .toArray() .map (f => {return $(f) .data ('field')._id});
+        if (ids .includes (doc._id))
+          eventType = ModelEvent .UPDATE;
+      }
+      switch (eventType) {
+        case ModelEvent .INSERT:
+          yield* this._insertConfig (doc);
+          break;
+        case ModelEvent .REMOVE:
+          break;
+        case ModelEvent .UPDATE:
+          let c = this._configs .find (c => {return c._id == doc._id});
+          if (c && arg .name) {
+            c .name = arg .name;
+            if (this._onLabelChange)
+              this._onLabelChange (this .getLabel());
+          }
+          break;
+      }
     }
-    console.log ('c', eventType, doc, arg, source);
-
   }
 
-  _onBudgetModelChange (eventType, doc, arg, source) {
-    console.log ('b', eventType, doc, arg, source);
-
+  *_onBudgetModelChange (eventType, doc, arg, source) {
+    if (this._configTabs) {
+      if (eventType == ModelEvent .INSERT) {
+        let ids = this._configTabs
+          .find ('> ._tabGroupContents > ._content > ._contentGroup > ._tabGroup > ._tabGroupTabs > ._tab > ._field')
+          .toArray()
+          .map (f => {return $(f) .data ('field')._id});
+        if (ids .includes (doc._id))
+          eventType = ModelEvent .UPDATE;
+      }
+      switch (eventType) {
+        case ModelEvent .INSERT:
+          yield* this._insertBudget (doc);
+          break;
+        case ModelEvent .REMOVE:
+          break;
+        case ModelEvent .UPDATE:
+          let b = this._budgets .find (b => {return b._id == doc._id});
+          if (b) {
+            for (let f in arg)
+              if (! f .startsWith ('_'))
+                b [f] = doc [f];
+          }
+          this._updateCookie();
+          if (arg .name) {
+            if (this._onLabelChange)
+              this._onLabelChange (this .getLabel())
+          } else if (arg .start || arg .end)
+            // Change to start or end date require re-evaluation of actuals; this is the easiest way to force that (perhaps overkill)
+            this._notifyObservers (UserEvent .NEW_CONFIGURATION);
+          break;
+      }
+    }
   }
 
-  _insertConfig (doc) {
+  *_insertConfig (doc) {
+    this._configs .push (doc);
+    this._selectConfig    (doc._id);
+    yield* this._addConfig (doc, true);
+  }
 
+  *_insertBudget (doc) {
+    let ci = this._configTabs
+      .find ('> ._tabGroupTabs > ._tab > ._field') .toArray()
+      .findIndex (f => {return $(f) .data ('field')._id == doc .configuration});
+    let budgetTabs = $(this._configTabs .find ('> ._tabGroupContents > ._content') .toArray() [ci])
+      .find ('> ._contentGroup > ._tabGroup')
+    this._addBudget (doc, budgetTabs, true);
   }
 
   *_onViewChange (eventType, arg) {
@@ -93,15 +145,25 @@ class User extends Observable {
         break;
 
       case UserViewEvent .TAB_CLICK:
-        if (arg .content)
+        if (arg .content) {
           this._view .selectTab (arg);
-        else
+          let field = arg .tab .find ('._field') .data('field');
+          if (field._name .startsWith ('c_'))
+            yield* this._selectConfig (field._id);
+          else
+            this._selectBudget (field._id);
+        } else
+          /* ADD */
           switch (arg .name) {
             case 'configurations':
-              this._configModel .insert ({user: this._uid, name: 'Untitled'});
+              this._cid = (yield* this._configModel .insert ({user: this._uid, name: 'Untitled'}))._id;
+              this._setModelsForConfig();
+              yield* this._initConfig();
+              yield* this._selectConfig (this._cid);
               break;
             case 'budgets':
-              this._budgetModel .insert ({name: 'Untitled'});
+              yield* this._initBudget();
+              this._selectBudget (this._bid);
               break;
           }
         break;
@@ -158,7 +220,7 @@ class User extends Observable {
     document .cookie = 'user=; expires=Thu, 01 Jan 1970 00:00:00 UTC'
   }
 
-  *_initConfig() {
+  *_initConfig () {
     yield* this._initBudget();
     yield* this._configModel .update (this._cid, {curBudget: this._bid});
     this._configs = yield* this._configModel .find();
@@ -167,11 +229,11 @@ class User extends Observable {
   *_initBudget() {
     let y  = Types .date._year (Types .date .today());
     let b  = yield* this._budgetModel .insert({
-      name:             'Default',
-      startMonth:       1,
+      name:             this._budgets && this._budgets .length? 'Untitled': 'Default',
       start:            Types .date._date (y,  1,  1),
       end:              Types .date._date (y, 12, 31),
-      startCashBalance: 0
+      startCashBalance: 0,
+      configuration:    this._cid
     });
     let cm = new Model ('categories', this .getDatabaseName());
     let exp = yield* cm .insert ({
@@ -209,6 +271,7 @@ class User extends Observable {
     })
     this._bid     = b._id;
     this._budgets = yield* this._budgetModel .find();
+    cm .delete();
   }
 
   login () {
@@ -218,12 +281,14 @@ class User extends Observable {
 
   logout() {
     this._deleteCookie();
-    this._uid = null;
+    this._uid     = null;
+    this._configs = null;
+    this._budgets = null;
     this._notifyObservers (UserEvent .LOGOUT);
   }
 
-  getDatabaseName() {
-    return 'config_' + this._cid + '_' + this._accessCap;
+  getDatabaseName (cid = this._cid) {
+    return 'config_' + cid + '_' + this._accessCap;
   }
 
   getLabel (onChange) {
@@ -246,22 +311,40 @@ class User extends Observable {
     this._view .addMenuItem (name, () => {this._view .removeMenu(); action()});
   }
 
+  *_selectConfig (cid) {
+    this._cid = cid;
+    this._setModelsForConfig();
+    this._bid     = (yield* this._configModel .find ({_id: this._cid})) [0] .curBudget;
+    this._configs = yield* this._configModel .find();
+    this._budgets = yield* this._budgetModel .find();
+    this._updateCookie();
+    this._notifyObservers (UserEvent .NEW_CONFIGURATION);
+    if (this._onLabelChange)
+      this._onLabelChange (this .getLabel());
+    async (null, Model .updateUser) (this._uid, this._accessCap, {curConfiguration: this._cid});
+  }
+
+  _selectBudget (bid) {
+    this._bid = bid;
+    this._updateCookie();
+    this._notifyObservers (UserEvent .NEW_CONFIGURATION);
+    if (this._onLabelChange)
+      this._onLabelChange (this .getLabel());
+    async (this._configModel, this._configModel .update) (this._cid, {curBudget: this._bid});
+  }
+
   showMenu (toHtml) {
     let html = $('body');
     this._view .addMenu (html, {top: 48, right: 10}, toHtml, {top: 0, right: 10});
     this._addMenuItem ('Edit Account', () => {async (this, this._showAccountEdit) ()});
     if (this._configs .length > 1) {
-      let items = this._configurations
+      let items = this._configs
         .filter (c => {return c._id != this._cid})
-        .map (b => {return {
+        .map (c => {return {
           name:   c .name,
           action: e => {
             this._view .removeMenu();
-            this._cid = c._id;
-            this._updateCookie();
-            this._setModelsForConfig();
-            this._notifyObservers (UserEvent .NEW_CONFIGURATION);
-            async (this._model, this._model .update) (this._uid, {curConfiguration: this._cid});
+            async (this, this._selectConfig) (c._id);
           }
         }})
       this._view .addSubMenu ('Change Configuration', items);
@@ -273,10 +356,7 @@ class User extends Observable {
           name:   b .name,
           action: e => {
             this._view .removeMenu();
-            this._bid = b._id;
-            this._updateCookie();
-            this._notifyObservers (UserEvent .NEW_CONFIGURATION);
-            async (this._configModel, this._configModel .update) (this._cid, {curBudget: this._bid});
+            this._selectBudget (b._id);
           }
         }})
       this._view .addSubMenu ('Change Budget', items);
@@ -291,8 +371,8 @@ class User extends Observable {
       this._budgetModel .delete();
     this._configModel = new Model ('configurations', 'user_' + this._uid + '_' + this._accessCap);
     this._budgetModel = new Model ('budgets',        this .getDatabaseName());
-    this._configModel .addObserver (this, this._onConfigModelChange);
-    this._budgetModel .addObserver (this, this._onBudgetModelChange);
+    this._configModel .addObserver (null, (e,d,a,s) => {async (this, this._onConfigModelChange) (e,d,a,s)});
+    this._budgetModel .addObserver (null, (e,d,a,s) => {async (this, this._onBudgetModelChange) (e,d,a,s)});
   }
 
   *_addAccountEdit() {
@@ -319,7 +399,7 @@ class User extends Observable {
     this._accountEditError = this._view .addLabel ('', update, '_errorMessage');
   }
 
-  *_addBudget (b, budgetTabs) {
+  _addBudget (b, budgetTabs, select) {
     let budgetTab = this._view .addTab (budgetTabs);
     this._view .addField (
       new ViewScalableTextbox ('b_name',  ViewFormats ('string'), '', '',  'Budget Name'),
@@ -337,29 +417,40 @@ class User extends Observable {
     this._view .addButton ('Delete Budget', () => {}, this._view .addLine (budgetTab .content));
     if (b._id == this._bid)
       this._view .selectTab (budgetTab);
+    if (select)
+      this._view .selectTab (budgetTab);
   }
 
-  *_addConfig (c, configTabs) {
-    let configTab = this._view .addTab (configTabs);
+  *_addConfig (c, select) {
+    let configTab = this._view .addTab (this._configTabs);
     this._view .addField (new ViewScalableTextbox ('c_name', ViewFormats ('string'), '', '', 'Config Name'), c._id, c .name, configTab .tab);
-    if (c._id == this._cid)
+    if (select)
       this._view .selectTab (configTab);
     let budgetContentGroup = this._view .addTabContentGroup ('Budgets', configTab .content);
     let budgetTabs = this._view .addTabGroup ('budgets', budgetContentGroup);
     this._view .addButton ('Delete Configuration', () => {}, this._view .addLine (configTab .content));
-    let budgets = yield* this._budgetModel .find ({})
+    let bm = new Model ('budgets', this .getDatabaseName (c._id));
+    let budgets = yield* bm .find ({});
+    bm .delete();
     let budgetTab = this._view .addTab (budgetTabs, '_add', true, 'Add');
     for (let b of budgets)
-      yield* this._addBudget (b, budgetTabs);
+      this._addBudget (b, budgetTabs, b._id == c .curBudget);
   }
 
   *_addConfigEdit (ae) {
     let configGroup = this._view .addGroup ('Configurations', ae, '_dark');
     let configs = yield* this._configModel .find ({});
-    let configTabs = this._view .addTabGroup ('configurations', configGroup);
-    this._view .addTab (configTabs, '_add', true, 'Add');
-    for (let c of configs)
-      yield* this._addConfig (c, configTabs)
+    this._configTabs = this._view .addTabGroup ('configurations', configGroup);
+    this._view .addTab (this._configTabs, '_add', true, 'Add');
+    let cid = this._cid;
+    for (let c of configs) {
+      this._cid = c._id
+      this._setModelsForConfig();
+      yield* this._addConfig (c, c._id == cid);
+    }
+    this._cid = cid;
+    this._setModelsForConfig();
+
   }
 
   *_updateAccount (values) {

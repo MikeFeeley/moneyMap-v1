@@ -4,9 +4,9 @@ var express  = require ('express');
 var async    = require ('../lib/async.js');
 var router   = express.Router();
 
-function* checkUpdate (collection, id, update) {
+function* checkUpdate (req, collection, id, update) {
   if (collection == 'categories' && update .budgets) {
-    var db = yield dbPromise;
+    var db = yield req .dbPromise;
     var category = (yield db .collection ('categories') .findOne ({_id: id}));
     if (category)
       for (let bid of category .budgets .filter (b => {return ! update .budgets .includes (b)})) {
@@ -26,8 +26,8 @@ function* updateOne (req, res, next) {
   try {
     if (!req.body.update)
       throw 'No update in body';
-    if (yield* checkUpdate (req .body .collection, req .body .id, req .body .update))
-      var result = yield (yield dbPromise) .collection (req.body.collection) .update ({_id: req.body.id}, {$set: req.body.update});
+    if (yield* checkUpdate (req, req .body .collection, req .body .id, req .body .update))
+      var result = yield (yield req .dbPromise) .collection (req.body.collection) .update ({_id: req.body.id}, {$set: req.body.update});
     else
       var result = false;
     res.json (result && result .result .ok);
@@ -69,7 +69,7 @@ function* updateList (req, res, next) {
       for (let item of req.body.list) {
         if (!item .update)
           throw 'No update in list';
-        var result = yield (yield dbPromise) .collection (req.body.collection) .update ({_id: item .id}, {$set: item .update});
+        var result = yield (yield req .dbPromise) .collection (req.body.collection) .update ({_id: item .id}, {$set: item .update});
         allOkay &= result && result .result .ok;
       }
     res.json (allOkay);

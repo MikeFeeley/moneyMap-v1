@@ -32,8 +32,10 @@ class Categories {
     doc [parent] = doc [parent]? this._index .get (doc [parent]): undefined;
     if (doc [parent])
       var list = (doc [parent] [children] = doc [parent] [children] || [])
-    else
+    else if (doc .budgets .includes (this._budget .getId()))
       var list = (this._roots = this._roots || [])
+    else
+      return;
     var index = list .findIndex (d => {return d .sort >= doc .sort});
     list .splice (index >=0? index: list.length + 1, 0, doc);
   }
@@ -94,11 +96,11 @@ class Categories {
   }
 
   getSiblings (doc, parent='parent', children='children') {
-    return this .getSiblingsAndSelf (doc, parent, children) .filter (s => {return s._id != doc._id})
+    return this .getSiblingsAndSelf (doc, parent, children) .filter (s => {return s._id != doc._id}) || [];
   }
 
   getSiblingsAndSelf (doc, parent='parent', children='children') {
-    return (doc [parent]? doc [parent] [children]: this._roots);
+    return (doc [parent]? doc [parent] [children]: this._roots) || [];
   }
 
   getRoots() {

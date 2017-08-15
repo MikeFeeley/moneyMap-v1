@@ -5,8 +5,8 @@ var assert   = require ('assert');
 var async    = require ('../lib/async.js');
 var router  = express.Router();
 
-function* remove (collection, id) {
-  var db = yield dbPromise;
+function* remove (req, collection, id) {
+  var db = yield req .dbPromise;
 //  if (collection == 'categories') {
 //    var categories   = db .collection ('categories');
 //    var transactions = db .collection ('transactions');
@@ -29,7 +29,7 @@ function* remove (collection, id) {
 
 function* removeOne (req, res, next) {
   try {
-    res.json (yield* remove (req .body .collection, req .body .id));
+    res.json (yield* remove (req, req .body .collection, req .body .id));
   } catch (e) {
     console .log ('removeOne: ', e, req.body);
     next (e);
@@ -42,7 +42,7 @@ function* removeList (req, res, next) {
       throw ('No list in body')
     var results = [];
     for (let id of req .body .list)
-      results .push (yield* remove (req .body .collection, id))
+      results .push (yield* remove (req, req .body .collection, id))
     res.json (results);
   } catch (e) {
     console .log ('removeList: ', e, req.body);

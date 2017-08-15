@@ -119,6 +119,7 @@ body {
         > ._line {
           display: flex;
           margin-top: 12px;
+          margin-right: 12px;
           > button {
             background: #33b1ff;
             color:      white;
