@@ -31,7 +31,7 @@ class App {
       this._perT = this._tabs .addTab  ('Perspective');
       this._weaT = this._tabs .addTab  ('Wealth');
       this._setT = this._tabs .addTab  ('Settings');
-      this._tabs .addTool (this._user .getLabel (l => {
+      let tl = this._tabs .addTool (this._user .getLabel (l => {
         this._tabs .changeToolName (tl, l);
       }), e => {this._user .showMenu ($(e .target))})
     }
