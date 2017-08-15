@@ -1,7 +1,7 @@
 var fs    = require('fs');
 var http  = require('http');
 var https = require('https');
-var async = require ('../lib/async.js'); 
+var async = require ('../lib/async.js');
 var credentials = {
   key:  fs.readFileSync ('../ssl/key.pem', 'utf8'),
   cert: fs.readFileSync ('../ssl/cert.pem', 'utf8')
