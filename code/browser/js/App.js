@@ -3,7 +3,7 @@ $(document) .ready (() => {
   app .start();
 });
 
-class App {
+class App { 
 
   start() {
     ui .ModalStack .init();
