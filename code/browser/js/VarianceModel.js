@@ -146,7 +146,7 @@ class VarianceModel extends Observable {
   /**
    * Get budget and actuals amounts for category
    */
-  _getAmount (cat, period, skip, excludeChild) {
+  _getAmount (cat, period, skip) {
     var isCredit  = this._budget .isCredit    (cat);
     var isGoal    = this._budget .isGoal      (cat);
     var type      = this._getScheduleTypeName (cat);
@@ -175,9 +175,9 @@ class VarianceModel extends Observable {
   /**
    * Get budget and actual amounts for category and its children
    */
-  _getAmountDown (cat, period, skip, excludeChild) {
+  _getAmountDown (cat, period, skip, excludeChild, transactionFocused) {
     var type      = this._getScheduleTypeName (cat);
-    var amount    = this._getAmount (cat, period, skip, excludeChild);
+    var amount    = this._getAmount (cat, period, skip);
     var chiAmount = (cat .children || [])
       .filter (c => {return c != excludeChild})
       .reduce ((a, c) => {
@@ -215,11 +215,19 @@ class VarianceModel extends Observable {
       chiAmount .none = undefined;
     }
 
+    // If transactionFocused then only excess available budget propagates from children
+    if (transactionFocused)
+      for (let sch of ['none','month','year'])
+        for (let per of ['prev','cur'])
+          if (chiAmount [sch]) {
+            chiAmount [sch] .budget [per] = Math .max (0, chiAmount [sch] .budget [per] - chiAmount [sch] .actual [per]);
+            chiAmount [sch] .actual [per] = 0;
+          }
+
     amount        = this._addAmounts (amount, chiAmount);
     amount .type  = type;
     return amount;
   }
-
 
   /**
    * getAmountUp
@@ -446,7 +454,7 @@ class VarianceModel extends Observable {
     for (let cat of (cats && ([] .concat (cats)) || [])) {
       let children = this._getVarianceListByPeriod (cat .children, period, transactionFocused);
       if (transactionFocused || this._budget .getCategories() .getType (cat) != ScheduleType .NONE) {
-        let amount   = transactionFocused? this._getAmountDown (cat, period): this._getAmountUpDown (cat, period) .amount;
+        let amount   = transactionFocused? this._getAmountDown (cat, period, null, null, true): this._getAmountUpDown (cat, period) .amount;
         let variance = ['prev', 'cur'] .reduce ((o,per) => {
           o [per] = ['month', 'year'] .reduce ((total, sch) => {
             return total + (amount [sch]? amount [sch] .budget [per] - amount [sch] .actual [per]: 0);
