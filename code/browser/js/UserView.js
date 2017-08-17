@@ -184,7 +184,7 @@ class UserView extends View {
   addTabGroup (name, toHtml) {
     let g = $('<div>', {class: '_tabGroup', data: {name: name}}) .appendTo (toHtml);
     let f = $('<div>', {class: '_filler', html: '&nbsp;'});
-    f .click (() => {this._notifyObservers (UserViewEvent .TAB_CLICK, {name: name})});
+    f .click (e => {this._notifyObservers (UserViewEvent .TAB_CLICK, {name: name, target: $(e .target)})});
     return g
       .append ($('<div>', {class: '_tabGroupTabs'}) .append (f))
       .append ($('<div>', {class: '_tabGroupContents'}))
@@ -196,7 +196,7 @@ class UserView extends View {
     let t = $('<div>', {class: '_tab ' + subType, text: text}) .insertBefore (ib);
     let c = ! noContent && $('<div>', {class: '_content'})     .appendTo     (toGroup .find ('> ._tabGroupContents'));
     let r = noContent? {name: toGroup .data ('name')} : {tab: t, content: c};
-    t .click (() => {this._notifyObservers (UserViewEvent .TAB_CLICK, r)})
+    t .click (e => {r .target = $(e .target); this._notifyObservers (UserViewEvent .TAB_CLICK, r)})
     return {tab: t, content: c}
   }
 
@@ -223,11 +223,48 @@ class UserView extends View {
     this._tabbedContents .find     ('> :not(.background)') .addClass ('background');
     this._accountEdit .removeClass ('background');
   }
+
+  addBudgetAddPopup (positionTarget, budgets) {
+    let popup = $('<div>', {class: '_addPopup'}) .appendTo (this._accountEdit .find ('> div'));
+    popup .css (ui .calcPosition (positionTarget, this._accountEdit, {top: 40, left: 0}));
+    $('<div>', {text: 'Add New Budget'}) .appendTo (popup);
+    $('<form>') .appendTo (popup)
+      .append ($('<label>')
+        .append ($('<input>', {type: 'radio', prop: {checked: true}}))
+        .append ($('<span>',  {text: 'Rollover to next year from budget'}))
+        .append ($('<select>'))
+      )
+    $('<div>') .appendTo (popup)
+      .append (
+        $('<button>', {text: 'Add'})
+          .click (() => {
+            this._notifyObservers (UserViewEvent .BUDGET_ROLLOVER, {from: popup .find ('select') .val()})
+            ui .ModalStack .delete (modal);
+            popup .remove();
+          })
+      )
+      .append (
+        $('<button>', {text: 'Cancel'})
+          .click (() => {
+            ui .ModalStack .delete (modal);
+            popup .remove();
+          })
+      )
+    for (let select of popup .find ('select') .toArray())
+      for (let budget of budgets)
+        $('<option>', {value: budget._id, text: budget .name}) .appendTo (select);
+    let modal = ui .ModalStack .add (
+      e  => {return e && $.contains (document .body, e .target) && ! $.contains (popup .get (0), e .target)},
+      () => {popup .remove();},
+      true
+    );
+  }
 }
 
 var UserViewEvent = {
   LOGIN: 0,
   SIGNUP_ASK: 1,
   SIGNUP: 2,
-  TAB_CLICK: 3
+  TAB_CLICK: 3,
+  BUDGET_ROLLOVER: 4
 }

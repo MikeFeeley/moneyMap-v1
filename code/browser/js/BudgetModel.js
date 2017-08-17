@@ -60,12 +60,18 @@ class BudgetModel extends Observable {
     })
   }
 
-  getLabel (date = {start: this._budget .start, end: this._budget .end}) {
-    let sy = Types .date._year (date .start);
-    if (this._budget .name .includes ('/'))
-      return sy + '/'+ ((sy % 10) + 1)
-    else
+  static getLabelForDates (start, end) {
+    let sy = Types .date._year (start);
+    let ey = Types .date._year (end);
+    if (sy == ey)
       return sy .toString();
+    else
+      return sy + '/'+ ((sy % 10) + 1)
+
+  }
+
+  getLabel (date = {start: this._budget .start, end: this._budget .end}) {
+    return BudgetModel .getLabelForDates (date .start, date .end);
   }
 
   getCategories() {

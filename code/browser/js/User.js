@@ -68,17 +68,21 @@ class User extends Observable {
 
   *_insertConfig (doc) {
     this._configs .push (doc);
+    this._configs = this._configs .sort ((a,b) => {return a .name < b .name? -1: a .name == b .name? 0: 1})
     this._selectConfig    (doc._id);
     yield* this._addConfig (doc, true);
   }
 
   *_insertBudget (doc) {
+    this._budgets .push (doc);
+    this._budgets = this._budgets .sort ((a,b) => {return a .name > b .name? -1: a .name == b .name? 0: 1});
     let ci = this._configTabs
       .find ('> ._tabGroupTabs > ._tab > ._field') .toArray()
       .findIndex (f => {return $(f) .data ('field')._id == doc .configuration});
     let budgetTabs = $(this._configTabs .find ('> ._tabGroupContents > ._content') .toArray() [ci])
       .find ('> ._contentGroup > ._tabGroup')
-    this._addBudget (doc, budgetTabs, true);
+    if (budgetTabs)
+      this._addBudget (doc, budgetTabs, true);
   }
 
   *_onViewChange (eventType, arg) {
@@ -91,20 +95,16 @@ class User extends Observable {
         else if (login .badPassword)
           this._view .loginError ('Incorrect password');
         else {
-          let user = login .user;
+          let user         = login .user;
           this._uid        = user._id;
           this._accessCap  = user .accessCap;
           this._username   = user .username;
           this._name       = user .name;
           this._cid        = user .curConfiguration;
-          this._setModelsForConfig();
-          this._configs    = (yield* this._configModel .find());
-          this._budgets    = (yield* this._budgetModel .find());
-          this._bid        = this._configs .find (c => {return c._id == this._cid}) .curBudget;
-          if (! this._budgets .find (b => {return b._id == this._bid}))
-            this._bid = this._budgets [0]._id;
           if (arg .remember)
             this._addCookie();
+          this._setModelsForConfig();
+          yield* this._init();
           this._view .removeLogin();
           this._notifyObservers (UserEvent .NEW_USER);
         }
@@ -164,11 +164,14 @@ class User extends Observable {
               yield* this._selectConfig (this._cid);
               break;
             case 'budgets':
-              yield* this._initBudget();
-              this._selectBudget (this._bid);
+              this._view .addBudgetAddPopup (arg .target, this._budgets);
               break;
           }
         break;
+
+      case UserViewEvent .BUDGET_ROLLOVER:
+        yield* this._rollover (arg .from);
+        break
 
       case ViewEvent .UPDATE:
         if (arg .id && arg .value) {
@@ -190,7 +193,7 @@ class User extends Observable {
   }
 
   _addCookie() {
-    const pickle = ['_uid', '_accessCap', '_username', '_name', '_cid', '_bid', '_configs', '_budgets'];
+    const pickle = ['_uid', '_accessCap', '_username', '_name', '_cid'];
     let   expiry = new Date();
     expiry .setTime (expiry .getTime() + (1000 * 24 * 60 * 60 * 1000));
     document .cookie =
@@ -203,19 +206,28 @@ class User extends Observable {
       this._addCookie();
   }
 
-  _tryCookie() {
+  *_tryCookie() {
     let cookie = document .cookie .split (';') .find (c => {return c .startsWith ('user={')});
     if (cookie) {
       let cv = JSON .parse (cookie .slice (5));
       for (let p in cv)
         this [p] = cv [p];
       this._setModelsForConfig();
+      yield* this._init();
       this._hasCookie = true;
       this._deleteCookie()
       this._notifyObservers (UserEvent .NEW_USER);
       return true;
     } else
       return false;
+  }
+
+  *_init() {
+    this._configs = (yield* this._configModel .find()) .sort ((a,b) => {return a .name < b .name? -1: a .name == b.name? 0: 1});
+    this._budgets = (yield* this._budgetModel .find()) .sort ((a,b) => {return a .name > b .name? -1: a .name == b.name? 0: 1});
+    this._bid     = this._configs .find (c => {return c._id == this._cid}) .curBudget;
+    if (! this._budgets .find (b => {return b._id == this._bid}))
+      this._bid = this._budgets [0]._id;
   }
 
   _deleteCookie() {
@@ -225,7 +237,7 @@ class User extends Observable {
   *_initConfig () {
     yield* this._initBudget();
     yield* this._configModel .update (this._cid, {curBudget: this._bid});
-    this._configs = yield* this._configModel .find();
+    this._configs = (yield* this._configModel .find()) .sort ((a,b) => {return a .name < b .name? -1: a .name == b .name? 0: 1})
   }
 
   *_initBudget() {
@@ -272,12 +284,12 @@ class User extends Observable {
       suspenseCategory: sus._id
     })
     this._bid     = b._id;
-    this._budgets = yield* this._budgetModel .find();
+    this._budgets = (yield* this._budgetModel .find()) .sort ((a,b) => {return a .name > b .name? -1: a .name == b .name? 0: 1});
     cm .delete();
   }
 
-  login () {
-    if (! this._tryCookie ())
+  * login () {
+    if (! (yield* this._tryCookie ()))
       this._view .addLogin ($('body'));
   }
 
@@ -315,11 +327,9 @@ class User extends Observable {
 
   *_selectConfig (cid) {
     this._cid = cid;
-    this._setModelsForConfig();
-    this._bid     = (yield* this._configModel .find ({_id: this._cid})) [0] .curBudget;
-    this._configs = yield* this._configModel .find();
-    this._budgets = yield* this._budgetModel .find();
     this._updateCookie();
+    this._setModelsForConfig();
+    yield* this._init();
     this._notifyObservers (UserEvent .NEW_CONFIGURATION);
     if (this._onLabelChange)
       this._onLabelChange (this .getLabel());
@@ -432,7 +442,7 @@ class User extends Observable {
     let budgetTabs = this._view .addTabGroup ('budgets', budgetContentGroup);
     this._view .addButton ('Delete Configuration', () => {}, this._view .addLine (configTab .content));
     let bm = new Model ('budgets', this .getDatabaseName (c._id));
-    let budgets = yield* bm .find ({});
+    let budgets = (yield* bm .find ({})) .sort ((a,b) => {return a .name > b .name? -1: a .name == b .name? 0: 1});
     bm .delete();
     let budgetTab = this._view .addTab (budgetTabs, '_add', true, 'Add');
     for (let b of budgets)
@@ -486,6 +496,109 @@ class User extends Observable {
 
   *_showAccountEdit() {
     yield* this._addAccountEdit();
+  }
+
+  *_rollover (from) {
+    let b = Object .assign ({}, this._budgets .find (b => {return b._id == from}));
+    b .start            = Types .date .addYear (b .start, 1);
+    b .end              = Types .date .addYear (b .end,   1);
+    b .name             = BudgetModel .getLabelForDates (b .start, b .end);
+    b .startCashBalance = 0;
+    b._id               = undefined;
+    b = yield* this._budgetModel .insert (b);
+    let cm = new Model ('categories', this .getDatabaseName());
+    let sm = new Model ('schedules',  this .getDatabaseName());
+    let fc = (yield* cm .find ({budgets: from})) .reduce ((m,c) => {m .set (c._id, c); return m}, new Map());
+    let fs = yield* sm .find ({budget: from});
+
+    // get new schedule
+    let ts = [];
+    for (let sch of fs || []) {
+
+      if (! Types .date .isBlank (sch .start) && fc .get (sch .category)) {
+        let c   = Types .date._year (b .start) - (Types .date .isYear (sch .start)? sch.start: Types .date._year (sch .start));
+        sch._id = undefined;
+
+        if (Types .date .isYear (sch .start)) {
+          if (sch .repeat && (! sch .limit || sch .limit >= c)) {
+            if (c > 0) {
+              sch .start += c;
+              if (sch .limit) {
+                sch .limit -= c;
+                sch .repeat = sch .limit > 0;
+              }
+            }
+            ts .push (sch);
+          }
+
+        } else if (Types .date .isInfinity (sch .end)) {
+          if (c > 0)
+            sch .start = Types .date .addYear (sch .start, c);
+          ts .push (sch);
+
+        } else {
+          if (sch .repeat && (! sch .limit || sch .limit >= c)) {
+            if (c > 0) {
+              sch .start = Types .date .addYear (sch .start, c);
+              if (Types .date .isMonth (sch .end))
+                sch .end = Types .date .addYear (sch .end,   c);
+              if (sch .limit) {
+                sch .limit -= c;
+                sch .repeat = sch .limit > 0;
+              }
+            }
+            ts .push (sch)
+          }
+        }
+       }
+    }
+
+    // get new categories
+    let tc = new Set();
+    let addCat = id => {
+      if (id) {
+        tc .add (id);
+        addCat (fc .get (id) .parent);
+      }
+    }
+    for (let sch of ts || [])
+      addCat (sch .category);
+
+    // ensure that all categories have a schedule
+    let tsc = ts .reduce ((s,sch) => {s .add (sch .category); return s}, new Set());
+    for (let cid of tc .keys())
+      if (! tsc .has (cid))
+        ts .push ({
+          amount:   0,
+          category: cid,
+          limit:    0,
+          repeat:   true,
+          sort:     0,
+          start:    ''
+        });
+
+    // set budget for schedules
+    for (let sch of ts)
+      sch .budget = b._id;
+
+    // update the models
+    let updateList = []
+    for (let cid of Array .from (tc .keys()))
+      updateList .push ({
+        id:     cid,
+        update: {
+          budgets: fc .get (cid) .budgets .concat (b._id)
+        }
+      })
+    let catUpdate = cm .updateList (updateList);
+    let schInsert = sm .insertList (ts);
+    yield* catUpdate;
+    yield* schInsert;
+
+    // finish
+    cm .delete();
+    sm .delete();
+    this._selectBudget (b._id);
   }
 }
 

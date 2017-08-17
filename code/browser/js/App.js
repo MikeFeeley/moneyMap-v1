@@ -9,7 +9,7 @@ class App {
     ui .ModalStack .init();
     this._user = new User();
     this._user .addObserver (null, e => {async (this, this._configurationChange) (e)});
-    this._user .login();
+    async (this._user, this._user .login)();
   }
 
   _deleteModels() {
@@ -73,7 +73,7 @@ class App {
 
    } else if (eventType == UserEvent .LOGOUT) {
      $('body') .empty();
-     this._user .login();
+     async (this._user, this._user .login)();
    }
   }
 }//
