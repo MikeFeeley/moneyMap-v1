@@ -200,6 +200,15 @@ class UserView extends View {
     return {tab: t, content: c}
   }
 
+  removeTab (tab) {
+    let tabs     = tab .parent() .find ('> ._tab')                                        .toArray();
+    let contents = tab .closest ('._tabGroup') .find ('> ._tabGroupContents > ._content') .toArray();
+    let i = tabs .indexOf (tab [0]);
+    $(tabs [i])     .remove();
+    $(contents [i]) .remove();
+
+  }
+
   selectTab (tab) {
     if (! tab .tab .hasClass ('_selected')) {
       let tabGroup = tab .tab .closest  ('._tabGroup');

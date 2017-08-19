@@ -46,6 +46,20 @@ class User extends Observable {
           yield* this._insertBudget (doc);
           break;
         case ModelEvent .REMOVE:
+          let i = this._budgets .findIndex (b => {return b._id == doc._id});
+          if (i > -1) {
+            let did = this._budgets [i]._id;
+            this._budgets .splice (i, 1);
+            let budgetTabs = this._configTabs .find ('> ._tabGroupContents > ._content > ._contentGroup > ._tabGroup > ._tabGroupTabs > ._tab');
+            let bi         = budgetTabs .find ('> ._field') .toArray() .findIndex (f => {return $(f) .data ('field')._id == did});
+            this._view .removeTab ($(budgetTabs [bi]));
+            if (this._bid == did) {
+              this._selectBudget (this._budgets [0]._id);
+              let tabs     = this._configTabs .find ('> ._tabGroupContents > ._content > ._contentGroup > ._tabGroup > ._tabGroupTabs > ._tab') .toArray();
+              let contents = this._configTabs .find ('> ._tabGroupContents > ._content > ._contentGroup > ._tabGroup > ._tabGroupContents > ._content') .toArray();
+              this._view .selectTab ({tab: $(tabs [0]), content: $(contents [0])});
+            }
+          }
           break;
         case ModelEvent .UPDATE:
           let b = this._budgets .find (b => {return b._id == doc._id});
@@ -385,6 +399,8 @@ class User extends Observable {
     this._budgetModel = new Model ('budgets',        this .getDatabaseName());
     this._configModel .addObserver (null, (e,d,a,s) => {async (this, this._onConfigModelChange) (e,d,a,s)});
     this._budgetModel .addObserver (null, (e,d,a,s) => {async (this, this._onBudgetModelChange) (e,d,a,s)});
+    this._configModel .observe();
+    this._budgetModel .observe();
   }
 
   *_addAccountEdit() {
@@ -426,7 +442,9 @@ class User extends Observable {
       new ViewTextbox ('b_end',   ViewFormats ('dateDMY'), '', '', 'End Date'),
       b._id, b .end, line, 'End'
     );
-    this._view .addButton ('Delete Budget', () => {}, this._view .addLine (budgetTab .content));
+    this._view .addButton ('Delete Budget', () => {
+      async (this, this._deleteBudget) (b._id);
+    }, this._view .addLine (budgetTab .content));
     if (b._id == this._bid)
       this._view .selectTab (budgetTab);
     if (select)
@@ -496,6 +514,44 @@ class User extends Observable {
 
   *_showAccountEdit() {
     yield* this._addAccountEdit();
+  }
+
+  *_deleteBudget (id) {
+    let cm         = new Model ('categories', this .getDatabaseName());
+    let sm         = new Model ('schedules',  this .getDatabaseName());
+    let updateList = (yield* cm .find ({budgets: id}))
+      .map (c => {
+        let i = c .budgets .indexOf (id);
+        if (i > 0) {
+          c .budgets .splice (i, 1)
+          return {
+            id:     c._id,
+            update: {
+              budgets: c .budgets
+            }
+          }
+        }
+      })
+      .filter (c => {return c})
+    let removeList = updateList
+      .filter (u => {return u .update .budgets .length == 0})
+      .map    (u => {return u .id});
+    updateList = updateList
+      .filter (u => {return u .update .budgets .length > 0})
+//    let categoriesUpdate = cm .updateList (updateList);
+//    let categoriesRemove = cm .removeList (removeList);
+//    let schedulesRemove  = sm .removeList ((yield* sm .find ({budget: id})) .map (s => {return s._id}))
+//    let budgetUpdate     = this._budgetModel .remove (id);
+        yield* cm .updateList (updateList);
+        yield* cm .removeList (removeList);
+        yield* sm .removeList ((yield* sm .find ({budget: id})) .map (s => {return s._id}))
+        yield* this._budgetModel .remove (id);
+//    yield* categoriesUpdate;
+//    yield* categoriesRemove;
+//    yield* schedulesRemove;
+//    yield* budgetUpdate;
+    cm .delete();
+    sm .delete();
   }
 
   *_rollover (from) {

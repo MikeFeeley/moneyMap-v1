@@ -71,8 +71,11 @@ class Categories {
         this._addParentLink (doc, parent, children);
         break;
       case ModelEvent.REMOVE:
-        this._removeParentLink (this._index .get (doc._id), parent, children);
-        this._index .delete (doc._id);
+        let d = this._index .get (doc._id);
+        if (d) {
+          this._removeParentLink (d, parent, children);
+          this._index .delete (doc._id);
+        }
         break;
     }
   }
