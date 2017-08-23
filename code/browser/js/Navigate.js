@@ -1298,6 +1298,10 @@ class Navigate {
         for (let r of g .rows)
           r .amounts = [r .amounts [sc]];
     }
+    for (let g of result .groups)
+      g .rows = g .rows .filter (r => {
+        return r .amounts .find (a => {return a .value != 0})
+      })
     return result;
   }
 
