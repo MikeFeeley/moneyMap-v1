@@ -917,7 +917,8 @@ class NavigateView extends Observable  {
             html:     html,
             position: position,
             altClick: e .originalEvent && (e .originalEvent .webkitForce > 1 || e .originalEvent .altKey),
-            view:     this
+            view:     this,
+            dataset:  dataset
           })
           e .stopPropagation();
           return false;
