@@ -561,6 +561,11 @@ class User extends Observable {
     let cm = new Model ('categories', this .getDatabaseName());
     let sm = new Model ('schedules',  this .getDatabaseName());
     let fc = (yield* cm .find ({budgets: from})) .reduce ((m,c) => {m .set (c._id, c); return m}, new Map());
+    for (let c of fc .values()) {
+      let parent = c .parent && fc .get (c .parent);
+      if (parent)
+        parent .children = (parent .children || []) .concat (c);
+    }
     let fs = yield* sm .find ({budget: from});
 
     // get new schedule
@@ -590,9 +595,9 @@ class User extends Observable {
           ts .push (sch);
 
         } else {
-          if (sch .repeat && (! sch .limit || sch .limit >= c)) {
+          if ((sch .repeat && (! sch .limit || sch .limit >= c)) || (sch .end >= b .start)) {
             sch .start = Types .date .addYear (sch .start, c);
-            if (Types .date .isMonth (sch .end))
+            if (Types .date .isMonth (sch .end) && sch .end < b.start)
               sch .end = Types .date .addYear (sch .end,   c);
             if (sch .limit) {
               sch .limit -= c;
@@ -612,8 +617,25 @@ class User extends Observable {
         addCat (fc .get (id) .parent);
       }
     }
+    let addCatAndDescendants = id => {
+      addCat (id);
+      for (let c of fc .get (id) .children || [])
+        addCatAndDescendants (c._id);
+    }
     for (let sch of ts || [])
       addCat (sch .category);
+
+    // add no-budget categories descendants
+    let bc = fs .filter (s => {return ! Types .date .isBlank (s .start)}) .reduce ((s, sch) => {s .add (sch .category); return s}, new Set());
+    let hasNoBudget = cats => {
+      return ((cats || []) .length == 0) || (! cats .find (cat => {return bc .has (cat._id) || (! hasNoBudget (cat .children))}))
+
+    }
+    for (let cid of tc) {
+      for (let cat of fc .get (cid) .children || [])
+        if (hasNoBudget ([cat]))
+          addCatAndDescendants (cat._id);
+    }
 
     // ensure that all categories have a schedule
     let tsc = ts .reduce ((s,sch) => {s .add (sch .category); return s}, new Set());
