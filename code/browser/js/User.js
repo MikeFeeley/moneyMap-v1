@@ -538,18 +538,14 @@ class User extends Observable {
       .map    (u => {return u .id});
     updateList = updateList
       .filter (u => {return u .update .budgets .length > 0})
-//    let categoriesUpdate = cm .updateList (updateList);
-//    let categoriesRemove = cm .removeList (removeList);
-//    let schedulesRemove  = sm .removeList ((yield* sm .find ({budget: id})) .map (s => {return s._id}))
-//    let budgetUpdate     = this._budgetModel .remove (id);
-        yield* cm .updateList (updateList);
-        yield* cm .removeList (removeList);
-        yield* sm .removeList ((yield* sm .find ({budget: id})) .map (s => {return s._id}))
-        yield* this._budgetModel .remove (id);
-//    yield* categoriesUpdate;
-//    yield* categoriesRemove;
-//    yield* schedulesRemove;
-//    yield* budgetUpdate;
+    let categoriesUpdate = cm .updateList (updateList);
+    let categoriesRemove = cm .removeList (removeList);
+    let schedulesRemove  = sm .removeList ((yield* sm .find ({budget: id})) .map (s => {return s._id}))
+    let budgetUpdate     = this._budgetModel .remove (id);
+    yield* categoriesUpdate;
+    yield* categoriesRemove;
+    yield* schedulesRemove;
+    yield* budgetUpdate;
     cm .delete();
     sm .delete();
   }
@@ -575,7 +571,10 @@ class User extends Observable {
         let c   = Types .date._year (b .start) - (Types .date .isYear (sch .start)? sch.start: Types .date._year (sch .start));
         sch._id = undefined;
 
-        if (Types .date .isYear (sch .start)) {
+        if (c < 0) {
+          ts .push (sch);
+
+        } else if (Types .date .isYear (sch .start)) {
           if (sch .repeat && (! sch .limit || sch .limit >= c)) {
             if (c > 0) {
               sch .start += c;
