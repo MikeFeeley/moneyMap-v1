@@ -1280,7 +1280,7 @@ class Navigate {
         }
       })
     }
-    result .startBal = [(this .historicBudgets && this._historicBudgets [0] && this._historicBudgets [0] .startCashBalance) || 0];
+    result .startBal = [(this._historicBudgets && this._historicBudgets [0] && this._historicBudgets [0] .startCashBalance) || 0];
     for (let i = 1; i < result .cols .length; i++)
       result .startBal [i] = result .startBal [i-1] + result .groups .reduce ((t,g) => {
         return t + g .rows .reduce ((t,r) => {
