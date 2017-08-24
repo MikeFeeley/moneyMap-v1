@@ -571,36 +571,31 @@ class User extends Observable {
         let c   = Types .date._year (b .start) - (Types .date .isYear (sch .start)? sch.start: Types .date._year (sch .start));
         sch._id = undefined;
 
-        if (c < 0) {
+        if (c <= 0) {
           ts .push (sch);
 
         } else if (Types .date .isYear (sch .start)) {
           if (sch .repeat && (! sch .limit || sch .limit >= c)) {
-            if (c > 0) {
-              sch .start += c;
-              if (sch .limit) {
-                sch .limit -= c;
-                sch .repeat = sch .limit > 0;
-              }
+            sch .start += c;
+            if (sch .limit) {
+              sch .limit -= c;
+              sch .repeat = sch .limit > 0;
             }
             ts .push (sch);
           }
 
         } else if (Types .date .isInfinity (sch .end)) {
-          if (c > 0)
-            sch .start = Types .date .addYear (sch .start, c);
+          sch .start = Types .date .addYear (sch .start, c);
           ts .push (sch);
 
         } else {
           if (sch .repeat && (! sch .limit || sch .limit >= c)) {
-            if (c > 0) {
-              sch .start = Types .date .addYear (sch .start, c);
-              if (Types .date .isMonth (sch .end))
-                sch .end = Types .date .addYear (sch .end,   c);
-              if (sch .limit) {
-                sch .limit -= c;
-                sch .repeat = sch .limit > 0;
-              }
+            sch .start = Types .date .addYear (sch .start, c);
+            if (Types .date .isMonth (sch .end))
+              sch .end = Types .date .addYear (sch .end,   c);
+            if (sch .limit) {
+              sch .limit -= c;
+              sch .repeat = sch .limit > 0;
             }
             ts .push (sch)
           }
