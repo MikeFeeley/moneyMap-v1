@@ -267,7 +267,7 @@ class TransactionHUD extends TransactionAndRulesTable {
   }
 
   static showRefineByField (title, query, field, selectedText, accounts, variance, toHtml, position, onClose, monthStart, monthEnd) {
-    var query = Object .keys (query) .reduce ((o,f) => {o[f] = query[f]; return o}, {});
+    query = Object .keys (query) .reduce ((o,f) => {o[f] = query[f]; return o}, {});
     if (selectedText .length && ['payee', 'description'] .includes (field._name)) {
       var selectValue = selectedText;
       if (field._value .startsWith (selectedText)) {
@@ -321,7 +321,7 @@ class TransactionHUD extends TransactionAndRulesTable {
       $options: {updateDoesNotRemove: true}
     };
     if (selectPayee)
-      query .payee = {$regex: '^' + selectPayee};
+      query .payee = {$regex: '^' + selectPayee .replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + '.*'};
     TransactionHUD .show (title, query, accounts, variance, toHtml, position);
   }
 
@@ -337,7 +337,7 @@ class TransactionHUD extends TransactionAndRulesTable {
   }
 
   static show (title, query, accounts, variance, toHtml, position, onClose, monthStart, monthEnd) {
-    var hud = new TransactionHUD (title, query, accounts, variance, onClose, monthStart, monthEnd);
+   var hud = new TransactionHUD (title, query, accounts, variance, onClose, monthStart, monthEnd);
     async (hud, hud .addHtml) (toHtml, position);
   }
 }
