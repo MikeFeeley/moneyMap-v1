@@ -236,8 +236,11 @@ class Navigate {
               ? Math .min(Types .date. today(), Types .date .monthEnd (Types .date .addMonthStart (this._budget .getStartDate(), arg . labelIndex)))
               : undefined;
             BudgetProgressHUD .show (id, arg .html, arg .position, this._accounts, this._variance, date);
-          } else
-            this._addMonthsGraph (arg .name, arg .view, [arg .id], true, arg .position, arg .html, true, iy, sel && sel .addCats);
+          } else {
+            arg .date .start = Types .dateFY .getFYStart (arg .date .start, this._budget .getStartDate(), this._budget .getEndDate());
+            arg .date .end   = Types .dateFY .getFYEnd   (arg .date .end,   this._budget .getStartDate(), this._budget .getEndDate());
+            this._addMonthsGraph (arg .name, arg .view, [arg .id], true, arg .position, arg .html, true, iy, sel && sel .addCats, arg .date);
+          }
         }
       } else if (arg .name == '_budgetHistoryGraph' && arg .id .length >= 1 && arg .id [0]) {
         if (arg .altClick) {
@@ -323,7 +326,7 @@ class Navigate {
   /*******************************************/
   /***** GET BUDGET / ACTUAL INFORMATION *****/
 
-  _getChildren (type, id) {
+  _getChildren (type, id, isLastYear) {
     switch (type) {
       case NavigateValueType .BUDGET: case NavigateValueType .BUDGET_YR_AVE: case NavigateValueType .BUDGET_YR_AVE_ACT:
         if (id .includes ('other_'))
@@ -352,14 +355,14 @@ class Navigate {
               .map    (p       => {return 'payee_' + p + '_' + cat._id})
           } else
             var result = children .map (c => {return c._id});
-          if (type == NavigateValueType .ACTUALS_BUD)
+          if (type == NavigateValueType .ACTUALS_BUD && ! isLastYear)
             result = ['budget_' + id] .concat (result);
           return result;
         }
     }
   }
 
-  _getAmounts (type, id, isCredit, dates, includeMonths = true, includeYears = true, addCats) {
+  _getAmounts (type, id, isCredit, dates, includeMonths = true, includeYears = true, addCats, isLastYear) {
     switch (type) {
       case NavigateValueType .BUDGET: case NavigateValueType .BUDGET_YR_AVE: case NavigateValueType .BUDGET_YR_AVE_ACT:
         if (type == NavigateValueType .BUDGET_YR_AVE_ACT && id .includes ('budget_')) {
@@ -367,7 +370,7 @@ class Navigate {
           return (dates .filter (d => {return d .start <= Types .date .today()}) .map (date => {
             let value = this._actuals .getAmountRecursively (cat, date .start, date .end);
             if (id .includes ('other_'))
-              value -= this._getChildren (type, id) .reduce ((t, c) => {
+              value -= this._getChildren (type, id, isLastYear) .reduce ((t, c) => {
                 if (! c .includes ('_')) {
                   let cat = this._categories .get (c);
                   if (this._budget .getAmount (cat, date .start, date .end) .amount == 0) {
@@ -428,14 +431,21 @@ class Navigate {
           }})
         } else {
           let isOther = id .includes ('other_');
+          let tc = [cat];
+          if (isLastYear)
+            tc = tc .concat ((cat .parent && cat .parent .zombies) || []) .filter (c => {return c .name == cat .name})
           return dates .map (date => {
             let value;
             if (isOther)
-              value = this._actuals .getAmount (cat, date .start, date .end, null, includeMonths, includeYears, addCats) * (isCredit? -1: 1);
+              value = tc .reduce ((t, cat) => {
+                return t + this._actuals .getAmount (cat, date .start, date .end, null, includeMonths, includeYears, addCats) * (isCredit? -1: 1)
+              }, 0);
             else
-              value = this._actuals .getAmountRecursively (cat, date .start, date .end, null, includeMonths, includeYears, addCats) * (isCredit? -1: 1);
+              value = tc .reduce ((t, cat) => {
+                return t + this._actuals .getAmountRecursively (cat, date .start, date .end, null, includeMonths, includeYears, addCats) * (isCredit? -1: 1)
+              }, 0);
             return {
-              id:    cat._id,
+              id:    isLastYear? tc .map (cat => {return cat._id}): cat._id,
               value: value
             }})
         }
@@ -478,7 +488,7 @@ class Navigate {
     }
   }
 
-  _getNote (type, id, includeMonths, includeYears) {
+  _getNote (type, id, includeMonths, includeYears, isLastYear) {
     switch (type) {
       case NavigateValueType .BUDGET: case NavigateValueType .BUDGET_YR_AVE: case NavigateValueType .BUDGET_YR_AVE_ACT:
         return 'Budget';
@@ -487,7 +497,8 @@ class Navigate {
         let getRoot  = c => {return c.parent? getRoot (c .parent): c}
         let ym       = includeMonths && !includeYears? ' Monthly ': !includeMonths && includeYears? ' Anytime ': '';
         let gn       = getRoot (this._categories .get (id .split ('_') .slice (-1) [0])) .name;
-        return 'Actual ' + ym + gn;
+        let ly       = isLastYear? ' Last Year': ''
+        return 'Actual ' + ym + gn + ly;
     }
   }
 
@@ -504,15 +515,15 @@ class Navigate {
     }
   }
 
-  _getChildrenData (type, id, dates, allowLeaf, includeMonths = true, includeYears = true, addCats = []) {
-    let isLeaf = (id .includes ('other_') || id .includes ('payee_') || this._getChildren (type, id) .filter (c => {return ! c .includes ('budget_')}) .length == 0);
+  _getChildrenData (type, id, dates, allowLeaf, includeMonths = true, includeYears = true, addCats = [], isLastYear) {
+    let isLeaf = (id .includes ('other_') || id .includes ('payee_') || this._getChildren (type, id, isLastYear) .filter (c => {return ! c .includes ('budget_')}) .length == 0);
     if (isLeaf && (! allowLeaf || id .includes ('leaf_')))
       return {data: []}
     else {
       let cat         = this._categories .get (id .split ('_') .slice (-1) [0]);
       let isCredit    = this._budget .isCredit (cat);
       let isGoal      = this._budget .isGoal   (cat);
-      let children    = this._getChildren (type, id);
+      let children    = this._getChildren (type, id, isLastYear);
       let hasChildren = children .length > 1 || (children .length == 1 && ! children [0] .includes ('budget_'));
       let data        = ((hasChildren && children) || [id] .concat (children))
         .map (child => {return {
@@ -521,7 +532,7 @@ class Navigate {
           isCredit: isCredit,
           isGoal:   isGoal,
           isYear:   includeMonths != includeYears? this._categories .getType (this._categories .get (child .split ('_') .slice (-1) [0])) == ScheduleType .YEAR: undefined,
-          amounts:  this._getAmounts (type, child, isCredit, dates, includeMonths, includeYears, addCats),
+          amounts:  this._getAmounts (type, child, isCredit, dates, includeMonths, includeYears, addCats, isLastYear),
           type:     child .includes ('budget_') && 'line'
         }});
       if (! id .includes ('other_')) {
@@ -531,7 +542,7 @@ class Navigate {
           id:       'other_' + cat._id,
           isCredit: isCredit,
           isGoal:   isGoal,
-          amounts:  this._getAmounts (type, id, isCredit, dates, includeMonths, includeYears, addCats) .map ((a,i) => {
+          amounts:  this._getAmounts (type, id, isCredit, dates, includeMonths, includeYears, addCats, isLastYear) .map ((a,i) => {
             return {id: 'other_' + cat._id, value: a .value - (totals [i] || 0)
           }})
         })
@@ -541,7 +552,7 @@ class Navigate {
       let hasBudget = data .length != realData .length;
       let hasOther  = realData .length && realData [realData .length -1] .id .includes ('other_');
       let one = data .length == 1 || (data .length == 2 && hasBudget);
-      if (one && (data [0] .id .includes ('other_') || this._getChildren (type, data [0] .id) .filter (c => {return ! c .includes ('budget_')}) .length == 0))
+      if (one && (data [0] .id .includes ('other_') || this._getChildren (type, data [0] .id, isLastYear) .filter (c => {return ! c .includes ('budget_')}) .length == 0))
         data [0] .id = 'leaf_' + data [0] .id;
       return {
         data:      data,
@@ -559,7 +570,7 @@ class Navigate {
               if (aff .length) {
                 let up = aff .map (af => {
                   let aid     = af .id;
-                  let newData = this._getChildrenData (type, id, dates, allowLeaf, includeMonths, includeYears, addCats);
+                  let newData = this._getChildrenData (type, id, dates, allowLeaf, includeMonths, includeYears, addCats, isLastYear);
                   if (hasOther == (newData .data .length && newData .data [newData .data .length - 1] .id .includes ('other_'))) {
                     let newAff = newData .data .filter (d => {return d .id == aid});
                     if (newAff .length == 1) {
@@ -628,16 +639,17 @@ class Navigate {
       }
     } else
       dates = [] .concat (dates);
+    let isLastYear = dates && (dates [0] .start < this._budget .getStartDate());
     let isYear = dates .length == 1 && Types .date._month (dates [0] .start) != Types .date._month (dates [0] .end);
     var months = isYear? 0: dates .length;
     var cols   = isYear? []: dates .map (d => {return Types .dateM .toString (d .start)});
     var groups = ids
       .map (id => {
-        let data = this._getChildrenData (type, id, dates, allowLeaf, includeMonths, includeYears, addCats);
+        let data = this._getChildrenData (type, id, dates, allowLeaf, includeMonths, includeYears, addCats, isLastYear);
         return {
           id:        id,
           name:      this._getName         (type, id),
-          note:      this._getNote         (type, id, includeMonths, includeYears),
+          note:      this._getNote         (type, id, includeMonths, includeYears, isLastYear),
           rows:      data .data,
           getUpdate: data .getUpdate
         }
@@ -706,9 +718,9 @@ class Navigate {
   /**
    * Add GRAPH (either budget or actual) showing children of specifie root list
    */
-  _addMonthsGraph (name, view, ids, popup, position, toHtml, includeMonths=true, includeYears=true, addCats=[]) {
+  _addMonthsGraph (name, view, ids, popup, position, toHtml, includeMonths=true, includeYears=true, addCats=[], dates=null) {
     var type    = name .includes ('budget')? NavigateValueType .BUDGET_YR_AVE_ACT: NavigateValueType .ACTUALS_BUD;
-    var dataset = this._getMonthsData (type, null, ids, true, includeMonths, includeYears, addCats);
+    var dataset = this._getMonthsData (type, dates, ids, true, includeMonths, includeYears, addCats);
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       var updater = this._addUpdater (view, (eventType, model, ids) => {
         let update = dataset .getUpdate (eventType, model, ids);
@@ -1599,12 +1611,12 @@ class Navigate {
   /**************************/
   /***** STATIC METHODS *****/
 
-  static showActualMonthGraph (id, month, html, position, includeMonths=true, includeYears=true) {
-    if (NavigateInstance)
-      NavigateInstance._addMonthsGraph ('_activityMonthsGraph', NavigateInstance._progressView, [id], true, position, html, includeMonths, includeYears, []);
+  static showActualMonthGraph (id, dates, html, position, includeMonths=true, includeYears=true) {
+    if (NavigateInstance && NavigateInstance._progressView)
+      NavigateInstance._addMonthsGraph ('_activityMonthsGraph', NavigateInstance._progressView, [id], true, position, html, includeMonths, includeYears, [], dates);
   }
-  static showBudgetMonthGraph (id, month, html, position, includeMonths=true, includeYears=true) {
-    if (NavigateInstance)
+  static showBudgetMonthGraph (id, dates, html, position, includeMonths=true, includeYears=true) {
+    if (NavigateInstance && NavigateInstance._progressView)
       NavigateInstance._addMonthsGraph ('_budgetMonthsGraph', NavigateInstance._progressView, [id], true, position, html, includeMonths, includeYears, []);
   }
 }

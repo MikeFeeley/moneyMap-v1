@@ -76,7 +76,108 @@ class BudgetProgressHUDView extends View {
   updateText (name, text) {
     this._content .find ('._graph_title.' + name) .text (text);
   }
-  
+
+  addCompareGraph (group, title) {
+    if (!this._compareGraph) {
+      this._compareGraph      = this._content .find ('._group.' + group);
+      this._compareGraphGroup = group;
+      this._compareGraphTitle = title;
+    }
+  }
+
+  updateCompareGraph (data) {
+    if (data .lastYear > 0 && data .thisYear > 0) {
+      if (! this._hasCompareGraph) {
+        this._hasCompareGraph = true;
+        this .addText (this._compareGraphGroup, '_monthTitle', this._compareGraphTitle);
+        let canvas = $('<canvas>', {prop: {width: 400, height: 24}, class: '_compareGraph'}) .appendTo (this._compareGraph);
+        let chart  = new Chart (canvas [0] .getContext ('2d'), {
+          type: 'horizontalBar',
+          data: {labels: ['']},
+          options: {
+            animation: false,
+            elements: {rectangle: {borderWidth: 1}},
+            events: ['mousemove', 'mouseout', 'click', 'touchstart', 'touchmove', 'webkitmouseforcedown'],
+            legend: {display: false},
+            scales: {
+              xAxes: [{
+                display: false, ticks: {min: 0, max: 102}, gridLines: {display: false}
+              }],
+              yAxes: [{
+                display:             false,
+                gridLines:           {display: false},
+                barThickness:        10
+              }]
+            },
+            tooltips: {
+              titleSpacing: 0, xPadding: 8, yPadding: 4, backgroundColor: 'rgba(0,0,0,0.6)',
+              yAlign: 'middle',
+              callbacks: {
+                label: (t, d) => {
+                  var val = d .datasets [t .datasetIndex] .values [t .index];
+                  return val? d .datasets [t .datasetIndex] .label + ': ' + val: '';
+                },
+                title:  () => {return ''},
+                footer: () => {return ''}
+              }
+            },
+
+
+
+            onClick: (e) => {
+              let element = chart .getElementAtEvent (e);
+              if (element .length > 0) {
+                if (element [0]._datasetIndex == 0) {
+                  this._notifyObservers (BudgetProgressHUDViewEvent .GRAPH_CLICK, {
+                    name:     'all',
+                    lastYear: true,
+                    html:     canvas .parent(),
+                    position: {top: canvas .position() .top + 30, left: 0},
+                    altClick: e .webkitForce > 1 || e .altKey,
+                  })
+                }
+                else if (element [0]._datasetIndex == 1)
+                    this._notifyObservers (BudgetProgressHUDViewEvent .BODY_CLICK, {
+                    html:     canvas .parent(),
+                    position: {top: canvas .position() .top + 30, left: 0},
+                    altClick: e .webkitForce > 1 || e .altKey
+                  });
+                e .stopPropagation();
+                return false;
+              }
+            }
+
+
+
+
+         }
+        });
+        chart .data .datasets = [{
+          label:                "Last Year's Actual",
+          backgroundColor:      this._monthsDatasets [0][2],
+          hoverBackgroundColor: this._monthsDatasets [0][2],
+          borderColor:          this._monthsDatasets [0][3],
+          hoverBorderColor:     this._monthsDatasets [0][3],
+          values: [Types .moneyDZ .toString (data .lastYear)],
+          data: [Math .round (data .lastYear * 100.0 / Math .max (data .lastYear, data .thisYear) ,0)]
+        }, {
+          label: "This Year's Budget",
+          backgroundColor:      this._monthsDatasets [1][2],
+          hoverBackgroundColor: this._monthsDatasets [1][2],
+          borderColor:          this._monthsDatasets [1][3],
+          hoverBorderColor:     this._monthsDatasets [1][3],
+          values: [Types .moneyDZ .toString (data .thisYear)],
+          data: [Math .round (data .thisYear * 100.0 / Math .max (data .lastYear, data .thisYear) ,0)]
+        }]
+        chart .update();
+      }
+    } else {
+      this._compareGraph .empty();
+      this._hasCompareGraph = false;
+    }
+  }
+
+
   addMonthsGraph (group, data) {
     if (!this._monthsGraph)
       this._monthsGraph = $('<div>') .appendTo (this._content .find ('._group.' + group));
@@ -97,7 +198,7 @@ class BudgetProgressHUDView extends View {
               var datasetIndex = element[0]._datasetIndex;
               var datasetSize  = element[0]._chart .config .data .datasets .length;
               if ((datasetSize == 3 && [0,2] .includes (datasetIndex)) || (datasetSize == 2 && datasetIndex == 1)) {
-                var month = data .date [element[0]._index];
+                var month = Object .assign({}, data .date [element[0]._index]);
                 if (element[0]._datasetIndex == 0) {
                   month .start = Types .date .addYear (month .start, -1);
                   month .end   = Types .date .addYear (month .end,   -1);
@@ -105,9 +206,10 @@ class BudgetProgressHUDView extends View {
                 this._notifyObservers (BudgetProgressHUDViewEvent .GRAPH_CLICK, {
                   name:     'months',
                   month:    month,
+                  lastYear: element[0]._datasetIndex == 0,
                   html:     canvas .parent(),
                   position: {top: canvas .position() .top + 100, left: 0},
-                  altClick:   e .webkitForce > 1 || e .altKey,
+                  altClick:  e .webkitForce > 1 || e .altKey,
                 })
                 e.stopPropagation();
                 return false;
@@ -171,6 +273,8 @@ class BudgetProgressHUDView extends View {
     this._progressGraphs   = new Map();
     this._monthsGraph      = null;
     this._monthsGraphAdded = false;
+    this._compareGraph     = null;
+    this._hasCompareGraph  = false;
   }
 
   removeHtml() {

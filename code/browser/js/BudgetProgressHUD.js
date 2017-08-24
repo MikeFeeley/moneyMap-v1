@@ -21,6 +21,7 @@ class BudgetProgressHUD {
   _onModelChange (eventType, doc, arg, model) {
     if (this._id) {
       this._getData();
+      this._updateCompare();
       this._updateMonth();
       this._updateYear();
       this._updateTitle();
@@ -37,13 +38,25 @@ class BudgetProgressHUD {
       start: Types .dateMY .monthStart (this._date),
       end:   Types .dateMY .monthEnd   (this._date)
     }
-    if (eventType == BudgetProgressHUDViewEvent .GRAPH_CLICK && (arg .name != 'monthly' || arg .month)) {
+    if (eventType == BudgetProgressHUDViewEvent .GRAPH_CLICK && (arg .name != 'monthly' || arg .month || arg .name == 'all')) {
       arg .position .left = Math .min (0, ($(document) .width() - 1000) - arg .html .offset() .left);
-      if (arg .altClick)
+      if (arg .altClick) {
+        if (arg .name == 'all') {
+          let budget = this._variance .getBudget();
+          dates = {start: budget .getStartDate(), end: budget .getEndDate()};
+          if (arg .lastYear)
+            dates = {start: Types .date .addYear (dates .start, -1), end: Types .date .addYear (dates .end, -1)};
+        }
         TransactionHUD .showCategory (this._id, arg .month || dates, this._accounts, this._variance, arg .html, arg .position);
-      else {
+      } else {
         let isMonth = arg .name == 'months' || arg .name == '_month';
-        Navigate .showActualMonthGraph (this._id, arg .month, arg .html, arg .position, isMonth, ! isMonth);
+        let isAll   = arg .name == 'all';
+        if (arg .lastYear) {
+          dates .start = Types .date .addYear (this._variance .getBudget() .getStartDate(), -1);
+          dates .end   = Types .date .addYear (this._variance .getBudget() .getEndDate(),   -1);
+        } else
+          dates = undefined;
+        Navigate .showActualMonthGraph (this._id, dates, arg .html, arg .position, isMonth || isAll, ! isMonth || isAll);
       }
     } else if (eventType == BudgetProgressHUDViewEvent .BODY_CLICK) {
       if (arg .altClick) {
@@ -61,6 +74,7 @@ class BudgetProgressHUD {
     this._date       = date;
     this._view .addHtml (toHtml, position);
     this._addTitle();
+    this._addCompare();
     this._addMonth();
     this._addYear();
     this._addSubCategories();
@@ -98,6 +112,15 @@ class BudgetProgressHUD {
     this._view .addText          ('_month', '_monthTitle', 'Monthly on ' + Types .dateLong .toString (this._date));
     this._view .addMonthsGraph   ('_month', this._monthsAmount);
     this._view .addProgressGraph ('_month', '_month');
+  }
+
+  _addCompare() {
+    this._view .addGroup        ('_compare');
+    this._view .addCompareGraph ('_compare', 'Compared to Last Year')
+  }
+
+  _updateCompare() {
+    this._view .updateCompareGraph (this._compareAmount)
   }
 
   _updateMonth() {
@@ -217,12 +240,26 @@ class BudgetProgressHUD {
   _getData() {
     if (this._id) {
       this._varianceAmount = this._getAmount (this._id);
-      this._monthsAmount   = this._variance .getAmountByMonth (this._id, this._variance .getBudget() .getEndDate(), true);
+      let budget           = this._variance .getBudget();
+      let cyE              = budget .getEndDate();
+      this._monthsAmount   = this._variance .getAmountByMonth (this._id, cyE, true);
+      let lyS              = Types .date .addYear (budget .getStartDate(), -1);
+      let lyE              = Types .date .addYear (cyE,   -1);
+      let cat              = budget .getCategories() .get (this._id);
+      let lastYearAmount   = [cat]
+        .concat ((cat .parent && cat .parent .zombies) || [])
+        .filter (c      => {return c .name == cat .name})
+        .reduce ((t, c) => {return t + this._variance .getActuals() .getAmountRecursively (c, lyS, lyE)}, 0);
+      this._compareAmount  = {
+        lastYear: lastYearAmount,
+        thisYear: budget .getAmount (cat) .amount
+      }
     }
   }
 
   _updateAll() {
     this._updateTitle();
+    this._updateCompare();
     this._updateMonth();
     this._updateYear();
     this._updateSubCategories();
