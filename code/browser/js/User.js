@@ -568,7 +568,8 @@ class User extends Observable {
     for (let sch of fs || []) {
 
       if (! Types .date .isBlank (sch .start) && fc .get (sch .category)) {
-        let c   = Types .date._year (b .start) - (Types .date .isYear (sch .start)? sch.start: Types .date._year (sch .start));
+        let fy  = Types .date .isYear (sch .start)? sch.start: Types .dateFY._fiscalYear (sch .start, b .start, b .end);
+        let c   = Types .date._year (b .start) - fy;
         sch._id = undefined;
 
         if (c <= 0) {
