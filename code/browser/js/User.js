@@ -591,13 +591,14 @@ class User extends Observable {
           }
 
         } else if (Types .date .isInfinity (sch .end)) {
-          sch .start = Types .date .addYear (sch .start, c);
+          sch .start = b .start;
           ts .push (sch);
+
 
         } else {
           if ((sch .repeat && (! sch .limit || sch .limit >= c)) || (sch .end >= b .start)) {
             sch .start = Types .date .addYear (sch .start, c);
-            if (Types .date .isMonth (sch .end) && sch .end < b.start)
+            if (Types .date .isMonth (sch .end) && (sch .repeat && (! sch .limit || sch .limit >= c)))
               sch .end = Types .date .addYear (sch .end,   c);
             if (sch .limit) {
               sch .limit -= c;
