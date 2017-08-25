@@ -517,12 +517,13 @@ class User extends Observable {
   }
 
   *_deleteBudget (id) {
-    let cm         = new Model ('categories', this .getDatabaseName());
-    let sm         = new Model ('schedules',  this .getDatabaseName());
+    let cm         = new Model ('categories',   this .getDatabaseName());
+    let sm         = new Model ('schedules',    this .getDatabaseName());
+    let tm         = new Model ('transactions', this .getDatabaseName());
     let updateList = (yield* cm .find ({budgets: id}))
       .map (c => {
         let i = c .budgets .indexOf (id);
-        if (i > 0) {
+        if (i >= 0) {
           c .budgets .splice (i, 1)
           return {
             id:     c._id,
@@ -536,8 +537,14 @@ class User extends Observable {
     let removeList = updateList
       .filter (u => {return u .update .budgets .length == 0})
       .map    (u => {return u .id});
-    updateList = updateList
-      .filter (u => {return u .update .budgets .length > 0})
+    let b  = yield* this._budgetModel .find ({_id: id});
+    let rt = (yield* tm .find ({category: {$in: removeList}}))
+      .reduce ((s, t) => {
+        return s .add (t .category)
+      }, new Set());
+    removeList = removeList .filter (r => {return ! rt .has (r)});
+    let rs     = new Set (removeList);
+    updateList = updateList .filter (u => {return ! rs .has (u .id)});
     let categoriesUpdate = cm .updateList (updateList);
     let categoriesRemove = cm .removeList (removeList);
     let schedulesRemove  = sm .removeList ((yield* sm .find ({budget: id})) .map (s => {return s._id}))
@@ -548,6 +555,7 @@ class User extends Observable {
     yield* budgetUpdate;
     cm .delete();
     sm .delete();
+    tm .delete();
   }
 
   *_rollover (from) {
