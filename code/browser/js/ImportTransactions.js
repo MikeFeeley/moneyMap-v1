@@ -17,6 +17,11 @@ class ImportTransactions extends Observable {
   delete() {
     this._importRulesModel .delete();
     this._transactions     .delete();
+    this._view .remove();
+    if (this._lastImport)
+      this._lastImport .delete();
+    if (this._attention)
+      this._attention .delete();
   }
 
   _onViewChange (EventType, arg) {
@@ -45,6 +50,7 @@ class ImportTransactions extends Observable {
   }
 
   *_importFile (file) {
+  try{
     var csv = yield new Promise ((resolve, reject) => {
       Papa .parse (file, {
         complete: (results) => {resolve (results)},
@@ -93,6 +99,9 @@ class ImportTransactions extends Observable {
     if (trans .length)
       yield* this._lastImport .refreshToLatest();
     yield* this._attention .refreshHtml();
+  } catch (e) {
+    console.log('xxx', e);
+  }
   }
 
   _processDroppedFile (file) {
@@ -128,6 +137,7 @@ class TransactionAndRulesTable extends TransactionTable {
 
   delete() {
     this._importRulesModel .deleteObserver (this._importRulesModelObserver);
+    super .delete();
   }
 
   _onRulesModelChange (event, doc, arg, source) {

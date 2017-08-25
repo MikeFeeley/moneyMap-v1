@@ -11,6 +11,12 @@ class TupleView extends View {
     this._tuples = new Map();
   }
 
+  remove() {
+    if (this._html) {
+      this._html .remove();
+    }
+  }
+
   /**
    * Overridden by subclasses that use different HTML structure
    */

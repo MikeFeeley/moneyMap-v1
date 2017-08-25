@@ -6,6 +6,12 @@ class IndexedList {
     this._view  = new IndexedListView (head != null);
   }
 
+  delete() {
+    this._index .delete();
+    this._list  .delete();
+    this._view  .remove();
+  }
+
   addHtml (toHtml) {
     this._view  .addHtml (toHtml);
     this._index .addHtml (this._view .getIndexHtml());

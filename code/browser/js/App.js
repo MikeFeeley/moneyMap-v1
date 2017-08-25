@@ -54,20 +54,26 @@ class App {
       yield* this._accModel .find ();
 
       /* presenters */
-      let it = new ImportTransactions   (this._accModel, this._varModel);
-      let na = new Navigate             (this._accModel, this._varModel);
-      let se = new IndexedScheduleEntry ('_CategoryMenu', '_ScheduleEntry', this._accModel, this._varModel);
-      let or = new Organize             (this._accModel, this._varModel);
+      if (this._it) {
+        this._it .delete();
+        this._na .delete();
+        this._se .delete();
+        this._or .delete();
+      }
+      this._it = new ImportTransactions   (this._accModel, this._varModel);
+      this._na = new Navigate             (this._accModel, this._varModel);
+      this._se = new IndexedScheduleEntry ('_CategoryMenu', '_ScheduleEntry', this._accModel, this._varModel);
+      this._or = new Organize             (this._accModel, this._varModel);
 
       /* tabs */
-      this._tabs .setTab  (this._proT, html => {na .addProgressHtml     (html)});
-      this._tabs .setTab  (this._traT, html => {async (it, it.addHtml)  (html)}, true);
-      this._tabs .setTab  (this._actT, html => {na .addRealityHtml      (html)});
-      this._tabs .setTab  (this._budT, html => {na .addPlanHtml         (html)});
-      this._tabs. setTab  (this._plaT, html => {se .addHtml             (html)});
-      this._tabs .setTab  (this._perT, html => {na .addPerspectiveHtml  (html)});
-      this._tabs .setTab  (this._weaT, html => {na .addNetWorthHtml     (html)});
-      this._tabs .setTab  (this._setT, html => {async (or, or .addHtml) (html)});
+      this._tabs .setTab  (this._proT, html => {this._na .addProgressHtml     (html)});
+      this._tabs .setTab  (this._traT, html => {async (this._it, this._it.addHtml)  (html)}, true);
+      this._tabs .setTab  (this._actT, html => {this._na .addRealityHtml      (html)});
+      this._tabs .setTab  (this._budT, html => {this._na .addPlanHtml         (html)});
+      this._tabs. setTab  (this._plaT, html => {this._se .addHtml             (html)});
+      this._tabs .setTab  (this._perT, html => {this._na .addPerspectiveHtml  (html)});
+      this._tabs .setTab  (this._weaT, html => {this._na .addNetWorthHtml     (html)});
+      this._tabs .setTab  (this._setT, html => {async (this._or, this._or .addHtml) (html)});
 
       this._user .newConfigurationAccepted();
 

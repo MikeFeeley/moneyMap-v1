@@ -5,6 +5,13 @@ class IndexedListView extends Observable {
     this._hasHead = hasHead;
   }
 
+  remove() {
+    if (this._html) {
+      this._html .remove();
+      this._html = null;
+    }
+  }
+
   addHtml (toHtml) {
     this._html  = $('<div>', {class: '_IndexedListView' + (this._hasHead? 'WithHead': '')}) .appendTo (toHtml);
     this._index = $('<div>', {class: '_index'})           .appendTo (this._html);

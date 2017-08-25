@@ -7,6 +7,14 @@ class ImportTransactionsView extends View {
     super (name, fields);
     this._variance = variance;
   }
+  remove() {
+    if (this._html) {
+      this._html .remove();
+      this._html = null;
+    }
+    $('body') .off ('dragover');
+    $('body') .off ('drop');
+  }
   *addHtml (toHtml) {
     this._html = $('<div>', {class: '_ImportTransactions'}) .appendTo (toHtml);
     $('body') .on ({

@@ -27,6 +27,12 @@ class Navigate {
     this._parameters    .delete();
     this._history       .delete();
     this._accountsModel .delete();
+    if (this._progressView)
+      this._progressView .remove();
+    if (this._planView)
+      this._planView .remove();
+    if (this._realityView)
+      this._realityView .remove();
   }
 
   addProgressHtml (toHtml) {

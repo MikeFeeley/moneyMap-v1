@@ -19,6 +19,11 @@ class TuplePresenter extends Presenter {
     }
   }
 
+  delete() {
+    if (this._view .remove)
+      this._view .remove();
+  }
+
   _getTupleData (doc) {
     return doc;
   }

@@ -12,6 +12,10 @@ class IndexedScheduleEntry extends IndexedList {
     this._view .addObserver (this, this._onViewChange);
   }
 
+  delete() {
+    super .delete();
+  }
+
   _onViewChange (eventType, arg) {
     if (eventType == IndexedListViewEvent .SCROLL && this. getIndex() .getWatchScroll()) {
       var top  = $('.' + this._listName) .parent() .scrollTop();

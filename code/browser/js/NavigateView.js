@@ -16,6 +16,13 @@ class NavigateView extends Observable  {
     this._variance = variance;
   }
 
+  remove() {
+    if (this._html) {
+      this._html .remove();
+      this._html = null;
+    }
+  }
+
   addHtml (toHtml, buildHtml) {
     this._toHtml    = toHtml;
     this._buildHtml = buildHtml;
