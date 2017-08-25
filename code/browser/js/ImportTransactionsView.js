@@ -61,9 +61,12 @@ class ImportRulesField extends ViewLabel {
     this._label .click (e => {
       var tuple = $(e .currentTarget) .closest ('._tuple');
       this._view._toggleRule (tuple .data ('id'));
-      this._ruleIsShowing = ! this._ruleIsShowing;
       this._setState();
     });
+  }
+  setRuleShowing (isShowing) {
+    this._ruleIsShowing = isShowing;
+    this._setState();
   }
   set (value) {
     super .set (value);
@@ -115,11 +118,14 @@ class ImportedTransactionTableView extends TransactionTableView {
   }
 
   addRuleBox (id) {
+    this._getTuple (id) .find ('._field') .data ('field') .setRuleShowing (true);
     return $('<div>', {class: '_rulebox'}) .appendTo ($('<td>', {prop: {colspan: 8}}) .appendTo ($('<tr>') .insertAfter (this._getTuple (id))));
   }
 
   removeRuleBox (id) {
-    this .getRuleBox (id) .closest ('tr') .remove();
+    let tr = this .getRuleBox (id) .closest ('tr');
+    tr .prev ('tr') .find ('._field') .data ('field') .setRuleShowing (false);
+    tr .remove();
   }
 }
 

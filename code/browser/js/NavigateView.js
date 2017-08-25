@@ -470,11 +470,10 @@ class NavigateView extends Observable  {
         legend: {display: false},
         events: ['mousemove', 'mouseout', 'click', 'touchstart', 'touchmove', 'webkitmouseforcedown'],
         onClick: (e, elements) => {
-          var element = chart .getElementAtEvent (e);
-          if (element .length) { 
-            var position    = graph .position();
-            position .top  += 50;
-            position .left += 50;
+          let element = chart .getElementAtEvent (e);
+          if (element .length) {
+            let html        = container .closest ('div:not(._popup)');
+            let position    = ui .calcPosition (graph, html, {top: 50, left: 50});
             this._notifyObservers (NavigateViewEvent .BUDGET_GRAPH_CLICK, {
               name:       name,
               id:         datasets [element [0] ._datasetIndex] .id,
@@ -483,7 +482,7 @@ class NavigateView extends Observable  {
               data:       data,
               date:       dataset .dates && dataset .dates [element [0] ._index + startCol],
               position:   position,
-              html:       container .closest ('div:not(._popup)'),
+              html:       html,
               altClick:   e .webkitForce > 1 || e .altKey,
               view:       this
             })

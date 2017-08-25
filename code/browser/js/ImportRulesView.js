@@ -378,8 +378,9 @@ class ImportRulesView extends TupleView {
     popup .css ({top: 30, left: 10});
     async (presenter, presenter .addHtml) (popup, () => {
       popup .remove();
+      ui .ModalStack .delete (modal);
     });
-    ui .ModalStack .add (
+    let modal = ui .ModalStack .add (
       e => {return e && !$.contains (popup .get (0), e .target) && popup .get (0) != e .target},
       () => {popup .remove()},
       true

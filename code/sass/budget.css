@@ -444,7 +444,6 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
     ._activityTable > div > table,
     ._budgetHistoryTable > div > table,
     ._netWorthTable {
-      margin-bottom: 100px;
       border-collapse: collapse;
       padding: 0px 4px;
       color: #222;

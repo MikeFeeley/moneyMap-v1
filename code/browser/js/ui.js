@@ -19,10 +19,13 @@ var ui = {
         let sh = Math .max (document .documentElement .clientHeight, e .outerHeight (includeMargin) + sp .offset() .top);
         let sw = Math .max (sp .innerWidth(),                        e .outerWidth  (includeMargin) + sp .offset() .left);
         let sy = Math .max (0, e .outerHeight (includeMargin) + e .offset() .top  - sh);
+        let sx = Math .max (0, e .outerWidth  (includeMargin) + e .offset() .left - sw);
         let tp = e .offset() .top;
         if (tp < 0)
           sy = tp - sp .offset() .top;
-        let sx = Math .max (0, e .outerWidth  (includeMargin) + e .offset() .left - sw);
+        let lp = e .offset() .left;
+        if (lp < 0)
+          sx = lp - sp .offset() .left;
         if (sy != 0 || sx != 0)
           sp .animate ({scrollTop: (st + sy), scrollLeft: (sl + sx)}, 200);
       }
@@ -82,15 +85,6 @@ var ui = {
       ui .ModalStack._handleClick (e)
     }
 
-    static _onMouseUp (e) {
-// removed due to conflict with slider ... wait to see if it breaks anything before deleting  XXX
-//      if (ui .ModalStack._stopRemainingMouseEvents) {
-//        e .stopPropagation()
-//        e .stopImmediatePropagation();
-//        e .preventDefault();
-//      }
-    }
-
     static add (guard, action, remove) {
       if (! ui._modalStack)
         ui._modalStack = [];
@@ -109,7 +103,6 @@ var ui = {
       $('body') [0] .addEventListener ('mousedown',            e => {ui .ModalStack._onMouseDown (e)},         true);
       $('body') [0] .addEventListener ('webkitmouseforcedown', e => {ui .ModalStack._onForceClick (e)},        true);
       $('body') [0] .addEventListener ('click',                e => {ui .ModalStack._onClick (e)},             true);
-      $('body') [0] .addEventListener ('mouseup',              e => {ui .ModalStack._onMouseUp (e)},           true);
     }
   },
 
