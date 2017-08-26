@@ -340,6 +340,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
       > ._text {
         font-size: 32px;
         font-weight: 100;
+        margin-top: 20px;
         margin-left: 20px;
       }
     }
