@@ -153,7 +153,7 @@ class BudgetProgressHUDView extends View {
          }
         });
         chart .data .datasets = [{
-          label:                "Last Year's Actual",
+          label:                "Last Year's Activity",
           backgroundColor:      this._monthsDatasets [0][2],
           hoverBackgroundColor: this._monthsDatasets [0][2],
           borderColor:          this._monthsDatasets [0][3],
