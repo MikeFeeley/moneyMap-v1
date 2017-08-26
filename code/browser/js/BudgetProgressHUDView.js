@@ -121,9 +121,6 @@ class BudgetProgressHUDView extends View {
                 footer: () => {return ''}
               }
             },
-
-
-
             onClick: (e) => {
               let element = chart .getElementAtEvent (e);
               if (element .length > 0) {
@@ -146,10 +143,6 @@ class BudgetProgressHUDView extends View {
                 return false;
               }
             }
-
-
-
-
          }
         });
         chart .data .datasets = [{
