@@ -421,15 +421,14 @@ class NavigateView extends Observable  {
         let head = $('<div>', {class: '_heading'})
           .appendTo (graph .children())
           .on ('click webkitmouseforcedown', e => {
-            let position = graph .position();
-            position .top  += 50;
-            position .left += 50;
+            let html        = container .closest ('div:not(._popup)');
+            let position    = ui .calcPosition (graph, html, {top: 50, left: 50});
             this._notifyObservers (NavigateViewEvent .BUDGET_GRAPH_TITLE_CLICK, {
               name:     name,
               id:       data [0] .id,
               data:     data,
               position: position,
-              html:     container .closest ('div:not(._popup)'),
+              html:     html,
               view:     this,
               altClick: e .originalEvent .webkitForce > 1 || e . originalEvent .altKey
             });
