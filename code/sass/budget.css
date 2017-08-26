@@ -440,6 +440,9 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
         border-right: 1px solid #aaa;
       }
     }
+    ._netWorthTable{
+      margin-bottom: 100px;
+    }
     ._budgetTable > div > table,
     ._activityTable > div > table,
     ._budgetHistoryTable > div > table,
