@@ -344,8 +344,10 @@ class Navigate {
       case NavigateValueType .BUDGET: case NavigateValueType .BUDGET_YR_AVE: case NavigateValueType .BUDGET_YR_AVE_ACT:
         if (id .includes ('other_'))
           result = []
-        else
-          result = ((this._categories .get (id .split ('_') .slice (-1) [0]) || {}) .children || []) .map (c => {return c._id});
+        else {
+          let cat = this._categories .get (id .split ('_') .slice (-1) [0]) || {};
+          result = (cat .children || []) .concat (cat .zombies || []) .map (c => {return c._id});
+        }
         if (type == NavigateValueType .BUDGET_YR_AVE_ACT)
           result = ['budget_' + id] .concat (result);
         return result
@@ -355,7 +357,7 @@ class Navigate {
           return []
         else {
           let cat           = this._categories .get (id .split ('_') .slice (-1) [0]);
-          let children      = cat .children || [];
+          let children      = (cat .children || []) .concat (cat .zombies || []);
           let payeeTruncate = /\d|#|\(/;
           if (children .length == 0) {
             var result = this._actuals .getTransactions (cat, this._budget .getStartDate(), this._budget .getEndDate())
@@ -445,8 +447,6 @@ class Navigate {
         } else {
           let isOther = id .includes ('other_');
           let tc = [cat];
-          if (isLastYear)
-            tc = tc .concat ((cat .parent && cat .parent .zombies) || []) .filter (c => {return c .name == cat .name})
           return dates .map (date => {
             let value;
             if (isOther)
