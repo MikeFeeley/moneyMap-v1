@@ -284,6 +284,10 @@ div._budgetHistoryTables {
   position: relative;
 }
 
+div._budgetMonthsGraphs, div._activityMonthsGraphs, div._budgetHistoryGraphs {
+  position: relative;
+}
+
 div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._progressGraph {
   position: relative;
   &._popup, & > ._popup {
