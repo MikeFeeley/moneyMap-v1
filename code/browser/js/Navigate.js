@@ -272,7 +272,9 @@ class Navigate {
           let sel = arg .data [0] .rows [1];
           let im  = !sel || sel .isYear === undefined || ! sel.isYear;
           let iy  = !sel || sel .isYear === undefined || sel .isYear;
-          this._addMonthsGraph (arg .name, arg .view, [parent._id], true, arg .position, arg .html, im, iy, sel && sel .addCats);
+          arg .date .start = Types .dateFY .getFYStart (arg .date .start, this._budget .getStartDate(), this._budget .getEndDate());
+          arg .date .end   = Types .dateFY .getFYEnd   (arg .date .end,   this._budget .getStartDate(), this._budget .getEndDate());
+          this._addMonthsGraph (arg .name, arg .view, [parent._id], true, arg .position, arg .html, im, iy, sel && sel .addCats, arg .date);
         }
       } else {
         if (Array .isArray (arg .id))
@@ -353,13 +355,13 @@ class Navigate {
         return result
 
       case NavigateValueType .ACTUALS: case NavigateValueType .ACTUALS_BUD:
-        if (id .includes ('other_') || id .includes ('payee_'))
+        if (id .includes ('payee_'))
           return []
         else {
           let cat           = this._categories .get (id .split ('_') .slice (-1) [0]);
           let children      = (cat .children || []) .concat (cat .zombies || []);
           let payeeTruncate = /\d|#|\(/;
-          if (children .length == 0) {
+          if (children .length == 0 || id .includes ('other_')) {
             let st     = this._budget .getStartDate();
             let en     = this._budget .getEndDate();
             if (isLastYear) {

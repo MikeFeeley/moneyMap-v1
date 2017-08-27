@@ -283,6 +283,7 @@ class NavigateView extends Observable  {
               html:     progressGraph,
               position: {top: 50, left: 50},
               view:     this
+
             });
             e .stopPropagation();
             return false;
@@ -430,7 +431,8 @@ class NavigateView extends Observable  {
               position: position,
               html:     html,
               view:     this,
-              altClick: e .originalEvent .webkitForce > 1 || e . originalEvent .altKey
+              altClick: e .originalEvent .webkitForce > 1 || e . originalEvent .altKey,
+              date:     dataset .dates && dataset .dates [0],
             });
             e .stopPropagation();
             return false;
