@@ -57,6 +57,7 @@ body {
         > tr > td {
           padding: 0px 8px;
           height: 1.2em;
+          white-space: nowrap;
         }
       }
     }

@@ -86,7 +86,7 @@ class BudgetProgressHUDView extends View {
   }
 
   updateCompareGraph (data) {
-    if (data .lastYear > 0 && data .thisYear > 0) {
+    if (data && data .lastYear > 0 && data .thisYear > 0) {
       if (! this._hasCompareGraph) {
         this._hasCompareGraph = true;
         this .addText (this._compareGraphGroup, '_monthTitle', this._compareGraphTitle);
@@ -320,7 +320,7 @@ class BudgetProgressHUDNameView extends View {
       if (e .keyCode == 8 && e .metaKey)
         return false;
     });
-    this._html .on ('click', e => {ce.stopPropagation(); return false})
+    this._html .on ('click', e => {e.stopPropagation(); return false})
     if (this._setFocus) {
       this._html .find ('input') .focus();
       this._setFocus = false;
