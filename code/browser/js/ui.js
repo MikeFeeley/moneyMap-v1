@@ -21,11 +21,13 @@ var ui = {
         let sy = Math .max (0, e .outerHeight (includeMargin) + e .offset() .top  - sh);
         let sx = Math .max (0, e .outerWidth  (includeMargin) + e .offset() .left - sw);
         let tp = e .offset() .top;
-        if (tp < 0)
-          sy = tp - sp .offset() .top;
+        let ot = sp .offset() .top;
+        if (tp < ot)
+          sy = tp - ot;
         let lp = e .offset() .left;
-        if (lp < 0)
-          sx = lp - sp .offset() .left;
+        let ol = sp .offset() .left
+        if (lp < ol)
+          sx = lp - ol;
         if (sy != 0 || sx != 0)
           sp .animate ({scrollTop: (st + sy), scrollLeft: (sl + sx)}, 200);
       }

@@ -423,7 +423,6 @@ class NavigateView extends Observable  {
           .on ('click webkitmouseforcedown', e => {
             let html        = container .closest ('div:not(._popup)');
             let position    = ui .calcPosition (graph, html, {top: 50, left: 50});
-            console.log (graph, container, html, position);
             this._notifyObservers (NavigateViewEvent .BUDGET_GRAPH_TITLE_CLICK, {
               name:     name,
               id:       data [0] .id,
