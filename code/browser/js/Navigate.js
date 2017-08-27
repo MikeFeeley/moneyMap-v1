@@ -39,13 +39,13 @@ class Navigate {
     // hack needed because monthly popups can be generated from other views before first nav view is created
     // when that is fixed, prime() can be removed
     this._progressView = new NavigateView (this._accounts, this._variance);
+    this._progressView .addObserver       (this, this._onViewChange);
   }
 
   addProgressHtml (toHtml) {
     if (!this._progressView)
       this.prime();
-    this._progressView .addObserver       (this, this._onViewChange);
-    this._progressView .addHtml           (toHtml, () => {
+    this._progressView .addHtml (toHtml, () => {
       this._clearUpdatersForView (this._progressView);
       this._addProgressSidebar()
       this._addProgressGraphs();
@@ -360,7 +360,13 @@ class Navigate {
           let children      = (cat .children || []) .concat (cat .zombies || []);
           let payeeTruncate = /\d|#|\(/;
           if (children .length == 0) {
-            var result = this._actuals .getTransactions (cat, this._budget .getStartDate(), this._budget .getEndDate())
+            let st     = this._budget .getStartDate();
+            let en     = this._budget .getEndDate();
+            if (isLastYear) {
+              st = Types .date .addYear (st, -1);
+              en = Types .date .addYear (en, -1);
+            }
+            var result = this._actuals .getTransactions (cat, st, en)
               .map (t => {
                 let stop = t .payee .match (payeeTruncate);
                 return (stop && stop .index? t .payee .slice (0, stop .index): t .payee) .split (' ') .slice (0,3) .join (' ');
