@@ -35,8 +35,15 @@ class Navigate {
       this._realityView .remove();
   }
 
-  addProgressHtml (toHtml) {
+  prime() {
+    // hack needed because monthly popups can be generated from other views before first nav view is created
+    // when that is fixed, prime() can be removed
     this._progressView = new NavigateView (this._accounts, this._variance);
+  }
+
+  addProgressHtml (toHtml) {
+    if (!this._progressView)
+      this.prime();
     this._progressView .addObserver       (this, this._onViewChange);
     this._progressView .addHtml           (toHtml, () => {
       this._clearUpdatersForView (this._progressView);

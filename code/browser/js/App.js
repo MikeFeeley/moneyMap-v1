@@ -62,6 +62,7 @@ class App {
       }
       this._it = new ImportTransactions   (this._accModel, this._varModel);
       this._na = new Navigate             (this._accModel, this._varModel);
+      this._na .prime();
       this._se = new IndexedScheduleEntry ('_CategoryMenu', '_ScheduleEntry', this._accModel, this._varModel);
       this._or = new Organize             (this._accModel, this._varModel);
 
