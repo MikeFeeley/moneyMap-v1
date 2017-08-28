@@ -906,7 +906,7 @@ class Navigate {
       let otherAmount = ['month', 'year'] .reduce ((o,per) => {
         if (rootAmount [per])
           o [per] = Array .from (Object .keys (rootAmount [per] .amounts)) .reduce ((o,p) => {
-            o[p] = rootAmount [per] .amounts [p] - (total [per] [p] || 0)
+            o[p] = rootAmount [per] .amounts [p] - (total [per]? total [per] [p]: 0)
             return o;
           }, {})
         return o
