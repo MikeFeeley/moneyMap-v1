@@ -333,8 +333,7 @@ class Navigate {
 
     } else if (eventType == NavigateViewEvent .PROGRESS_GRAPH_TITLE_CLICK && arg .data .length) {
       /* Progress Graph Title */
-      var id = this._categories .get (arg .data [0]._id) .parent ._id;
-      BudgetProgressHUD .show (id, arg .html, arg .position, this._accounts, this._variance);
+      BudgetProgressHUD .show (pid, arg .html, arg .position, this._accounts, this._variance);
     }
   }
 
@@ -911,15 +910,22 @@ class Navigate {
           }, {})
         return o
       }, {})
-      let oaTotal = ['month', 'year'] .reduce ((t,per) => {
-        return t + (otherAmount [per]? Array .from (Object.keys (otherAmount [per])): []) .reduce ((t,p) => {
+      let oaTotal = ['month', 'year'] .reduce ((o,per) => {
+        o [per] = (otherAmount [per]? Array .from (Object .keys (otherAmount [per])): []) .reduce ((t,p) => {
           return t + otherAmount [per] [p]
         }, 0)
-      }, 0)
-      if (oaTotal > 0) {
+        return o
+      }, {});
+      let raTotal = ['month', 'year'] .reduce ((o,per) => {
+        o [per] = (rootAmount [per]? Array .from (Object .keys (rootAmount [per] .amounts)): []) .reduce ((t,p) => {
+          return t + rootAmount [per] .amounts [p];
+        }, 0)
+        return o
+      }, {});
+      if (Array .from (Object .keys (oaTotal)) .reduce ((t,p) => {return t + oaTotal [p]}, 0) > 0) {
         for (let per of ['month', 'year'])
           if (rootAmount [per])
-            rootAmount [per] .amounts = otherAmount [per]
+            rootAmount [per] .amounts = (raTotal [per] != oaTotal [per]) && otherAmount [per]
         amounts .push ({
           cat: {
             _id:      'other_' + root._id,
