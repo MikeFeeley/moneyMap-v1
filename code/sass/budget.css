@@ -44,7 +44,9 @@ body {
   z-index: 1001;
   > ._pickerContent {
     margin-bottom: 16px;
-    background: #f6f6f6;
+    background: rgba(245,246,246,.94);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     border: 8px solid transparent;
     border-radius: 6px;
     vertical-align: middle;
@@ -72,7 +74,9 @@ body {
   font-size: 13px;
   > ._hudContent {
     width: 550px;
-    background: #f6f6f6;
+    background: rgba(245,246,246,.94);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     border: 8px solid transparent;
     vertical-align: middle;
     box-shadow: $drop-shadow;
@@ -336,6 +340,10 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
   }
   
   ._progressGraphs {
+    ._progressGraph:not(._popup) > div > ._text {
+      margin-top: 20px;
+      margin-left: 20px;
+    }
     ._progressGraph > div {
       > ._heading {
         font-size:     48px;
@@ -345,8 +353,6 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
       > ._text {
         font-size: 32px;
         font-weight: 100;
-        margin-top: 20px;
-        margin-left: 20px;
       }
     }
     > ._container {
