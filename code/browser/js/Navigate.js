@@ -186,10 +186,13 @@ class Navigate {
           arg .position .left = 0;
       }
       if (arg .isLabel) {
+        arg .id     = arg .id .split ('other_');
+        let isOther = arg .id .length > 1;
+        arg .id     = arg .id [arg .id .length - 1];
         var root = this._categories .get (arg .id);
         var t    = arg .title .split (' ');
         var im   = t [t .length -1] == 'Month';
-        if (arg .altClick || ! this._addProgressGraph (root, arg .html, true, arg .position, undefined, im, ! im))
+        if (arg .altClick || isOther || ! this._addProgressGraph (root, arg .html, true, arg .position, undefined, im, ! im))
           BudgetProgressHUD .show (root._id, arg .html, arg .position, this._accounts, this._variance);
       } else {
         var today = Types .dateMY .today();
@@ -887,6 +890,45 @@ class Navigate {
         cat:    cat,
         amount: this._variance .getAmount (cat._id, date)
       }});
+      let total = amounts .reduce ((total, entry) => {
+        return ['month', 'year'] .reduce ((o,per) => {
+          if (entry .amount [per])
+            o[per] = Array .from (Object .keys (entry .amount [per] .amounts)) .reduce ((o,p) => {
+              o[p] = (total [per]? total [per] [p]: 0) + (entry .amount [per] .amounts [p] || 0);
+              return o
+            }, {});
+          else
+            o[per] = total [per]
+          return o
+        }, {});
+      }, {});
+      let rootAmount  = this._variance .getAmount (root._id, date);
+      let otherAmount = ['month', 'year'] .reduce ((o,per) => {
+        if (rootAmount [per])
+          o [per] = Array .from (Object .keys (rootAmount [per] .amounts)) .reduce ((o,p) => {
+            o[p] = rootAmount [per] .amounts [p] - (total [per] [p] || 0)
+            return o;
+          }, {})
+        return o
+      }, {})
+      let oaTotal = ['month', 'year'] .reduce ((t,per) => {
+        return t + (otherAmount [per]? Array .from (Object.keys (otherAmount [per])): []) .reduce ((t,p) => {
+          return t + otherAmount [per] [p]
+        }, 0)
+      }, 0)
+      if (oaTotal > 0) {
+        for (let per of ['month', 'year'])
+          if (rootAmount [per])
+            rootAmount [per] .amounts = otherAmount [per]
+        amounts .push ({
+          cat: {
+            _id:      'other_' + root._id,
+            name:     'Other',
+            children: []
+          },
+          amount: rootAmount
+        })
+      }
       months = includeMonths && getData ('month', amounts .filter (a => {return a .amount .month}));
       years  = includeYears  && getData ('year',  amounts .filter (a => {return a .amount .year}));
       if (! labelWidth)
