@@ -246,13 +246,17 @@ class BudgetProgressHUD {
       let lyS              = Types .date .addYear (budget .getStartDate(), -1);
       let lyE              = Types .date .addYear (cyE,   -1);
       let cat              = budget .getCategories() .get (this._id);
+      let isCredit         = ['month', 'year'] .reduce ((isc, per) => {
+        return isc || (this._varianceAmount [per] && this._varianceAmount [per] .isCredit)
+      }, false)
+      let creditAdjust     = isCredit? -1: 1;
       let lastYearAmount   = [cat]
         .concat ((cat .parent && cat .parent .zombies) || [])
         .filter (c      => {return c .name == cat .name})
         .reduce ((t, c) => {return t + this._variance .getActuals() .getAmountRecursively (c, lyS, lyE)}, 0);
       this._compareAmount  = {
-        lastYear: lastYearAmount,
-        thisYear: budget .getAmount (cat) .amount
+        lastYear: lastYearAmount                  * creditAdjust,
+        thisYear: budget .getAmount (cat) .amount * creditAdjust
       }
     }
   }
