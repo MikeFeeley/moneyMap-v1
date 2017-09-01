@@ -264,7 +264,7 @@ class Organize {
     var options;
     var view    = new TableView ('_budgets', fields, headers, options);
     var query;
-    var sort = undefined;
+    var sort = (a,b) => {return a.name < b.name? -1: a .name == b .name? 0: 1};
     var budgets = new Table (this._budModel, view, query, sort, options, columns);
     this._view .addHeading ('Budgets', 'Budgets');
     yield* budgets .addHtml (this._view .getHtml());
