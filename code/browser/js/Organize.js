@@ -182,11 +182,10 @@ class Organize {
       ()    => {return accounts .map  (a => {return a.name})}
     );
     var accounts = this._accounts .getAccounts();
-    var budgets = (yield* this._budModel .find (
-      {end: {$lt: this._budget .getStartDate()}})
-    ) .map (b => {
-      return {_id: b._id, name: b .name, start: b .start}
-    });
+    var budgets = (yield* this._budModel .find ({end: {$lt: this._budget .getStartDate()}}))
+      .map  (b     => {return {_id: b._id, name: b .name, start: b .start}})
+      .sort ((a,b) => {return a .name > b .name? -1: a .name == b .name? 0: 1})
+
     if (budgets .length) {
       var query = {account: {$in: accounts .map(a => {return a._id})}, budget: {$in: budgets .map (b => {return b._id})}};
       var his   = yield* this._balModel .find(query);
@@ -226,7 +225,7 @@ class Organize {
       var view = new TableView ('_balances', fields, headers, options);
       var sort = undefined;
       var balances = new _FoldUpTable (this._balModel, view, query, sort, options, columns, 'account', 'amount');
-      this._view .addHeading ('Balances', 'Historical Account Balances');
+      this._view .addHeading ('Balances', 'Historic Account Balances');
       yield* balances .addHtml (this._view .getHtml());
     }
   }
