@@ -192,8 +192,8 @@ class ImportRulesView extends TupleView {
   }
 
   _setRowShowing (id, type) {
-    var tr = this._rules .get (id) .find ('.' + type) .find ('tr') .last();
-    if (tr .find ('._field') .toArray() .find (f => {return $(f) .data ('field') .isEnabled()}))
+    let tr  = this._rules .get (id) .find ('.' + type) .find ('tr') .last();
+    if (tr .find ('._field') .toArray() .find (f => {let fld = $(f) .data ('field'); return fld && fld .isEnabled()}))
       tr .removeClass ('hidden')
     else
       tr .addClass ('hidden');
