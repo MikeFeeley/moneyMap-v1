@@ -237,14 +237,16 @@ class Navigate {
         if (arg .altClick) {
           let id = arg .id .split ('_') .slice (-1) [0];
           var today = Types .date .today();
-          var dates = {};
-          dates .start = arg .labelIndex < 12? Types .date .addMonthStart (this._budget .getStartDate(), arg .labelIndex) : Types .date .monthStart (today);
-          dates .end   = Types .date .monthEnd (dates .start);
+          if (! arg .date) {
+            arg .date = {};
+            arg .date .start = arg .labelIndex < 12? Types .date .addMonthStart (this._budget .getStartDate(), arg .labelIndex) : Types .date .monthStart (today);
+            arg .date .end   = Types .date .monthEnd (dates .start);
+          }
           if (arg .name == '_budgetMonthsGraph') {
             var position = {top: arg .position .top, left: Math .max (0, arg .position .left + 200)}
-            BudgetProgressHUD .show (id, arg .html, position, this._accounts, this._variance, arg .labelIndex < 12? dates .end: undefined);
+            BudgetProgressHUD .show (id, arg .html, position, this._accounts, this._variance, arg .labelIndex < 12? arg .date .end: undefined);
           } else
-            TransactionHUD .showCategory (arg .id, dates, this._accounts, this._variance, arg .html, {top: arg .position .top, left: 0}, im, iy, sel && sel .addCats);
+            TransactionHUD .showCategory (arg .id, arg .date, this._accounts, this._variance, arg .html, {top: arg .position .top, left: 0}, im, iy, sel && sel .addCats);
         } else {
           if (arg .id .includes ('budget_')) {
             let id   = arg .id .split ('_') .slice (-1) [0];
