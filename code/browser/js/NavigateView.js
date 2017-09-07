@@ -841,14 +841,16 @@ class NavigateView extends Observable  {
           return row .amounts .map ((a,i) => {
             return a .value + (total [i] || 0)
           })
-        },[])
+        },[]);
+        if (totals .length == 0)
+          totals = dataset .cols .map (c => {return ''})
         var grandTotal = totals .reduce ((s,a) => {return s + a}, 0);
         var vm = totals
           .concat (totalRows? [grandTotal / dataset .months, grandTotal]: [])
           .map (a => {return Types .moneyD .toString (a)});
         var values = [group .name]
           .concat (vm)
-          .concat (totalRows? Types .percent .toString (grandTotal / dataset .income): [])
+          .concat (totalRows? (dataset .income? Types .percent .toString (grandTotal / dataset .income): ['']): [])
         tr .empty();
         for (let i=0; i<values.length; i++)
           $('<td>', {
@@ -868,7 +870,7 @@ class NavigateView extends Observable  {
           .map    (a => {return Types .moneyD .toString (a .value)})
         var vs = [row .name]
           .concat (vm)
-          .concat (totalRows? Types .percent .toString (rowTotal / dataset .income) : [])
+          .concat (totalRows? (dataset .income? Types .percent .toString (rowTotal / dataset .income): ['']) : [])
         tr .empty();
         for (let i=0; i< vs.length; i++)
           $('<td>', {
