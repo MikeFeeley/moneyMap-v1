@@ -441,14 +441,14 @@ class Navigate {
       case NavigateValueType .ACTUALS: case NavigateValueType .ACTUALS_BUD:
         let ida = id .split ('_');
         let cat = this._categories .get (ida .slice (-1) [0]);
-        if (type == NavigateValueType .ACTUALS_BUD && id .includes ('budget_')) {
-          return (dates .filter (d => {return d .start <= Types .date .today()}) .map (date => {
+        if (type == NavigateValueType .ACTUALS_BUD && id .includes ('budget_'))
+          return dates .filter (d => {return d .start <= Types .date .today()}) .map (date => {
             let va = this._variance .getAmount (cat._id, date .start - 1);
             let ma = includeMonths && va .month? va .month .amounts .available: 0;
             let ya = includeYears  && va .year?  va .year  .amounts .available: 0;
             return {id: id, value: ma + ya}
-          }))
-        } else if (id .includes ('payee_')) {
+          })
+        else if (id .includes ('payee_')) {
           let payee = ida .slice (-2) [0];
           return dates .map (date => {return {
             id:    id,
