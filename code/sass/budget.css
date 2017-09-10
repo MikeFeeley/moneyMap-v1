@@ -456,33 +456,19 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
       margin-bottom: 100px;
     }
     div._budgetTable > div > table, div._activityTable > div > table {
-
-/*      @media (min-width: 1335px  - 1px) {background: red}*/
       @media (max-width: 1400px)        {
-        > thead > tr > th {
-          font-size: 16px;
-        }
+        > thead > tr > th {font-size: 16px}
         > tfoot, > tbody > tr._subTotal {
-          > tr > td:first-child, & > td:first-child {
-            font-size: 14px;
-          }
+          > tr > td:first-child, & > td:first-child {font-size: 14px}
         }
         > tfoot, > tbody {
           > tr {
-            > td {
-              font-size: 11px;
-            }
-            > td:not(:first-child) {
-              min-width: 58px;
-            }
-            > td:first-child {
-              min-width: 125px;
-            }
+            > td                   {font-size: 11px}
+            > td:not(:first-child) {min-width: 58px}
+            > td:first-child       {min-width: 125px}
           }
         }
       }
-
-
     }
     ._budgetTable > div > table,
     ._activityTable > div > table,
