@@ -77,8 +77,15 @@ class CategoryPicker {
   filter (value) {
     if (value .length)
       var id = (this._categories .findBestMatch (value .split(':') .map (s => {return s.trim()})) || {}) ._id;
-    this._show                      (id);
-    this._budgetProgressHUD .update (id);
+    this._show (id);
+    if (this._filterTimeout) {
+      window .clearTimeout (this._filterTimeout);
+      this._filterTimeout = null;
+    }
+    this._filterTimeout = window .setTimeout (() => {
+      this._budgetProgressHUD .update (id);
+      this._filterTimeout = null;
+    }, 200);
   }
 
   hide() {
