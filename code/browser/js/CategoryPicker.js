@@ -4,7 +4,7 @@ class CategoryPicker {
     this._variance          = variance;
     this._budget            = this._variance .getBudget();
     this._categories        = this._budget .getCategories();
-    this._budgetProgressHUD = new BudgetProgressHUD (accounts, this._variance, {isNotModal: true});
+    this._budgetProgressHUD = new BudgetProgressHUD (accounts, this._variance, {isNotModal: true, topBuffer: 20});
     this._observer          = this._budget .addObserver (this, this._onModelChange);
   }
 

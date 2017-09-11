@@ -1,5 +1,5 @@
 class BudgetProgressHUDView extends View {
-  constructor (isModal, onDelete) {
+  constructor (isModal, onDelete, topBuffer=0) {
     super();
     this._html          = $('<div>', {class: '_BudgetProgressHUD'});
     this._content       = $('<div>', {class: '_hudContent'}) .appendTo (this._html);
@@ -11,6 +11,7 @@ class BudgetProgressHUDView extends View {
     this._progressGraphs = new Map();
     this._isModal        = isModal;
     this._onDelete       = onDelete;
+    this._topBuffer      = topBuffer;
   }
 
   delete() {
@@ -255,7 +256,7 @@ class BudgetProgressHUDView extends View {
   setVisible (isVisible) {
     if (isVisible) {
       this._html .removeClass ('hidden');
-      ui .scrollIntoView (this._html);
+      ui .scrollIntoView (this._html, false, {topBuffer: this._topBuffer});
     } else
       this._html .addClass ('hidden'); 
   }

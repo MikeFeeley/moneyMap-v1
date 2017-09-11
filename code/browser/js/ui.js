@@ -1,6 +1,6 @@
 var ui = {
 
-  scrollIntoView: (e, includeMargin = false) => {
+  scrollIntoView: (e, includeMargin = false, options = {}) => {
     var getScrollParent = node => {
       if (node === null)
         return null;
@@ -19,6 +19,12 @@ var ui = {
         let sh = Math .max (document .documentElement .clientHeight, e .outerHeight (includeMargin) + sp .offset() .top);
         let sw = Math .max (sp .innerWidth(),                        e .outerWidth  (includeMargin) + sp .offset() .left);
         let sy = Math .max (0, e .outerHeight (includeMargin) + e .offset() .top  - sh);
+        if (options .topBuffer) {
+          let topOver = sy - (e .offset() .top - sp .offset() .top);
+          if (topOver >= 0)
+            sy -= Math .max (0, options .topBuffer - topOver);
+
+        }
         let sx = Math .max (0, e .outerWidth  (includeMargin) + e .offset() .left - sw);
         let tp = e .offset() .top;
         let ot = sp .offset() .top;

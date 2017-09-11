@@ -2,7 +2,7 @@ class BudgetProgressHUD {
   constructor (accounts, variance, options = {}) {
     this._accounts        = accounts;
     this._variance        = variance;
-    this._view            = new BudgetProgressHUDView (! options .isNotModal, () => {this .delete()});
+    this._view            = new BudgetProgressHUDView (! options .isNotModal, () => {this .delete()}, options .topBuffer);
     this._observer        = this._variance .addObserver (this, this._onModelChange);
     this._options         = options;
     this._view .addObserver (this, this._onViewChange);
