@@ -1416,12 +1416,13 @@ class Navigate {
     if (cbi < 0)
       cbi = 0;
     view .addSlider ({
-      left:  {min:   0,                       start: Math .max (cbi-5, 0)},
-      right: {max:   dataset .cols .length-1, start: Math .min (cbi+5, dataset .cols .length-1)},
+      left:  {min:   0,                       start: NavigateSavedHistorySlider? NavigateSavedHistorySlider[0]: Math .max (cbi-5, 0)},
+      right: {max:   dataset .cols .length-1, start: NavigateSavedHistorySlider? NavigateSavedHistorySlider[1]: Math .min (cbi+5, dataset .cols .length-1)},
       keep:  {value: [cbi,cbi],               count: 2},
       onChange: (values, handle) => {
         this._historySliderLeft = Math .floor (values [0]);
         this._historySliderRight = Math .floor (values [1]);
+        NavigateSavedHistorySlider = [this._historySliderLeft, this._historySliderRight];
         leftValue  .text (dataset .cols [this._historySliderLeft]);
         rightValue .text (dataset .cols [this._historySliderRight]);
         let rds       = Object .assign ({}, dataset);
@@ -1451,12 +1452,13 @@ class Navigate {
     if (cbi < 0)
       cbi = 0;
     view .addSlider ({
-      left:     {min: 0,                       start: Math .max (cbi-5, 0)},
-      right:    {max: dataset .cols .length-1, start: Math .min (cbi+10, dataset .cols .length-1)},
+      left:     {min: 0,                       start: NavigateSavedNetWorthSlider? NavigateSavedNetWorthSlider[0]: Math .max (cbi-5, 0)},
+      right:    {max: dataset .cols .length-1, start: NavigateSavedNetWorthSlider? NavigateSavedNetWorthSlider[1]: Math .min (cbi+10, dataset .cols .length-1)},
       keep:     {value: [cbi,cbi+1],           count: 2},
       onChange: (values, handle) => {
         this._netWorthSliderLeft = Math .floor (values [0]);
         this._netWorthSliderRight = Math .floor (values [1]);
+        NavigateSavedNetWorthSlider = [this._netWorthSliderLeft, this._netWorthSliderRight];
         leftValue  .text (dataset .cols [this._netWorthSliderLeft]);
         rightValue .text (dataset .cols [this._netWorthSliderRight]);
         let rds = Object .assign ({}, dataset);
@@ -1693,6 +1695,8 @@ class Navigate {
 }
 
 var NavigateInstance;
+var NavigateSavedHistorySlider;
+var NavigateSavedNetWorthSlider;
 
 const NavigateValueType = {
   BUDGET:            0,
