@@ -269,14 +269,14 @@ class NavigateView extends Observable  {
 
   addHeadingToProgressGraph (progressGraph, heading) {
     if (progressGraph)
-      $('<div>', {class: '_heading', text: heading}) .appendTo (progressGraph .children());
+      $('<div>', {class: '_heading', text: heading}) .appendTo (progressGraph .children('._popupContent'));
   }
 
   addToProgressGraph (progressGraph, heading, data, labelWidth) {
     if (progressGraph) {
-      if (heading)
+      if (heading) {
         var head = $('<div>', {class: '_text', text: heading})
-          .appendTo (progressGraph .children())
+          .appendTo (progressGraph .children('._popupContent'))
           .on ('click webkitmouseforcedown', e => {
             this._notifyObservers (NavigateViewEvent .PROGRESS_GRAPH_TITLE_CLICK, {
               data:     data,
@@ -288,12 +288,13 @@ class NavigateView extends Observable  {
             e .stopPropagation();
             return false;
           })
-      head [0] .addEventListener ('webkitmouseforcewillbegin', e => {e .preventDefault()}, true)
+        head [0] .addEventListener ('webkitmouseforcewillbegin', e => {e .preventDefault()}, true)
+      }
       var isPopup = progressGraph .hasClass ('_popup');
       if (isPopup)
         progressGraph .removeClass ('hidden');
       var graph = new BudgetProgressGraph (
-        '', progressGraph .children(), true, false,
+        '', progressGraph .children('._popupContent'), true, false,
         {barThickness: 24, barPercentage: .85, labelWidth: labelWidth}
       );
       graph .addObserver (this, (eventType, arg) => {
@@ -317,7 +318,7 @@ class NavigateView extends Observable  {
 
   emptyProgressGraph (progressGraph) {
     if (progressGraph)
-      progressGraph .empty();
+      progressGraph .children ('._popupContent') .empty();
     if (progressGraph .hasClass ('_popup'))
       progressGraph .addClass ('hidden');
   }
@@ -420,7 +421,7 @@ class NavigateView extends Observable  {
     if (popup) {
       if (data .length == 1) {
         let head = $('<div>', {class: '_heading'})
-          .appendTo (graph .children())
+          .appendTo (graph .children('._popupContent'))
           .on ('click webkitmouseforcedown', e => {
             let html        = container .closest ('div:not(._popup)');
             let position    = ui .calcPosition (graph, html, {top: 50, left: 50});
@@ -450,7 +451,7 @@ class NavigateView extends Observable  {
           true
         );
     }
-    var canvas = $('<canvas>') .appendTo (graph .children());
+    var canvas = $('<canvas>') .appendTo (graph .children('._popupContent'));
     if (data .length > 1) {
       var height = [[],[]];
       for (let i = 0; i < labels .length; i++)
