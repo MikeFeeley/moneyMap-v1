@@ -117,17 +117,24 @@ class NavigateView extends Observable  {
       right: options .right .start
     }
     slider .noUiSlider .on ('update', (values, handle) => {
+      values = values .map (v => {return Number (v)});
       if (values [0] != lastValues .left) {
-        if (values [0] > options .keep .value [0] || lastValues .right - values [0] < options .keep .count) {
-          lastValues .left = Math .min (options .keep .value [0], lastValues .right - options .keep .count + 1);
+        if ((options .keep .value && values [0] > options .keep .value [0]) || lastValues .right - values [0] < options .keep .count) {
+          if (options .keep .value)
+            lastValues .left = Math .min (options .keep .value [0], lastValues .right - options .keep .count + 1);
+          else
+            lastValues .left = lastValues .right - options .keep .count + 1;
           slider .noUiSlider .set ([lastValues .left, lastValues .right]);
           return;
         }
         lastValues .left = values [0];
       }
       if (values [0] == lastValues .left && values [1] != lastValues .right) {
-        if (values [1] < options .keep .value [1] || values [1] - lastValues .left < options .keep .count) {
-          lastValues .right = Math .max (options .keep .value [1], lastValues .left + options .keep .count - 1);
+        if ((options .keep .value && values [1] < options .keep .value [1]) || values [1] - lastValues .left < options .keep .count) {
+          if (options .keep .value)
+            lastValues .right = Math .max (options .keep .value [1], lastValues .left + options .keep .count - 1);
+          else
+            lastValues .right = lastValues .left + options .keep .count - 1;
           slider .noUiSlider .set ([lastValues .left, lastValues .right]);
           return;
         }
