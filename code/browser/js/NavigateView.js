@@ -403,8 +403,6 @@ class NavigateView extends Observable  {
         }
       }
       datasets = groups .length > 1? groups [0] .concat (groups [2]) .concat (groups [1]): groups [0];
-      startCol = 0;
-      endCol   = dataset .cols .length - 1;
     }
 
     var setDataset = () => {
@@ -584,6 +582,50 @@ class NavigateView extends Observable  {
     if (popup)
       ui .scrollIntoView (graph, false);
     var highlightCopy, colsCopy, datasetsCopy;
+    var filter = (start, end) => {
+      if (colsCopy == null) {
+        highlightCopy = dataset .highlight;
+        colsCopy      = dataset .cols .map (c => {return c});
+        datasetsCopy  = datasets .map (ds => {
+          ds = Object .assign ({}, ds);
+          ds .data = ds .data .map (d => {return d});
+          return ds;
+        });
+        startCol = 0;
+        endCol   = dataset .cols .length - 1;
+      }
+      if (highlightCopy != null)
+        dataset .highlight = highlightCopy - start;
+      if (start > startCol) {
+        /* remove from front */
+        config .data .labels .splice (0, start - startCol);
+        for (let ds of config .data .datasets)
+          ds .data .splice (0, start - startCol);
+      } else
+        /* add to front */
+        for (let c = startCol - 1; c >= start; c--) {
+          config .data .labels .splice (0, 0, colsCopy [c]);
+          for (let i = 0; i < config .data .datasets .length; i++) {
+            config .data .datasets [i] .data .splice (0, 0, datasetsCopy [i] .data [c]);
+          }
+        }
+      if (end < endCol) {
+        /* remove from end */
+        let deleteCount = endCol - end;
+        let spliceStart = config .data .labels .length - deleteCount;
+        config .data .labels .splice (spliceStart, deleteCount);
+        for (let ds of config .data .datasets)
+          ds .data .splice (spliceStart, deleteCount);
+      } else
+        /* add to end */
+        for (let c = endCol + 1; c <= end; c++) {
+          config .data .labels .push (colsCopy [c]);
+          for (let i = 0; i < config .data .datasets .length; i++)
+            config .data .datasets [i] .data .push (datasetsCopy [i] .data [c]);
+        }
+      startCol = start;
+      endCol   = end;
+    }
     return (updates) => {
       for (let update of updates || [])
 
@@ -599,51 +641,13 @@ class NavigateView extends Observable  {
             graph .find ('span._heading') .text (update .update .name)
 
         } else if (update .filterCols) {
-          if (colsCopy == null) {
-            highlightCopy = dataset .highlight;
-            colsCopy      = dataset .cols .map (c => {return c});
-            datasetsCopy  = datasets .map (ds => {
-              ds = Object .assign ({}, ds);
-              ds .data = ds .data .map (d => {return d});
-              return ds;
-            });
-          }
-          if (highlightCopy != null)
-            dataset .highlight = highlightCopy - update .filterCols .start;
-          if (update .filterCols .start > startCol) {
-            /* remove from front */
-            config .data .labels .splice (0, update .filterCols .start - startCol);
-            for (let ds of config .data .datasets)
-              ds .data .splice (0, update .filterCols .start - startCol);
-          } else
-            /* add to front */
-            for (let c = startCol - 1; c >= update .filterCols .start; c--) {
-              config .data .labels .splice (0, 0, colsCopy [c]);
-              for (let i = 0; i < config .data .datasets .length; i++) {
-                config .data .datasets [i] .data .splice (0, 0, datasetsCopy [i] .data [c]);
-              }
-            }
-          if (update .filterCols .end < endCol) {
-            /* remove from end */
-            let deleteCount = endCol - update .filterCols .end;
-            let spliceStart = config .data .labels .length - deleteCount;
-            config .data .labels .splice (spliceStart, deleteCount);
-            for (let ds of config .data .datasets)
-              ds .data .splice (spliceStart, deleteCount);
-          } else
-            /* add to end */
-            for (let c = endCol + 1; c <= update .filterCols .end; c++) {
-              config .data .labels .push (colsCopy [c]);
-              for (let i = 0; i < config .data .datasets .length; i++)
-                config .data .datasets [i] .data .push (datasetsCopy [i] .data [c]);
-            }
-          startCol = update .filterCols .start;
-          endCol   = update .filterCols .end;
-
+          filter (update .filterCols .start, update .filterCols .end);
         } else if (update .replace) {
-          dataset = update .replace;
+          dataset  = Object .assign ({}, update .replace);
           processDataset();
           setDataset();
+          colsCopy = null;
+          filter (startCol, endCol);
         }
       chart .update();
     }

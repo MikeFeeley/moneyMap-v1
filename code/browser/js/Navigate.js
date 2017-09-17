@@ -103,10 +103,10 @@ class Navigate {
     this._historySliderLeft  = undefined;
     this._historySliderRight = undefined;
     let ds = this._getHistoryData                   ();
-    this._addHistorySlider (
+    var updateSlider = this._addHistorySlider (
       this._perspectiveView, ds, sc, lv, rv,
-      this._addHistoryGraph (undefined, undefined, undefined, this._perspectiveView, ds),
-      this._addHistoryTable (undefined, undefined, undefined, undefined, undefined, this._perspectiveView, ds)
+      this._addHistoryGraph (undefined, undefined, undefined, this._perspectiveView, ds, undefined, updateSlider),
+      this._addHistoryTable (undefined, undefined, undefined, undefined, undefined, this._perspectiveView, ds, undefined, updateSlider)
     );
   }
 
@@ -1370,7 +1370,6 @@ class Navigate {
           return t + r .amounts [i-1] .value * (r .isCredit? 1: -1)
         }, 0)
       }, 0)
-    result = this._filterHistoryBySlider (result);
     // filter by selected date range if any
     if (date) {
       let sc = result .dates .findIndex (r => {return r .start == date .start && r .end == date .end});
@@ -1391,11 +1390,13 @@ class Navigate {
   _budgetHistoryUpdater (eventType, model, ids, dataset, parentIds, includeYearly, updateView) {
     var defaultRoots = [this._budget .getIncomeCategory(), this._budget .getSavingsCategory(), this._budget .getExpenseCategory()];
     if (model == 'SchedulesModel')
-      this._updateHistoryView (parentIds, updateView);
+      return this._updateHistoryView (parentIds, updateView);
   }
 
   _updateHistoryView (parentIds, updateView) {
-    updateView ([{replace: this._getHistoryData (parentIds)}])
+    let ds = this._getHistoryData (parentIds);
+    updateView ([{replace: ds}]);
+    return ds;
   }
 
   _filterHistoryBySlider (dataset) {
@@ -1445,6 +1446,9 @@ class Navigate {
           tableUpdater ([{replace: rds}]);
       }
     }, toHtml)
+    return d => {
+//      dataset = d;
+    }
   }
 
   _addNetworthSlider (view, dataset, toHtml, leftValue, rightValue, graphUpdater, tableUpdater) {
@@ -1475,10 +1479,12 @@ class Navigate {
     }, toHtml)
   }
 
-  _addHistoryGraph (parentIds, popup, position, view, dataset = this._getHistoryData(parentIds), toHtml) {
+  _addHistoryGraph (parentIds, popup, position, view, dataset = this._getHistoryData(parentIds), toHtml, updateDataset) {
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       var updater = this._addUpdater (view, (eventType, model, ids) => {
-        this._budgetHistoryUpdater (eventType, model, ids, dataset, parentIds, false, updateView)
+        let ds = this._budgetHistoryUpdater (eventType, model, ids, dataset, parentIds, false, updateView)
+        if (ds && updateDataset)
+          updateDataset (ds);
       });
       var updateView = view .addHistoryGraph (dataset, popup, position, () => {
         this._deleteUpdater (view, updater);
@@ -1487,12 +1493,14 @@ class Navigate {
     }
   }
 
-  _addHistoryTable (parentIds, date, skipFoot, popup, position, view, dataset = this._getHistoryData (parentIds, date), toHtml) {
+  _addHistoryTable (parentIds, date, skipFoot, popup, position, view, dataset = this._getHistoryData (parentIds, date), toHtml, updateDataset) {
     dataset = Object .assign ({}, dataset);
     dataset .cols = dataset .cols .map (c => {return c .slice (-4)})
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       var updater = this._addUpdater (view, (eventType, model, ids) => {
-        this._budgetHistoryUpdater (eventType, model, ids, dataset, parentIds, true, updateView)
+        let ds = this._budgetHistoryUpdater (eventType, model, ids, dataset, parentIds, true, updateView);
+        if (ds && updateDataset)
+          updateDataset (ds);
       });
       var updateView = view .addHistoryTable (dataset, dataset .cols .length == 1, skipFoot, popup, position, () => {
         this._deleteUpdater (view, updater);
