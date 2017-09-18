@@ -589,7 +589,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
           margin-bottom: 10px;
         }
         > table {
-/*          width: 100%;*/
+          width: 100%;
           border-collapse: collapse;
           tr {
             > td {padding: 2px}
