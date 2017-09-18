@@ -265,8 +265,10 @@ class Navigate {
           let activeId = arg .id .find (i => {let cat= this._categories .get (i); return cat && cat .budgets .includes (this._budget .getId())})
           if (activeId && arg .date && arg .date .end && arg .date .end > this._budget .getStartDate())
             BudgetProgressHUD .show (activeId, arg .html, arg .position, this._accounts, this._variance);
-        } else
-          this._addHistoryGraph ([] .concat (arg .id), true, arg .position, arg .view, undefined, arg .html);
+        } else {
+          let ids = [] .concat (arg .id);
+          this._addHistoryGraph (ids, true, arg .position, arg .view, this._getHistoryData (ids, undefined, true), arg .html);
+        }
       }
 
     } else if (eventType == NavigateViewEvent .BUDGET_GRAPH_TITLE_CLICK && arg .id) {
@@ -317,8 +319,10 @@ class Navigate {
           let activeId = arg .id .find (i => {let cat= this._categories .get (i); return cat && cat .budgets .includes (this._budget .getId())})
           if (activeId && arg .date && arg .date .end && arg .date .end > this._budget .getStartDate())
             BudgetProgressHUD .show (activeId, arg .html, arg .position, this._accounts, this._variance);
-        } else
-          this._addHistoryTable ([] .concat (arg .id), arg .date, true, true, arg .position, arg .view, undefined, arg .html);
+        } else {
+          let ids = [] .concat (arg .id);
+          this._addHistoryTable (ids, arg .date, true, true, arg .position, arg .view, this._getHistoryData (ids, arg .date, true), arg .html);
+        }
       }
 
     } else if (eventType == NavigateViewEvent .BUDGET_TABLE_TITLE_CLICK && arg .name == '_budgetHistoryTable') {
@@ -1164,7 +1168,7 @@ class Navigate {
    *     }]
    *   }
    */
-  _getHistoryData (parentIds, date) {
+  _getHistoryData (parentIds, date, filter) {
     var defaultParents  = [this._budget .getIncomeCategory(), this._budget .getSavingsCategory(), this._budget .getExpenseCategory()];
     parentIds           = parentIds || (defaultParents .map (p => {return p._id}));
     var parents         = parentIds .map (pid => {return this._categories .get (pid)});
@@ -1370,6 +1374,8 @@ class Navigate {
           return t + r .amounts [i-1] .value * (r .isCredit? 1: -1)
         }, 0)
       }, 0)
+    if (filter)
+      result = this._filterHistoryBySlider (result);
     // filter by selected date range if any
     if (date) {
       let sc = result .dates .findIndex (r => {return r .start == date .start && r .end == date .end});
