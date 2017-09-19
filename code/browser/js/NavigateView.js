@@ -403,6 +403,8 @@ class NavigateView extends Observable  {
         }
       }
       datasets = groups .length > 1? groups [0] .concat (groups [2]) .concat (groups [1]): groups [0];
+      startCol = 0;
+      endCol   = dataset .cols .length - 1;
     }
 
     var setDataset = () => {
