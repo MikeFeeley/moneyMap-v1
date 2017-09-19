@@ -909,16 +909,25 @@ class Navigate {
       }, {});
       let rootAmount  = this._variance .getAmount (root._id, date);
       let otherAmount = ['month', 'year'] .reduce ((o,per) => {
-        if (rootAmount [per])
-          o [per] = Array .from (Object .keys (rootAmount [per] .amounts)) .reduce ((o,p) => {
-            o[p] = rootAmount [per] .amounts [p] - (total [per]? total [per] [p]: 0)
-            return o;
-          }, {})
+        if (rootAmount [per]) {
+          if (total [per] && total [per] .budgetlessActual) {
+            let ra = Array .from (Object .keys (rootAmount [per] .amounts)) .reduce ((t,k) => {
+              if (k .includes ('Available'))
+                t += rootAmount [per] .amounts [k];
+              return t;
+            }, 0);
+            o [per] = {budgetlessActual: rootAmount [per] .amounts .curBudgetedActual - total [per] .budgetlessActual};
+          } else
+            o [per] = Array .from (Object .keys (rootAmount [per] .amounts)) .reduce ((o,p) => {
+              o[p] = rootAmount [per] .amounts [p] - (total [per]? (total [per] [p] || 0): 0)
+              return o;
+            }, {})
+        }
         return o
-      }, {})
+      }, {});
       let oaTotal = ['month', 'year'] .reduce ((o,per) => {
         o [per] = (otherAmount [per]? Array .from (Object .keys (otherAmount [per])): []) .reduce ((t,p) => {
-          return t + otherAmount [per] [p]
+          return t + (otherAmount [per] [p] || 0);
         }, 0)
         return o
       }, {});
