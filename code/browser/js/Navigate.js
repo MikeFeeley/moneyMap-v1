@@ -734,7 +734,7 @@ class Navigate {
 
   _getMonthsData (type, dates, ids, allowLeaf, includeMonths, includeYears, addCats) {
     let data = this._getData (type, dates, ids, allowLeaf, includeMonths, includeYears, addCats);
-    let parentUpdate = data .getUpdate;
+    let parentUpdate = data .getUpdate;  // XXX
     data .getUpdate = (e,m,i) => {
       return parentUpdate (e,m,i) .map (u => {
         if (u .needUpdate)
