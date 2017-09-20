@@ -132,8 +132,12 @@ class ImportedTransactionTableView extends TransactionTableView {
 
   removeRuleBox (id) {
     let tr = this .getRuleBox (id) .closest ('tr');
-    tr .prev ('tr') .find ('._field') .data ('field') .setRuleShowing (false);
-    tr .remove();
+    if (tr .length) {
+      let field = tr .prev ('tr') .find ('._field') .data ('field');
+      if (field)
+        field .setRuleShowing (false);
+      tr .remove();
+    }
   }
 }
 
