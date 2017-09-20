@@ -593,27 +593,30 @@ class Navigate {
             if (eventType == ModelEvent .UPDATE && ids .length == 0)
               return
             else if (eventType == ModelEvent .UPDATE && ids .length == 1) {
-              let eid = ids [0];
-              let aff = data .filter (e => {
-                let i =  e. id .split ('_') .slice (-1) [0];
-                return i == eid || (! e .id .includes ('other_') && this._categories .getDescendants (this._categories .get (i)) .find (d => {return d._id == eid}))
-              });
+              let eid = ids [0], aff;
+              if (data && data .length && data [0] .id .startsWith ('payee_'))
+                aff = [{id: eid}];
+              else
+                aff = data .filter (e => {
+                  let i =  e. id .split ('_') .slice (-1) [0];
+                  return i == eid || (! e .id .includes ('other_') && this._categories .getDescendants (this._categories .get (i)) .find (d => {return d._id == eid}))
+                });
               if (aff .length) {
                 let up = aff .map (af => {
                   let aid     = af .id;
                   let newData = this._getChildrenData (type, id, dates, allowLeaf, includeMonths, includeYears, addCats, isLastYear);
                   if (hasOther == (newData .data .length && newData .data [newData .data .length - 1] .id .includes ('other_'))) {
-                    let newAff = newData .data .filter (d => {return d .id == aid});
+                    let newAff = newData .data .filter (d => {return d .id .split ('_') .slice (-1) [0] == aid});
                     if (newAff .length == 1) {
                       newAff = newAff [0];
                       return {update: {id: newAff .id, name: newAff .name, amounts: newAff .amounts}}
                     } else if (newAff .length == 0)
                       return {needUpdate: true, affected: aid}
                     else
-                      return needUpdate
+                      return needReplace
                   } else
                     return needReplace
-                })
+                });
                 if (up .find (u => {return u .needReplace}))
                   return [needReplace]
                 else
@@ -734,14 +737,16 @@ class Navigate {
 
   _getMonthsData (type, dates, ids, allowLeaf, includeMonths, includeYears, addCats) {
     let data = this._getData (type, dates, ids, allowLeaf, includeMonths, includeYears, addCats);
-    let parentUpdate = data .getUpdate;  // XXX
+    let parentUpdate = data .getUpdate;
     data .getUpdate = (e,m,i) => {
-      return parentUpdate (e,m,i) .map (u => {
+      let up = parentUpdate (e,m,i) .map (u => {
         if (u .needUpdate)
           return {replace: this._getData (type, dates, ids, allowLeaf, includeMonths, includeYears, addCats)}
         else
           return u;
       })
+      let re = up .find (u => {return u .replace});
+      return re? [re]: up;
     }
     return data;
   }
