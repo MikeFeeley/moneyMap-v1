@@ -59,7 +59,7 @@ class ImportRules extends TuplePresenter {
       (eventType == ImportRulesViewEvent .UPDATE && ['debit', 'credit'] .includes (arg .fieldName))
     if (mayNeedToValidate) {
       var entry  = this._model .get ((arg .pos && arg .pos .id) || arg .id || arg);
-      if (entry .type == ImportRulesModelType .SPLIT) {
+      if (entry && entry .type == ImportRulesModelType .SPLIT) {
         var splits = (entry .parent .children || []) .filter (c => {
           return c .type == ImportRulesModelType .SPLIT && (eventType != ImportRulesViewEvent .REMOVE || c._id != arg)
         })
