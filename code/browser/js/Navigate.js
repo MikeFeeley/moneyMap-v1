@@ -339,7 +339,9 @@ class Navigate {
 
     } else if (eventType == NavigateViewEvent .PROGRESS_GRAPH_TITLE_CLICK && arg .data .length) {
       /* Progress Graph Title */
-      BudgetProgressHUD .show (pid, arg .html, arg .position, this._accounts, this._variance);
+      let parent = this._categories .get (arg .data [0]._id) .parent;
+      if (parent)
+        BudgetProgressHUD .show (parent._id, arg .html, arg .position, this._accounts, this._variance);
     }
   }
 
