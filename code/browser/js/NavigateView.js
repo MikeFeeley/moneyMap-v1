@@ -630,7 +630,6 @@ class NavigateView extends Observable  {
     }
     return (updates) => {
       for (let update of updates || [])
-
         if (update .update) {
           var ds = config .data .datasets .find (d => {return d .id == update .update .id});
           if (ds) {

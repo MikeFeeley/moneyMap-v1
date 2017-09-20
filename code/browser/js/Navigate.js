@@ -738,7 +738,7 @@ class Navigate {
     data .getUpdate = (e,m,i) => {
       return parentUpdate (e,m,i) .map (u => {
         if (u .needUpdate)
-          return {needReplace: this._getData (type, dates, ids, allowLeaf, includeMonths, includeYears, addCats)}
+          return {replace: this._getData (type, dates, ids, allowLeaf, includeMonths, includeYears, addCats)}
         else
           return u;
       })
