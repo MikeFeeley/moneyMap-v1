@@ -88,7 +88,7 @@ class BudgetProgressHUDView extends View {
 
   updateCompareGraph (data) {
     if (data && data .lastYear > 0 && data .thisYear > 0) {
-      if (! this._hasCompareGraph) {
+      if (! this._hasCompareGraph && this._compareGraph && this._compareGraph .length) {
         this._hasCompareGraph = true;
         this .addText (this._compareGraphGroup, '_monthTitle', this._compareGraphTitle);
         let canvas = $('<canvas>', {prop: {width: 400, height: 24}, class: '_compareGraph'}) .appendTo (this._compareGraph);

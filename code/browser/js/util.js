@@ -166,7 +166,7 @@ class DateType extends FieldType {
         var ms = dt.find (t => {return isNaN (t)});
         var ds = dt.find (t => {return !isNaN (t) && t.length <= 2});
         var ys = dt.find (t => {return !isNaN (t) && t.length == 4});
-        var m = this._mthsLC .indexOf (ms .slice (0, 3)) + 1;
+        var m = ms? this._mthsLC .indexOf (ms .slice (0, 3)) + 1: 0;
         if (m == 0)
           return undefined;
         if (ys)
