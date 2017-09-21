@@ -1590,8 +1590,8 @@ class Navigate {
               var rate = ((a .apr || param .apr) - (param .presentValue? param .inflation: 0))
               var bal  = bal * (1 + rate / 3650000 * Types .dateDMY .daysInMonth (st)) + ba;
             }
-            bal += cat? (this._budget .getAmount (cat, yr .start, yr .end) .year || {}) .amount || 0 : 0;
-            bal += dis? (this._budget .getAmount (dis, yr .start, yr .end) .year || {}) .amount || 0 : 0;
+            bal += cat? this._budget .getAmount (cat, yr .start, yr .end) .amount : 0;
+            bal += dis? this._budget .getAmount (dis, yr .start, yr .end) .amount : 0;
             bal  = Math .round (bal);
             amt .push (bal);
           }
