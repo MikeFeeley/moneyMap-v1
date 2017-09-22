@@ -1586,12 +1586,13 @@ class Navigate {
           var amt  = [];
           for (let yr of yrs) {
             for (let st = yr .start; st <= yr .end; st = Types .dateDMY .addMonthStart (st, 1)) {
-              var ba   = cat? (this._budget .getAmount (cat, st, Types .dateDMY .monthEnd (st)) .month || {}) .amount || 0 : 0;
+              let ba  = cat? (this._budget .getAmount (cat, st, Types .dateDMY .monthEnd (st)) .month || {}) .amount || 0 : 0;
+              let bs  = dis? (this._budget .getAmount (dis, st, Types .dateDMY .monthEnd (st)) .month || {}) .amount || 0 : 0;
               var rate = ((a .apr || param .apr) - (param .presentValue? param .inflation: 0))
-              var bal  = bal * (1 + rate / 3650000 * Types .dateDMY .daysInMonth (st)) + ba;
+              bal = bal * (1 + rate / 3650000 * Types .dateDMY .daysInMonth (st)) + ba + bs;
             }
-            bal += cat? this._budget .getAmount (cat, yr .start, yr .end) .amount : 0;
-            bal += dis? this._budget .getAmount (dis, yr .start, yr .end) .amount : 0;
+            bal += cat? (this._budget .getAmount (cat, yr.start, yr.end) .year || {}) .amount || 0 : 0;
+            bal += dis? (this._budget .getAmount (dis, yr.start, yr.end) .year || {}) .amount || 0 : 0;
             bal  = Math .round (bal);
             amt .push (bal);
           }
