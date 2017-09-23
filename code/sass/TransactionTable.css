@@ -541,7 +541,7 @@ div._TransactionHUD {
   }
 }
 
-$import-width:  1024px;
+$import-width:  1155px;
 $import-sidebar-width: 220px;
 ._ImportTransactions > ._AccountBalanceView {
   @include sidebar-right-sidebar($import-width, $import-sidebar-width);
