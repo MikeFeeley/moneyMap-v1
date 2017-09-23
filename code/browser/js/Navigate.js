@@ -1462,6 +1462,8 @@ class Navigate {
           return g;
         });
         rds .highlight -= this._historySliderLeft;
+        for (let g of rds .groups)
+          g .rows = g .rows .filter (r => {return r .amounts .find (a => {return a .value})})
         if (graphUpdater)
           graphUpdater ([{filterCols: {start: this._historySliderLeft, end: this._historySliderRight}}]);
         if (tableUpdater)
