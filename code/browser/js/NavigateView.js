@@ -496,7 +496,7 @@ class NavigateView extends Observable  {
               label:      labels   [element [0] ._index],
               labelIndex: element [0] ._index,
               data:       data,
-              date:       dataset .dates && dataset .dates [element [0] ._index + startCol],
+              date:       Object .assign ({}, dataset .dates && dataset .dates [element [0] ._index + startCol]),
               position:   position,
               html:       html,
               altClick:   e .webkitForce > 1 || e .altKey,
