@@ -103,10 +103,10 @@ class Navigate {
     this._historySliderLeft  = undefined;
     this._historySliderRight = undefined;
     let ds = this._getHistoryData                   ();
-    var updateSlider = this._addHistorySlider (
+    this._addHistorySlider (
       this._perspectiveView, ds, sc, lv, rv,
-      this._addHistoryGraph (undefined, undefined, undefined, this._perspectiveView, ds, undefined, updateSlider),
-      this._addHistoryTable (undefined, undefined, undefined, undefined, undefined, this._perspectiveView, ds, undefined, updateSlider)
+      this._addHistoryGraph (undefined, undefined, undefined, this._perspectiveView, ds, undefined),
+      this._addHistoryTable (undefined, undefined, undefined, undefined, undefined, this._perspectiveView, ds, undefined)
     );
   }
 
@@ -1468,9 +1468,6 @@ class Navigate {
           tableUpdater ([{replace: rds}]);
       }
     }, toHtml)
-    return d => {
-//      dataset = d;
-    }
   }
 
   _addNetworthSlider (view, dataset, toHtml, leftValue, rightValue, graphUpdater, tableUpdater) {
@@ -1492,6 +1489,7 @@ class Navigate {
         rds .rows = rds .rows .map (r => {
           r = Object .assign ({}, r);
           r .amounts = r .amounts .slice (this._netWorthSliderLeft, this._netWorthSliderRight + 1);
+          r .detail  = r .detail  .slice (this._netWorthSliderLeft, this._netWorthSliderRight + 1);
           return r;
         })
         rds .highlight -= this._netWorthSliderLeft;
@@ -1501,12 +1499,10 @@ class Navigate {
     }, toHtml)
   }
 
-  _addHistoryGraph (parentIds, popup, position, view, dataset = this._getHistoryData(parentIds), toHtml, updateDataset) {
+  _addHistoryGraph (parentIds, popup, position, view, dataset = this._getHistoryData(parentIds), toHtml) {
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       var updater = this._addUpdater (view, (eventType, model, ids) => {
         let ds = this._budgetHistoryUpdater (eventType, model, ids, dataset, parentIds, false, updateView)
-        if (ds && updateDataset)
-          updateDataset (ds);
       });
       var updateView = view .addHistoryGraph (dataset, popup, position, () => {
         this._deleteUpdater (view, updater);
@@ -1515,14 +1511,12 @@ class Navigate {
     }
   }
 
-  _addHistoryTable (parentIds, date, skipFoot, popup, position, view, dataset = this._getHistoryData (parentIds, date), toHtml, updateDataset) {
+  _addHistoryTable (parentIds, date, skipFoot, popup, position, view, dataset = this._getHistoryData (parentIds, date), toHtml) {
     dataset = Object .assign ({}, dataset);
     dataset .cols = dataset .cols .map (c => {return c .slice (-4)})
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       var updater = this._addUpdater (view, (eventType, model, ids) => {
         let ds = this._budgetHistoryUpdater (eventType, model, ids, dataset, parentIds, true, updateView);
-        if (ds && updateDataset)
-          updateDataset (ds);
       });
       var updateView = view .addHistoryTable (dataset, dataset .cols .length == 1, skipFoot, popup, position, () => {
         this._deleteUpdater (view, updater);
@@ -1584,17 +1578,32 @@ class Navigate {
           var bal  = stb;
           var yrs  = [{start: Types .dateDMY .today(), end: this._budget .getEndDate()}] .concat (futBud);
           var amt  = [];
+          var det  = [];
           for (let yr of yrs) {
+            let tInt = 0, tAdd = 0, tSub = 0;
             for (let st = yr .start; st <= yr .end; st = Types .dateDMY .addMonthStart (st, 1)) {
-              let ba  = cat? (this._budget .getAmount (cat, st, Types .dateDMY .monthEnd (st)) .month || {}) .amount || 0 : 0;
-              let bs  = dis? (this._budget .getAmount (dis, st, Types .dateDMY .monthEnd (st)) .month || {}) .amount || 0 : 0;
-              var rate = ((a .apr || param .apr) - (param .presentValue? param .inflation: 0))
-              bal = bal * (1 + rate / 3650000 * Types .dateDMY .daysInMonth (st)) + ba + bs;
+              let add  = cat? (this._budget .getAmount (cat, st, Types .dateDMY .monthEnd (st)) .month || {}) .amount || 0 : 0;
+              let sub  = dis? (this._budget .getAmount (dis, st, Types .dateDMY .monthEnd (st)) .month || {}) .amount || 0 : 0;
+              let rate = ((a .apr || param .apr) - (param .presentValue? param .inflation: 0));
+              let int  = bal * (rate / 3650000 * Types .dateDMY .daysInMonth (st))
+              bal = bal + int + add + sub;
+              tInt += int;
+              tAdd += add;
+              tSub += sub;
             }
-            bal += cat? (this._budget .getAmount (cat, yr.start, yr.end) .year || {}) .amount || 0 : 0;
-            bal += dis? (this._budget .getAmount (dis, yr.start, yr.end) .year || {}) .amount || 0 : 0;
-            bal  = Math .round (bal);
+            let add = cat? (this._budget .getAmount (cat, yr.start, yr.end) .year || {}) .amount || 0 : 0;
+            let sub = dis? (this._budget .getAmount (dis, yr.start, yr.end) .year || {}) .amount || 0 : 0;
+            bal = Math .round (bal + add + sub);
+            tAdd += add;
+            tSub += sub;
             amt .push (bal);
+            det .push ({
+              int: tInt,
+              addCat: cat,
+              addAmt: tAdd,
+              subCat: dis,
+              subAmt: tSub
+            })
           }
           var amounts = hisBud
             .map (b => {return (his .find (h => {return h .account == a._id && h .budget == b._id}) || {}) .amount * sign})
@@ -1603,14 +1612,22 @@ class Navigate {
             name:    a .name,
             type:    a .type,
             curBal:  stb,
-            amounts: amounts
+            amounts: amounts,
+            detail:  hisBud .map (b => {return null}) .concat (det)
           }
         })
         .reduce ((m,e) => {
-          var typeValue = m .get (e .type) || {curBal: 0, amounts: []};
+          var typeValue = m .get (e .type) || {curBal: 0, amounts: [], detail: []};
           m .set (e .type, {
             curBal:  e .curBal + typeValue .curBal,
-            amounts: e .amounts .map ((a,i) => {return (a || 0) + (typeValue .amounts [i] || 0)})
+            amounts: e .amounts .map ((a,i) => {return (a || 0) + (typeValue .amounts [i] || 0)}),
+            detail:  e .detail  .map ((d,i) => {return {
+              int:    ((typeValue .detail [i] || {}) .int || 0)       + ((d || {})       .int    || 0),
+              addCat: ((typeValue .detail [i] || {}) .addCat || [])   .concat ((d || {}) .addCat || []),
+              addAmt: ((typeValue .detail [i] || {}) .addAmt || 0)    + ((d || {})       .addAmt || 0),
+              subCat: ((typeValue .detail [i] || {}) .subCat || [])   .concat ((d || {}) .subCat || []),
+              subAmt: ((typeValue .detail [i] || {}) .subAmt || 0)    + ((d || {})       .subAmt || 0)
+            }})
           })
           return m;
         }, new Map())
@@ -1620,7 +1637,8 @@ class Navigate {
             name:    accounts .find (a => {return a[0] == e[0]}) [1],
             type:    e [0],
             curBal:  e [1] .curBal,
-            amounts: e [1] .amounts
+            amounts: e [1] .amounts,
+            detail:  e [1]. detail
           }
         })
         .filter (e => {return e .amounts .reduce ((s,a) => {return s+a}) != 0})

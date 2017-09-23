@@ -1215,8 +1215,64 @@ class NavigateView extends Observable  {
         net = row .amounts .map ((a,i) => {return a + (net [i] || 0)});
         if (! [AccountType .MORTGAGE, AccountType .HOME] .includes (row .type))
           liquid = row .amounts .map ((a,i) => {return a + (liquid [i] || 0)});
-        for (let i=0; i<vs.length; i++)
-          $('<td>', {text: vs [i], class: dataset .highlight == i - 1? '_highlight': ''}) .appendTo (tr);
+        for (let i=0; i<vs.length; i++) {
+          $('<td>', {text: vs [i], class: dataset .highlight == i - 1? '_highlight': ''}) .appendTo (tr)
+            .click (e => {
+              let target = $(e .target);
+              if (i > 0) {
+                let detail = row .detail [i-1];
+                if (detail .int || detail .addAmt || detail .subAmt) {
+                  let popup = $('<div>', {class: '_popup _netWorthTable'})
+                    .appendTo (target)
+                    .append   ($('<div>', {class: '_popupContent'}))
+                    .click    (e => {
+                      e .stopPropagation();
+                    })
+                  let table = $('<table>') .appendTo (popup.children('._popupContent'));
+                  if ([detail .int, detail .addAmt, detail .subAmt] .filter (v => {return v}) .length > 1) {
+                    let net = detail .int + detail .addAmt + detail .subAmt;
+                    let row = $('<tr>') .appendTo ($('<tfoot>') .appendTo (table));
+                    row
+                     .append ($('<td>', {text: 'Net ' + (net>=0? 'Increase': 'Decrease')}))
+                     .append ($('<td>', {text: Types .moneyD .toString (net)}))
+                   if (net < 0)
+                     row .children ('td:nth-child(2)') .addClass ('negative');
+                  }
+                  let tbody = $('<tbody>') .appendTo (table);
+                  if (detail .int)
+                    tbody .append ($('<tr>') .append ($('<td>', {text: 'Earnigns'})) .append ($('<td>', {text: Types .moneyD .toString (detail .int)})));
+                  if (detail .addAmt)
+                    tbody .append ($('<tr>')
+                      .append ($('<td>', {text: 'Contributions'}))
+                      .append ($('<td>', {text: Types .moneyD .toString (detail .addAmt)})));
+// save this until netWorth (and this popup) can react to modelChanges
+//                      .click  (e => {
+//                        let html = target .offsetParent();
+//                        let pos  = ui .calcPosition (target, html, {top: 6, left: -250});
+//                        BudgetProgressHUD .show (detail .subCat[0]._id, html, pos, this._accounts, this._variance);
+//                      })
+                  if (detail .subAmt)
+                    tbody .append ($('<tr>')
+                      .append ($('<td>', {text: 'Withdrawals'}))
+                      .append ($('<td>', {text: Types .moneyD .toString (detail .subAmt), class: 'negative'})))
+//                      .click  (e => {
+//                        let html = target .offsetParent();
+//                        let pos  = ui .calcPosition (target, html, {top: 6, left: -250});
+//                        BudgetProgressHUD .show (detail .subCat[0]._id, html, pos, this._accounts, this._variance);
+//                      })
+                  ui .scrollIntoView (popup);
+                  var position = target .position();
+                  popup .css ({top: position .top + 14, left: position .left - 4});
+                  ui .ModalStack .add (
+                    e  => {return e && !$.contains (popup .get (0), e .target) && popup .get (0) != e .target},
+                    () => {popup .remove()},
+                    true
+                  );
+                }
+                e .stopPropagation();
+              }
+            })
+        }
       }
       var vss = [
         ['Liquid'] .concat (liquid .map (a => {return Types .moneyK .toString (a)})),
@@ -1240,7 +1296,7 @@ class NavigateView extends Observable  {
   }
 }
 
-var NavigateViewEvent = Object.create (ViewEvent, {
+var NavigateViewEvent = Object.create (ViewEvent,{
   PROGRESS_GRAPH_CLICK:       {value: 201},
   BUDGET_CHART_CLICK:         {value: 202},
   BUDGET_GRAPH_CLICK:         {value: 203},
@@ -1248,7 +1304,7 @@ var NavigateViewEvent = Object.create (ViewEvent, {
   BUDGET_TABLE_CLICK:         {value: 205},
   BUDGET_TABLE_TITLE_CLICK:   {value: 206},
   PROGRESS_GRAPH_TITLE_CLICK: {value: 207},
-  PROGRESS_SIDEBAR_CLICK:     {value: 208}
+  PROGRESS_SIDEBAR_CLICK:     {value: 208},
 });
 
 

@@ -329,12 +329,27 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
     position: relative;
   }
 
-  div._budgetTable, div._activityTable, div._budgetHistoryTable {
+  div._budgetTable, div._activityTable, div._budgetHistoryTable, div._netWorthTable._popup {
     &._popup {
       @include popup-container();
       width: auto;
       > div {
         @include popup-content();
+      }
+    }
+  }
+  div._netWorthTable._popup {
+    > div {
+      background: rgba(255,255,255,.75);
+      > table {
+        border-collapse: collapse;
+         > * > tr > td:first-child {
+            text-align: left;
+            padding-right: 8px;
+        }
+        > tfoot {
+          border-top: 1px solid #aaa;
+        }
       }
     }
   }
