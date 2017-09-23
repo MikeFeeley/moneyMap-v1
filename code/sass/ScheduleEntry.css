@@ -167,7 +167,7 @@ $indent:       24px;
   > ul > li > ul > div > li {
     padding-top: 28px;
     > ._field:not(._field_name) {
-      margin-top: 12px;
+      padding-bottom: 2px;
     }
     > ._field_name {
       * {
