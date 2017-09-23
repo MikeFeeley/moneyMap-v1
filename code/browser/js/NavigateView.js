@@ -1231,7 +1231,7 @@ class NavigateView extends Observable  {
                   let table = $('<table>') .appendTo (popup.children('._popupContent'));
                   let isCredit = vs[i] .startsWith ('-');
                   if ([detail .int, detail .addAmt, detail .subAmt] .filter (v => {return v}) .length > 1) {
-                    let net = detail .int * (isCredit? -1: 1) + detail .addAmt + detail .subAmt;
+                    let net = detail .int + detail .addAmt + detail .subAmt;
                     let row = $('<tr>') .appendTo ($('<tfoot>') .appendTo (table));
                     row
                      .append ($('<td>', {text: 'Net ' + (net>=0 && !isCredit? 'Increase': 'Decrease')}))
@@ -1243,10 +1243,10 @@ class NavigateView extends Observable  {
                   if (detail .int)
                     tbody .append ($('<tr>')
                       .append ($('<td>', {text: isCredit? 'Interest': 'Earnings'}))
-                      .append ($('<td>', {text: Types .moneyD .toString (detail .int * (isCredit? -1: 1)), class: (isCredit? 'negative': '')})));
+                      .append ($('<td>', {text: Types .moneyD .toString (detail .int)})));
                   if (detail .addAmt)
                     tbody .append ($('<tr>')
-                      .append ($('<td>', {text: isCredit? 'Payments': 'Contributions'}))
+                      .append ($('<td>', {text: isCredit? 'Principle': 'Contributions'}))
                       .append ($('<td>', {text: Types .moneyD .toString (detail .addAmt)})));
 // save this until netWorth (and this popup) can react to modelChanges
 //                      .click  (e => {
