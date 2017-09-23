@@ -166,11 +166,10 @@ $indent:       24px;
   > ul > div > li > ul > li,
   > ul > li > ul > div > li {
     padding-top: 28px;
-    > ._field:not(._field_name):not(._field_scheduleLine) {
+    > ._field:not(._field_name) {
       margin-top: 10px;
     }
     > ._field_scheduleLine {
-      margin-top: 10px;
       padding-bottom: 2px;
     }
     > ._field_name {
