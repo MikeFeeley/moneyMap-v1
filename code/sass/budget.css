@@ -343,9 +343,12 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
       background: rgba(255,255,255,.75);
       > table {
         border-collapse: collapse;
-         > * > tr > td:first-child {
-            text-align: left;
-            padding-right: 8px;
+        > * > tr > td {
+          white-space: nowrap;
+        }
+        > * > tr > td:first-child {
+          text-align: left;
+          padding-right: 8px;
         }
         > tfoot {
           border-top: 1px solid #aaa;
