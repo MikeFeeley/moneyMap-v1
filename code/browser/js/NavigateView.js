@@ -1229,21 +1229,24 @@ class NavigateView extends Observable  {
                       e .stopPropagation();
                     })
                   let table = $('<table>') .appendTo (popup.children('._popupContent'));
+                  let isCredit = vs[i] .startsWith ('-');
                   if ([detail .int, detail .addAmt, detail .subAmt] .filter (v => {return v}) .length > 1) {
-                    let net = detail .int + detail .addAmt + detail .subAmt;
+                    let net = detail .int * (isCredit? -1: 1) + detail .addAmt + detail .subAmt;
                     let row = $('<tr>') .appendTo ($('<tfoot>') .appendTo (table));
                     row
-                     .append ($('<td>', {text: 'Net ' + (net>=0? 'Increase': 'Decrease')}))
+                     .append ($('<td>', {text: 'Net ' + (net>=0 && !isCredit? 'Increase': 'Decrease')}))
                      .append ($('<td>', {text: Types .moneyD .toString (net)}))
                    if (net < 0)
                      row .children ('td:nth-child(2)') .addClass ('negative');
                   }
                   let tbody = $('<tbody>') .appendTo (table);
                   if (detail .int)
-                    tbody .append ($('<tr>') .append ($('<td>', {text: 'Earnigns'})) .append ($('<td>', {text: Types .moneyD .toString (detail .int)})));
+                    tbody .append ($('<tr>')
+                      .append ($('<td>', {text: isCredit? 'Interest': 'Earnings'}))
+                      .append ($('<td>', {text: Types .moneyD .toString (detail .int * (isCredit? -1: 1)), class: (isCredit? 'negative': '')})));
                   if (detail .addAmt)
                     tbody .append ($('<tr>')
-                      .append ($('<td>', {text: 'Contributions'}))
+                      .append ($('<td>', {text: isCredit? 'Payments': 'Contributions'}))
                       .append ($('<td>', {text: Types .moneyD .toString (detail .addAmt)})));
 // save this until netWorth (and this popup) can react to modelChanges
 //                      .click  (e => {
