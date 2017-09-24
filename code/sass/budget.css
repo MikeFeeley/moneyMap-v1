@@ -419,7 +419,6 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
     clear: all;
     position: relative;
     padding: 0px 40px;
-    margin-right: 20px;
     width: auto;
     ._heading {
       font-size:     48px;
@@ -473,8 +472,11 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
         border-right: 1px solid #aaa;
       }
     }
-    ._netWorthTable {
+    ._netWorthTableContainer {
+      width: auto;
+      padding-right: 40px;
       margin-bottom: 100px;
+      display: table;
     }
     div._budgetTable > div > table, div._activityTable > div > table {
       @media (max-width: 1400px)        {

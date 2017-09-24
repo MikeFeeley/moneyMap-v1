@@ -1190,7 +1190,7 @@ class NavigateView extends Observable  {
     }
   }
 
-  addNetWorthTable (dataset, toHtml, onClose) {
+  addNetWorthTable (dataset, onClose) {
 
     var addPopup = (e, detail, isCredit) => {
       let target   = $(e .target);
@@ -1251,10 +1251,7 @@ class NavigateView extends Observable  {
     /** main code **/
 
     var table = $('<table>', {class: '_netWorthTable'});
-    if (toHtml)
-      table .insertAfter (toHtml);
-    else
-      table .appendTo (this._content);
+    table .appendTo ($('<div>', {class: '_netWorthTableContainer'}) .appendTo (this._content));
     var buildTable = () => {
       table.empty();
       var thead = $('<thead>') .appendTo (table);

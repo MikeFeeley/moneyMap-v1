@@ -1682,12 +1682,12 @@ class Navigate {
     return updateView;
   }
 
-  _addNetWorthTable (view, dataset, toHtml) {
+  _addNetWorthTable (view, dataset) {
     let updater = this._addUpdater (view, (eventType, model, ids) => {
       if (['Accounts', 'ActualsModel', 'BalanceHistory'] .includes (model))
         updateView();
     })
-    let updateView = view .addNetWorthTable (dataset, toHtml, () => {
+    let updateView = view .addNetWorthTable (dataset, () => {
       this._deleteUpdater (view, updater);
     });
     return updateView;
