@@ -1191,6 +1191,64 @@ class NavigateView extends Observable  {
   }
 
   addNetWorthTable (dataset, toHtml, onClose) {
+
+    var addPopup = (e, detail, isCredit) => {
+      let target = $(e .target);
+      if (detail .int || detail .addAmt || detail .subAmt) {
+        let popup = $('<div>', {class: '_popup _netWorthTable'})
+          .appendTo (target)
+          .append   ($('<div>', {class: '_popupContent'}))
+          .click    (e => {
+            e .stopPropagation();
+          })
+        let table = $('<table>') .appendTo (popup.children('._popupContent'));
+        if ([detail .int, detail .addAmt, detail .subAmt] .filter (v => {return v}) .length > 1) {
+          let net = detail .int + detail .addAmt + detail .subAmt;
+          let row = $('<tr>') .appendTo ($('<tfoot>') .appendTo (table));
+          row
+           .append ($('<td>', {text: 'Net ' + (net>=0 && !isCredit? 'Increase': 'Decrease')}))
+           .append ($('<td>', {text: Types .moneyD .toString (net)}))
+         if (net < 0)
+           row .children ('td:nth-child(2)') .addClass ('negative');
+        }
+        let tbody = $('<tbody>') .appendTo (table);
+        if (detail .int)
+          tbody .append ($('<tr>')
+            .append ($('<td>', {text: isCredit? 'Inflation': 'Earnings'}))
+            .append ($('<td>', {text: Types .moneyD .toString (detail .int)})));
+        if (detail .addAmt)
+          tbody .append ($('<tr>')
+            .append ($('<td>', {text: isCredit? 'Principle': 'Contributions'}))
+            .append ($('<td>', {text: Types .moneyD .toString (detail .addAmt)})));
+// save this until netWorth (and this popup) can react to modelChanges
+//                      .click  (e => {
+//                        let html = target .offsetParent();
+//                        let pos  = ui .calcPosition (target, html, {top: 6, left: -250});
+//                        BudgetProgressHUD .show (detail .subCat[0]._id, html, pos, this._accounts, this._variance);
+//                      })
+        if (detail .subAmt)
+          tbody .append ($('<tr>')
+            .append ($('<td>', {text: 'Withdrawals'}))
+            .append ($('<td>', {text: Types .moneyD .toString (detail .subAmt), class: 'negative'})))
+//                      .click  (e => {
+//                        let html = target .offsetParent();
+//                        let pos  = ui .calcPosition (target, html, {top: 6, left: -250});
+//                        BudgetProgressHUD .show (detail .subCat[0]._id, html, pos, this._accounts, this._variance);
+//                      })
+        ui .scrollIntoView (popup);
+        var position = target .position();
+        popup .css ({top: position .top + 14, left: position .left - 4});
+        ui .ModalStack .add (
+          e  => {return e && !$.contains (popup .get (0), e .target) && popup .get (0) != e .target},
+          () => {popup .remove()},
+          true
+        );
+      }
+      e .stopPropagation();
+    }
+
+    /** main code **/
+
     var table = $('<table>', {class: '_netWorthTable'});
     if (toHtml)
       table .insertAfter (toHtml);
@@ -1217,64 +1275,7 @@ class NavigateView extends Observable  {
           liquid = row .amounts .map ((a,i) => {return a + (liquid [i] || 0)});
         for (let i=0; i<vs.length; i++) {
           $('<td>', {text: vs [i], class: dataset .highlight == i - 1? '_highlight': ''}) .appendTo (tr)
-            .click (e => {
-              let target = $(e .target);
-              if (i > 0) {
-                let detail = row .detail [i-1];
-                if (detail .int || detail .addAmt || detail .subAmt) {
-                  let popup = $('<div>', {class: '_popup _netWorthTable'})
-                    .appendTo (target)
-                    .append   ($('<div>', {class: '_popupContent'}))
-                    .click    (e => {
-                      e .stopPropagation();
-                    })
-                  let table = $('<table>') .appendTo (popup.children('._popupContent'));
-                  let isCredit = vs[i] .startsWith ('-');
-                  if ([detail .int, detail .addAmt, detail .subAmt] .filter (v => {return v}) .length > 1) {
-                    let net = detail .int + detail .addAmt + detail .subAmt;
-                    let row = $('<tr>') .appendTo ($('<tfoot>') .appendTo (table));
-                    row
-                     .append ($('<td>', {text: 'Net ' + (net>=0 && !isCredit? 'Increase': 'Decrease')}))
-                     .append ($('<td>', {text: Types .moneyD .toString (net)}))
-                   if (net < 0)
-                     row .children ('td:nth-child(2)') .addClass ('negative');
-                  }
-                  let tbody = $('<tbody>') .appendTo (table);
-                  if (detail .int)
-                    tbody .append ($('<tr>')
-                      .append ($('<td>', {text: isCredit? 'Interest': 'Earnings'}))
-                      .append ($('<td>', {text: Types .moneyD .toString (detail .int)})));
-                  if (detail .addAmt)
-                    tbody .append ($('<tr>')
-                      .append ($('<td>', {text: isCredit? 'Principle': 'Contributions'}))
-                      .append ($('<td>', {text: Types .moneyD .toString (detail .addAmt)})));
-// save this until netWorth (and this popup) can react to modelChanges
-//                      .click  (e => {
-//                        let html = target .offsetParent();
-//                        let pos  = ui .calcPosition (target, html, {top: 6, left: -250});
-//                        BudgetProgressHUD .show (detail .subCat[0]._id, html, pos, this._accounts, this._variance);
-//                      })
-                  if (detail .subAmt)
-                    tbody .append ($('<tr>')
-                      .append ($('<td>', {text: 'Withdrawals'}))
-                      .append ($('<td>', {text: Types .moneyD .toString (detail .subAmt), class: 'negative'})))
-//                      .click  (e => {
-//                        let html = target .offsetParent();
-//                        let pos  = ui .calcPosition (target, html, {top: 6, left: -250});
-//                        BudgetProgressHUD .show (detail .subCat[0]._id, html, pos, this._accounts, this._variance);
-//                      })
-                  ui .scrollIntoView (popup);
-                  var position = target .position();
-                  popup .css ({top: position .top + 14, left: position .left - 4});
-                  ui .ModalStack .add (
-                    e  => {return e && !$.contains (popup .get (0), e .target) && popup .get (0) != e .target},
-                    () => {popup .remove()},
-                    true
-                  );
-                }
-                e .stopPropagation();
-              }
-            })
+            .click (e => {if (i > 0) addPopup (e, row .detail [i-1], vs[i] .startsWith ('-'))})
         }
       }
       var vss = [
@@ -1284,7 +1285,17 @@ class NavigateView extends Observable  {
       for (let vs of vss) {
         var tr = $('<tr>') .appendTo (tfoot);
         for (let i=0; i<vs.length; i++)
-          $('<td>', {text: vs [i], class: dataset .highlight == i - 1? '_highlight': ''}) .appendTo (tr);
+          $('<td>', {text: vs [i], class: dataset .highlight == i - 1? '_highlight': ''})
+            .appendTo (tr)
+            .click (e => {
+              let total = dataset .rows .reduce ((t, r) => {
+                if (vss .indexOf (vs) == 1 || ! [AccountType .MORTGAGE, AccountType .HOME] .includes (r .type))
+                  for (let p of ['int', 'addAmt', 'subAmt'])
+                    t [p] += r .detail [i] [p];
+                return t;
+              }, {int: 0, addAmt: 0, subAmt: 0})
+              addPopup (e, total);
+            })
       }
     }
     buildTable();
