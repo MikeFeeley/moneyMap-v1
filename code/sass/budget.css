@@ -478,6 +478,10 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
       margin-bottom: 100px;
       display: table;
     }
+    ._budgetTableContainer {
+      padding-right: 40px;
+      display: table;
+    }
     div._budgetTable > div > table, div._activityTable > div > table {
       @media (max-width: 1400px)        {
         > thead > tr > th {font-size: 16px}
