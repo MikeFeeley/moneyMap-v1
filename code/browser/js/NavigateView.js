@@ -1275,7 +1275,7 @@ class NavigateView extends Observable  {
           liquid = row .amounts .map ((a,i) => {return a + (liquid [i] || 0)});
         for (let i=0; i<vs.length; i++) {
           $('<td>', {text: vs [i], class: dataset .highlight == i - 1? '_highlight': ''}) .appendTo (tr)
-            .click (e => {if (i > 0) addPopup (e, row .detail [i-1], vs[i] .startsWith ('-'))})
+            .click (e => {if (i > 0) addPopup (e, row .detail [i-1], vs[i-1] .startsWith ('-'))})
         }
       }
       var vss = [
@@ -1291,7 +1291,7 @@ class NavigateView extends Observable  {
               let total = dataset .rows .reduce ((t, r) => {
                 if (vss .indexOf (vs) == 1 || ! [AccountType .MORTGAGE, AccountType .HOME] .includes (r .type))
                   for (let p of ['int', 'addAmt', 'subAmt'])
-                    t [p] += r .detail [i] [p];
+                    t [p] += r .detail [i-1] [p];
                 return t;
               }, {int: 0, addAmt: 0, subAmt: 0})
               addPopup (e, total);
