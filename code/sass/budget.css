@@ -417,7 +417,6 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
 
   > ._list {
     clear: all;
-    overflow-y: scroll;
     position: relative;
     padding: 0px 40px;
     margin-right: 20px;

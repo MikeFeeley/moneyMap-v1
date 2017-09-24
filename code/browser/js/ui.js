@@ -4,7 +4,7 @@ var ui = {
     var getScrollParent = node => {
       if (node === null)
         return null;
-      else if (window .getComputedStyle (node) .overflowY == 'scroll' || node .scrollHeight > node .clientHeight) {
+      else if (window .getComputedStyle (node) .overflowY == 'scroll' && node .scrollHeight > node .clientHeight) {
         return node;
       } else
         return getScrollParent (node.parentNode);
