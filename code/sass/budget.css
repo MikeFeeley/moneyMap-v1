@@ -420,7 +420,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
     overflow-y: scroll;
     position: relative;
     padding: 0px 40px;
-    margin-right: 40px;
+    margin-right: 20px;
     width: auto;
     ._heading {
       font-size:     48px;
@@ -474,7 +474,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
         border-right: 1px solid #aaa;
       }
     }
-    ._netWorthTable{
+    ._netWorthTable {
       margin-bottom: 100px;
     }
     div._budgetTable > div > table, div._activityTable > div > table {
