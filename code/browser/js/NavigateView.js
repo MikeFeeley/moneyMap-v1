@@ -1193,10 +1193,12 @@ class NavigateView extends Observable  {
   addNetWorthTable (dataset, toHtml, onClose) {
 
     var addPopup = (e, detail, isCredit) => {
-      let target = $(e .target);
+      let target   = $(e .target);
+      let html     = target .offsetParent();
+      let position = ui .calcPosition (target, html, {top: -34, left: -2})
       if (detail .int || detail .addAmt || detail .subAmt) {
         let popup = $('<div>', {class: '_popup _netWorthTable'})
-          .appendTo (target)
+          .appendTo (html)
           .append   ($('<div>', {class: '_popupContent'}))
           .click    (e => {
             e .stopPropagation();
@@ -1236,8 +1238,7 @@ class NavigateView extends Observable  {
 //                        BudgetProgressHUD .show (detail .subCat[0]._id, html, pos, this._accounts, this._variance);
 //                      })
         ui .scrollIntoView (popup);
-        var position = target .position();
-        popup .css ({top: position .top + 14, left: position .left - 4});
+        popup .css (position);
         ui .ModalStack .add (
           e  => {return e && !$.contains (popup .get (0), e .target) && popup .get (0) != e .target},
           () => {popup .remove()},

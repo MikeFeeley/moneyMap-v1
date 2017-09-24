@@ -338,17 +338,20 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
       }
     }
   }
-  div._netWorthTable._popup {
+  > ._list > div._netWorthTable._popup {
     > div {
-      background: rgba(255,255,255,.75);
       > table {
         border-collapse: collapse;
         > * > tr > td {
           white-space: nowrap;
+          font-size: 14px;
         }
         > * > tr > td:first-child {
           text-align: left;
           padding-right: 8px;
+        }
+        > * > tr > td:last-child {
+          text-align: right;
         }
         > tfoot {
           border-top: 1px solid #aaa;
@@ -414,9 +417,10 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
 
   > ._list {
     clear: all;
-    overflow-y: view;
+    overflow-y: scroll;
     position: relative;
     padding: 0px 40px;
+    margin-right: 40px;
     width: auto;
     ._heading {
       font-size:     48px;

@@ -4,7 +4,7 @@ var ui = {
     var getScrollParent = node => {
       if (node === null)
         return null;
-      else if (window .getComputedStyle (node) .overflowY == 'scroll' && node .scrollHeight > node .clientHeight) {
+      else if (window .getComputedStyle (node) .overflowY == 'scroll' || node .scrollHeight > node .clientHeight) {
         return node;
       } else
         return getScrollParent (node.parentNode);
@@ -45,7 +45,7 @@ var ui = {
     let rp = relativeToElement .offset();
     let cp = {top: position .top  + ep .top  - rp .top + relativeToElement .scrollTop()}
     if (position .left !== undefined)
-      cp .left  = ep .left - rp .left + position .left - Math .max (0, ep .left + width - (document .body .clientWidth -8))
+      cp .left  = ep .left - rp .left + position .left - Math .max (0, ep .left + width - (document .body .clientWidth -8)) + relativeToElement .scrollLeft()
     if (position .right !== undefined)
       cp .right = (document .body .clientWidth - ep .left) - Math .max (0, (document .body .clientWidth - (rp .left + relativeToElement .width())))
     return cp
