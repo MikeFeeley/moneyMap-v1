@@ -4,8 +4,8 @@ class BudgetYearGraph {
     this._budget           = budget;
     this._content          = content;
     this._budgetObserver   = this._budget .addObserver (this, this._onBudgetChange);
-    this._backgroundColors = ['rgba(73,167,46,0.6)', 'rgba(26,101,202,0.05)', 'rgba(26,101,202,6)'];
-    this._borderColors     = ['rgba(73,167,46,0.8)', 'rgba(26,101,202,0.2)', 'rgba(26,101,202,0.8)'];
+    this._backgroundColors = ['rgba(73,167,46,0.6)', 'rgba(26,101,202,0.05)', 'rgba(26,101,202,0.6)'];
+    this._borderColors     = ['rgba(73,167,46,0.8)', 'rgba(26,101,202,0.2)',  'rgba(26,101,202,0.8)'];
   }
 
   delete() {
