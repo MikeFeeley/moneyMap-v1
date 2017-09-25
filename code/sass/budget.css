@@ -342,7 +342,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
     > div {
       > table {
         border-collapse: collapse;
-        > * > tr > td {
+        > * > tr > td, > * > tr > th {
           white-space: nowrap;
           font-size: 14px;
         }
@@ -504,6 +504,9 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
       border-collapse: collapse;
       padding: 0px 4px;
       color: #222;
+      > * > tr > td, > * > tr > th {
+        white-space: nowrap;
+      }
       > thead, > tbody, > tfoot {
         & > tr:not(._subtotal) > ._highlight {
           background: #ffffaa;
