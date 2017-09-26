@@ -307,16 +307,21 @@ class TransactionHUD extends TransactionAndRulesTable {
           }
       return family;
     }
-    var budget     = variance .getBudget();
-    var categories = budget .getCategories();
-    var cat        = categories .get (id);
-    var qualifier = includeMonths && !includeYears? ' (Monthly) ': includeYears && !includeMonths? ' (Anytime) ': '';
-    var dates      = dates || {start: budget .getStartDate(), end: budget .getEndDate()};
+    let budget     = variance .getBudget();
+    let categories = budget .getCategories();
+    let cat        = categories .get (id) || {};
+    let qualifier  = includeMonths && !includeYears? ' (Monthly) ': includeYears && !includeMonths? ' (Anytime) ': '';
+    dates = dates || {start: budget .getStartDate(), end: budget .getEndDate()};
     var title      = [(isOther? 'Other ': '') + cat .name + qualifier + ' for XXX XXX', ''];
     if (selectPayee)
       title [1] = 'Where Payee starts with "' + selectPayee + '"';
-    var query = {
-      category: {$in: getFamily ([cat]) .concat (addCats)},
+    let p = cat .parent || {};
+    let cats = (p .children || []) .concat (p .zombies || [])
+      .filter (s => {return s .name == cat .name})
+      .map    (s => {return getFamily ([s])})
+      .reduce ((l,i) => {return l .concat (i)}, [])
+    let query = {
+      category: {$in: cats .concat (addCats)},
       date:     dates && {$gte: dates .start, $lte: dates .end},
       $options: {updateDoesNotRemove: true}
     };
