@@ -280,7 +280,15 @@ class TransactionHUD extends TransactionAndRulesTable {
     } else {
       var selectType  = 'is';
       var selectValue = field._get();
-      query [field._name] = field._value;
+      let value       = field._value;
+      if (field._name == 'category') {
+        let c = variance .getBudget() .getCategories() .get (value);
+        let p = c .parent || {};
+        let h = (p .children || []) .concat (p .zombies || []) .filter (s => {return s .name == c .name}) .map (s => {return s._id});
+        if (h .length > 1)
+          value = {$in: h}
+      }
+      query [field._name] = value;
     }
     if (['payee', 'description'] .includes (field._name))
       selectValue = '"' + selectValue + '"';
