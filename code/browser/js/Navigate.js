@@ -273,21 +273,64 @@ class Navigate {
 
     } else if (eventType == NavigateViewEvent .BUDGET_GRAPH_TITLE_CLICK && arg .id) {
       /* Graph Title */
-      if (arg .altClick) {
-        let parent = this._categories .get (arg .id) .parent;
-        if (parent) {
-          let sel = arg .data [0] .rows [1];
-          let im  = !sel || sel .isYear === undefined || ! sel.isYear;
-          let iy  = !sel || sel .isYear === undefined || sel .isYear;
-          arg .date .start = Types .dateFY .getFYStart (arg .date .start, this._budget .getStartDate(), this._budget .getEndDate());
-          arg .date .end   = Types .dateFY .getFYEnd   (arg .date .end,   this._budget .getStartDate(), this._budget .getEndDate());
-          this._addMonthsGraph (arg .name, arg .view, [parent._id], true, arg .position, arg .html, im, iy, sel && sel .addCats, arg .date);
+      if (arg .name == '_budgetHistoryGraph') {
+        if (arg .altClick) {
+          /* Parent Graph */
+          // let ids = [].concat (arg .id)
+          //   .map (i => {
+          //     let p = this._categories .get (i) .parent;
+          //     if (p) {
+          //       let gp = p .parent;
+          //       return [p._id] .concat(gp? gp .children .filter(s => {
+          //         return s .name == p .name
+          //       }).map(c => {
+          //         return c._id
+          //       }) : [])
+          //     }
+          //   })
+          // .filter (i => {return i})
+          // .reduce((s, e) => {
+          //   return [] .concat (e) .reduce ((s, e) => {
+          //     s .add (e);
+          //     return s;
+          //   }, s)
+          // }, new Set())
+          // console.log(Array.from(ids));
+          let ids = Array .from (arg .id
+            .map    (i => {
+              let p = this._categories .get (i) .parent;
+              if (p) {
+                let gp = p .parent;
+                return [p._id] .concat (gp? (gp .children .concat (gp .zombies || []) .filter (s => {return s .name == p .name}) .map (s => {return s._id})): [])
+              }
+            })
+            .filter (l => {return l})
+            .reduce ((s,l) => {return l .reduce ((s,i) => {return s .add (i)}, s)}, new Set()))
+          this._addHistoryGraph (ids, true, arg .position, arg .view, this._getHistoryData(ids, undefined, true), arg .html);
+        } else {
+          /* Budget HUD */
+          if (Array .isArray (arg .id))
+            arg .id = arg .id .find (i => {let cat = this._categories .get(i); return cat && cat .budgets .includes (this._budget .getId())});
+          if (arg .id)
+            BudgetProgressHUD .show (arg .id .split ('_') .slice (-1) [0], arg .html, arg .position, this._accounts, this._variance);
         }
       } else {
-        if (Array .isArray (arg .id))
-          arg .id = arg .id .find (i => {let cat = this._categories .get(i); return cat && cat .budgets .includes (this._budget .getId())});
-        if (arg .id)
-          BudgetProgressHUD .show (arg .id .split ('_') .slice (-1) [0], arg .html, arg .position, this._accounts, this._variance);
+        if (arg .altClick) {
+          let parent = this._categories .get (arg .id) .parent;
+          if (parent) {
+            let sel = arg .data [0] .rows [1];
+            let im  = !sel || sel .isYear === undefined || ! sel.isYear;
+            let iy  = !sel || sel .isYear === undefined || sel .isYear;
+            arg .date .start = Types .dateFY .getFYStart (arg .date .start, this._budget .getStartDate(), this._budget .getEndDate());
+            arg .date .end   = Types .dateFY .getFYEnd   (arg .date .end,   this._budget .getStartDate(), this._budget .getEndDate());
+            this._addMonthsGraph (arg .name, arg .view, [parent._id], true, arg .position, arg .html, im, iy, sel && sel .addCats, arg .date);
+          }
+        } else {
+          if (Array .isArray (arg .id))
+            arg .id = arg .id .find (i => {let cat = this._categories .get(i); return cat && cat .budgets .includes (this._budget .getId())});
+          if (arg .id)
+            BudgetProgressHUD .show (arg .id .split ('_') .slice (-1) [0], arg .html, arg .position, this._accounts, this._variance);
+        }
       }
 
     } else if (eventType == NavigateViewEvent .BUDGET_TABLE_CLICK && arg .id) {
@@ -1306,80 +1349,78 @@ class Navigate {
     budgetAmounts = budgetAmounts .map (ba => {
       return Array .from (ba .reduce ((m, a) => {
         let e = m .get (a .name);
-        if (e)
+        if (e) {
           e .amounts = e .amounts .concat (a .amounts);
-        else
-          m .set (a .name, a);
+          e .id      = e .id      .concat (a .id);
+        } else {
+          a .id = [] .concat (a.id);
+          m.set (a.name, a);
+        }
         return m;
       }, new Map()) .values())
-    })
-    parentIds = Array .from (budgetAmounts .reduce ((s,ba) => {
-      return ba .reduce ((s, a) => {
-        if (a .id)
-          s .add (a .id);
-        return s;
-      }, s)
-    }, new Set));
-    var cats = parentIds .map (pid => {
-      return budgetAmounts
-        .reduce ((map, budgetAmount) => {
-          return (budgetAmount .find (ba => {return ba .id == pid}) || {amounts: []}) .amounts .reduce ((m,a) => {
-            if (a .amount != 0) {
-              var e = m .get (a .name);
-              if (e) {
-                if (!e .sort)
-                  e .sort = a .sort;
-              } else
-                m .set (a.name, a);
-            }
-            return m;
-          }, map)
-        }, new Map());
     });
+    // get name-normalized parent id list
+    parentIds = Array .from (budgetAmounts .reduce ((s,ba) => {
+      return ba .reduce ((s, a) => {return s .add (a .id .join ('$'))}, new Set ())
+    })) .map (ba => {return ba .split ('$')});
+    // invert list from [period,cats] to [cat,periods] for each parent
+    var cats = parentIds .map (pid => {return budgetAmounts .reduce ((map, budgetAmount) => {
+      return (budgetAmount .find (ba => {return ba .id .find (i => {return pid .includes (i)})}) || {amounts: []}) .amounts
+        .reduce ((m,a) => {
+          if (a .amount != 0) {
+            let e = m .get (a .name);
+            if (e && ! e .sort)
+              e .sort = a.sort;
+            if (!e)
+              m .set (a .name, a);
+          }
+          return m
+        }, map)
+    }, new Map())});
     // compute return values
     let result = {
       cols:      budgets .map (b => {return b .name}),
       dates:     budgets .map (b => {return {start: b .start, end: b .end}}),
       highlight: this._historicBudgets .length,
       groups: parentIds .map ((pid, i) => {
+        let pids   = pid .sort() .join ('$');
         let parent = new Map();
-
-// XXX PARENT is not real parent when there are multple different ones with same name in different years
-
         for (let ba of budgetAmounts) {
-          let p = (ba .find (as => {return as .id == pid && as .name}));
+          let p = (ba .find (as => {return as .id .find (i => {return pid .includes (i)}) && as .name}));
           if (p)
-            parent .set (p .id, p .name);
+            parent .set (p .id .join ('$'), p .name);
         }
         return {
           name: Array .from (parent .values()) [0],
-          id:   Array .from (parent .keys()),
-          rows: Array .from (cats [i] .values()) .sort ((a,b) => {return a.sort==null? 1: b.sort==null? -1: a.sort<b.sort? -1: 1}) .map (cat => {
-            var ids = Array .from (budgetAmounts .reduce ((s,ba) => {
-              return ba [i] .amounts .reduce ((s,a) => {
-                if (a .name == cat .name)
-                  s .add (a .id);
-                return s;
-              }, s)
-            }, new Set()));
-            return {
-              name:     cat .name,
-              id:       ids,
-              isCredit: cat .isCredit,
-              isGoal:   cat .isGoal,
-              amounts:  budgetAmounts .map (ba => {
-                var group = ba .find (as => {return as .id == pid});
-                if (group) {
-                  var a = group .amounts .find (a => {return a .name == cat .name}) || {};
-                  return {
-                    id:    a .id,
-                    value: a .amount || 0
-                  }
-                } else
-                  return {value: 0}
-              })
-            }
-          })
+          id:   Array .from (parent .keys()) [0] .split('$'),
+          rows: Array .from (cats [i] .values())
+            .sort ((a,b) => {return a.sort==null? 1: b.sort==null? -1: a.sort<b.sort? -1: 1})
+            .map (cat => {
+              var ids = Array .from (budgetAmounts .reduce ((s,ba) => {
+                return ba [i] .amounts .reduce ((s,a) => {
+                  if (a .name == cat .name)
+                    s .add (a .id);
+                  return s;
+                }, s)
+              }, new Set()));
+              return {
+                name:     cat .name,
+                id:       ids,
+                isCredit: cat .isCredit,
+                isGoal:   cat .isGoal,
+                amounts:  budgetAmounts .map (ba => {
+                  var group = ba .find (as => {return as .id .sort () .join ('$') == pids});
+                  if (group) {
+                    var a = group .amounts .find (a => {return a .name == cat .name}) || {};
+                    return {
+                      id:    a .id,
+                      value: a .amount || 0
+                    }
+                  } else
+                    return {value: 0}
+                })
+              }
+            })
         }
       })
     }
