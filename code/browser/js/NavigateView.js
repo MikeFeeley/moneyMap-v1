@@ -433,7 +433,7 @@ class NavigateView extends Observable  {
             let position    = ui .calcPosition (graph, html, {top: 50, left: 50});
             this._notifyObservers (NavigateViewEvent .BUDGET_GRAPH_TITLE_CLICK, {
               name:     name,
-              id:       Array .from (data .reduce ((s,d) => {return d .id .reduce((s,i) => {return s .add (i)},s)}, new Set())),
+              id:       Array .from (data .reduce ((s,d) => {return [] .concat (d .id) .reduce((s,i) => {return s .add (i)},s)}, new Set())),
               data:     data,
               position: position,
               html:     html,

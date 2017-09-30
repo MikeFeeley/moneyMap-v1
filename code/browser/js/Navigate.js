@@ -144,10 +144,7 @@ class Navigate {
     var modelName = model .constructor .name;
     let skip =
       (eventType == ModelEvent .INSERT && modelName == 'SchedulesModel' && doc .category) ||
-      (eventType == ModelEvent .INSERT && modelName == 'ActualsModel') ||
       (eventType == ModelEvent .UPDATE && modelName == 'SchedulesModel' && arg && arg .sort != null);
-    if (skip)
-      return;
     switch (modelName) {
       case 'ActualsModel':
         var ids = (doc .category && [doc .category]) || [];
@@ -161,7 +158,7 @@ class Navigate {
         var ids = [doc._id] || [];
         break;
     }
-   this._update (eventType, modelName, ids, doc);
+    this._update (eventType, modelName, ids, doc, skip);
   }
 
 
@@ -276,26 +273,6 @@ class Navigate {
       if (arg .name == '_budgetHistoryGraph') {
         if (arg .altClick) {
           /* Parent Graph */
-          // let ids = [].concat (arg .id)
-          //   .map (i => {
-          //     let p = this._categories .get (i) .parent;
-          //     if (p) {
-          //       let gp = p .parent;
-          //       return [p._id] .concat(gp? gp .children .filter(s => {
-          //         return s .name == p .name
-          //       }).map(c => {
-          //         return c._id
-          //       }) : [])
-          //     }
-          //   })
-          // .filter (i => {return i})
-          // .reduce((s, e) => {
-          //   return [] .concat (e) .reduce ((s, e) => {
-          //     s .add (e);
-          //     return s;
-          //   }, s)
-          // }, new Set())
-          // console.log(Array.from(ids));
           let ids = Array .from (arg .id
             .map    (i => {
               let p = this._categories .get (i) .parent;
@@ -1758,11 +1735,12 @@ class Navigate {
     this._updaters .set (view, []);
   }
 
-  _update (eventType, model, ids, doc, arg) {
+  _update (eventType, model, ids, doc, arg, skipLiveUpdate) {
     for (let view of this._updaters .keys()) {
       if (!view || !view .isVisible || view .isVisible()) {
-        for (let updater of this._updaters .get (view))
-          updater (eventType, model, ids, doc, arg);
+        if (! skipLiveUpdate)
+          for (let updater of this._updaters .get (view))
+            updater (eventType, model, ids, doc, arg);
       } else
         view .resetHtml();
     }

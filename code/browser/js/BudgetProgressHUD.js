@@ -318,6 +318,7 @@ class BudgetProgressHUD {
           dat .thisBudgeted = bud;
           dat .thisOver     = amt - bud;
           dat .available    = Math.max (0, dat .available - amt);
+          dat .curAvailable = Math.max (0, dat .curAvailable - amt);
           if (t == 'month' && data .year && data .year .available) {
             amt           = dat .thisOver;
             dat .thisOver = 0;

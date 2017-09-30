@@ -112,33 +112,35 @@ class Actuals {
         this._trans .delete (tran._id)
         break;
     }
-    var act = this._getEntry (tran .category);
-    if (act) {
-      var origDate = (update && update .date)? update._original_date: tran .date;
-      var origAct  = (update && update .category)? update ._original_category && this._getEntry (update ._original_category): act;
-      for (let r of this._ranges)
-        if ((tran .date >= r .start && tran .date <= r .end) || (origDate && origDate >= r.start && origDate <= r.end)) {
-          var ri = this._ranges .indexOf (r);
-          switch (eventType) {
-            case ModelEvent .UPDATE:
-              var origAmt =
-                (update .debit  != null? update._original_debit  || 0: tran .debit) -
-                (update .credit != null? update._original_credit || 0: tran .credit)
-              var amt = (tran .debit || 0) - (tran .credit || 0);
-              if (origAct && origDate && origDate >= r.start && origDate <= r.end)
-                origAct .amounts [ri] = (origAct .amounts [ri] || 0) - origAmt;
-              if (tran .date >= r.start && tran .date <= r.end)
-                act .amounts [ri] = (act .amounts [ri] || 0) + amt;
-              break;
-            case ModelEvent .INSERT:
-              act .amounts [ri] = (act .amounts [ri] || 0) + (tran .debit || 0) - (tran .credit || 0);
-              break;
-            case ModelEvent .REMOVE:
-              act .amounts [ri] = (act .amounts [ri] || 0) - (tran .debit || 0) - (tran .credit || 0);
-              break;
-          }
-        }
+    let act, origAct, origDate, amt, origAmt;
+    act = this._getEntry (tran .category);
+    amt = (tran .debit || 0) - (tran .credit || 0);
+    if (eventType == ModelEvent .UPDATE) {
+      origDate = ('_original_date'     in update)? update._original_date:                      tran .date;
+      origAct  = ('_original_category' in update)? this._getEntry (update._original_category): origDate && act;
+      origAmt  = (update .debit  !== undefined? update._original_debit  || 0: tran .debit) -
+                 (update .credit !== undefined? update._original_credit || 0: tran .credit)
     }
+    for (let r of this._ranges)
+      if ((tran .date >= r .start && tran .date <= r .end) || (origDate && origDate >= r.start && origDate <= r.end)) {
+        var ri = this._ranges .indexOf (r);
+        switch (eventType) {
+          case ModelEvent .UPDATE:
+            if (origAct && origDate && origDate >= r.start && origDate <= r.end)
+              origAct .amounts [ri] = (origAct .amounts [ri] || 0) - origAmt;
+            if (act && tran .date >= r.start && tran .date <= r.end)
+              act .amounts [ri] = (act .amounts [ri] || 0) + amt;
+            break;
+          case ModelEvent .INSERT:
+            if (act)
+              act .amounts [ri] = (act .amounts [ri] || 0) + amt;
+            break;
+          case ModelEvent .REMOVE:
+            if (act)
+              act .amounts [ri] = (act .amounts [ri] || 0) - amt;
+            break;
+        }
+      }
   }
 
   _getInterval (st, en) {
