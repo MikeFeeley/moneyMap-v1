@@ -89,6 +89,7 @@ body {
         border: 0px;
         background-color: transparent;
         height: auto;
+        margin-bottom: 8px;
       }
     }
     ._graph_title {
