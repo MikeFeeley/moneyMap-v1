@@ -170,7 +170,8 @@ table._ImportTransactionsTable._TransactionAndRulesTable:not(._needsAttention) {
 }
 table._ImportTransactionsTable._TransactionAndRulesTable._needsAttention {
     @include transaction-table (18px, 13px, 26px, 1, 1, 2, 3, 6, 4, 5, 7, 8, 9, 4, 6, 7);
-    > tbody > tr > td:last-child,  > thead > tr > th:last-child {
+    > * > tr > td > div._field_importTime {
+    //> tbody > tr > td:last-child,  > thead > tr > th:last-child {
       color: #aaa;
     }
 }
@@ -406,7 +407,7 @@ table._TransactionAndRulesTable {
       ._field:nth-child(2) {
         float: right;
       }
-      clear:    all;
+      clear:    both;
       overflow: hidden;
     }
   }
@@ -558,7 +559,7 @@ $import-sidebar-width: 220px;
   position:   absolute;
   height:     100%;
   width:      100%;
-  clear:      all;
+  clear:      both;
   overflow-y: scroll;
   > ._AccountBalanceView {
     &::-webkit-scrollbar { width: 0 !important };
@@ -567,7 +568,7 @@ $import-sidebar-width: 220px;
   > ._import {
     height: 100%;
     overflow-y: scroll;
-    clear: all;
+    clear: both;
     margin-left: 10px;
     padding-left: 8px;
     padding-top: 8px;
