@@ -1427,14 +1427,14 @@ class Navigate {
     return result;
   }
 
-  _budgetHistoryUpdater (eventType, model, ids, dataset, parentIds, includeYearly, updateView) {
+  _budgetHistoryUpdater (eventType, model, ids, dataset, parentIds, includeYearly, updateView, date) {
     var defaultRoots = [this._budget .getIncomeCategory(), this._budget .getSavingsCategory(), this._budget .getExpenseCategory()];
     if (model == 'SchedulesModel')
-      return this._updateHistoryView (parentIds, updateView);
+      return this._updateHistoryView (parentIds, updateView, date);
   }
 
-  _updateHistoryView (parentIds, updateView) {
-    let ds = this._getHistoryData (parentIds);
+  _updateHistoryView (parentIds, updateView, date) {
+    let ds = this._getHistoryData (parentIds, date);
     updateView ([{replace: ds}]);
     return ds;
   }
@@ -1536,7 +1536,7 @@ class Navigate {
     dataset .cols = dataset .cols .map (c => {return c .slice (-4)})
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       var updater = this._addUpdater (view, (eventType, model, ids) => {
-        let ds = this._budgetHistoryUpdater (eventType, model, ids, dataset, parentIds, true, updateView);
+        let ds = this._budgetHistoryUpdater (eventType, model, ids, dataset, parentIds, true, updateView, date);
       });
       var updateView = view .addHistoryTable (dataset, dataset .cols .length == 1, skipFoot, popup, position, () => {
         this._deleteUpdater (view, updater);

@@ -849,26 +849,28 @@ class NavigateView extends Observable  {
     var updateGroup = group => {
       if (group) {
         var tr     = groupTrs [dataset .groups .indexOf (group)];
-        var totals = group .rows .reduce ((total, row) => {
-          return row .amounts .map ((a,i) => {
-            return a .value + (total [i] || 0)
-          })
-        },[]);
-        if (totals .length == 0)
-          totals = dataset .cols .map (c => {return ''})
-        var grandTotal = totals .reduce ((s,a) => {return s + a}, 0);
-        var vm = totals
-          .concat (totalRows? [grandTotal / dataset .months, grandTotal]: [])
-          .map (a => {return Types .moneyD .toString (a)});
-        var values = [group .name]
-          .concat (vm)
-          .concat (totalRows? (dataset .income? Types .percent .toString (grandTotal / dataset .income): ['']): [])
-        tr .empty();
-        for (let i=0; i<values.length; i++)
-          $('<td>', {
-            text: values [i],
-            class: (values [i] && values [i] .charAt (0) == '-'? 'negative': '') + (dataset .highlight == i - 1? ' _highlight': '')
-          }) .appendTo (tr);
+        if (tr) {
+          var totals = group .rows .reduce ((total, row) => {
+            return row .amounts .map ((a,i) => {
+              return a .value + (total [i] || 0)
+            })
+          },[]);
+          if (totals .length == 0)
+            totals = dataset .cols .map (c => {return ''})
+          var grandTotal = totals .reduce ((s,a) => {return s + a}, 0);
+          var vm = totals
+            .concat (totalRows? [grandTotal / dataset .months, grandTotal]: [])
+            .map (a => {return Types .moneyD .toString (a)});
+          var values = [group .name]
+            .concat (vm)
+            .concat (totalRows? (dataset .income? Types .percent .toString (grandTotal / dataset .income): ['']): [])
+          tr .empty();
+          for (let i=0; i<values.length; i++)
+            $('<td>', {
+              text: values [i],
+              class: (values [i] && values [i] .charAt (0) == '-'? 'negative': '') + (dataset .highlight == i - 1? ' _highlight': '')
+            }) .appendTo (tr);
+        }
       }
     }
 
