@@ -171,7 +171,6 @@ table._ImportTransactionsTable._TransactionAndRulesTable:not(._needsAttention) {
 table._ImportTransactionsTable._TransactionAndRulesTable._needsAttention {
     @include transaction-table (18px, 13px, 26px, 1, 1, 2, 3, 6, 4, 5, 7, 8, 9, 4, 6, 7);
     > * > tr > td > div._field_importTime {
-    //> tbody > tr > td:last-child,  > thead > tr > th:last-child {
       color: #aaa;
     }
 }
