@@ -293,7 +293,7 @@ class Navigate {
         }
       } else {
         if (arg .altClick) {
-          let parent = this._categories .get (arg .id) .parent;
+          let parent = this._categories .get ([] .concat (arg .id) [0]) .parent;
           if (parent) {
             let sel = arg .data [0] .rows [1];
             let im  = !sel || sel .isYear === undefined || ! sel.isYear;
