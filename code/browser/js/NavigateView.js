@@ -644,6 +644,8 @@ class NavigateView extends Observable  {
           filter (update .filterCols .start, update .filterCols .end);
         } else if (update .replace) {
           dataset  = Object .assign ({}, update .replace);
+          if (popup)
+            graph .find ('span._heading') .text (dataset .groups [0] .name);
           processDataset();
           setDataset();
           colsCopy = null;
