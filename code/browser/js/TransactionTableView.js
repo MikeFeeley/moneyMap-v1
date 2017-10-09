@@ -105,13 +105,24 @@ class TransactionTableView extends TableView {
     for (let tl of tipText)
       $('<div>', {text: tl}) .appendTo (tip .children());
     setTimeout (() => {
-      tip .css (ui .calcPosition (field, html, {top: -130, left: - tip .width() / 2 + field .width() / 2}));
+      tip .css (ui .calcPosition (field, html, {top: - tip .height() - 32, left: - tip .width() / 2 + field .width() / 2}));
       tip .fadeIn (300, () => {
-        setTimeout (() => {
+        let mo = ui .ModalStack .add (() => {return true}, () => {
+          if (mo) {
+            mo = null;
+            clearTimeout (to);
+            tip .fadeOut (300, () => {
+              tip .remove();
+            })
+          }
+        }, true);
+        let to = setTimeout (() => {
           tip .fadeOut (1000, () => {
             tip .remove();
+            if (mo)
+              ui .ModalStack .delete (mo);
           })
-        }, 3000);
+        }, 5000);
       });
     }, 0);
   }
