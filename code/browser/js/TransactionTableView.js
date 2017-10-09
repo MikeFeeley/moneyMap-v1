@@ -105,7 +105,7 @@ class TransactionTableView extends TableView {
     for (let tl of tipText)
       $('<div>', {text: tl}) .appendTo (tip .children());
     setTimeout (() => {
-      tip .css (ui .calcPosition(field, html, {top: -130, left: - tip .width() / 2 + field .width() / 2}));
+      tip .css (ui .calcPosition (field, html, {top: -130, left: - tip .width() / 2 + field .width() / 2}));
       tip .fadeIn (300, () => {
         setTimeout (() => {
           tip .fadeOut (1000, () => {
