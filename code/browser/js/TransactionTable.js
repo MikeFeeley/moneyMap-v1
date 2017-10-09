@@ -96,7 +96,7 @@ class TransactionTable extends Table {
         let cat = categories .get (arg .value);
         if (cat .children && cat .children .length) {
           this._view .showFieldTip (
-            ['Consider a more specific subcategory.','Edit category again and move arrow to the right.'],
+            ['Consider a more specific category.','Edit again and move arrow to the right.'],
             arg .id, arg .fieldName
           );
         }
