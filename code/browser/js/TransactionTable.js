@@ -91,7 +91,17 @@ class TransactionTable extends Table {
 
   _onViewChange (eventType, arg) {
     if (eventType == TupleViewEvent .UPDATE) {
-      if (['debit', 'credit'] .includes (arg .fieldName)) {
+      if (arg .fieldName == 'category') {
+        let categories = this._variance .getBudget() .getCategories();
+        let cat = categories .get (arg .value);
+        if (cat .children && cat .children .length) {
+          this._view .showFieldTip (
+            ['Consider a more specific subcategory.','Edit category again and move arrow to the right.'],
+            arg .id, arg .fieldName
+          );
+        }
+      }
+      else if (['debit', 'credit'] .includes (arg .fieldName)) {
         if (arg.value > 0)
           this .updateField (arg.id, arg.fieldName == 'debit'? 'credit': 'debit', 0);
         else if (arg.value < 0) {

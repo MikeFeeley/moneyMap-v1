@@ -96,6 +96,24 @@ class TransactionTableView extends TableView {
       return html
     }
   }
+
+  showFieldTip (tipText, id, fieldName) {
+    let field    = this._getFieldHtml (id, fieldName) .closest ('td');
+    let html     = field .offsetParent();
+    let position = ui .calcPosition(field, html, {top: -130, left: -170});
+    let tip      = $('<div>', {class: '_fieldTip hidden'}) .appendTo (html) .append ($('<div>'));
+    $('<div>', {text: 'TIP'}) .appendTo (tip .children());
+    for (let tl of tipText)
+      $('<div>', {text: tl}) .appendTo (tip .children());
+    tip .css (position);
+    tip .fadeIn (300, () => {
+      setTimeout (() => {
+        tip .fadeOut (1000, () => {
+          tip .remove();
+        })
+      }, 3000);
+    });
+  }
 }
 
 class ViewDateTextbox extends ViewScalableTextbox {
