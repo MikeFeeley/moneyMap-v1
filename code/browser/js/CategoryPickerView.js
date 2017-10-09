@@ -27,7 +27,7 @@ class CategoryPickerView extends View {
       var td = $('<td>', {
         text:  p.name,
         data:  {id: p.id},
-        class: p.selected? '_selected': ''
+        class: (p.selected? '_selected': '') + ' ' + (p.isLeaf? '_leaf': '') + ' ' + (p.isLast? '_last': '')
       }) .appendTo (tr);
       this._tds .set (p.id, td);
     }

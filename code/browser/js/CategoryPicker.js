@@ -29,14 +29,14 @@ class CategoryPicker {
     for (let c of path) {
       var col = []
       for (let sib of this._categories .getSiblingsAndSelf (c))
-        col .push ({name: sib.name, id: sib._id, selected: sib==c});
-      this._cols   .push (col);
+        col .push ({name: sib .name, id: sib._id, selected: sib==c, isLeaf: ! sib .children || sib .children .length == 0});
+      this._cols .push (col);
     }
     this._selCol = Math .max (0, this._cols .length - 1);
     this._selRow = this._cols .length > 0? this._cols [this._selCol] .findIndex (r => {return r.selected}): -1;
     var children = cat? cat.children: this._categories.getRoots();
     if (children)
-      this._cols .push (children .map (c => {return {name: c.name, id: c._id, selected: false}}));
+      this._cols .push (children .map (c => {return {name: c.name, id: c._id, selected: false, isLeaf: ! c .children || c .children .length == 0}}));
     var remove = this._cols .length - 3;
     if (remove > 0) {
       this._selCol -= remove;
@@ -46,6 +46,7 @@ class CategoryPicker {
       let row = [];
       for (let col of this._cols)
         row .push (col [i] || {name: ''});
+      row [this._selCol] .isLast = true;
       this._view .addRow (row);
     }
     this._view .updateHeight();

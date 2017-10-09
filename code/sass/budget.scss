@@ -53,8 +53,16 @@ body {
     box-shadow: $drop-shadow;
     > table {
       > tbody {
-        > tr *:not(._selected) {
-          color: rgb(160,160,160);
+        tr *:not(._selected) {
+          color: rgb(180,180,180);
+        }
+        > tr *._selected._last {
+          &._leaf {
+            color: rgb(0,128,0);
+          }
+          &:not(._leaf) {
+            color: rgb(160,0,0);
+          }
         }
         > tr > td {
           padding: 0px 8px;
