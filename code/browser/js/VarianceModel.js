@@ -206,6 +206,7 @@ class VarianceModel extends Observable {
     }
 
     // If we have a type, then move any "none" actuals to this type
+    let chiWereNone = chiAmount .none;
     if (type != 'none') {
       if (! chiAmount [type])
         chiAmount [type] = {actual: {prev: 0, cur: 0}, budget: {prev: 0, cur: 0}};
@@ -216,7 +217,7 @@ class VarianceModel extends Observable {
     }
 
     // If transactionFocused then only excess available budget propagates from children
-    if (transactionFocused)
+    if (transactionFocused && !chiWereNone)
       for (let sch of ['none','month','year'])
         for (let per of ['prev','cur'])
           if (chiAmount [sch]) {
