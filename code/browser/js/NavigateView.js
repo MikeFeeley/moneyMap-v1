@@ -399,6 +399,7 @@ class NavigateView extends Observable  {
             d .backgroundColor = this._getColor (groups .length > 1? backgroundAlphas [idx]: 0.3);
             d .borderColor     = this._getColor (borderAlphas     [idx]);
             d .stack           = stacks [idx];
+            d .colorIndex      = this._colorIndex;
           }
           d .label           = labelPrefixes [idx] + d .label;
           if (d .type != 'line' && d .data .find (a => {return a != 0}))
@@ -491,16 +492,12 @@ class NavigateView extends Observable  {
           if (element .length) {
             let html        = container .closest ('div:not(._popup)');
             let position    = ui .calcPosition (graph, html, {top: 50, left: 50});
-            let colorIndex  = 0;
-            for (let i = 0; i < element [0] ._datasetIndex; i++)
-              if (datasets [i] .type != 'line' && datasets [i] .data .find (d => {return d != 0}))
-                colorIndex ++;
             this._notifyObservers (NavigateViewEvent .BUDGET_GRAPH_CLICK, {
               name:         name,
               id:           datasets [element [0] ._datasetIndex] .id,
               label:        labels   [element [0] ._index],
               labelIndex:   element [0] ._index,
-              colorIndex:   colorIndex,
+              colorIndex:   datasets [element [0] ._datasetIndex] .colorIndex,
               data:         data,
               date:         Object .assign ({}, dataset .dates && dataset .dates [element [0] ._index + startCol]),
               position:     position,
