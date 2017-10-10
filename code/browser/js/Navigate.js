@@ -254,7 +254,7 @@ class Navigate {
           } else {
             arg .date .start = Types .dateFY .getFYStart (arg .date .start, this._budget .getStartDate(), this._budget .getEndDate());
             arg .date .end   = Types .dateFY .getFYEnd   (arg .date .end,   this._budget .getStartDate(), this._budget .getEndDate());
-            this._addMonthsGraph (arg .name, arg .view, [arg .id], true, arg .position, arg .html, true, iy, sel && sel .addCats, arg .date, arg .datasetIndex - 1);
+            this._addMonthsGraph (arg .name, arg .view, [arg .id], true, arg .position, arg .html, true, iy, sel && sel .addCats, arg .date, arg .colorIndex);
           }
         }
       } else if (arg .name == '_budgetHistoryGraph' && arg .id .length >= 1 && arg .id [0]) {
@@ -264,7 +264,7 @@ class Navigate {
             BudgetProgressHUD .show (activeId, arg .html, arg .position, this._accounts, this._variance);
         } else {
           let ids = [] .concat (arg .id);
-          this._addHistoryGraph (ids, true, arg .position, arg .view, this._getHistoryData (ids, undefined, true), arg .html, arg .datasetIndex);
+          this._addHistoryGraph (ids, true, arg .position, arg .view, this._getHistoryData (ids, undefined, true), arg .html, arg .colorIndex);
         }
       }
 

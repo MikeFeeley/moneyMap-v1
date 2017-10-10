@@ -491,12 +491,16 @@ class NavigateView extends Observable  {
           if (element .length) {
             let html        = container .closest ('div:not(._popup)');
             let position    = ui .calcPosition (graph, html, {top: 50, left: 50});
+            let colorIndex  = 0;
+            for (let i = 0; i < element [0] ._datasetIndex; i++)
+              if (datasets [i] .type != 'line' && datasets [i] .data .find (d => {return d != 0}))
+                colorIndex ++;
             this._notifyObservers (NavigateViewEvent .BUDGET_GRAPH_CLICK, {
               name:         name,
               id:           datasets [element [0] ._datasetIndex] .id,
               label:        labels   [element [0] ._index],
               labelIndex:   element [0] ._index,
-              datasetIndex: element [0] ._datasetIndex,
+              colorIndex:   colorIndex,
               data:         data,
               date:         Object .assign ({}, dataset .dates && dataset .dates [element [0] ._index + startCol]),
               position:     position,
