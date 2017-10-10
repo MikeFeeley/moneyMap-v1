@@ -336,12 +336,12 @@ class NavigateView extends Observable  {
     this._budgetYearGraph .add();
   }
 
-  addMonthsGraph (name, dataset, popup, position, onClose, toHtml) {
-    return this._addBudgetGraph (name, dataset, popup, position, onClose, toHtml);
+  addMonthsGraph (name, dataset, popup, position, onClose, toHtml, startColor=0) {
+    return this._addBudgetGraph (name, dataset, popup, position, onClose, toHtml, startColor);
   }
 
-  addHistoryGraph (dataset, popup, position, onClose, toHtml) {
-    return this._addBudgetGraph ('_budgetHistoryGraph', dataset, popup, position, onClose, toHtml);
+  addHistoryGraph (dataset, popup, position, onClose, toHtml, startColor=0) {
+    return this._addBudgetGraph ('_budgetHistoryGraph', dataset, popup, position, onClose, toHtml, startColor);
   }
 
   /**
@@ -361,7 +361,7 @@ class NavigateView extends Observable  {
    *   }
    */
 
-  _addBudgetGraph (name, dataset, popup, position, onClose, toHtml) {
+  _addBudgetGraph (name, dataset, popup, position, onClose, toHtml, startColor=0) {
     var startCol, endCol;
     dataset       = Object .assign ({}, dataset);
     dataset .cols = dataset .cols .map (c => {return c});
@@ -388,6 +388,8 @@ class NavigateView extends Observable  {
       for (let g of groups) {
         let idx = groups .indexOf (g);
         this._resetColors();
+        for (let i = 0; i < startColor || 0; i ++)
+          this._nextColor();
         for (let d of g) {
           if (d .type == 'line') {
             d .borderColor     = 'rgba(221,0,0,1)';
@@ -490,16 +492,17 @@ class NavigateView extends Observable  {
             let html        = container .closest ('div:not(._popup)');
             let position    = ui .calcPosition (graph, html, {top: 50, left: 50});
             this._notifyObservers (NavigateViewEvent .BUDGET_GRAPH_CLICK, {
-              name:       name,
-              id:         datasets [element [0] ._datasetIndex] .id,
-              label:      labels   [element [0] ._index],
-              labelIndex: element [0] ._index,
-              data:       data,
-              date:       Object .assign ({}, dataset .dates && dataset .dates [element [0] ._index + startCol]),
-              position:   position,
-              html:       html,
-              altClick:   e .webkitForce > 1 || e .altKey,
-              view:       this
+              name:         name,
+              id:           datasets [element [0] ._datasetIndex] .id,
+              label:        labels   [element [0] ._index],
+              labelIndex:   element [0] ._index,
+              datasetIndex: element [0] ._datasetIndex,
+              data:         data,
+              date:         Object .assign ({}, dataset .dates && dataset .dates [element [0] ._index + startCol]),
+              position:     position,
+              html:         html,
+              altClick:     e .webkitForce > 1 || e .altKey,
+              view:         this
             })
           }
           e .stopPropagation();

@@ -254,7 +254,7 @@ class Navigate {
           } else {
             arg .date .start = Types .dateFY .getFYStart (arg .date .start, this._budget .getStartDate(), this._budget .getEndDate());
             arg .date .end   = Types .dateFY .getFYEnd   (arg .date .end,   this._budget .getStartDate(), this._budget .getEndDate());
-            this._addMonthsGraph (arg .name, arg .view, [arg .id], true, arg .position, arg .html, true, iy, sel && sel .addCats, arg .date);
+            this._addMonthsGraph (arg .name, arg .view, [arg .id], true, arg .position, arg .html, true, iy, sel && sel .addCats, arg .date, arg .datasetIndex - 1);
           }
         }
       } else if (arg .name == '_budgetHistoryGraph' && arg .id .length >= 1 && arg .id [0]) {
@@ -264,7 +264,7 @@ class Navigate {
             BudgetProgressHUD .show (activeId, arg .html, arg .position, this._accounts, this._variance);
         } else {
           let ids = [] .concat (arg .id);
-          this._addHistoryGraph (ids, true, arg .position, arg .view, this._getHistoryData (ids, undefined, true), arg .html);
+          this._addHistoryGraph (ids, true, arg .position, arg .view, this._getHistoryData (ids, undefined, true), arg .html, arg .datasetIndex);
         }
       }
 
@@ -774,7 +774,7 @@ class Navigate {
   /**
    * Add GRAPH (either budget or actual) showing children of specifie root list
    */
-  _addMonthsGraph (name, view, ids, popup, position, toHtml, includeMonths=true, includeYears=true, addCats=[], dates=null) {
+  _addMonthsGraph (name, view, ids, popup, position, toHtml, includeMonths=true, includeYears=true, addCats=[], dates=null, startColor=0) {
     var type    = name .includes ('budget')? NavigateValueType .BUDGET_YR_AVE_ACT: NavigateValueType .ACTUALS_BUD;
     var dataset = this._getMonthsData (type, dates, ids, true, includeMonths, includeYears, addCats);
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
@@ -783,9 +783,10 @@ class Navigate {
         if (update)
           updateView (update);
       });
+      let oneBar = dataset .groups .length == 1 && dataset .groups [0] .rows .filter (r => {return ! r .id .startsWith ('budget_')}) .length == 1;
       var updateView = view .addMonthsGraph (name, dataset, popup, position, () => {
         this._deleteUpdater (view, updater);
-      }, toHtml);
+      }, toHtml, oneBar? startColor: 0);
     }
   }
 
@@ -1519,14 +1520,14 @@ class Navigate {
     }, toHtml)
   }
 
-  _addHistoryGraph (parentIds, popup, position, view, dataset = this._getHistoryData(parentIds), toHtml) {
+  _addHistoryGraph (parentIds, popup, position, view, dataset = this._getHistoryData(parentIds), toHtml, startColor) {
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       var updater = this._addUpdater (view, (eventType, model, ids) => {
         let ds = this._budgetHistoryUpdater (eventType, model, ids, dataset, parentIds, false, updateView)
       });
       var updateView = view .addHistoryGraph (dataset, popup, position, () => {
         this._deleteUpdater (view, updater);
-      }, toHtml);
+      }, toHtml, dataset .groups .length == 1 && dataset .groups [0] .rows .length == 1? startColor: 0);
       return updateView;
     }
   }
