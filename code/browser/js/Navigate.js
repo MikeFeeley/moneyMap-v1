@@ -421,7 +421,7 @@ class Navigate {
         if (type == NavigateValueType .BUDGET_YR_AVE_ACT && id .includes ('budget_')) {
           let cat = this._categories .get (id .split ('_') .slice (-1) [0]);
           return (dates .filter (d => {return d .start <= Types .date .today()}) .map (date => {
-            let value = this._actuals .getAmountRecursively (cat, date .start, date .end);
+            let value = this._actuals .getAmountRecursively (cat, date .start, date .end) * (this._budget .isCredit (cat)? -1: 1);
             if (id .includes ('other_'))
               value -= this._getChildren (type, id, isLastYear) .reduce ((t, c) => {
                 if (! c .includes ('_')) {
