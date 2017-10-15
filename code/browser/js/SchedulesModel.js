@@ -50,12 +50,12 @@ class SchedulesModel extends Observable {
   /**
    * Called by Presenter
    */
-  *find (catQuery, schQuery) {
+  async find (catQuery, schQuery) {
     (schQuery = schQuery || {}) .budget = this._budget .getId();
     var cats    = this._catModel .find (catQuery);
     var schs    = this._schModel .find (schQuery);
-    cats     = yield* cats;
-    schs     = yield* schs;
+    cats     = await cats;
+    schs     = await schs;
     for (let cat of cats) {
       cat._id    = this._joinMI (this._catModel, cat._id);
       cat.parent = this._joinMI (this._catModel, cat.parent);
@@ -77,7 +77,7 @@ class SchedulesModel extends Observable {
    * Tricky case is moving last schedule from category or adding schedule to an "empty" category;
    * in these cases either add or remove empty schedule.
    */
-  *move (mi, pos, source) {
+  async move (mi, pos, source) {
     var mis      = this._splitMI (mi);
     var target   = this._categories .get (mi);
     if (pos .inside)
@@ -90,10 +90,10 @@ class SchedulesModel extends Observable {
         budget:   this._budget .getId(),
         category: this._splitMI (target .category ._id) .id
       }
-      yield* this._schModel .insert (data);
+      await this._schModel .insert (data);
     }
     if (mis .model == this._schModel && siblings .length == 1 && Types .dateMYorYear .isBlank (siblings [0] .start)) {
-      var result = yield* this._schModel .remove (this._splitMI (siblings [0] ._id) .id);
+      var result = await this._schModel .remove (this._splitMI (siblings [0] ._id) .id);
       if (result)
         pos .before = undefined;
     }
@@ -111,23 +111,23 @@ class SchedulesModel extends Observable {
       data [mis .model .parent] = null;
     changes .push (this .update (mi, data, source));
     for (let c of changes)
-      yield* c;
+      await c;
   }
 
   /**
    *
    */
-  *update (mi, data, source) {
+  async update (mi, data, source) {
     let mis = this._splitMI (mi);
     if (data [mis .model .parent])
       data [mis .model .parent] = this._splitMI (data [mis .model .parent] ._id) .id;
-    return yield* mis.model.update (mis.id, data, source);
+    return await mis.model.update (mis.id, data, source);
   }
 
   /**
    *
    */
-  *insert (data, pos) {
+  async insert (data, pos) {
     var mis = this._splitMI (pos .id);
     if (mis .model == this._schModel)
       data.budget  = this._budget .getId();
@@ -148,13 +148,13 @@ class SchedulesModel extends Observable {
     for (let s of siblings || [])
       if (s.sort >= data .sort)
         changes .push ({id: this._splitMI (s._id) .id, update: {sort: s.sort + 1}})
-    yield* mis .model .updateList (changes);
-    yield* mis .model .insert (data);
+    await mis .model .updateList (changes);
+    await mis .model .insert (data);
     if (data._id) {
       var ids = [this._joinMI (mis. model, data._id)];
       if (mis .model == this._catModel) {
         data = {budget: this._budget .getId(), category: data._id, sort: 0};
-        yield* this._schModel .insert (data);
+        await this._schModel .insert (data);
         if (data._id)
           ids .push (this._joinMI (this._schModel, data._id));
       }
@@ -165,7 +165,7 @@ class SchedulesModel extends Observable {
   /**
    *
    */
-  *remove (mi) {
+  async remove (mi) {
     var result = true;
     var mis = this._splitMI (mi);
     Model .newUndoGroup();
@@ -175,7 +175,7 @@ class SchedulesModel extends Observable {
         mi  = sch .category._id;
         mis = this._splitMI (mi);
       } else
-        var result = yield* mis .model .remove (mis .id);
+        var result = await mis .model .remove (mis .id);
     }
     if (mis .model == this._catModel) {
       var cat = this._categories .get (mi);
@@ -190,13 +190,13 @@ class SchedulesModel extends Observable {
       var sl  = cl. reduce ((l,c) => {
         return l .concat ((c .schedule || []) .map (s => {return this._splitMI (s._id) .id}));
       }, []);
-      result = (yield* this._catModel .checkUpdateList (ul));
+      result = (await this._catModel .checkUpdateList (ul));
       if (! result && sch)
-        yield* this._schModel .update (this._splitMI (sch._id) .id, {amount: 0, start: 0, end: 0, limit: 0, repeat: 0});
+        await this._schModel .update (this._splitMI (sch._id) .id, {amount: 0, start: 0, end: 0, limit: 0, repeat: 0});
       if (result)
-        result = (yield* this._schModel .removeList (sl));
+        result = (await this._schModel .removeList (sl));
       if (result)
-        result = (yield* this._catModel .updateList (ul));
+        result = (await this._catModel .updateList (ul));
     }
     return result;
   }

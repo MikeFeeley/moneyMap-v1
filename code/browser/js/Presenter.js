@@ -32,14 +32,14 @@ class Presenter {
     }
   }
 
-  *_updateField (id, fieldName, value) {
+  async _updateField (id, fieldName, value) {
     let update         = {};
     update [fieldName] = value;
-    yield* this._model .update (id, update, this._view);
+    await this._model .update (id, update, this._view);
   }
 
   updateField (id, fieldName, value) {
-    async (this, this._updateField) (id, fieldName, value);
+    (async () => {await this._updateField (id, fieldName, value)}) ();
   }
 
   click() {

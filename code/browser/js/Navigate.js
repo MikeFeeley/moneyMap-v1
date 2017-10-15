@@ -76,24 +76,24 @@ class Navigate {
     })
   }
 
-  *_getModelValues() {
-    yield* this._actuals .findHistory ();
+  async _getModelValues() {
+    await this._actuals .findHistory ();
     if (this._historicBudgets === undefined)
-      this._historicBudgets = (yield* this._budget .getHistoricBudgets()) || null;
+      this._historicBudgets = (await this._budget .getHistoricBudgets()) || null;
     if (this._noTranAmounts === undefined) {
-      this._noTranAmounts = (yield* this._history .find()) || null;
+      this._noTranAmounts = (await this._history .find()) || null;
       for (let nta of this._noTranAmounts || [])
         nta .category = this._categories .get (nta .category);
     }
     if (this._historicBalances === undefined)
-      this._historicBalances = (yield* this._balances .find()) || null
+      this._historicBalances = (await this._balances .find()) || null
     if (this._rates === undefined)
-      this._rates = (yield* this._parameters .find ({name: 'rates'})) [0] || {apr: 0, inflation: 0, presentValue: false}
+      this._rates = (await this._parameters .find ({name: 'rates'})) [0] || {apr: 0, inflation: 0, presentValue: false}
   }
 
 
-  *_aph() {
-    yield* this._getModelValues();
+  async _aph() {
+    await this._getModelValues();
     this._clearUpdatersForView                      (this._perspectiveView);
     let sc = this._perspectiveView .addContainer    ('_sliderHeader');
     this._perspectiveView .addHeading               ('Compare Years', '', sc);
@@ -113,11 +113,11 @@ class Navigate {
   addPerspectiveHtml (toHtml) {
     this._perspectiveView = new NavigateView (this._accounts, this._variance);
     this._perspectiveView .addObserver       (this, this._onViewChange);
-    this._perspectiveView .addHtml (toHtml, () => {async (this, this._aph) ()})
+    this._perspectiveView .addHtml (toHtml,  () => {this._aph()})
   }
 
-  *_anwh() {
-    yield* this._getModelValues();
+  async _anwh() {
+    await this._getModelValues();
     this._netWorthSliderLeft  = undefined;
     this._netWorthSliderRight = undefined;
     var ds = this._getNetWorthData ();
@@ -137,7 +137,7 @@ class Navigate {
   addNetWorthHtml (toHtml) {
     this._netWorthView = new NavigateView (this._accounts, this._variance);
     this._netWorthView .addObserver       (this, this._onViewChange);
-    this._netWorthView .addHtml           (toHtml, () => {async (this, this._anwh) ()})
+    this._netWorthView .addHtml           (toHtml, () => {this._anwh()})
   }
 
   _onModelChange (eventType, doc, arg, source, model) {

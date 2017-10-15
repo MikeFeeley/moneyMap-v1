@@ -53,7 +53,7 @@ class ImportRulesModel extends Observable {
     this._notifyObservers (eventType, doc, arg, source);
   }
 
-  *find() {
+  async find() {
     if (!this._entries) {
       this._entries   = new Map();
       this._rules     = new Map();
@@ -61,7 +61,7 @@ class ImportRulesModel extends Observable {
       this._entries .clear();
       this._rules   .clear();
     }
-    for (let r of yield* this._model .find()) {
+    for (let r of await this._model .find()) {
       this._entries .set (r._id, r);
       if (r .type == ImportRulesModelType .PREDICATE)
         this._rules .set (r._id, r);
@@ -80,27 +80,27 @@ class ImportRulesModel extends Observable {
     return this._entries != null;
   }
 
-  *update (id, update, source) {
-    return yield* this._model .update (id, update, source);
+  async update (id, update, source) {
+    return await this._model .update (id, update, source);
   }
 
-  *updateList (list, source) {
-    return yield* this._model .updateList (list, source);
+  async updateList (list, source) {
+    return await this._model .updateList (list, source);
   }
 
-  *insert (insert, source) {
-    return yield* this._model .insert (insert, source);
+  async insert (insert, source) {
+    return await this._model .insert (insert, source);
   }
 
-  *insertList (list, source) {
-    return yield* this._model .insertList (list, source);
+  async insertList (list, source) {
+    return await this._model .insertList (list, source);
   }
 
-  *remove (id, source) {
+  async remove (id, source) {
     var rule = this._rules .get (id);
     if (rule)
-      yield* this._model .removeList ((rule .children || []) .map (c => {return c._id}))
-    return yield* this._model .remove (id, source);
+      await this._model .removeList ((rule .children || []) .map (c => {return c._id}))
+    return await this._model .remove (id, source);
   }
 
   get (id) {
@@ -174,7 +174,7 @@ class ImportRulesModel extends Observable {
       return Number (spec);
   }
 
-  *applyRule (rule, tran) {
+  async applyRule (rule, tran) {
     var async     = [];
     var sort      = this._tranModel
       .refine (t     => {return (t .leader || t._seq) == tran._seq})
@@ -208,7 +208,7 @@ class ImportRulesModel extends Observable {
           }
           if (! hasSplit) {
             var hasSplit = true;
-            yield* this._tranModel .update (tran._id, data);
+            await this._tranModel .update (tran._id, data);
           } else {
             data ._seq        = null;
             data .leader      = tran._seq;
@@ -221,7 +221,7 @@ class ImportRulesModel extends Observable {
           }
           break;
         case ImportRulesModelType .ADD:
-          var insert = yield* this._tranModel .insert ({
+          var insert = await this._tranModel .insert ({
             _seq:        null,
             leader:      tran   ._seq,
             sort:        ++sort,
@@ -238,7 +238,7 @@ class ImportRulesModel extends Observable {
           break;
       }
     for (let a of async)
-      yield* a;
+      await a;
   }
 }
 

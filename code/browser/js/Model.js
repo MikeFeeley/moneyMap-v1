@@ -47,7 +47,7 @@ class Model extends Observable {
     super._notifyObservers (eventType, Object .keys (doc) .reduce ((o,k) => {o [k] = doc [k]; return o}, {}), arg, source);
   }
 
-  *_addGroupToModel (doc) {
+  async _addGroupToModel (doc) {
     if (this._options && this._options .groupBy && doc [this._options .groupBy]) {
       var group = this._groups .get (doc [this._options .groupBy]);
       if (!group) {
@@ -57,7 +57,7 @@ class Model extends Observable {
       group .push (doc);
       var query = {}
       query [this._options .groupBy] = doc [this._options .groupBy];
-      for (let g of yield* this._collection .find (query)) {
+      for (let g of await this._collection .find (query)) {
         if (!this._ids .has (g._id)) {
           this._ids .add (g._id);
           group .push (g);
@@ -83,14 +83,14 @@ class Model extends Observable {
    *    Updates that changed model membership yield INSERT or REMOVE callbacks
    *    Callbacks are sent to all models.
    */
-  *_handleCollectionEvent (eventType, doc, arg, fromModel, source) {
+  async _handleCollectionEvent (eventType, doc, arg, fromModel, source) {
     switch (eventType) {
       case ModelEvent .UPDATE:
         if (doc) {
           if (this._ids .has (doc._id) || this._isObserver) {
             if (this._contains (doc) || (this._options && this._options .updateDoesNotRemove)) {
               if (this._options && this._options .groupBy && arg [this._options .groupBy] != null)
-                yield* this._addGroupToModel (doc);
+                await this._addGroupToModel (doc);
               this._notifyObservers (ModelEvent .UPDATE, doc, arg, source);
             } else if (!this._options || !this._options .updateDoesNotRemove) {
               this._ids .delete (doc._id);
@@ -100,7 +100,7 @@ class Model extends Observable {
           } else if (this._contains (doc)) {
             this._notifyObservers (ModelEvent .INSERT, doc, arg);
             this._ids .add (doc._id);
-            yield* this._addGroupToModel (doc);
+            await this._addGroupToModel (doc);
           }
         }
         break;
@@ -108,7 +108,7 @@ class Model extends Observable {
         if (doc && this._contains (doc)) {
           this._notifyObservers (ModelEvent .INSERT, doc, arg, source);
           this._ids .add (doc._id);
-          yield* this._addGroupToModel (doc);
+          await this._addGroupToModel (doc);
         }
         break;
       case ModelEvent .REMOVE:
@@ -124,11 +124,11 @@ class Model extends Observable {
   /**
    * Query server and return matching documents
    */
-  *find (query, append = false) {
+  async find (query, append = false) {
     this._options = query && query .$options;
     if (query && query .$options)
       query = Object .keys (query) .reduce ((o,k) => {if (k != '$options') o [k] = query [k]; return o}, {});
-    var docs    = yield* this._collection .find (query);
+    var docs    = await this._collection .find (query);
     this._query = (this._query && append)? {$or: [this._query, query]}: query;
     if (this._options && this._options .groupBy) {
       var groups =
@@ -141,7 +141,7 @@ class Model extends Observable {
         .filter (d => {return ! d [this._options .groupBy]})
       query = {};
       query [this._options .groupBy] = {$in: groups};
-      var groupDocs = (yield* this._collection .find (query));
+      var groupDocs = (await this._collection .find (query));
       docs = docs .concat (groupDocs);
       this._groups = groups .reduce ((map,group) => {
         map .set (group, groupDocs .filter (d => {return d [this._options .groupBy] == group}));
@@ -187,30 +187,30 @@ class Model extends Observable {
    * Update document with specified id
    *   returns true iff update succeeded
    */
-  *update (id, update, source) {
-    return yield* this._collection .update (id, update, source);
+  async update (id, update, source) {
+    return await this._collection .update (id, update, source);
   }
 
   /**
    * Update list
    */
-  *updateList (list, source) {
-    return yield* this._collection .updateList (list, source);
+  async updateList (list, source) {
+    return await this._collection .updateList (list, source);
   }
 
   /**
    * Check update list
    */
-  *checkUpdateList (list, source) {
-    return yield* this._collection .checkUpdateList (list, source);
+  async checkUpdateList (list, source) {
+    return await this._collection .checkUpdateList (list, source);
   }
 
   /**
    * Insert document
    *    returns inserted doc if successful, falsy otherwise
    */
-  *insert (insert, source) {
-    var result = yield* this._collection .insert (insert, source);
+  async insert (insert, source) {
+    var result = await this._collection .insert (insert, source);
     if (result)
       this._ids .add (result._id);
     return result;
@@ -220,8 +220,8 @@ class Model extends Observable {
    * Insert list of documents
    *    returns an array of inserted docs or falsy for each insert (in order)
    */
-   *insertList (list, source) {
-     var results = yield* this._collection .insertList (list, source);
+   async insertList (list, source) {
+     var results = await this._collection .insertList (list, source);
      for (let result of results)
        if (result)
          this._ids .add (result._id);
@@ -232,8 +232,8 @@ class Model extends Observable {
    * Remove docuement with specified id
    *    returns true iff successful
    */
-  *remove (id, source) {
-    var ok = yield* this._collection .remove (id, source);
+  async remove (id, source) {
+    var ok = await this._collection .remove (id, source);
     if (ok)
       this._ids .delete (id);
     return ok;
@@ -243,24 +243,24 @@ class Model extends Observable {
    * Remove list of docuement with specified ids
    *    returns true iff successful
    */
-  *removeList (list, source) {
-    var ok = yield* this._collection .removeList (list, source);
+  async removeList (list, source) {
+    var ok = await this._collection .removeList (list, source);
     if (ok)
       for (let id of list)
         this._ids .delete (id);
     return ok;
   }
 
-  static *login (username, password) {
-    return yield* _Collection .login (username, password);
+  static async login (username, password) {
+    return await _Collection .login (username, password);
   }
 
-  static *signup (data) {
-    return yield* _Collection .signup (data);
+  static async signup (data) {
+    return await _Collection .signup (data);
   }
 
-  static *updateUser (id, accessCap, update, password) {
-    return yield* _Collection .updateUser (id, accessCap, update, password);
+  static async updateUser (id, accessCap, update, password) {
+    return await _Collection .updateUser (id, accessCap, update, password);
   }
 
   /**
@@ -310,7 +310,7 @@ class _Collection extends Observable {
       _redoLog = [];
       $('body') .keydown (e => {
         if (e .keyCode == 90 && e .metaKey) {
-          async (null, e.shiftKey? _Collection._redo: _Collection._undo) ();
+          (async () => {await (e.shiftKey? _Collection._redo: _Collection._undo) ()})();
           e .preventDefault();
           return false;
         }
@@ -323,8 +323,8 @@ class _Collection extends Observable {
     return   cd           .get (database) || cd           .set (database, new _Collection (name, database)) .get (database);
   }
 
-  *find (query) {
-    var docs = yield* _db .perform (DatabaseOperation .FIND, {database: this._database, collection: this._name, query: query});
+  async find (query) {
+    var docs = await _db .perform (DatabaseOperation .FIND, {database: this._database, collection: this._name, query: query});
     if (docs)
       for (let doc of docs)
         this._docs .set (doc._id, doc);
@@ -345,13 +345,13 @@ class _Collection extends Observable {
     return this._docs .get (id);
   }
 
-  *update (id, update, source, isUndo, tid) {
+  async update (id, update, source, isUndo, tid) {
     var doc  = this._docs .get (id);
     if (doc) {
       var orig = {}
       for (let f in update)
         orig [f] = doc [f];
-      var ok  = yield* _db .perform (DatabaseOperation .UPDATE_ONE, {database: this._database, collection: this._name, id: id, update: update})
+      var ok  = await _db .perform (DatabaseOperation .UPDATE_ONE, {database: this._database, collection: this._name, id: id, update: update})
       if (ok) {
         var undo = Object .keys (update) .reduce ((o,f) => {o [f] = doc [f] || ''; return o}, {})
         _Collection._logUndo (this, this .update, [id, undo], isUndo, tid);
@@ -359,13 +359,13 @@ class _Collection extends Observable {
           doc [f]                   = update [f];
           update ['_original_' + f] = orig   [f];
         }
-        yield* this._notifyObserversGenerator (ModelEvent.UPDATE, doc, update, this, source);
+        await this._notifyObservers (ModelEvent.UPDATE, doc, update, this, source);
       }
       return ok;
     }
   }
 
-  *updateList (list, source, isUndo, tid) {
+  async updateList (list, source, isUndo, tid) {
     if (list .length == 0)
       return true;
     var origs = []
@@ -378,7 +378,7 @@ class _Collection extends Observable {
       origs .push (orig);
       docs  .push (doc);
     }
-    var ok  = yield* _db .perform (DatabaseOperation .UPDATE_LIST, {database: this._database, collection: this._name, list: list});
+    var ok  = await _db .perform (DatabaseOperation .UPDATE_LIST, {database: this._database, collection: this._name, list: list});
     if (ok) {
       var undo = []
       for (let item of list) {
@@ -389,33 +389,33 @@ class _Collection extends Observable {
           doc [f]                         = item .update [f];
           item .update ['_original_' + f] = orig         [f];
         }
-        yield* this._notifyObserversGenerator (ModelEvent.UPDATE, doc, item .update, this, source);
+        await this._notifyObservers (ModelEvent.UPDATE, doc, item .update, this, source);
       }
       _Collection._logUndo (this, this .updateList, [undo], isUndo, tid);
     }
     return ok;
   }
 
-  *checkUpdateList (list, source, isUndo, tid) {
+  async checkUpdateList (list, source, isUndo, tid) {
     if (list .length == 0)
       return true;
-    return yield* _db .perform (DatabaseOperation .CHECK_UPDATE_LIST, {database: this._database, collection: this._name, list: list});
+    return await _db .perform (DatabaseOperation .CHECK_UPDATE_LIST, {database: this._database, collection: this._name, list: list});
   }
 
-  *insert (insert, source, isUndo, tid) {
-    var result = yield* _db .perform (DatabaseOperation .INSERT_ONE, {database: this._database, collection: this._name, insert: insert});
+  async insert (insert, source, isUndo, tid) {
+    var result = await _db .perform (DatabaseOperation .INSERT_ONE, {database: this._database, collection: this._name, insert: insert});
     if (result) {
       _Collection._logUndo (this, this .remove, [result._id], isUndo, tid);
       for (let f of Object .keys (result) .filter (f => {return f .startsWith ('_')}))
         insert [f] = result [f];
       this._docs .set (insert._id, insert);
-      yield* this._notifyObserversGenerator (ModelEvent.INSERT, insert, undefined, this, source);
+      await this._notifyObservers (ModelEvent.INSERT, insert, undefined, this, source);
       return insert;
     }
   }
 
-  *insertList (list, source, isUndo, tid) {
-    var results = yield* _db .perform (DatabaseOperation .INSERT_LIST, {database: this._database, collection: this._name, list: list})
+  async insertList (list, source, isUndo, tid) {
+    var results = await _db .perform (DatabaseOperation .INSERT_LIST, {database: this._database, collection: this._name, list: list})
     var undo    = [];
     for (let i = 0; i < list .length; i++)
       if (results [i]) {
@@ -423,7 +423,7 @@ class _Collection extends Observable {
         for (let f of Object .keys (results [i]) .filter (f => {return f .startsWith ('_')}))
           list [i] [f] = results [i] [f];
         this._docs .set (list [i]._id, list [i]);
-        yield* this._notifyObserversGenerator (ModelEvent.INSERT, list [i], undefined, this, source);
+        await this._notifyObservers (ModelEvent.INSERT, list [i], undefined, this, source);
         results [i] = list [i];
       }
       if (undo .length)
@@ -431,42 +431,42 @@ class _Collection extends Observable {
     return results;
   }
 
-  *remove (id, source, isUndo, tid) {
-    var ok  = yield* _db .perform (DatabaseOperation .REMOVE_ONE, {database: this._database, collection: this._name, id: id});
+  async remove (id, source, isUndo, tid) {
+    var ok  = await _db .perform (DatabaseOperation .REMOVE_ONE, {database: this._database, collection: this._name, id: id});
     if (ok) {
       var doc = this._docs .get (id);
       _Collection._logUndo (this, this .insert, [doc], isUndo, tid);
       this._docs .delete (id);
-      yield* this._notifyObserversGenerator (ModelEvent.REMOVE, doc, undefined, this, source);
+      await this._notifyObservers (ModelEvent.REMOVE, doc, undefined, this, source);
     }
     return ok;
   }
 
-  *removeList (list, source, isUndo, tid) {
-    var results = yield* _db .perform (DatabaseOperation .REMOVE_LIST, {database: this._database, collection: this._name, list: list})
+  async removeList (list, source, isUndo, tid) {
+    var results = await _db .perform (DatabaseOperation .REMOVE_LIST, {database: this._database, collection: this._name, list: list})
     var undo    = [];
     for (let i = 0; i < list .length; i++)
       if (results [i]) {
         var doc = this._docs .get (list [i]);
         undo .push (doc);
         this._docs .delete (list [i]);
-        yield* this._notifyObserversGenerator (ModelEvent.REMOVE, doc, undefined, this, source);
+        await this._notifyObservers (ModelEvent.REMOVE, doc, undefined, this, source);
       }
       if (undo .length)
         _Collection._logUndo (this, this .insertList, [undo], isUndo, tid);
     return results;
   }
 
-  static *login (username, password) {
-    return yield* _db .perform (DatabaseOperation .LOGIN, {username: username, password: password});
+  static async login (username, password) {
+    return await _db .perform (DatabaseOperation .LOGIN, {username: username, password: password});
   }
 
-  static *signup (data) {
-    return yield* _db .perform (DatabaseOperation .SIGNUP, data);
+  static async signup (data) {
+    return await _db .perform (DatabaseOperation .SIGNUP, data);
   }
 
-  static *updateUser (id, accessCap, update, password) {
-    return yield* _db .perform (DatabaseOperation .UPDATE_USER, {id: id, accessCap: accessCap, update: update, password: password});
+  static async updateUser (id, accessCap, update, password) {
+    return await _db .perform (DatabaseOperation .UPDATE_USER, {id: id, accessCap: accessCap, update: update, password: password});
   }
 
   static newUndoGroup() {
@@ -478,21 +478,21 @@ class _Collection extends Observable {
     log .push ({tid: tid || _tid, collection: collection, op: op, args: args});
   }
 
-  static *_processLog (isUndo) {
+  static async _processLog (isUndo) {
     var log = isUndo? _undoLog: _redoLog;
     while (log .length && (!tid || log [log .length - 1] .tid == tid)) {
       var le  = log .pop();
       var tid = le .tid || -1;
-      yield* le .op .apply (le .collection, le .args .concat ([null, isUndo, tid]));
+      await le .op .apply (le .collection, le .args .concat ([null, isUndo, tid]));
     }
   }
 
-  static *_undo() {
-    yield* _Collection ._processLog (true);
+  static async _undo() {
+    await _Collection ._processLog (true);
   }
 
-  static *_redo() {
-    yield* _Collection ._processLog (false);
+  static async _redo() {
+    await _Collection ._processLog (false);
   }
 
   static _resetUndo() {

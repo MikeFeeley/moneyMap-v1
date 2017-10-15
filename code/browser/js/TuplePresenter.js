@@ -40,34 +40,34 @@ class TuplePresenter extends Presenter {
     this._view .empty();
   }
 
-  _onViewChange (eventType, arg) {
+  async _onViewChange (eventType, arg) {
     super._onViewChange (eventType, arg);
     switch (eventType) {
       case TupleViewEvent .INSERT:
         Model .newUndoGroup();
         if (! this._options .noInsert)
-          async (this, this._insert) (arg.insert, arg.pos);
+          this._insert (arg.insert, arg.pos);
         break;
       case TupleViewEvent .REMOVE:
         Model .newUndoGroup();
         if (! this._options .noRemove)
-          async (this, this._remove) (arg);
+          this._remove (arg);
         break;
     }
   }
 
-  *_insert (insert, pos) {
-    yield* this._model .insert (insert, this._view);
+  async _insert (insert, pos) {
+    await this._model .insert (insert, this._view);
     this._addTuple (insert, pos);
   }
 
-  *_remove (id) {
-    yield* this._model .remove (id, this._view);
+  async _remove (id) {
+    await this._model .remove (id, this._view);
     this._removeTuple (id);
   }
 
-  *_removeList (list) {
-    yield* this._model .removeList (list, this._view);
+  async _removeList (list) {
+    await this._model .removeList (list, this._view);
     for (let id of list)
       this._removeTuple (id);
   }

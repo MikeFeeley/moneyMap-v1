@@ -27,33 +27,33 @@ class TransactionHUD extends TransactionAndRulesTable {
       super._onViewChange (eventType, arg);
   }
 
-  *refreshHtml() {
-    yield* super .refreshHtml();
+  async refreshHtml() {
+    await super .refreshHtml();
     ui .scrollIntoView (this._html);
   }
 
-  *_getModelData() {
-    var trans = yield* super._getModelData();
+  async _getModelData() {
+    var trans = await super._getModelData();
     this._tdebit  = trans .reduce ((s,t) => {s += t .debit  || 0; return s}, 0);
     this._tcredit = trans .reduce ((s,t) => {s += t .credit || 0; return s}, 0);
     return trans;
   }
 
-  _toggleEdit() {
+  async _toggleEdit() {
     var button = this._content .find ('._editButton');
     if (button .text() == 'Edit') {
       button .text ('View');
       this._content .removeClass ('_TransactionReadOnly');
       this._view._options .readOnly = false;
       (this._query .$options = this._query .$options || {}) .groupBy = 'group';
-      async (this, this .refreshHtml)();
+      this .refreshHtml();
     } else {
       button .text ('Edit');
       this._view._clearSelectedTuple();
       this._content .addClass ('_TransactionReadOnly');
       this._view._options .readOnly = true;
       delete this._query .$options .groupBy;
-      async (this, this .refreshHtml)();
+      this .refreshHtml();
     }
   }
 
@@ -173,12 +173,12 @@ class TransactionHUD extends TransactionAndRulesTable {
       $(this._view._tfoot .find ('td') [3]) .addClass ('_rightArrow');
   }
 
-  *_addModelData() {
-    yield* super._addModelData();
+  async _addModelData() {
+    await super._addModelData();
     this._addFooter();
   }
 
-  *addHtml (toHtml, position) {
+  async addHtml (toHtml, position) {
     let ml = 500;
     let po = toHtml .offset() .left;
     if (po + position .left > ml)
@@ -245,7 +245,7 @@ class TransactionHUD extends TransactionAndRulesTable {
       $('<div>', {text: this._title [1], class: '_subtitle'}) .appendTo (body);
     this._view._options .readOnly = true;
     this._setTitleDate();
-    yield* super .addHtml (body);
+    await super .addHtml (body);
     this._modalStackEntry = ui .ModalStack .add (
       (e) => {return ! $.contains (this._content .get (0), e .target) && this._content .get (0) != e .target},
       ()  => {this .delete()}, true
@@ -350,8 +350,8 @@ class TransactionHUD extends TransactionAndRulesTable {
   }
 
   static show (title, query, accounts, variance, toHtml, position, onClose, monthStart, monthEnd) {
-   var hud = new TransactionHUD (title, query, accounts, variance, onClose, monthStart, monthEnd);
-    async (hud, hud .addHtml) (toHtml, position);
+    let hud = new TransactionHUD (title, query, accounts, variance, onClose, monthStart, monthEnd);
+    (async () => {await hud .addHtml (toHtml, position)}) ();
   }
 }
 

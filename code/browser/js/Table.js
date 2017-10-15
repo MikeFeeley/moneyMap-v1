@@ -25,12 +25,12 @@ class Table extends TuplePresenter {
     return this._columns .reduce ((o,f) => {o [f] = doc [f] || ''; return o}, {_id: doc._id});
   }
 
-  *_getModelData() {
-    return yield* this._model .find (this._query);
+  async _getModelData() {
+    return await this._model .find (this._query);
   }
 
-  *_addModelData() {
-    var docs = yield* this._getModelData();
+  async _addModelData() {
+    var docs = await this._getModelData();
     if (this._sort)
       docs .sort (this._sort);
     for (let doc of docs)
@@ -41,14 +41,14 @@ class Table extends TuplePresenter {
     this._view .addTuple (this._getTupleData (doc));
   }
 
-  *addHtml (toHtml) {
+  async addHtml (toHtml) {
     this._view .addHtml (toHtml);
-    yield* this._addModelData();
+    await this._addModelData();
   }
 
-  *refreshHtml() {
+  async refreshHtml() {
     this._view .empty();
-    yield* this._addModelData();
+    await this._addModelData();
   }
 }
 

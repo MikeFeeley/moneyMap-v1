@@ -156,7 +156,7 @@ var ui = {
           content .empty();
           content .data({hidden: null, visible: null});
           if (addNow || ! t .tab .hasClass ('background')) {
-            addContent (content);
+            (async () => {await addContent (content)}) ();
             addContent = null;
           }
           tabMap .set (name, {tab: t .tab, addContent: addContent});

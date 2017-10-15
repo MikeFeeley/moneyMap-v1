@@ -21,20 +21,20 @@ class BudgetModel extends Observable {
     this._notifyObservers (eventType, doc, arg, source, model);
   }
 
-  *find (id) {
+  async find (id) {
     let today = Types .date .today();
-    //    this._budgets = yield* this._budModel .find ({start: {$lte: today}, end: {$gte: today}});
-    this._budgets = yield* this._budModel .find ();  // XXX Old budgets?
+    //    this._budgets = await this._budModel .find ({start: {$lte: today}, end: {$gte: today}});
+    this._budgets = await this._budModel .find ();  // XXX Old budgets?
     this._budget  = this._budgets .find (b => {return b._id == id});
     if (this._schModel)
       this._schModel .delete();
     this._schModel = new SchedulesModel (this);
     this._schModel .addObserver (this, this._onSchedulesModelChange);
-    yield* this._schModel .find ();
+    await this._schModel .find ();
   }
 
-  *getHistoricBudgets() {
-    return (yield* this._budModel .find ())
+  async getHistoricBudgets() {
+    return (await this._budModel .find ())
       .filter (b     => {return b .end < this._budget .start})
       .sort   ((a,b) => {return a .start < b .start? -1: a .start == b .start? 0: 1})
   }

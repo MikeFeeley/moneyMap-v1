@@ -91,7 +91,7 @@ class ScheduleEntry extends List {
     }
   }
 
-  _onViewChange (eventType, arg) {
+  async _onViewChange (eventType, arg) {
     if (this._options.noInsertInside && arg && arg .pos && arg .pos .inside)
       arg .pos .inside = undefined;
     switch (eventType) {
@@ -114,7 +114,7 @@ class ScheduleEntry extends List {
           this._view .cancelMove (arg.id);
           return;
         }
-        async (this, this._move) (arg .id, arg .pos, this._view);
+        this._move (arg .id, arg .pos, this._view);
         break;
 
       case ListViewEvent .UPDATE:
@@ -191,20 +191,20 @@ class ScheduleEntry extends List {
     super._onViewChange  (eventType, arg);
   }
 
-  *_insert (lineType, pos) {
+  async _insert (lineType, pos) {
     if (lineType == 'scheduleLine')
       pos .inside = false;
-    var insert = (yield* this._model .insert ({}, pos)) [0];
+    var insert = (await this._model .insert ({}, pos)) [0];
     this._view .selectTupleWithId (insert._id, {first: true});
   }
 
-  *_remove (id) {
-    if (! (yield* this._model .remove (id)))
+  async _remove (id) {
+    if (! (await this._model .remove (id)))
       this._view .flagTupleError (id);
   }
 
-  *_move (id, pos, source) {
-    yield* this._model .move (id, pos, source);
+  async _move (id, pos, source) {
+    await this._model .move (id, pos, source);
   }
 
   addHtml (toHtml) {

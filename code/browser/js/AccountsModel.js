@@ -9,14 +9,14 @@ class AccountsModel extends Observable {
     this._model .delete();
   }
 
-  _onModelChange (eventType, doc, arg) {
+  async _onModelChange (eventType, doc, arg) {
     if (this._updateModel)
-      async (this, this._updateModel)();
+      this._updateModel();
     this._notifyObservers (eventType, doc, arg);
   }
 
-  *_updateModel() {
-    this._accounts = yield* this._model .find();
+  async _updateModel() {
+    this._accounts = await this._model .find();
   }
 
   _smartLowerCase (s) {
@@ -65,7 +65,7 @@ class AccountsModel extends Observable {
     return this._accounts;
   }
 
-  *find() {
-    yield* this._updateModel();
+  async find() {
+    await this._updateModel();
   }
 }

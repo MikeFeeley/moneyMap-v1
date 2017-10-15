@@ -3,10 +3,10 @@ class User extends Observable {
   constructor() {
     super();
     this._view = new UserView();
-    this._view .addObserver (null, (e,a) => {async (this, this._onViewChange) (e,a)});
+    this._view .addObserver (this, this._onViewChange);
   }
 
-  *_onConfigModelChange (eventType, doc, arg, source) {
+  async _onConfigModelChange (eventType, doc, arg, source) {
     if (this._configTabs) {
       if (eventType == ModelEvent .INSERT) {
         let ids = this._configTabs .find ('> ._tabGroupTabs > ._tab > ._field') .toArray() .map (f => {return $(f) .data ('field')._id});
@@ -15,7 +15,7 @@ class User extends Observable {
       }
       switch (eventType) {
         case ModelEvent .INSERT:
-          yield* this._insertConfig (doc);
+          await this._insertConfig (doc);
           break;
         case ModelEvent .REMOVE:
           break;
@@ -31,7 +31,7 @@ class User extends Observable {
     }
   }
 
-  *_onBudgetModelChange (eventType, doc, arg, source) {
+  async _onBudgetModelChange (eventType, doc, arg, source) {
     if (this._configTabs) {
       if (eventType == ModelEvent .INSERT) {
         let ids = this._configTabs
@@ -43,7 +43,7 @@ class User extends Observable {
       }
       switch (eventType) {
         case ModelEvent .INSERT:
-          yield* this._insertBudget (doc);
+          await this._insertBudget (doc);
           break;
         case ModelEvent .REMOVE:
           let i = this._budgets .findIndex (b => {return b._id == doc._id});
@@ -80,14 +80,14 @@ class User extends Observable {
     }
   }
 
-  *_insertConfig (doc) {
+  async _insertConfig (doc) {
     this._configs .push (doc);
     this._configs = this._configs .sort ((a,b) => {return a .name < b .name? -1: a .name == b .name? 0: 1})
     this._selectConfig    (doc._id);
-    yield* this._addConfig (doc, true);
+    await this._addConfig (doc, true);
   }
 
-  *_insertBudget (doc) {
+  async _insertBudget (doc) {
     this._budgets .push (doc);
     this._budgets = this._budgets .sort ((a,b) => {return a .name > b .name? -1: a .name == b .name? 0: 1});
     let ci = this._configTabs
@@ -99,11 +99,11 @@ class User extends Observable {
       this._addBudget (doc, budgetTabs, true);
   }
 
-  *_onViewChange (eventType, arg) {
+  async _onViewChange (eventType, arg) {
   
     switch (eventType) {
       case UserViewEvent .LOGIN:
-        let login = yield* Model .login (arg .username, arg .password);
+        let login = await Model .login (arg .username, arg .password);
         if (login .noUser)
           this._view .loginError ('No user exists with that email');
         else if (login .badPassword)
@@ -118,7 +118,7 @@ class User extends Observable {
           if (arg .remember)
             this._addCookie();
           this._setModelsForConfig();
-          yield* this._init();
+          await this._init();
           this._view .removeLogin();
           this._notifyObservers (UserEvent .NEW_USER);
         }
@@ -139,7 +139,7 @@ class User extends Observable {
           this._view .loginError ('Passwords do not match');
         else {
           arg .username = arg .username .toLowerCase();
-          let signup = yield* Model .signup ({username: arg .username, password: arg .password, name: arg .name});
+          let signup = await Model .signup ({username: arg .username, password: arg .password, name: arg .name});
           if (signup .alreadyExists)
             this._view .loginError ('User already exists with that email');
           else {
@@ -148,10 +148,10 @@ class User extends Observable {
             this._username  = arg .username;
             this._name      = arg .name;
             this._setModelsForConfig();
-            this._cid  = (yield* this._configModel .insert ({user: this._uid, name: 'Default'}))._id;
-            yield* Model .updateUser (this._uid, this._accessCap, {curConfiguration: this._cid});
+            this._cid  = (await this._configModel .insert ({user: this._uid, name: 'Default'}))._id;
+            await Model .updateUser (this._uid, this._accessCap, {curConfiguration: this._cid});
             this._setModelsForConfig();
-            yield* this._initConfig();
+            await this._initConfig();
             if (arg .remember)
               this._addCookie();
             this._view .removeLogin();
@@ -165,17 +165,17 @@ class User extends Observable {
           this._view .selectTab (arg);
           let field = arg .tab .find ('._field') .data('field');
           if (field._name .startsWith ('c_'))
-            yield* this._selectConfig (field._id);
+            await this._selectConfig (field._id);
           else
             this._selectBudget (field._id);
         } else
           /* ADD */
           switch (arg .name) {
             case 'configurations':
-              this._cid = (yield* this._configModel .insert ({user: this._uid, name: 'Untitled'}))._id;
+              this._cid = (await this._configModel .insert ({user: this._uid, name: 'Untitled'}))._id;
               this._setModelsForConfig();
-              yield* this._initConfig();
-              yield* this._selectConfig (this._cid);
+              await this._initConfig();
+              await this._selectConfig (this._cid);
               break;
             case 'budgets':
               this._view .addBudgetAddPopup (arg .target, this._budgets);
@@ -184,7 +184,7 @@ class User extends Observable {
         break;
 
       case UserViewEvent .BUDGET_ROLLOVER:
-        yield* this._rollover (arg .from);
+        await this._rollover (arg .from);
         break
 
       case ViewEvent .UPDATE:
@@ -192,7 +192,7 @@ class User extends Observable {
           let model  = arg .fieldName .startsWith ('c_')? this._configModel: this._budgetModel;
           let update = {}
           update [arg .fieldName .slice (2)] = arg .value;
-          yield* model .update (arg.id, update);
+          await model .update (arg.id, update);
           this._notifyObservers (UserEvent .NEW_CONFIGURATION);
         }
         break;
@@ -220,14 +220,14 @@ class User extends Observable {
       this._addCookie();
   }
 
-  *_tryCookie() {
+  async _tryCookie() {
     let cookie = document .cookie .split (';') .find (c => {return c .startsWith ('user={')});
     if (cookie) {
       let cv = JSON .parse (cookie .slice (5));
       for (let p in cv)
         this [p] = cv [p];
       this._setModelsForConfig();
-      yield* this._init();
+      await this._init();
       this._hasCookie = true;
       this._deleteCookie()
       this._notifyObservers (UserEvent .NEW_USER);
@@ -236,9 +236,9 @@ class User extends Observable {
       return false;
   }
 
-  *_init() {
-    this._configs = (yield* this._configModel .find()) .sort ((a,b) => {return a .name < b .name? -1: a .name == b.name? 0: 1});
-    this._budgets = (yield* this._budgetModel .find()) .sort ((a,b) => {return a .name > b .name? -1: a .name == b.name? 0: 1});
+  async _init() {
+    this._configs = (await this._configModel .find()) .sort ((a,b) => {return a .name < b .name? -1: a .name == b.name? 0: 1});
+    this._budgets = (await this._budgetModel .find()) .sort ((a,b) => {return a .name > b .name? -1: a .name == b.name? 0: 1});
     this._bid     = this._configs .find (c => {return c._id == this._cid}) .curBudget;
     if (! this._budgets .find (b => {return b._id == this._bid}))
       this._bid = this._budgets [0]._id;
@@ -248,15 +248,15 @@ class User extends Observable {
     document .cookie = 'user=; expires=Thu, 01 Jan 1970 00:00:00 UTC'
   }
 
-  *_initConfig () {
-    yield* this._initBudget();
-    yield* this._configModel .update (this._cid, {curBudget: this._bid});
-    this._configs = (yield* this._configModel .find()) .sort ((a,b) => {return a .name < b .name? -1: a .name == b .name? 0: 1})
+  async _initConfig () {
+    await this._initBudget();
+    await this._configModel .update (this._cid, {curBudget: this._bid});
+    this._configs = (await this._configModel .find()) .sort ((a,b) => {return a .name < b .name? -1: a .name == b .name? 0: 1})
   }
 
-  *_initBudget() {
+  async _initBudget() {
     let y  = Types .date._year (Types .date .today());
-    let b  = yield* this._budgetModel .insert({
+    let b  = await this._budgetModel .insert({
       name:             this._budgets && this._budgets .length? 'Untitled': 'Default',
       start:            Types .date._date (y,  1,  1),
       end:              Types .date._date (y, 12, 31),
@@ -264,20 +264,20 @@ class User extends Observable {
       configuration:    this._cid
     });
     let cm = new Model ('categories', this .getDatabaseName());
-    let exp = yield* cm .insert ({
+    let exp = await cm .insert ({
       name: 'Spending',
       parent: null,
       sort: 1,
       budgets: [b._id]
     })
-    let sav = yield* cm .insert ({
+    let sav = await cm .insert ({
       name: 'Savings',
       parent: null,
       sort: 2,
       budgets: [b._id],
       goal: true
     })
-    let inc = yield* cm .insert({
+    let inc = await cm .insert({
       name: 'Income',
       parent: null,
       sort: 3,
@@ -285,25 +285,25 @@ class User extends Observable {
       credit: true,
       goal: true
     })
-    let sus = yield* cm .insert ({
+    let sus = await cm .insert ({
       name: 'Suspense',
       parent: null,
       sort: 4,
       budgets: [b._id]
     })
-    yield* this._budgetModel .update (b._id, {
+    await this._budgetModel .update (b._id, {
       incomeCategory:   inc._id,
       savingsCategory:  sav._id,
       expenseCategory:  exp._id,
       suspenseCategory: sus._id
     })
     this._bid     = b._id;
-    this._budgets = (yield* this._budgetModel .find()) .sort ((a,b) => {return a .name > b .name? -1: a .name == b .name? 0: 1});
+    this._budgets = (await this._budgetModel .find()) .sort ((a,b) => {return a .name > b .name? -1: a .name == b .name? 0: 1});
     cm .delete();
   }
 
-  * login () {
-    if (! (yield* this._tryCookie ()))
+  async login () {
+    if (! (await this._tryCookie ()))
       this._view .addLogin ($('body'));
   }
 
@@ -339,11 +339,11 @@ class User extends Observable {
     this._view .addMenuItem (name, () => {this._view .removeMenu(); action()});
   }
 
-  *_selectConfig (cid) {
+  async _selectConfig (cid) {
     this._cid = cid;
     this._updateCookie();
     this._setModelsForConfig();
-    yield* this._init();
+    await this._init();
     this._notifyObservers (UserEvent .NEW_CONFIGURATION);
     if (this._onLabelChange)
       this._onLabelChange (this .getLabel());
@@ -403,10 +403,10 @@ class User extends Observable {
     this._budgetModel .observe();
   }
 
-  *_addAccountEdit() {
+  async _addAccountEdit() {
     let ae = this._view .addAccountEdit();
     this._addUserEdit   (ae);
-    yield* this._addConfigEdit (ae);
+    await this._addConfigEdit (ae);
   }
 
   _addUserEdit (ae) {
@@ -451,7 +451,7 @@ class User extends Observable {
       this._view .selectTab (budgetTab);
   }
 
-  *_addConfig (c, select) {
+  async _addConfig (c, select) {
     let configTab = this._view .addTab (this._configTabs);
     this._view .addField (new ViewScalableTextbox ('c_name', ViewFormats ('string'), '', '', 'Config Name'), c._id, c .name, configTab .tab);
     if (select)
@@ -460,30 +460,30 @@ class User extends Observable {
     let budgetTabs = this._view .addTabGroup ('budgets', budgetContentGroup);
     this._view .addButton ('Delete Configuration', () => {}, this._view .addLine (configTab .content));
     let bm = new Model ('budgets', this .getDatabaseName (c._id));
-    let budgets = (yield* bm .find ({})) .sort ((a,b) => {return a .name > b .name? -1: a .name == b .name? 0: 1});
+    let budgets = (await bm .find ({})) .sort ((a,b) => {return a .name > b .name? -1: a .name == b .name? 0: 1});
     bm .delete();
     let budgetTab = this._view .addTab (budgetTabs, '_add', true, 'Add');
     for (let b of budgets)
       this._addBudget (b, budgetTabs, b._id == c .curBudget);
   }
 
-  *_addConfigEdit (ae) {
+  async _addConfigEdit (ae) {
     let configGroup = this._view .addGroup ('Configurations', ae, '_dark');
-    let configs = yield* this._configModel .find ({});
+    let configs = await this._configModel .find ({});
     this._configTabs = this._view .addTabGroup ('configurations', configGroup);
     this._view .addTab (this._configTabs, '_add', true, 'Add');
     let cid = this._cid;
     for (let c of configs) {
       this._cid = c._id
       this._setModelsForConfig();
-      yield* this._addConfig (c, c._id == cid);
+      await this._addConfig (c, c._id == cid);
     }
     this._cid = cid;
     this._setModelsForConfig();
 
   }
 
-  *_updateAccount (values) {
+  async _updateAccount (values) {
     let [email, oldPassword, newPassword, confirmPassword, name] = values;
     email = email .toLowerCase();
     let update   = {username: email == this._username? undefined: email, name: name};
@@ -497,7 +497,7 @@ class User extends Observable {
         update .password = newPassword;
       }
     }
-    let result = yield* Model .updateUser (this._uid, this._accessCap, update, password);
+    let result = await Model .updateUser (this._uid, this._accessCap, update, password);
     if (result .passwordMismatch)
       this._view .setLabel (this._accountEditError, 'Profile not updated &mdash; Old password does not match');
     else if (result .alreadyExists)
@@ -512,15 +512,15 @@ class User extends Observable {
     }
   }
 
-  *_showAccountEdit() {
-    yield* this._addAccountEdit();
+  async _showAccountEdit() {
+    await this._addAccountEdit();
   }
 
-  *_deleteBudget (id) {
+  async _deleteBudget (id) {
     let cm         = new Model ('categories',   this .getDatabaseName());
     let sm         = new Model ('schedules',    this .getDatabaseName());
     let tm         = new Model ('transactions', this .getDatabaseName());
-    let updateList = (yield* cm .find ({budgets: id}))
+    let updateList = (await cm .find ({budgets: id}))
       .map (c => {
         let i = c .budgets .indexOf (id);
         if (i >= 0) {
@@ -537,8 +537,8 @@ class User extends Observable {
     let removeList = updateList
       .filter (u => {return u .update .budgets .length == 0})
       .map    (u => {return u .id});
-    let b  = yield* this._budgetModel .find ({_id: id});
-    let rt = (yield* tm .find ({category: {$in: removeList}}))
+    let b  = await this._budgetModel .find ({_id: id});
+    let rt = (await tm .find ({category: {$in: removeList}}))
       .reduce ((s, t) => {
         return s .add (t .category)
       }, new Set());
@@ -547,34 +547,34 @@ class User extends Observable {
     updateList = updateList .filter (u => {return ! rs .has (u .id)});
     let categoriesUpdate = cm .updateList (updateList);
     let categoriesRemove = cm .removeList (removeList);
-    let schedulesRemove  = sm .removeList ((yield* sm .find ({budget: id})) .map (s => {return s._id}))
+    let schedulesRemove  = sm .removeList ((await sm .find ({budget: id})) .map (s => {return s._id}))
     let budgetUpdate     = this._budgetModel .remove (id);
-    yield* categoriesUpdate;
-    yield* categoriesRemove;
-    yield* schedulesRemove;
-    yield* budgetUpdate;
+    await categoriesUpdate;
+    await categoriesRemove;
+    await schedulesRemove;
+    await budgetUpdate;
     cm .delete();
     sm .delete();
     tm .delete();
   }
 
-  *_rollover (from) {
+  async _rollover (from) {
     let b = Object .assign ({}, this._budgets .find (b => {return b._id == from}));
     b .start            = Types .date .addYear (b .start, 1);
     b .end              = Types .date .addYear (b .end,   1);
     b .name             = BudgetModel .getLabelForDates (b .start, b .end);
     b .startCashBalance = 0;
     b._id               = undefined;
-    b = yield* this._budgetModel .insert (b);
+    b = await this._budgetModel .insert (b);
     let cm = new Model ('categories', this .getDatabaseName());
     let sm = new Model ('schedules',  this .getDatabaseName());
-    let fc = (yield* cm .find ({budgets: from})) .reduce ((m,c) => {m .set (c._id, c); return m}, new Map());
+    let fc = (await cm .find ({budgets: from})) .reduce ((m,c) => {m .set (c._id, c); return m}, new Map());
     for (let c of fc .values()) {
       let parent = c .parent && fc .get (c .parent);
       if (parent)
         parent .children = (parent .children || []) .concat (c);
     }
-    let fs = yield* sm .find ({budget: from});
+    let fs = await sm .find ({budget: from});
 
     // get new schedule
     let ts = [];
@@ -674,8 +674,8 @@ class User extends Observable {
       })
     let catUpdate = cm .updateList (updateList);
     let schInsert = sm .insertList (ts);
-    yield* catUpdate;
-    yield* schInsert;
+    await catUpdate;
+    await schInsert;
 
     // finish
     cm .delete();

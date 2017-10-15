@@ -15,17 +15,17 @@ class ActualsModel extends Observable {
     this._notifyObservers (eventType, doc, arg, source);
   }
 
-  *find () {
-    this._actuals = new Actuals (this._budget, yield* this._model .find ({
+  async find () {
+    this._actuals = new Actuals (this._budget, await this._model .find ({
       $and: [{date: {$gte: Types .date .addYear (this._budget .getStartDate(), -1)}}, {date: {$lte: this._budget .getEndDate()}}]
     }));
     this._haveHistory = false;
     return this._actuals;
   }
 
-  *findHistory() {
+  async findHistory() {
     if (! this._haveHistory) {
-      this._actuals .addTransactions (yield* this._model .find ({
+      this._actuals .addTransactions (await this._model .find ({
         date: {$lt: Types .date .addYear (this._budget .getStartDate(), -1)}
       }, true));
       this._haveHistory = true;

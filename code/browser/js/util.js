@@ -14,16 +14,16 @@ class Observable {
     this._observers = undefined;
   }
   _notifyObservers() {
-    for (let o of this._observers || []) {
-      o .observer .apply (o .thisArg, arguments);
-    }
+    for (let o of this._observers || [])
+      (async () => {
+        try {
+          await o .observer .apply (o .thisArg, arguments);
+        } catch (e) {
+          console .log (e);
+        }
+      }) ();
   }
-  *_notifyObserversGenerator() {
-    for (let o of this._observers || []) {
-      yield* o .observer .apply (o .thisArg, arguments);
-    }
-  }
-}
+ }
 
 class FieldType {
   constructor (format) {

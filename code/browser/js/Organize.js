@@ -20,7 +20,7 @@ class Organize {
     this._parModel .delete();
   }
 
-  *_addParameters() {
+  async _addParameters() {
     var fields = [
       new ViewTextbox  ('apr',       ViewFormats ('percent2')),
       new ViewTextbox  ('inflation', ViewFormats ('percent2')),
@@ -40,10 +40,10 @@ class Organize {
     var presenter = new Table (this._parModel, view, query, sort, options, columns);
     this._view .addHeading ('Parameters', 'Rates and Other Parameters');
     this._view .addText    ('When Projecting Future Account Balances');
-    yield* presenter .addHtml (this._view .getHtml());
+    await presenter .addHtml (this._view .getHtml());
   }
 
-  *_addAccounts() {
+  async _addAccounts() {
     var types = [
       ['Deposit',     AccountType .DEPOSIT],
       ['Credit Card', AccountType .CREDIT_CARD],
@@ -108,10 +108,10 @@ class Organize {
     var sort = undefined;
     var accounts = new Table (this._accModel, view, query, sort, options, columns);
     this._view .addHeading ('Accounts', 'Accounts and Balances');
-    yield* accounts .addHtml (this._view .getHtml());
+    await accounts .addHtml (this._view .getHtml());
   }
 
-  *_addHistory() {
+  async _addHistory() {
     var catFormat = new ViewFormatOptions (
       value => {var cat = this._categories .get (value); return cat? cat.name: value},
       view  => {return view},
@@ -126,12 +126,12 @@ class Organize {
       .map (c => {
         return {_id: c._id, name: c .name, sort: c .sort}
       });
-    var cols = (yield* this._budModel .find ({hasTransactions: {$ne: true}})) .map (b => {
+    var cols = (await this._budModel .find ({hasTransactions: {$ne: true}})) .map (b => {
       return {_id: b._id, name: b .name, start: b .start}
     });
     if (cols .length) {
       var query = {$and: [{budget: {$in: cols .map (c => {return c._id})}}, {category: {$in: rows .map (r => {return r._id})}}]};
-      var his   = yield* this._hisModel .find (query);
+      var his   = await this._hisModel .find (query);
       var ins   = [];
       for (let cat of rows .map (r => {return r._id}))
         for (let bud of cols .map (c => {return c._id}))
@@ -142,9 +142,9 @@ class Organize {
               amount:   0
             }));
       for (let i of ins)
-        yield* i;
+        await i;
       if (ins .length)
-        his = yield* this._hisModel .find (query);
+        his = await this._hisModel .find (query);
       his = his .sort ((a,b) => {
         var aCatSort = rows .find (r => {return r._id == a .category}) .sort;
         var bCatSort = rows .find (r => {return r._id == b .category}) .sort;
@@ -153,7 +153,7 @@ class Organize {
         return aCatSort < bCatSort? -1: aCatSort > bCatSort? 1: aBudSort < bBudSort? -1: aBudSort > bBudSort? 1: 0;
       })
       var sort = 0;
-      yield* this._hisModel .updateList (his .map (h => {return {id: h._id, update: {sort: sort++}}}));
+      await this._hisModel .updateList (his .map (h => {return {id: h._id, update: {sort: sort++}}}));
       var fields  = [new ViewLabel ('category', catFormat)];
       var headers = [];
       var columns = [];
@@ -170,11 +170,11 @@ class Organize {
       var sort = undefined;
       var history = new _FoldUpTable (this._hisModel, view, query, sort, options, columns, 'category', 'amount');
       this._view .addHeading ('Transactions',  'Historical Transaction Amounts');
-      yield* history .addHtml (this._view .getHtml());
+      await history .addHtml (this._view .getHtml());
     }
   }
 
-  *_addBalanceHistory() {
+  async _addBalanceHistory() {
     var accFormat = new ViewFormatOptions (
       value => {return (accounts .find (a => {return a._id  == value}) || {}) .name},
       view  => {return (accounts .find (a => {return a.name == view})  || {}) ._id},
@@ -182,22 +182,22 @@ class Organize {
       ()    => {return accounts .map  (a => {return a.name})}
     );
     var accounts = this._accounts .getAccounts();
-    var budgets = (yield* this._budModel .find ({end: {$lt: this._budget .getStartDate()}}))
+    var budgets = (await this._budModel .find ({end: {$lt: this._budget .getStartDate()}}))
       .map  (b     => {return {_id: b._id, name: b .name, start: b .start}})
       .sort ((a,b) => {return a .name > b .name? -1: a .name == b .name? 0: 1})
 
     if (budgets .length) {
       var query = {account: {$in: accounts .map(a => {return a._id})}, budget: {$in: budgets .map (b => {return b._id})}};
-      var his   = yield* this._balModel .find(query);
+      var his   = await this._balModel .find(query);
       var ins   = [];
       for (let a of accounts)
         for (let b of budgets)
           if (! his .find (h => {return h .account == a._id && h .budget == b._id}))
             ins .push (this._balModel .insert ({account: a._id, budget: b._id, amount: 0}))
       for (let i of ins)
-        yield* i;
+        await i;
       if (ins .length)
-        his = yield* this._balModel .find (query);
+        his = await this._balModel .find (query);
       his = his .sort ((x,y) => {
         var xAccSort = accounts .find (a => {return a._id == x .account});
         var yAccSort = accounts .find (a => {return a._id == y .account});
@@ -209,7 +209,7 @@ class Organize {
       })
       var sort = 0;
       if (! his .reduce ((x,h) => {return x? (x .sort <= h .sort? h: false): false}))
-        yield* this._balModel .updateList (his .map (h => {return {id: h._id, update: {sort: sort++}}}));
+        await this._balModel .updateList (his .map (h => {return {id: h._id, update: {sort: sort++}}}));
       var fields  = [new ViewLabel ('account', accFormat)];
       var headers = [];
       var columns = [];
@@ -226,11 +226,11 @@ class Organize {
       var sort = undefined;
       var balances = new _FoldUpTable (this._balModel, view, query, sort, options, columns, 'account', 'amount');
       this._view .addHeading ('Balances', 'Historic Account Balances');
-      yield* balances .addHtml (this._view .getHtml());
+      await balances .addHtml (this._view .getHtml());
     }
   }
 
-  *_addBudgets() {
+  async _addBudgets() {
     var catFormat = new ViewFormatOptions (
       value => {var cat = this._categories .get (value); return cat? cat.name: value},
       view  => {var cat = this._categories .findBestMatch (view); return cat? cat._id: view},
@@ -267,16 +267,16 @@ class Organize {
     var sort = (a,b) => {return a.name < b.name? -1: a .name == b .name? 0: 1};
     var budgets = new Table (this._budModel, view, query, sort, options, columns);
     this._view .addHeading ('Budgets', 'Budgets');
-    yield* budgets .addHtml (this._view .getHtml());
+    await budgets .addHtml (this._view .getHtml());
   }
   
-  *addHtml (toHtml) {
+  async addHtml (toHtml) {
     this._view .addHtml    (toHtml);
-    yield* this._addAccounts();
-    yield* this._addParameters();
-    yield* this._addHistory();
-    yield* this._addBalanceHistory();
-    yield* this._addBudgets();
+    await this._addAccounts();
+    await this._addParameters();
+    await this._addHistory();
+    await this._addBalanceHistory();
+    await this._addBudgets();
   }
 }
 
@@ -298,10 +298,10 @@ class _FoldUpTable extends Table {
     }
   }
 
-  *_getModelData() {
+  async _getModelData() {
     this._ids = new Map();
     this._his = new Map();
-    return (yield* super._getModelData())
+    return (await super._getModelData())
       .sort   ((a,b) => {return a.sort<b.sort? -1: a.sort>b.sort? 1: 0})
       .reduce ((list, item) => {
         var col = {_id: item._id}
@@ -328,11 +328,11 @@ class _FoldUpTable extends Table {
       });
   }
 
-  *_updateField (id, fieldName, value) {
+  async _updateField (id, fieldName, value) {
     if (fieldName .startsWith (this._val + '_')) {
       id        = this._ids .get (id + fieldName);
       fieldName = this._val;
     }
-    yield* super._updateField (id, fieldName, value);
+    await super._updateField (id, fieldName, value);
   }
 }

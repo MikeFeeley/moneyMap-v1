@@ -33,7 +33,7 @@ class ImportRules extends TuplePresenter {
     }
   }
 
-  _onViewChange (eventType, arg) {
+  async _onViewChange (eventType, arg) {
     if ([ImportRulesViewEvent .INSERT_KEY, ImportRulesViewEvent .REMOVE_KEY] .includes (eventType)) {
       var entry = this._model .get ((arg .pos && arg .pos .id) || arg);
       if ([ImportRulesModelType .PREDICATE, ImportRulesModelType .UPDATE] .includes (entry .type))
@@ -83,44 +83,44 @@ class ImportRules extends TuplePresenter {
     super._onViewChange (eventType, arg);
     switch (eventType) {
       case ImportRulesViewEvent .CREATE_UPDATE:
-        async (this, this._createUpdate) (arg);
+        this._createUpdate (arg);
         break;
       case ImportRulesViewEvent .CREATE_SPLIT:
-        async (this, this._createSplit) (arg);
+        this._createSplit (arg);
         break;
       case ImportRulesViewEvent .CREATE_ADD:
-        async (this, this._insert) ({type: ImportRulesModelType .ADD, predicate: arg});
+        this._insert ({type: ImportRulesModelType .ADD, predicate: arg});
         break;
       case ImportRulesViewEvent .DELETED:
         this._onClose();
         break;
       case ImportRulesViewEvent .APPLY:
-        async (this._model, this._model .applyRule) (this._model .get (arg), this._tran);
+        this._model .applyRule (this._model .get (arg), this._tran);
         this .close();
         break;
       case ImportRulesViewEvent .APPLY_UNCATEGORIZED:
-        async (this, this._showApply) (arg)
+        this._showApply (arg)
         break;
       case ImportRulesViewEvent .NEW:
-        async (this, this._createRule)()
+        this._createRule()
         break;
       case ImportRulesViewEvent .CLONE:
-        async (this, this._cloneRule) (arg)
+        this._cloneRule (arg)
        break;
     }
   }
 
-  *_showApply (id) {
-    var handleSelect = function* (ids) {
+  async _showApply (id) {
+    var handleSelect = async ids => {
       var async = []
       for (let tran of trans .filter (t => {return ids .includes (t._id)}))
         async .push (this._model .applyRule (rule, tran));
       for (let a of async)
-        yield* a;
+        await a;
       this .close();
     }
     var rule  = this._model .get (id);
-    var trans = (yield* this._model .getTransactionModel() .find ({$or: [{category: null}, {category: ''}]}))
+    var trans = (await this._model .getTransactionModel() .find ({$or: [{category: null}, {category: ''}]}))
       .sort ((a,b) => {return a.date < b.date? -1: a.date == b.date? (a._seq < b.seq? -1: 1): 1});
     this._view .showApplyPopup (id, new ApplyToTable (this._model .getMatchingTransactions (rule, trans), this, (ids) => {
       async (this, handleSelect) (ids);
@@ -193,7 +193,7 @@ class ImportRules extends TuplePresenter {
     }
   }
 
-  *_createRule() {
+  async _createRule() {
     var insert = {
       type:            ImportRulesModelType .PREDICATE,
       date_op0:        Types .date ._day (this._tran .date),
@@ -206,13 +206,13 @@ class ImportRules extends TuplePresenter {
       credit_op1:      this._tran .credit,
       description_op0: this._tran .description
     }
-    yield* this._insert (insert)
+    await this._insert (insert)
     this._rules .add (insert._id);
-    yield* this._createUpdate (insert._id);
+    await this._createUpdate (insert._id);
   }
 
-  *_createUpdate (id) {
-    yield* this._insert ({
+  async _createUpdate (id) {
+    await this._insert ({
       type:           ImportRulesModelType .UPDATE,
       predicate:      id,
       categoryUpdate: 1,
@@ -226,7 +226,7 @@ class ImportRules extends TuplePresenter {
     })
   }
 
-  *_cloneRule (id) {
+  async _cloneRule (id) {
     var insertList = []
     var clone = rule => {
       return Object .keys (rule) .reduce ((o,f) => {
@@ -237,7 +237,7 @@ class ImportRules extends TuplePresenter {
     }
     var rule   = this._model .get (id);
     var insert = clone (rule);
-    yield* this._insert (insert);
+    await this._insert (insert);
     this._rules .add (insert._id);
     var children = [];
     for (let child of rule .children || []) {
@@ -245,10 +245,10 @@ class ImportRules extends TuplePresenter {
       child .predicate = insert._id;
       children .push (child);
     }
-    yield* this._model .insertList (children);
+    await this._model .insertList (children);
   }
 
-  *_createSplit (id) {
+  async _createSplit (id) {
     var insertList = [
       {
         type:        ImportRulesModelType .SPLIT,
@@ -267,23 +267,23 @@ class ImportRules extends TuplePresenter {
         credit:      this._tran .credit? 'Remaining': ''
       }
     ]
-    yield* this._model .insertList (insertList);
+    await this._model .insertList (insertList);
   }
 
-  *_addHtml (tran, toHtml) {
+  async _addHtml (tran, toHtml) {
     this._view .addHtml  (toHtml);
     var rules = this._model .getMatchingRules (tran)
     for (let rule of rules)
       this._addRule (rule);
     if (rules .length == 0)
-      yield* this._createRule();
+      await this._createRule();
   }
 
   addHtml (tran, toHtml) {
     async (this, this._addHtml) (tran, toHtml);
   }
 
-  *_insert (insert, pos) {
+  async _insert (insert, pos) {
     var ref = pos && pos .id && this._model .get (pos .id);
     if (ref) {
       ref .sort         = ref .sort || 0;
@@ -294,10 +294,10 @@ class ImportRules extends TuplePresenter {
         var rule   = this._model .get (ref .predicate);
         var update = (rule .children || []) .filter (c => {return c .type == insert .type && c .sort >= insert .sort})
         if (update .length)
-          yield* this._model .updateList (update .map (u => {return {id: u._id, update: {sort: (u .sort || 0) + 1}}}))
+          await this._model .updateList (update .map (u => {return {id: u._id, update: {sort: (u .sort || 0) + 1}}}))
       }
     } 
-    yield* super._insert (insert, pos);
+    await super._insert (insert, pos);
   }
 }
 
@@ -324,18 +324,18 @@ class ApplyToTable extends TransactionTable {
       super ._onViewChange (eventType, arg);
   }
 
-  *_getModelData() {
+  async _getModelData() {
     return this._trans;
   }
 
-  *addHtml (toHtml, onClose) {
+  async addHtml (toHtml, onClose) {
     this._onClose = onClose;
     this._view .addHtml (toHtml);
-    yield* super .addHtml (toHtml);
+    await super .addHtml (toHtml);
   }
 
-  *refreshHtml() {
-    yield* super .refreshHtml();
+  async refreshHtml() {
+    await super .refreshHtml();
   }
 }
 

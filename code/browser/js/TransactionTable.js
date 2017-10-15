@@ -115,7 +115,7 @@ class TransactionTable extends Table {
       super._onViewChange (eventType, arg);
   }
 
-  *_redistributeGroupAmount (tran, delta) {
+  async _redistributeGroupAmount (tran, delta) {
     var siblings   = this._getGroup (tran) .filter (t => {return t._id != tran ._id});
     var newAmounts = [];
     for (let s of siblings) {
@@ -136,32 +136,32 @@ class TransactionTable extends Table {
         updates .push (this._model .update (s._id, {credit: c, debit: d}))
     }
     for (let u of updates)
-      yield* u;
+      await u;
   }
 
-  *_updateField (id, fieldName, value) {
+  async _updateField (id, fieldName, value) {
     if (['debit', 'credit'] .includes (fieldName)) {
       var tran  = this._getTran (id);
       if (tran .group && tran [fieldName] != value)
-        yield* this._redistributeGroupAmount (tran, ((tran .debit || 0) - (tran .credit || 0)) - value * (fieldName == 'credit'? -1: 1));
+        await this._redistributeGroupAmount (tran, ((tran .debit || 0) - (tran .credit || 0)) - value * (fieldName == 'credit'? -1: 1));
     }
     if (['date', 'payee', 'account'] .includes (fieldName)) {
       var tran = this._getTran (id);
       if (tran .group && tran .group == tran ._id) {
         var updateList = this._getGroup (tran)
           .map    (t => {var o = {id: t._id, update: {}}; o .update [fieldName] = value; return o})
-        yield* this._model .updateList (updateList);
+        await this._model .updateList (updateList);
       }
     }
-    yield* super._updateField (id, fieldName, value);
+    await super._updateField (id, fieldName, value);
   }
 
-  *_insert (insert, pos) {
+  async _insert (insert, pos) {
     insert ._seq = null;
     var tran = pos && this._getTran (pos .id);
     if (pos && pos .inside) {
       if (! tran .group) {
-        yield* this._model .update (tran._id, {group: tran._id, sort: 0});
+        await this._model .update (tran._id, {group: tran._id, sort: 0});
         tran .group = tran._id;
         tran .sort  = 0;
       }
@@ -173,26 +173,26 @@ class TransactionTable extends Table {
       var sortAdjust = group
         .filter (t => {return t .sort >= insert .sort})
         .map    (t => {return {id: t._id, update: {sort: t .sort + 1}}})
-      yield* this._model .updateList (sortAdjust);
+      await this._model .updateList (sortAdjust);
     } else if (tran && tran .group) {
       var group = this._getGroup (tran);
       pos .id = (pos .before? group [0]: group [group .length - 1]) ._id;
     }
-    yield * super._insert (insert, pos);
+    await super._insert (insert, pos);
   }
 
-  *_remove (id) {
+  async _remove (id) {
     var tran = this._getTran (id);
     if (tran .group) {
       if (tran .group == tran._id) {
-        yield* super._removeList (this._getGroup (tran) .map (s => {return s._id}));
+        await super._removeList (this._getGroup (tran) .map (s => {return s._id}));
         return;
       }
-      yield* this._redistributeGroupAmount (tran, (tran .debit - tran .credit) || 0);
+      await this._redistributeGroupAmount (tran, (tran .debit - tran .credit) || 0);
       var group = this._getGroup (tran);
       if (group .length == 2)
-        yield* this._model .update (group [0]._id, {group: null});
+        await this._model .update (group [0]._id, {group: null});
     }
-    yield* super._remove (id);
+    await super._remove (id);
   }
 }

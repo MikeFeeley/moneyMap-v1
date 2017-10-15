@@ -15,7 +15,7 @@ class ImportTransactionsView extends View {
     $('body') .off ('dragover');
     $('body') .off ('drop');
   }
-  *addHtml (toHtml) {
+  async addHtml (toHtml) {
     this._html = $('<div>', {class: '_ImportTransactions'}) .appendTo (toHtml);
     $('body') .on ({
       dragover: e => {e .preventDefault()},
@@ -25,7 +25,7 @@ class ImportTransactionsView extends View {
         this ._notifyObservers (ImportTransactionsViewEvent .DROPPED, e .originalEvent .dataTransfer .files [0])
       }
     });
-    yield* (new AccountBalance (this._variance)) .addHtml (this._html);
+    await (new AccountBalance (this._variance)) .addHtml (this._html);
     this._import = $('<div>', {class: '_import'})  .appendTo (this._html);
     this._html .parent() .addClass ('_ImportTransactionsContents')
   }
@@ -38,8 +38,8 @@ class ImportTransactionsView extends View {
     $('.' + name) .text (text);
   }
 
-  *addTable (table) {
-    yield* table .addHtml (this._import);
+  async addTable (table) {
+    await table .addHtml (this._import);
   }
 }
 

@@ -32,26 +32,25 @@ class ImportTransactions extends Observable {
     }
   }
 
-  *addHtml (toHtml) {
-    yield* this._view .addHtml (toHtml);
+  async addHtml (toHtml) {
+    await this._view .addHtml (toHtml);
     this._view .addText ('_import_status', 'Drag banking files here to import them ...');
-    yield* this .getModelData();
+    await this .getModelData();
     this._lastImport = new ImportBatchTable (this);
     this._attention  = new NeedsAttentionTable (this);
     if (!this._view || ! this._view .addTable) {console.log('DEBUG', this, this._view)}
-    yield* this._view .addTable (this._attention);
+    await this._view .addTable (this._attention);
     if (!this._view || ! this._view .addTable) {console.log('DEBUG', this, this._view)}
-    yield* this._view .addTable (this._lastImport);
+    await this._view .addTable (this._lastImport);
   }
 
-  *getModelData() {
+  async getModelData() {
     if (! this._importRulesModel .entriesHaveBeenFound())
-      yield* this._importRulesModel .find();
+      await this._importRulesModel .find();
   }
 
-  *_importFile (file) {
-  try{
-    var csv = yield new Promise ((resolve, reject) => {
+  async _importFile (file) {
+    var csv = await new Promise ((resolve, reject) => {
       Papa .parse (file, {
         complete: (results) => {resolve (results)},
         error:    (error)   => {reject  (error)}
@@ -60,7 +59,7 @@ class ImportTransactions extends Observable {
     var it = this._accounts .parseTransactions (csv .data);
     var st = it .reduce ((m,t) => {return Math .min (m, t .date)}, it [0] .date);
     var en = it .reduce ((m,t) => {return Math .max (m, t .date)}, 0);
-    var ct = yield* this._transactions .find ({date: {$gte: st, $lte: en}});
+    var ct = await this._transactions .find ({date: {$gte: st, $lte: en}});
     for (let i of it)
       i .duplicate = ct .filter (c => {
         return c .imported && Object .keys (c .imported) .reduce ((m,f) => {
@@ -77,7 +76,7 @@ class ImportTransactions extends Observable {
     var dc = it .filter (t => {return t .duplicate}) .length;
     var ic = it .length - dc;
     this._currentImportTime = (new Date()) .getTime();
-    var trans = yield* this._transactions .insertList (it .filter (t => {return ! t .duplicate}) .map (t => {
+    var trans = await this._transactions .insertList (it .filter (t => {return ! t .duplicate}) .map (t => {
       delete t .duplicate;
       t .imported   = Object .keys (t) .reduce ((o,f) => {o [f] = t [f]; return o}, {});
       t .importTime = this._currentImportTime;
@@ -91,21 +90,18 @@ class ImportTransactions extends Observable {
        async .push (this._importRulesModel .applyRule (rules [0], t));
     }
     for (let a of async)
-      yield* a;
+      await a;
     var is = ic? ic + ' transaction' + (ic>1? 's': '') + ' imported': '';
     var ds = dc? dc + ' duplicate'   + (dc>1? 's': '') + ' skipped' : '';
     var s  = is + (is .length && ds .length? '; ': '') + ds;
     this._view .updateText ('_import_status', 'Last Import: ' + (s .length? s: 'empty file'));
     if (trans .length)
-      yield* this._lastImport .refreshToLatest();
-    yield* this._attention .refreshHtml();
-  } catch (e) {
-    console.log('xxx', e);
-  }
+      await this._lastImport .refreshToLatest();
+    await this._attention .refreshHtml();
   }
 
-  _processDroppedFile (file) {
-    return async (this, this._importFile) (file);
+  async _processDroppedFile (file) {
+    this._importFile (file);
   }
 }
 
@@ -188,9 +184,9 @@ class TransactionAndRulesTable extends TransactionTable {
     super._onModelChange (eventType, doc, arg, source);
   }
 
-  *_getModelData() {
-    yield* this._parent .getModelData();
-    return (yield* super._getModelData()) .map (t => {
+  async _getModelData() {
+    await this._parent .getModelData();
+    return (await super._getModelData()) .map (t => {
       this._updateModelData (t);
       return t;
     });
@@ -223,15 +219,15 @@ class TransactionAndRulesTable extends TransactionTable {
     }
   }
 
-  *addHtml (toHtml) {
+  async addHtml (toHtml) {
     this._view .addHtml (toHtml);
     if (this._hasTitle)
       this._view .addText ('_title', this._title);
-    yield* super .addHtml (toHtml);
+    await super .addHtml (toHtml);
   }
 
-  *refreshHtml() {
-    yield* super .refreshHtml();
+  async refreshHtml() {
+    await super .refreshHtml();
   }
 }
 
@@ -288,24 +284,24 @@ class ImportBatchTable extends TransactionAndRulesTable {
     this._view .updateButton ('_newer_button', this._hasNewer);
   }
 
-  *addHtml (toHtml) {
+  async addHtml (toHtml) {
     this._view .addHtml (toHtml);
-    this._view .addButton ('_older_button', '<', this._hasOlder, () => {this._setBatch (true);  async (this, this .refresh)()});
-    this._view .addButton ('_newer_button', '>', this._hasNewer, () => {this._setBatch (false); async (this, this .refresh)()});
-    yield* super .addHtml (toHtml);
+    this._view .addButton ('_older_button', '<', this._hasOlder, () => {this._setBatch (true);  (async () => {await this .refresh()}) ()});
+    this._view .addButton ('_newer_button', '>', this._hasNewer, () => {this._setBatch (false); (async () => {await this .refresh()}) ()});
+    await super .addHtml (toHtml);
     this._setTitle();
   }
 
-  *refreshToLatest() {
+  async refreshToLatest() {
     this._batch = undefined;
     this._setBatch();
-    yield* this .refresh();
+    await this .refresh();
   }
 
-  *refresh() {
+  async refresh() {
     this._setTitle();
     this._updateButtons();
-    yield* this .refreshHtml();
+    await this .refreshHtml();
   }
 }
 
@@ -326,11 +322,11 @@ class NeedsAttentionTable extends TransactionAndRulesTable {
     this._onViewChange (TupleViewEvent .INSERT, {insert: {}});
   }
 
-  *addHtml (toHtml) {
+  async addHtml (toHtml) {
     this._view .addHtml   (toHtml);
     this._view .addButton ('_insert_buttom',  '+',       true, () => {this._addButtonPressed()});
-    this._view .addButton ('_refresh_button', 'Refresh', true, () => {async (this, this .refreshHtml)()});
-    yield* super .addHtml (toHtml);
+    this._view .addButton ('_refresh_button', 'Refresh', true, () => {(async () => {await this .refreshHtml()}) ()});
+    await super .addHtml (toHtml);
     this._setTitle();
   }
 }

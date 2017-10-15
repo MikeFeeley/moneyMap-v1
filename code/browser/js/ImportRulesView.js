@@ -373,10 +373,10 @@ class ImportRulesView extends TupleView {
       newFocus .click();
   }
 
-  showApplyPopup (id, presenter) {
+  async showApplyPopup (id, presenter) {
     var popup = $('<div>', {class: '_ApplyPopup'}) .appendTo (this._rules .get(id));
     popup .css ({top: 30, left: 10});
-    async (presenter, presenter .addHtml) (popup, () => {
+    await presenter .addHtml (popup, () => {
       popup .remove();
       ui .ModalStack .delete (modal);
     });

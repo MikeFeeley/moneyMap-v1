@@ -1,15 +1,17 @@
+window.addEventListener ("error", e => {console .log (e .error)});
+
 $(document) .ready (() => {
   let app = new App();
-  app .start();
+  (async () => {await app .start()}) ();
 });
 
 class App {
 
-  start() {
+  async start() {
     ui .ModalStack .init();
     this._user = new User();
-    this._user .addObserver (null, e => {async (this, this._configurationChange) (e)});
-    async (this._user, this._user .login)();
+    this._user .addObserver (this, this._configurationChange);
+    this._user .login();
   }
 
   _deleteModels() {
@@ -18,7 +20,7 @@ class App {
     this._models = [];
   }
 
-  *_configurationChange (eventType) {
+  async _configurationChange (eventType) {
   
     if (eventType == UserEvent .NEW_USER) {
 
@@ -49,9 +51,9 @@ class App {
 
       /* queries */
       this._accounts = this._accModel .find();
-      yield* this._budModel .find (this._user .getBudgetId());
-      yield* this._actModel .find ();
-      yield* this._accModel .find ();
+      await this._budModel .find (this._user .getBudgetId());
+      await this._actModel .find ();
+      await this._accModel .find ();
 
       /* presenters */
       if (this._it) {
@@ -68,19 +70,19 @@ class App {
 
       /* tabs */
       this._tabs .setTab  (this._proT, html => {this._na .addProgressHtml     (html)});
-      this._tabs .setTab  (this._traT, html => {async (this._it, this._it.addHtml)  (html)}, true);
+      this._tabs .setTab  (this._traT, html => {this._it.addHtml              (html)}, true);
       this._tabs .setTab  (this._actT, html => {this._na .addRealityHtml      (html)});
       this._tabs .setTab  (this._budT, html => {this._na .addPlanHtml         (html)});
       this._tabs. setTab  (this._plaT, html => {this._se .addHtml             (html)});
       this._tabs .setTab  (this._perT, html => {this._na .addPerspectiveHtml  (html)});
       this._tabs .setTab  (this._weaT, html => {this._na .addNetWorthHtml     (html)});
-      this._tabs .setTab  (this._setT, html => {async (this._or, this._or .addHtml) (html)});
+      this._tabs .setTab  (this._setT, html => {this._or .addHtml             (html)});
 
       this._user .newConfigurationAccepted();
 
    } else if (eventType == UserEvent .LOGOUT) {
      $('body') .empty();
-     async (this._user, this._user .login)();
+     (async () => {await this._user .login()}) ();
    }
   }
 }//

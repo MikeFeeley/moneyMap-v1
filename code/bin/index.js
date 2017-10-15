@@ -5,7 +5,6 @@ router.get('/', function(req, res, next) {
   res.render('app', {
     title: 'moneyMap',
     jss: [
-      'async',
       'ui',
       'util',
       'DBAdaptor',

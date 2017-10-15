@@ -97,8 +97,8 @@ class AccountBalance extends TuplePresenter {
     }
   }
 
-  *addHtml (toHtml) {
-    yield* this._model .find();
+  async addHtml (toHtml) {
+    await this._model .find();
     this._view .addHtml (toHtml);
     this._addGroup (AccountType .DEPOSIT,     'Bank Accounts', '_flagGood');
     this._addGroup (AccountType .CASH,        'Cash',          '_flagGood');
