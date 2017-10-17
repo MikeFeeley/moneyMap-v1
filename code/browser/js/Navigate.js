@@ -52,27 +52,27 @@ class Navigate {
     })
   }
 
-  addPlanHtml (toHtml) {
+  async addPlanHtml (toHtml) {
     this._planView = new NavigateView (this._accounts, this._variance);
     this._planView .addObserver       (this, this._onViewChange);
-    this._planView .addHtml           (toHtml, () => {
-      this._clearUpdatersForView     (this._planView);
-      this._addBudgetYearTotalsGraph (this._planView);
-      this._addYearCategoriesGraphs  ('_budgetChart', this._planView);
-      this._addMonthsGraph           ('_budgetMonthsGraph', this._planView);
-      this._addMonthsTable           ('_budgetTable', this._planView);
+    this._planView .addHtml           (toHtml, async () => {
+      this._clearUpdatersForView           (this._planView);
+      this._addBudgetYearTotalsGraph       (this._planView);
+      await this._addYearCategoriesGraphs  ('_budgetChart', this._planView);
+      await this._addMonthsGraph           ('_budgetMonthsGraph', this._planView);
+      await this._addMonthsTable           ('_budgetTable', this._planView);
     })
   }
 
-  addRealityHtml (toHtml) {
+  async addRealityHtml (toHtml) {
     this._realityView = new NavigateView (this._accounts, this._variance);
     this._realityView .addObserver       (this, this._onViewChange);
-    this._realityView .addHtml           (toHtml, () => {
-      this._clearUpdatersForView    (this._realityView);
-      this._realityView .addHeading ('What has actually happened so far ...');
-      this._addYearCategoriesGraphs ('_activityChart', this._realityView);
-      this._addMonthsGraph          ('_activityMonthsGraph', this._realityView);
-      this._addMonthsTable          ('_activityTable', this._realityView);
+    this._realityView .addHtml           (toHtml, async () => {
+      this._clearUpdatersForView          (this._realityView);
+      this._realityView .addHeading       ('What has actually happened so far ...');
+      await this._addYearCategoriesGraphs ('_activityChart', this._realityView);
+      await this._addMonthsGraph          ('_activityMonthsGraph', this._realityView);
+      await this._addMonthsTable          ('_activityTable', this._realityView);
     })
   }
 
@@ -140,7 +140,7 @@ class Navigate {
     this._netWorthView .addHtml           (toHtml, () => {this._anwh()})
   }
 
-  _onModelChange (eventType, doc, arg, source, model) {
+  async _onModelChange (eventType, doc, arg, source, model) {
     var modelName = model .constructor .name;
     let skip =
       (eventType == ModelEvent .INSERT && modelName == 'SchedulesModel' && doc .category) ||
@@ -158,7 +158,7 @@ class Navigate {
         var ids = [doc._id] || [];
         break;
     }
-    this._update (eventType, modelName, ids, doc, skip);
+    await this._update (eventType, modelName, ids, doc, skip);
   }
 
 
@@ -167,7 +167,7 @@ class Navigate {
   /**
    * Handle interation with view (drilling on click)
    */
-  _onViewChange (eventType, arg) {
+  async _onViewChange (eventType, arg) {
 
     if (eventType == NavigateViewEvent .PROGRESS_GRAPH_CLICK && arg .id) {
       /* Progress Graph */
@@ -201,14 +201,14 @@ class Navigate {
         if (arg .altClick)
           TransactionHUD .showCategory (arg .id, dates, this._accounts, this._variance, arg .html, {top: arg .position .top, left: 0}, ! sel .isYear, sel .isYear, sel .addCats);
         else
-          this._addMonthsGraph ('_activityMonthsGraph', arg.view, [arg .id], true, arg .position, arg .html, ! sel .isYear, sel .isYear, sel .addCats);
+          await this._addMonthsGraph ('_activityMonthsGraph', arg.view, [arg .id], true, arg .position, arg .html, ! sel .isYear, sel .isYear, sel .addCats);
       }
 
     } else if (eventType == NavigateViewEvent .PROGRESS_SIDEBAR_CLICK) {
       if (arg .altClick)
-        this._addMonthsGraph ('_budgetMonthsGraph', arg.view, [arg .id], true, arg .position, arg .html);
+        await this._addMonthsGraph ('_budgetMonthsGraph', arg.view, [arg .id], true, arg .position, arg .html);
       else
-        this._addMonthsGraph ('_activityMonthsGraph', arg.view, [arg .id], true, arg .position, arg .html);
+        await this._addMonthsGraph ('_activityMonthsGraph', arg.view, [arg .id], true, arg .position, arg .html);
     } else if (eventType == NavigateViewEvent .BUDGET_CHART_CLICK  && arg .id) {
       /* Yearly Chart (Budget or Actual) */
       if (arg .altClick) {
@@ -220,10 +220,10 @@ class Navigate {
             position .left = 0;
           else
             position .right = 200;
-          this._addMonthsGraph (name, arg .view, [arg .id], true, position, html);
+          await this._addMonthsGraph (name, arg .view, [arg .id], true, position, html);
         }
       } else
-        this._addYearCategoriesGraph (arg .name, arg .id, null, arg .view, true, arg .position, arg .direction);
+        await this._addYearCategoriesGraph (arg .name, arg .id, null, arg .view, true, arg .position, arg .direction);
 
     } else if (eventType == NavigateViewEvent .BUDGET_GRAPH_CLICK && arg .id) {
       /* Monthly or History Graph (Budget or Actual) */
@@ -254,7 +254,7 @@ class Navigate {
           } else {
             arg .date .start = Types .dateFY .getFYStart (arg .date .start, this._budget .getStartDate(), this._budget .getEndDate());
             arg .date .end   = Types .dateFY .getFYEnd   (arg .date .end,   this._budget .getStartDate(), this._budget .getEndDate());
-            this._addMonthsGraph (arg .name, arg .view, [arg .id], true, arg .position, arg .html, true, iy, sel && sel .addCats, arg .date, arg .colorIndex);
+            await this._addMonthsGraph (arg .name, arg .view, [arg .id], true, arg .position, arg .html, true, iy, sel && sel .addCats, arg .date, arg .colorIndex);
           }
         }
       } else if (arg .name == '_budgetHistoryGraph' && arg .id .length >= 1 && arg .id [0]) {
@@ -300,7 +300,7 @@ class Navigate {
             let iy  = !sel || sel .isYear === undefined || sel .isYear;
             arg .date .start = Types .dateFY .getFYStart (arg .date .start, this._budget .getStartDate(), this._budget .getEndDate());
             arg .date .end   = Types .dateFY .getFYEnd   (arg .date .end,   this._budget .getStartDate(), this._budget .getEndDate());
-            this._addMonthsGraph (arg .name, arg .view, [parent._id], true, arg .position, arg .html, im, iy, sel && sel .addCats, arg .date);
+            await this._addMonthsGraph (arg .name, arg .view, [parent._id], true, arg .position, arg .html, im, iy, sel && sel .addCats, arg .date);
           }
         } else {
           if (Array .isArray (arg .id))
@@ -332,7 +332,7 @@ class Navigate {
         } else {
           if (arg .date && arg .date .length == 0)
             arg .date = [{start: this._budget .getStartDate(), end: this._budget .getEndDate()}];
-          this._addMonthsTable (arg .name, arg .view, [arg .id], arg .date, true, true, arg .position, arg .html, undefined, undefined, im, iy);
+          await this._addMonthsTable (arg .name, arg .view, [arg .id], arg .date, true, true, arg .position, arg .html, undefined, undefined, im, iy);
         }
       } else if (arg .name == '_budgetHistoryTable' && arg .id .length >= 1 && arg .id [0]) {
         if (arg .altClick) {
@@ -355,7 +355,7 @@ class Navigate {
         title = 'Activity for ';
       }
       title += this._budget .getLabel (arg .date);
-      this._addMonthsTable (name, arg.view, undefined, arg .date, false, true, arg .position, arg .html, undefined, title);
+      await this._addMonthsTable (name, arg.view, undefined, arg .date, false, true, arg .position, arg .html, undefined, title);
 
     } else if (eventType == NavigateViewEvent .PROGRESS_GRAPH_TITLE_CLICK && arg .data .length) {
       /* Progress Graph Title */
@@ -371,7 +371,7 @@ class Navigate {
   /*******************************************/
   /***** GET BUDGET / ACTUAL INFORMATION *****/
 
-  _getChildren (type, id, isLastYear) {
+  async _getChildren (type, id, isLastYear) {
     switch (type) {
       case NavigateValueType .BUDGET: case NavigateValueType .BUDGET_YR_AVE: case NavigateValueType .BUDGET_YR_AVE_ACT:
         if (id .includes ('other_'))
@@ -398,7 +398,7 @@ class Navigate {
               st = Types .date .addYear (st, -1);
               en = Types .date .addYear (en, -1);
             }
-            var result = this._actuals .getTransactions (cat, st, en)
+            var result = await this._actuals .getTransactions (cat, st, en)
               .map (t => {
                 let stop = t .payee .match (payeeTruncate);
                 return (stop && stop .index? t .payee .slice (0, stop .index): t .payee) .split (' ') .slice (0,3) .join (' ');
@@ -415,15 +415,15 @@ class Navigate {
     }
   }
 
-  _getAmounts (type, id, isCredit, dates, includeMonths = true, includeYears = true, addCats, isLastYear) {
+  async _getAmounts (type, id, isCredit, dates, includeMonths = true, includeYears = true, addCats, isLastYear) {
     switch (type) {
       case NavigateValueType .BUDGET: case NavigateValueType .BUDGET_YR_AVE: case NavigateValueType .BUDGET_YR_AVE_ACT:
         if (type == NavigateValueType .BUDGET_YR_AVE_ACT && id .includes ('budget_')) {
           let cat = this._categories .get (id .split ('_') .slice (-1) [0]);
-          return (dates .filter (d => {return d .start <= Types .date .today()}) .map (date => {
+          return await Promise .all ((dates .filter (d => {return d .start <= Types .date .today()}) .map (async date => {
             let value = this._actuals .getAmountRecursively (cat, date .start, date .end) * (this._budget .isCredit (cat)? -1: 1);
             if (id .includes ('other_'))
-              value -= this._getChildren (type, id, isLastYear) .reduce ((t, c) => {
+              value -= await this._getChildren (type, id, isLastYear) .reduce ((t, c) => {
                 if (! c .includes ('_')) {
                   let cat = this._categories .get (c);
                   if (this._budget .getAmount (cat, date .start, date .end) .amount == 0) {
@@ -434,7 +434,7 @@ class Navigate {
                   return t;
               }, 0)
             return {id: id, value: value}
-          }))
+          })))
         } else {
           let cat = this._categories .get (id .split ('_') .slice (-1) [0]);
           let amounts;
@@ -476,12 +476,12 @@ class Navigate {
           })
         else if (id .includes ('payee_')) {
           let payee = ida .slice (-2) [0];
-          return dates .map (date => {return {
+          return await Promise .all (dates .map (async date => {return {
             id:    id,
-            value: this._actuals .getTransactions (cat, date .start, date .end)
+            value: await this._actuals .getTransactions (cat, date .start, date .end)
                      .filter (t     => {return t .payee .startsWith (payee)})
                      .reduce ((s,t) => {return s - (t .credit || 0) + (t .debit || 0)}, 0)  * (isCredit? -1: 1)
-          }})
+          }}))
         } else {
           let isOther = id .includes ('other_');
           let tc = [cat];
@@ -566,26 +566,26 @@ class Navigate {
     }
   }
 
-  _getChildrenData (type, id, dates, allowLeaf, includeMonths = true, includeYears = true, addCats = [], isLastYear) {
-    let isLeaf = (id .includes ('other_') || id .includes ('payee_') || this._getChildren (type, id, isLastYear) .filter (c => {return ! c .includes ('budget_')}) .length == 0);
+  async _getChildrenData (type, id, dates, allowLeaf, includeMonths = true, includeYears = true, addCats = [], isLastYear) {
+    let isLeaf = (id .includes ('other_') || id .includes ('payee_') || (await this._getChildren (type, id, isLastYear)) .filter (c => {return ! c .includes ('budget_')}) .length == 0);
     if (isLeaf && (! allowLeaf || id .includes ('leaf_')))
       return {data: []}
     else {
       let cat         = this._categories .get (id .split ('_') .slice (-1) [0]);
       let isCredit    = this._budget .isCredit (cat);
       let isGoal      = this._budget .isGoal   (cat);
-      let children    = this._getChildren (type, id, isLastYear);
+      let children    = await this._getChildren (type, id, isLastYear);
       let hasChildren = children .length > 1 || (children .length == 1 && ! children [0] .includes ('budget_'));
-      let data        = ((hasChildren && children) || [id] .concat (children))
-        .map (child => {return {
+      let data        = await Promise .all (((hasChildren && children) || [id] .concat (children))
+        .map (async child => {return {
           name:     this._getName (type, child) || '',
           id:       child,
           isCredit: isCredit,
           isGoal:   isGoal,
           isYear:   includeMonths != includeYears? this._categories .getType (this._categories .get (child .split ('_') .slice (-1) [0])) == ScheduleType .YEAR: undefined,
-          amounts:  this._getAmounts (type, child, isCredit, dates, includeMonths, includeYears, addCats, isLastYear),
+          amounts:  await this._getAmounts (type, child, isCredit, dates, includeMonths, includeYears, addCats, isLastYear),
           type:     child .includes ('budget_') && 'line'
-        }});
+        }}));
       if (! id .includes ('other_')) {
         let totals = data .reduce ((t,r) => {return ! r .id .includes ('budget_')? r .amounts .map ((a,i) => {return (t[i] || 0) + a .value}): t}, []);
         data .push ({
@@ -593,7 +593,7 @@ class Navigate {
           id:       'other_' + cat._id,
           isCredit: isCredit,
           isGoal:   isGoal,
-          amounts:  this._getAmounts (type, id, isCredit, dates, includeMonths, includeYears, addCats, isLastYear) .map ((a,i) => {
+          amounts:  (await this._getAmounts (type, id, isCredit, dates, includeMonths, includeYears, addCats, isLastYear)) .map ((a,i) => {
             return {id: 'other_' + cat._id, value: a .value - (totals [i] || 0)
           }})
         })
@@ -603,11 +603,11 @@ class Navigate {
       let hasBudget = data .length != realData .length;
       let hasOther  = realData .length && realData [realData .length -1] .id .includes ('other_');
       let one = data .length == 1 || (data .length == 2 && hasBudget);
-      if (one && (data [0] .id .includes ('other_') || this._getChildren (type, data [0] .id, isLastYear) .filter (c => {return ! c .includes ('budget_')}) .length == 0))
+      if (one && (data [0] .id .includes ('other_') || (await this._getChildren (type, data [0] .id, isLastYear) .filter (c => {return ! c .includes ('budget_')}) .length == 0)))
         data [0] .id = 'leaf_' + data [0] .id;
       return {
         data:      data,
-        getUpdate: (eventType, model, ids) => {
+        getUpdate: async (eventType, model, ids) => {
           let needReplace = {needReplace: true};
           if (this._getModels (type) .includes (model)) {
             if (eventType == ModelEvent .UPDATE && ids .length == 0)
@@ -622,9 +622,9 @@ class Navigate {
                   return i == eid || (! e .id .includes ('other_') && this._categories .getDescendants (this._categories .get (i)) .find (d => {return d._id == eid}))
                 });
               if (aff .length) {
-                let up = aff .map (af => {
-                  let aid     = af .id;
-                  let newData = this._getChildrenData (type, id, dates, allowLeaf, includeMonths, includeYears, addCats, isLastYear);
+                let up = await Promise .all (aff .map (async af => {
+                  let aid     = af .id .split ('_') .slice (-1) [0];
+                  let newData = await this._getChildrenData (type, id, dates, allowLeaf, includeMonths, includeYears, addCats, isLastYear);
                   if (hasOther == (newData .data .length && newData .data [newData .data .length - 1] .id .includes ('other_'))) {
                     let newAff = newData .data .filter (d => {return d .id .split ('_') .slice (-1) [0] == aid});
                     if (newAff .length == 1) {
@@ -636,7 +636,7 @@ class Navigate {
                       return needReplace
                   } else
                     return needReplace
-                });
+                }));
                 if (up .find (u => {return u .needReplace}))
                   return [needReplace]
                 else
@@ -674,7 +674,7 @@ class Navigate {
    *     }]
    *   }
    */
-  _getData (
+  async _getData (
     type,
     dates,
     ids           = [this._budget .getIncomeCategory()._id, this._budget .getSavingsCategory()._id, this._budget .getExpenseCategory()._id],
@@ -697,9 +697,9 @@ class Navigate {
     let isYear = dates .length == 1 && Types .date._month (dates [0] .start) != Types .date._month (dates [0] .end);
     var months = isYear? 0: dates .length;
     var cols   = isYear? []: dates .map (d => {return Types .dateM .toString (d .start)});
-    var groups = ids
-      .map (id => {
-        let data = this._getChildrenData (type, id, dates, allowLeaf, includeMonths, includeYears, addCats, isLastYear);
+    var groups = await Promise .all (ids
+      .map (async id => {
+        let data = await this._getChildrenData (type, id, dates, allowLeaf, includeMonths, includeYears, addCats, isLastYear);
         return {
           id:        id,
           name:      this._getName         (type, id),
@@ -707,7 +707,7 @@ class Navigate {
           rows:      data .data,
           getUpdate: data .getUpdate
         }
-      })
+      }))
     if ((type == NavigateValueType .BUDGET_YR_AVE_ACT || type == NavigateValueType .ACTUALS_BUD) && groups .length > 1)
       groups = groups .map (g => {
         g .rows = g .rows .filter (r => {return ! r .id .includes ('budget_')})
@@ -738,15 +738,15 @@ class Navigate {
       startBal:  this._budget .getStartCashBalance(),
       highlight: highlight > 0? highlight: undefined,
       income:    this._getIncome (type),
-      getUpdate: (eventType, model, eventIds) => {
+      getUpdate: async (eventType, model, eventIds) => {
         let update = [];
         for (let g of groups) {
           if (this._getModels (type) .includes (model) && eventIds .includes (g .id))
             update .push ({update: {id: g .id, name: this._getName (type, g .id)}})
-          let u = g .getUpdate (eventType, model, eventIds);
+          let u = await g .getUpdate (eventType, model, eventIds);
           if (u) {
             if (u [0] .needReplace)
-              u = [{replace: this._getData (type, dates, ids, allowLeaf, includeMonths, includeYears, addCats)}]
+              u = [{replace: await this._getData (type, dates, ids, allowLeaf, includeMonths, includeYears, addCats)}]
             update = update .concat (u);
           }
         }
@@ -755,16 +755,16 @@ class Navigate {
     }
   }
 
-  _getMonthsData (type, dates, ids, allowLeaf, includeMonths, includeYears, addCats) {
-    let data = this._getData (type, dates, ids, allowLeaf, includeMonths, includeYears, addCats);
+  async _getMonthsData (type, dates, ids, allowLeaf, includeMonths, includeYears, addCats) {
+    let data = await this._getData (type, dates, ids, allowLeaf, includeMonths, includeYears, addCats);
     let parentUpdate = data .getUpdate;
-    data .getUpdate = (e,m,i) => {
-      let up = parentUpdate (e,m,i) .map (u => {
+    data .getUpdate = async (e,m,i) => {
+      let up = await Promise .all ((await parentUpdate (e,m,i)) .map (async u => {
         if (u .needUpdate)
-          return {replace: this._getData (type, dates, ids, allowLeaf, includeMonths, includeYears, addCats)}
+          return {replace: await this._getData (type, dates, ids, allowLeaf, includeMonths, includeYears, addCats)}
         else
           return u;
-      })
+      }))
       let re = up .find (u => {return u .replace});
       return re? [re]: up;
     }
@@ -774,12 +774,12 @@ class Navigate {
   /**
    * Add GRAPH (either budget or actual) showing children of specifie root list
    */
-  _addMonthsGraph (name, view, ids, popup, position, toHtml, includeMonths=true, includeYears=true, addCats=[], dates=null, startColor=0) {
+  async _addMonthsGraph (name, view, ids, popup, position, toHtml, includeMonths=true, includeYears=true, addCats=[], dates=null, startColor=0) {
     var type    = name .includes ('budget')? NavigateValueType .BUDGET_YR_AVE_ACT: NavigateValueType .ACTUALS_BUD;
-    var dataset = this._getMonthsData (type, dates, ids, true, includeMonths, includeYears, addCats);
+    var dataset = await this._getMonthsData (type, dates, ids, true, includeMonths, includeYears, addCats);
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
-      var updater = this._addUpdater (view, (eventType, model, ids) => {
-        let update = dataset .getUpdate (eventType, model, ids);
+      var updater = this._addUpdater (view, async (eventType, model, ids) => {
+        let update = await dataset .getUpdate (eventType, model, ids);
         if (update)
           updateView (update);
       });
@@ -793,11 +793,11 @@ class Navigate {
   /**
    * Add TABLE (either budget or actual) showing children of specified root list
    */
-  _addMonthsTable (name, view, ids, dates, skipFoot, popup, position, toHtml, col, title, includeMonths, includeYears) {
-    var dataset = this._getMonthsData (name .includes ('budget')? NavigateValueType .BUDGET: NavigateValueType .ACTUALS, dates, ids, false, includeMonths, includeYears);
+  async _addMonthsTable (name, view, ids, dates, skipFoot, popup, position, toHtml, col, title, includeMonths, includeYears) {
+    var dataset = await this._getMonthsData (name .includes ('budget')? NavigateValueType .BUDGET: NavigateValueType .ACTUALS, dates, ids, false, includeMonths, includeYears);
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
-      var updater = this._addUpdater (view, (eventType, model, ids) => {
-        let update = dataset .getUpdate (eventType, model, ids);
+      var updater = this._addUpdater (view, async (eventType, model, ids) => {
+        let update = await dataset .getUpdate (eventType, model, ids);
         if (update)
           updateView (update);
       });
@@ -815,9 +815,9 @@ class Navigate {
   /***************************************/
   /**** YEARLY BUDGET OR ACTUAL GRAPH ****/
 
-  _getYearsData (type, id, blackouts) {
-    var getBlackouts = (d) => {
-      var boAmts  = blackouts .map (b => {return this._getAmounts (type, b._id, this._budget .isCredit (b), dates) [0]});
+  async _getYearsData (type, id, blackouts) {
+    var getBlackouts = async (d) => {
+      var boAmts  = await Promise .all (blackouts .map (async b => {return (await this._getAmounts (type, b._id, this._budget .isCredit (b), dates)) [0]}));
       var amts    = d .reduce ((s,c) => {return s + c .amounts[0] .value}, 0);
       var unalloc = Math .max (0, boAmts [0] .value - boAmts [1] .value - amts);
       return [{
@@ -832,9 +832,9 @@ class Navigate {
       }]
     }
     var dates = [{start: this._budget .getStartDate(), end: this._budget .getEndDate()}];
-    var data  = this._getChildrenData (type, id, dates);
+    var data  = await this._getChildrenData (type, id, dates);
     if (blackouts) {
-      let bo = getBlackouts (data .data);
+      let bo = await getBlackouts (data .data);
       for (let i=0; i<2; i++)
         if (bo [i] .amounts [0] .value != 0)
           data .data .push (bo [i]);
@@ -847,15 +847,15 @@ class Navigate {
         amount:    c .amounts [0] .value,
         blackout:  c .blackout,
       }}),
-      getUpdate: (e,m,i) => {
-        let update = data .getUpdate (e,m,i);
+      getUpdate: async (e,m,i) => {
+        let update = await data .getUpdate (e,m,i);
         if (update) {
           let nu = [];
           for (let u of update)
             if (u .needReplace) {
-              nu .push ({replace: this._getYearsData (type, id, blackouts)})
+              nu .push ({replace: await this._getYearsData (type, id, blackouts)})
             } else if (u .needUpdate && u .affected .startsWith ('blackout_')) {
-              let bo = getBlackouts (this._getChildrenData (type, id, dates) .data);
+              let bo = await getBlackouts ((await this._getChildrenData (type, id, dates)) .data);
               nu .push ({update: bo [0]}, {update: bo [1]})
             } else
               nu .push (u);
@@ -865,13 +865,13 @@ class Navigate {
     }
   }
 
-  _addYearCategoriesGraph (name, id, blackouts, view, popup, position, direction) {
+  async _addYearCategoriesGraph (name, id, blackouts, view, popup, position, direction) {
     if (! id .includes ('_')) {
       var type = name == '_budgetChart'? NavigateValueType .BUDGET: NavigateValueType .ACTUALS;
-      var data = this._getYearsData (type, id, blackouts);
+      var data = await this._getYearsData (type, id, blackouts);
       if (data .cats .length && (data .cats .length > 1 || ! data .cats [0] .id .includes ('leaf_'))) {
-        let updater = this._addUpdater (view, (eventType, model, ids) => {
-          let update = data .getUpdate (eventType, model, ids);
+        let updater = this._addUpdater (view, async (eventType, model, ids) => {
+          let update = await data .getUpdate (eventType, model, ids);
           if (update)
             updateView (update);
         })
@@ -882,13 +882,13 @@ class Navigate {
     }
   }
 
-  _addYearCategoriesGraphs (name, view, toHtml) {
+  async _addYearCategoriesGraphs (name, view, toHtml) {
     var income  = this._budget .getIncomeCategory();
     var savings = this._budget .getSavingsCategory();
     var expense = this._budget .getExpenseCategory();
     view .addGroup (name + 's', toHtml);
     for (let root of [income, savings, expense])
-      this._addYearCategoriesGraph (name, root._id, root == savings && [income, expense], view);
+      await this._addYearCategoriesGraph (name, root._id, root == savings && [income, expense], view);
   }
 
 
@@ -1736,12 +1736,12 @@ class Navigate {
     this._updaters .set (view, []);
   }
 
-  _update (eventType, model, ids, doc, arg, skipLiveUpdate) {
+  async _update (eventType, model, ids, doc, arg, skipLiveUpdate) {
     for (let view of this._updaters .keys()) {
       if (!view || !view .isVisible || view .isVisible()) {
         if (! skipLiveUpdate)
           for (let updater of this._updaters .get (view))
-            updater (eventType, model, ids, doc, arg);
+            await updater (eventType, model, ids, doc, arg);
       } else
         view .resetHtml();
     }
@@ -1755,13 +1755,13 @@ class Navigate {
   /**************************/
   /***** STATIC METHODS *****/
 
-  static showActualMonthGraph (id, dates, html, position, includeMonths=true, includeYears=true) {
+  static async showActualMonthGraph (id, dates, html, position, includeMonths=true, includeYears=true) {
     if (NavigateInstance && NavigateInstance._progressView)
-      NavigateInstance._addMonthsGraph ('_activityMonthsGraph', NavigateInstance._progressView, [id], true, position, html, includeMonths, includeYears, [], dates);
+      await NavigateInstance._addMonthsGraph ('_activityMonthsGraph', NavigateInstance._progressView, [id], true, position, html, includeMonths, includeYears, [], dates);
   }
-  static showBudgetMonthGraph (id, dates, html, position, includeMonths=true, includeYears=true) {
+  static async showBudgetMonthGraph (id, dates, html, position, includeMonths=true, includeYears=true) {
     if (NavigateInstance && NavigateInstance._progressView)
-      NavigateInstance._addMonthsGraph ('_budgetMonthsGraph', NavigateInstance._progressView, [id], true, position, html, includeMonths, includeYears, []);
+      await NavigateInstance._addMonthsGraph ('_budgetMonthsGraph', NavigateInstance._progressView, [id], true, position, html, includeMonths, includeYears, []);
   }
 }
 

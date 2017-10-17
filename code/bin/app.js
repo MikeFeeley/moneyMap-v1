@@ -1,7 +1,8 @@
 var fs    = require('fs');
 var http  = require('http');
 var https = require('https');
-var async = require ('../lib/async.js');
+var async = require ('../lib/async.js');  // XXX Remove once all files are converted to async/await
+
 var credentials = {
   key:  fs.readFileSync ('../ssl/key.pem', 'utf8'),
   cert: fs.readFileSync ('../ssl/cert.pem', 'utf8')
@@ -40,22 +41,28 @@ app.get ('/debug', function (req, res, next) {
 app.use ('/', require ('./index'));
 
 app.use(function (req, res, next) {
-  var database = req .body .database;
-  if (database == 'admin') {
-    var err     = new Error ('Direct access to Admin database not permitted');
-    err .status = 403;
-    next (err);
-  } else {
-    if (req .url .startsWith ('/admin/'))
-      database = 'admin';
-    req .dbPromise = getDB (database);
-    if (! req.url .startsWith ('/transaction/')) {
-      if ((req .body .collection == 'transactions' && req .url != '/find'))
-        req .url = '/transaction' + req.url;
-      else if (req .body .collection == 'accountBalance' && req .url == '/find')
-        req .url = '/transaction/findAccountBalance';
+  try {
+    var database = req .body .database;
+    if (database == 'admin') {
+      var err     = new Error ('Direct access to Admin database not permitted');
+      err .status = 403;
+      next (err);
+    } else {
+      if (req .url .startsWith ('/admin/'))
+        database = 'admin';
+      req .dbPromise = getDB (database);
+      if (req .body .collection == 'actuals' && ! req .url. startsWith ('/actuals/'))
+        req .url = '/transaction/actuals';
+      else if (! req .url .startsWith ('/transaction/')) {
+        if ((req .body .collection == 'transactions' && req .url != '/find'))
+          req .url = '/transaction' + req.url;
+        else if (req .body .collection == 'accountBalance' && req .url == '/find')
+          req .url = '/transaction/findAccountBalance';
+      }
+      next();
     }
-    next();
+  } catch (e) {
+    console .log (e);
   }
 })
 

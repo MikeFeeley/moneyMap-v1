@@ -1,4 +1,5 @@
-window.addEventListener ("error", e => {console .log (e .error)});
+window.addEventListener ("error",              e => {console .log (e .error)});
+window.addEventListener ("unhandledrejection", e => {console .log (e)});
 
 $(document) .ready (() => {
   let app = new App();

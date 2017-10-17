@@ -783,7 +783,7 @@ class NavigateView extends Observable  {
               }, 0))
             }
           }
-        } else {
+        } else if (update .replace) {
           data = update .replace;
           setDataset();
         }

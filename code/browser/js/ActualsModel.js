@@ -2,21 +2,23 @@ class ActualsModel extends Observable {
   constructor (budget) {
     super();
     this._budget = budget;
-    this._model  = new Model ('transactions');
-    this._model .addObserver (this, this._onModelChange);
+    this._transactionModel  = new Model ('transactions');
+    this._transactionModel .addObserver (this, this._onModelChange);
+    this._actualsModel = new Model ('actuals');
   }
   
   delete() {
-    this._model .delete();
+    this._transactionModel .delete();
   }
 
   _onModelChange (eventType, doc, arg, source) {
     this._actuals._onModelChange (eventType, doc, arg, source);
     this._notifyObservers (eventType, doc, arg, source);
   }
-
+  
   async find () {
-    this._actuals = new Actuals (this._budget, await this._model .find ({
+    console.log ('xxx', await this._actualsModel.find({$and: [{month: {$gte: 201701}}, {month: {$lte: 201712}}]}));
+    this._actuals = new Actuals (this._budget, await this._transactionModel .find ({
       $and: [{date: {$gte: Types .date .addYear (this._budget .getStartDate(), -1)}}, {date: {$lte: this._budget .getEndDate()}}]
     }));
     this._haveHistory = false;
@@ -25,7 +27,7 @@ class ActualsModel extends Observable {
 
   async findHistory() {
     if (! this._haveHistory) {
-      this._actuals .addTransactions (await this._model .find ({
+      this._actuals .addTransactions (await this._transactionModel .find ({
         date: {$lt: Types .date .addYear (this._budget .getStartDate(), -1)}
       }, true));
       this._haveHistory = true;
@@ -41,10 +43,10 @@ class ActualsModel extends Observable {
   }
 
   getModel() {
-    return this._model;
+    return this._transactionModel;
   }
 
-  getTransactions (cat, st, en) {
+  async getTransactions (cat, st, en) {
     return this._actuals .getTransactions (cat, st, en);
   }
 }
@@ -179,7 +181,7 @@ class Actuals {
     return amt;
   }
 
-  getTransactions (cat, st = this._budget .getStartDate(), en = this._budget .getEndDate()) {
+  async getTransactions (cat, st = this._budget .getStartDate(), en = this._budget .getEndDate()) {
     return Array .from (this._trans .values()) .filter (t => {return t .category == cat._id && t .date >= st && t .date <= en});
   }
 }

@@ -33,7 +33,7 @@ class BudgetProgressHUD {
     }
   }
 
-  _onViewChange (eventType, arg) {
+  async _onViewChange (eventType, arg) {
     let dates = {
       start: Types .dateMY .monthStart (this._date),
       end:   Types .dateMY .monthEnd   (this._date)
@@ -56,7 +56,7 @@ class BudgetProgressHUD {
           dates .end   = Types .date .addYear (this._variance .getBudget() .getEndDate(),   -1);
         } else
           dates = undefined;
-        Navigate .showActualMonthGraph (this._id, dates, arg .html, arg .position, isMonth || isAll, ! isMonth || isAll);
+        await Navigate .showActualMonthGraph (this._id, dates, arg .html, arg .position, isMonth || isAll, ! isMonth || isAll);
       }
     } else if (eventType == BudgetProgressHUDViewEvent .BODY_CLICK) {
       if (arg .altClick) {
@@ -64,7 +64,7 @@ class BudgetProgressHUD {
         if (parent)
           BudgetProgressHUD .show (parent._id, arg .html, arg .position, this._accounts, this._variance, this._date);
       } else
-        Navigate .showBudgetMonthGraph (this._id, dates, arg .html, arg .position);
+        await Navigate .showBudgetMonthGraph (this._id, dates, arg .html, arg .position);
     }
   }
 
