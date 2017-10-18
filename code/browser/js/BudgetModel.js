@@ -23,8 +23,7 @@ class BudgetModel extends Observable {
 
   async find (id) {
     let today = Types .date .today();
-    //    this._budgets = await this._budModel .find ({start: {$lte: today}, end: {$gte: today}});
-    this._budgets = await this._budModel .find ();  // XXX Old budgets?
+    this._budgets = await this._budModel .find ();
     this._budget  = this._budgets .find (b => {return b._id == id});
     if (this._schModel)
       this._schModel .delete();

@@ -1,4 +1,7 @@
 class TransactionTable extends Table {
+  async _addModelData () {
+    return super._addModelData ();
+  }
   constructor (name, query, sort, options, columns, accounts, variance, view) {
     var _sort = (a,b) => {
       var getSeq = t => {return t .leader || t._seq};
@@ -94,7 +97,7 @@ class TransactionTable extends Table {
       if (arg .fieldName == 'category') {
         let categories = this._variance .getBudget() .getCategories();
         let cat = categories .get (arg .value);
-        if (cat .children && cat .children .length) {
+        if (cat && cat .children && cat .children .length) {
           this._view .showFieldTip (
             ['Consider a more specific category.','Edit again and move arrow to the right.'],
             arg .id, arg .fieldName

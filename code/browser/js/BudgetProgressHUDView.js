@@ -177,59 +177,61 @@ class BudgetProgressHUDView extends View {
       this._monthsGraph = $('<div>') .appendTo (this._content .find ('._group.' + group));
     if (data) {
       var canvas = $('<canvas>', {prop: {width: 400, height: 100}, class: '_monthsGraph'}) .appendTo (this._monthsGraph);
-      this._monthsGraphAdded = true;
-      var chart  = new Chart (canvas [0] .getContext ('2d'), {
-        type: 'bar',
-        data: {labels: data .date .map (d => {return Types .dateM .toString (d .start)})},
-        options: {
-          animation: false,
-          legend: {display: false},
-          elements: {rectangle: {borderWidth: 1, borderSkipped: 'bottom'}},
-          events: ['mousemove', 'mouseout', 'click', 'touchstart', 'touchmove', 'webkitmouseforcedown'],
-          onClick: (e) => {
-            var element = chart .getElementAtEvent (e);
-            if (element .length > 0) {
-              var datasetIndex = element[0]._datasetIndex;
-              var datasetSize  = element[0]._chart .config .data .datasets .length;
-              if ((datasetSize == 3 && [0,2] .includes (datasetIndex)) || (datasetSize == 2 && datasetIndex == 1)) {
-                var month = Object .assign({}, data .date [element[0]._index]);
-                if (element[0]._datasetIndex == 0) {
-                  month .start = Types .date .addYear (month .start, -1);
-                  month .end   = Types .date .addYear (month .end,   -1);
-                }
-                this._notifyObservers (BudgetProgressHUDViewEvent .GRAPH_CLICK, {
-                  name:     'months',
-                  month:    month,
-                  lastYear: element[0]._datasetIndex == 0,
-                  html:     canvas .parent(),
-                  position: {top: canvas .position() .top + 100, left: 0},
-                  altClick:  e .webkitForce > 1 || e .altKey,
-                })
-                e.stopPropagation();
-                return false;
-             }
-            }
-          },
-          tooltips: {
-            backgroundColor: 'rgba(0,0,0,0.6)',
-            callbacks: {
-              label: (tooltipItem, data) => {
-                var val = data .datasets [tooltipItem .datasetIndex] .value [tooltipItem .index];
-                return val? data .datasets [tooltipItem .datasetIndex] .label + ': ' + val: '';
+      if (canvas .length) {
+        this._monthsGraphAdded = true;
+        var chart  = new Chart (canvas [0] .getContext ('2d'), {
+          type: 'bar',
+          data: {labels: data .date .map (d => {return Types .dateM .toString (d .start)})},
+          options: {
+            animation: false,
+            legend: {display: false},
+            elements: {rectangle: {borderWidth: 1, borderSkipped: 'bottom'}},
+            events: ['mousemove', 'mouseout', 'click', 'touchstart', 'touchmove', 'webkitmouseforcedown'],
+            onClick: (e) => {
+              var element = chart .getElementAtEvent (e);
+              if (element .length > 0) {
+                var datasetIndex = element[0]._datasetIndex;
+                var datasetSize  = element[0]._chart .config .data .datasets .length;
+                if ((datasetSize == 3 && [0,2] .includes (datasetIndex)) || (datasetSize == 2 && datasetIndex == 1)) {
+                  var month = Object .assign({}, data .date [element[0]._index]);
+                  if (element[0]._datasetIndex == 0) {
+                    month .start = Types .date .addYear (month .start, -1);
+                    month .end   = Types .date .addYear (month .end,   -1);
+                  }
+                  this._notifyObservers (BudgetProgressHUDViewEvent .GRAPH_CLICK, {
+                    name:     'months',
+                    month:    month,
+                    lastYear: element[0]._datasetIndex == 0,
+                    html:     canvas .parent(),
+                    position: {top: canvas .position() .top + 100, left: 0},
+                    altClick:  e .webkitForce > 1 || e .altKey,
+                  })
+                  e.stopPropagation();
+                  return false;
+               }
               }
+            },
+            tooltips: {
+              backgroundColor: 'rgba(0,0,0,0.6)',
+              callbacks: {
+                label: (tooltipItem, data) => {
+                  var val = data .datasets [tooltipItem .datasetIndex] .value [tooltipItem .index];
+                  return val? data .datasets [tooltipItem .datasetIndex] .label + ': ' + val: '';
+                }
+              }
+            },
+            scales: {
+              xAxes: [{
+                gridLines: {zeroLineColor: 'rgba(0,0,0,0)'}
+              }],
+              yAxes: [{
+                display: false, ticks: {max: 100}
+              }]
             }
-          },
-          scales: {
-            xAxes: [{
-              gridLines: {zeroLineColor: 'rgba(0,0,0,0)'}
-            }],
-            yAxes: [{
-              display: false, ticks: {max: 100}
-            }]
           }
-        }
-      });
-      canvas .data ({chart: chart});
+        });
+        canvas .data ({chart: chart});
+      }
     }
   }
 

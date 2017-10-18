@@ -53,7 +53,7 @@ class App {
       /* queries */
       this._accounts = this._accModel .find();
       await this._budModel .find (this._user .getBudgetId());
-      await this._actModel .find ();
+      await this._actModel .findCurrent ();
       await this._accModel .find ();
 
       /* presenters */
@@ -86,5 +86,5 @@ class App {
      (async () => {await this._user .login()}) ();
    }
   }
-}//
+}
 
