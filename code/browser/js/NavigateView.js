@@ -368,6 +368,18 @@ class NavigateView extends Observable  {
     startCol = 0;
     endCol   = dataset .cols .length - 1;
     var processDataset = () => {
+      let minResolution = dataset .groups .reduce ((t,g) => {
+        return t + g .rows .reduce ((t,r) => {
+          return t + r .amounts .reduce ((t,a) => {
+            return t + a .value;
+          }, 0)
+        }, 0)
+      }, 0) / 500;
+      for (let g of dataset .groups)
+        for (let r of g .rows)
+          for (let a of r .amounts)
+            if (a .value < 0 && - a .value < minResolution)
+              a .value = 0;
       labels = dataset .cols;
       data   = dataset .groups;
       var groups = data .map (g => {
@@ -709,7 +721,7 @@ class NavigateView extends Observable  {
         c = 'rgba(128,128,128,0.1)';
       return c;
     });
-    var container = $('<div>', {class: '_' + data .name + (popup? ' _popup': '')}) .appendTo (this._html .find ('.' + name + 's'));
+    var container = $('<div>', {class: '_' + data .name + (popup? ' _popup _popupNoContainer': '')}) .appendTo (this._html .find ('.' + name + 's'));
     if (popup) {
       if (position)
         container .css (position);
@@ -783,6 +795,7 @@ class NavigateView extends Observable  {
               }, 0))
             }
           }
+        } else if (update .replace) {
         } else if (update .replace) {
           data = update .replace;
           setDataset();
