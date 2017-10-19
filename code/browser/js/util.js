@@ -1,5 +1,7 @@
 'use strict';
 
+var isFirefox = window.navigator.userAgent .includes ('Firefox');
+
 class Observable {
   addObserver (thisArg, observer) {
     var o = {thisArg: thisArg, observer: observer};

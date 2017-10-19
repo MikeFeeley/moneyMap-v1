@@ -343,6 +343,8 @@ class ViewTextbox extends ViewEdit {
     this._inputContainer = $('<div>', {data: {field: this}})                                              .appendTo (this._html);
     $('<div>', {class: '_prefix', text: this._prefix})                                                    .appendTo (this._inputContainer);
     this._input = $('<input>', {type: 'text', class: '_content', prop: {placeholder: this._placeholder}}) .appendTo (this._inputContainer);
+    if (isFirefox) /* XXX Hack needed because firefox default border width is 3px and setting all inputs to 2px removes native format */
+      this._input .css('border', '2px solid #ddd');
     $('<div>', {class: '_suffix', text: this._suffix})                                                    .appendTo (this._inputContainer);
   }
   _get() {
