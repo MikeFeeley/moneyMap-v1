@@ -1592,21 +1592,30 @@ class Navigate {
           return as<bs? -1: as>bs? 1: a.sort<b.sort? -1: a.sort>b.sort? 1: 0;
         })
         .map (a => {
-          var sign = a .creditBalance? 1: -1;
-          var cat  = a .category && this._categories .get (a .category);
-          var dis  = a .disCategory && this._categories .get (a .disCategory);
-          var stb  = a .balance * sign || 0;
-          var bal  = stb;
-          var yrs  = [{start: Types .dateDMY .today(), end: this._budget .getEndDate()}] .concat (futBud);
-          var amt  = [];
-          var det  = [];
+          let rate = ((a .apr || param .apr) - (param .presentValue? param .inflation: 0)) / 3650000;
+          let sign = a .creditBalance? 1: -1;
+          let cat  = a .category && this._categories .get (a .category);
+          let dis  = a .disCategory && this._categories .get (a .disCategory);
+          let stb  = a .balance * sign || 0;
+          let bal = stb;
+          for (
+            let st = Types .date .addMonthStart (Types .date .today(), -1);
+            st    >= this._budget .getStartDate();
+            st     = Types .date .addMonthStart (st, -1)
+          ) {
+            let add = cat? (this._budget .getAmount (cat, st, Types .dateDMY .monthEnd (st)) .month || {}) .amount || 0 : 0;
+            let sub = dis? (this._budget .getAmount (dis, st, Types .dateDMY .monthEnd (st)) .month || {}) .amount || 0 : 0;
+            bal = bal / (1 + rate * Types .dateDMY .daysInMonth (st)) - add + sub;
+          }
+          let yrs  = [{start: this._budget .getStartDate(), end: this._budget .getEndDate()}] .concat (futBud);
+          let amt  = [];
+          let det  = [];
           for (let yr of yrs) {
             let tInt = 0, tAdd = 0, tSub = 0;
             for (let st = yr .start; st <= yr .end; st = Types .dateDMY .addMonthStart (st, 1)) {
               let add  = cat? (this._budget .getAmount (cat, st, Types .dateDMY .monthEnd (st)) .month || {}) .amount || 0 : 0;
               let sub  = dis? (this._budget .getAmount (dis, st, Types .dateDMY .monthEnd (st)) .month || {}) .amount || 0 : 0;
-              let rate = ((a .apr || param .apr) - (param .presentValue? param .inflation: 0));
-              let int  = bal * (rate / 3650000 * Types .dateDMY .daysInMonth (st))
+              let int  = bal * (rate * Types .dateDMY .daysInMonth (st))
               bal = bal + int + add + sub;
               tInt += int;
               tAdd += add;
