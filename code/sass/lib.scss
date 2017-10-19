@@ -11,6 +11,10 @@ $left-width: 210px;
 $left-padding-left: 8px;
 $left-margin-sep: 20px;
 
+table > tbody > tr > td > ._field > div > ._content {
+  color: #666;
+}
+
 @mixin dark-popup() {
   padding: 6px;
   position: absolute;
@@ -45,7 +49,7 @@ $left-margin-sep: 20px;
 
 @mixin popup-content() {
   padding: 6px;
-  background: rgba(255,255,255,.8);
+  background: rgba(255,255,255,.6);
   backdrop-filter: blur(25px);
   -webkit-backdrop-filter: blur(25px);
   border-radius: 6px;
@@ -54,13 +58,14 @@ $left-margin-sep: 20px;
   position: relative;
 }
 
-@mixin translucent-popup() {
-  padding: 6px;
+@mixin popup-content-less-transparent() {
+  @include popup-content();
+  background: rgba(255,255,255,.8);
+}
+
+@mixin popup-content-absolute-depricated() {
+  @include popup-content();
   position: absolute;
-  background: rgba(250,255,255,.7);
-  border-radius: 6px;
-  box-shadow: $drop-shadow;
-  z-index: 2003;
 }
 
 @mixin adaptive-width($narrow,$wide) {

@@ -1,7 +1,8 @@
 @import 'lib';
 
-$table-stripe-backgroud: #f8f8f8;
-$table-stripe-backgroud-occluded: rgba(248,248,248,.1);
+$table-stripe-background: #f8f8f8;
+$table-stripe-background-translucent: rgba(248,248,248,.8);
+$table-stripe-background-occluded: rgba(248,248,248,.1);
 
 @mixin transaction-table-base ($head-font, $body-font, $height) {
   position: relative;
@@ -53,7 +54,7 @@ $table-stripe-backgroud-occluded: rgba(248,248,248,.1);
       font-size: $body-font;
     }
     > tr:nth-child(even) {
-      background: $table-stripe-backgroud
+      background: $table-stripe-background
     }
     > tr {
       > td {
@@ -196,7 +197,7 @@ table._ImportTransactionsTable._TransactionAndRulesTable:not(._needsAttention) {
 table._ImportTransactionsTable._TransactionAndRulesTable._needsAttention {
     @include transaction-table (18px, 13px, 26px, 1, 1, 2, 3, 6, 4, 5, 7, 8, 9, 4, 6, 7);
     > * > tr > td > div._field_importTime {
-      color: #aaa;
+      color: #ccc;
     }
 }
 
@@ -446,7 +447,7 @@ div._TransactionHUD {
       -webkit-backdrop-filter: blur(20px);
     }
     tr:nth-child(even) {
-      background: $table-stripe-backgroud-occluded!important;
+      background: $table-stripe-background-occluded!important;
     }
   }
   @include popup-container();
@@ -469,8 +470,11 @@ div._TransactionHUD {
       border: 0px!important;
     }
   }
+  &:not(._occluded) > ._hudcontent > ._body > div > table > tbody > tr:nth-child(even) {
+    background: $table-stripe-background-translucent!important;
+  }
   > ._hudcontent {
-    @include popup-content();
+    @include popup-content-less-transparent();
     width: auto;
     min-width: 700px;
     position: relative;

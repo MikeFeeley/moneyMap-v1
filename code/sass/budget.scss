@@ -4,6 +4,7 @@ body {
   font-family: -apple-system, Helvetica, Arial, "Lucida Grande", sans-serif;
   -webkit-tap-highlight-color: rgba(0,0,0,0);
 }
+
 .transparent {
   opacity: 0;
 }
@@ -357,7 +358,6 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
             padding-left: 158px!important;
         }
   }
-
   div._budgetTable, div._activityTable, div._budgetHistoryTable, div._netWorthTable._popup {
     &._popup {
       @include popup-container();
@@ -677,7 +677,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
         width:   33%;
       }
       > ._popup:not(._budgetMonthsGraph):not(._activityMonthsGraph) {
-        @include translucent-popup();
+        @include popup-content-absolute-depricated();
         width:  200px;
         height: 200px;
       }
