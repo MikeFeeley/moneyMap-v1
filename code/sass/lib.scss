@@ -49,9 +49,12 @@ table > tbody > tr > td > ._field > div > ._content {
 
 @mixin popup-content() {
   padding: 6px;
-  background: rgba(255,255,255,.6);
+  background: rgba(255,255,255,0.7);
   backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(20px);
+  @supports not ((backdrop-filter: blur(25px)) or (-webkit-backdrop-filter: blur(25px))) {
+    background: rgba(255,255,255,0.94)!important;
+  }
   border-radius: 6px;
   box-shadow: $drop-shadow;
   color: #555;
