@@ -302,8 +302,8 @@ class DateType extends FieldType {
     return d == '...';
   }
   subDays (a, b) {
-    var ad = new Date (this._year (a), this._month (a), this._day (a));
-    var bd = new Date (this._year (b), this._month (b), this._day (b));
+    var ad = new Date (this._year (a), this._month (a) - 1, this._day (a)) .valueOf();
+    var bd = new Date (this._year (b), this._month (b) - 1, this._day (b)) .valueOf();
     return Math .floor ((ad - bd) / (1000 * 60 * 60 * 24));
   }
 }
