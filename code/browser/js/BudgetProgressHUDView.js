@@ -166,7 +166,8 @@ class BudgetProgressHUDView extends View {
         chart .update();
       }
     } else {
-      this._compareGraph .empty();
+      if (this._compareGraph)
+        this._compareGraph .empty();
       this._hasCompareGraph = false;
     }
   }
