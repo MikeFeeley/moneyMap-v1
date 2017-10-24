@@ -34,7 +34,6 @@ class TupleView extends View {
     if (tuple) {
       let html = this._getFieldHtmlFromTuple (tuple);
       let rs = $(html .toArray() .find (h => {return h .classList .contains (fieldClass)}));
-      console.trace(rs);
       return rs;
     }
   }
