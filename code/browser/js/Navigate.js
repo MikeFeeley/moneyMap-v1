@@ -603,7 +603,7 @@ class Navigate {
       let hasBudget = data .length != realData .length;
       let hasOther  = realData .length && realData [realData .length -1] .id .includes ('other_');
       let one = data .length == 1 || (data .length == 2 && hasBudget);
-      if (one && (data [0] .id .includes ('other_') || (await this._getChildren (type, data [0] .id, isLastYear) .filter (c => {return ! c .includes ('budget_')}) .length == 0)))
+      if (one && (data [0] .id .includes ('other_') || ((await this._getChildren (type, data [0] .id, isLastYear)) .filter (c => {return ! c .includes ('budget_')}) .length == 0)))
         data [0] .id = 'leaf_' + data [0] .id;
       return {
         data:      data,
