@@ -32,12 +32,14 @@ class BudgetModel extends Observable {
     await this._schModel .find ();
   }
 
+  // depricate
   async getHistoricBudgets() {
     return (await this._budModel .find ())
       .filter (b     => {return b .end < this._budget .start})
       .sort   ((a,b) => {return a .start < b .start? -1: a .start == b .start? 0: 1})
   }
 
+  // depricate
   getActiveBudgets() {
     return this._budgets;
   }
@@ -74,11 +76,7 @@ class BudgetModel extends Observable {
   }
 
   getCategories() {
-    return this._schModel .getCategories();
-  }
-
-  getActiveBudgets() {
-
+    return this._schModel && this._schModel .getCategories();
   }
 
   getId() {
