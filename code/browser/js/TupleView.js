@@ -29,8 +29,14 @@ class TupleView extends View {
   }
 
   _getFieldHtml (id, name) {
-    var tuple = this._tuples .get (id);
-    return tuple && this._getFieldHtmlFromTuple (tuple) .closest ('.' + this._getFieldHtmlClass (name));
+    let fieldClass = this._getFieldHtmlClass (name)
+    let tuple = this._tuples .get (id);
+    if (tuple) {
+      let html = this._getFieldHtmlFromTuple (tuple);
+      let rs = $(html .toArray() .find (h => {return h .classList .contains (fieldClass)}));
+      console.trace(rs);
+      return rs;
+    }
   }
 
   flagTupleError (id) {
