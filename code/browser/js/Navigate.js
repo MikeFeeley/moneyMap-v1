@@ -794,7 +794,7 @@ class Navigate {
    * Add TABLE (either budget or actual) showing children of specified root list
    */
   async _addMonthsTable (name, view, ids, dates, skipFoot, popup, position, toHtml, col, title, includeMonths, includeYears) {
-    var dataset = (await this._getMonthsData (name .includes ('budget'))? NavigateValueType .BUDGET: NavigateValueType .ACTUALS, dates, ids, false, includeMonths, includeYears);
+    var dataset = await this._getMonthsData (name .includes ('budget')? NavigateValueType .BUDGET: NavigateValueType .ACTUALS, dates, ids, false, includeMonths, includeYears);
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       var updater = this._addUpdater (view, async (eventType, model, ids) => {
         let update = await dataset .getUpdate (eventType, model, ids);
