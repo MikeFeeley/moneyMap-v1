@@ -30,12 +30,9 @@ class TupleView extends View {
 
   _getFieldHtml (id, name) {
     let fieldClass = this._getFieldHtmlClass (name)
-    let tuple = this._tuples .get (id);
-    if (tuple) {
-      let html = this._getFieldHtmlFromTuple (tuple);
-      let rs = $(html .toArray() .find (h => {return h .classList .contains (fieldClass)}));
-      return rs;
-    }
+    let tuple      = this._tuples .get (id);
+    if (tuple)
+      return $(this._getFieldHtmlFromTuple (tuple) .toArray() .find (h => {return h .classList .contains (fieldClass)}));
   }
 
   flagTupleError (id) {
