@@ -68,7 +68,8 @@ class TransactionHUD extends TransactionAndRulesTable {
     let edit = new ViewCategoryEdit ('category', format, '', '', 'Category',
       () => {return Types .date .today()},
       () => {return 0},
-      () => {return 0}
+      () => {return 0},
+      () => {return false}
     );
     let dialogue = $('<div>', {class: '_recategorizeDialogue'})
       .appendTo (this._content)

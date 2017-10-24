@@ -34,9 +34,10 @@ class ImportRulesView extends TupleView {
     var getValue = (field, html) => {
       return html .closest ('tr') .find ('.' + this._getFieldHtmlClass (field)) .data ('field') .get();
     }
-    var getDate   = html => {return date};
-    var getDebit  = html => {return getValue ('debit',  html)};
-    var getCredit = html => {return getValue ('credit', html)};
+    var getDate        = html => {return date};
+    var getDebit       = html => {return getValue ('debit',  html)};
+    var getCredit      = html => {return getValue ('credit', html)};
+    var getIsPriorYear = html => {return date < variance .getBudget() .getStartDate()};
     var fields = [
       new ViewSelect       ('date_fn',           new ViewFormatOptionList (amountFunctions)),
       new IRVDateTextbox   ('date_op0',          ViewFormats ('number')),
@@ -55,7 +56,7 @@ class ImportRulesView extends TupleView {
       new ViewTextbox      ('debit',             AmountFormulaType .toViewFormat()),
       new ViewTextbox      ('credit',            AmountFormulaType .toViewFormat()),
       new ViewSelect       ('account',           accFormat),
-      new ViewCategoryEdit ('category',          catFormat, '', '', 'Category', getDate, getDebit, getCredit),
+      new ViewCategoryEdit ('category',          catFormat, '', '', 'Category', getDate, getDebit, getCredit, getIsPriorYear),
       new ViewTextbox      ('description',       ViewFormats ('string')),
       new ViewCheckbox     ('payeeUpdate'),
       new ViewCheckbox     ('debitUpdate'),

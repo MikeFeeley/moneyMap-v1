@@ -17,9 +17,10 @@ class TransactionTableView extends TableView {
     var getValue = (field, html) => {
       return html .closest ('tr') .find ('.' + this._getFieldHtmlClass (field)) .data ('field') .get();
     }
-    var getDate   = html => {return getValue ('date',   html)};
-    var getDebit  = html => {return getValue ('debit',  html)};
-    var getCredit = html => {return getValue ('credit', html)};
+    var getDate        = html => {return getValue ('date',   html)};
+    var getDebit       = html => {return getValue ('debit',  html)};
+    var getCredit      = html => {return getValue ('credit', html)};
+    var getIsPriorYear = html => {return getDate (html) < variance .getBudget() .getStartDate()};
     var fieldDesc = {
       date:        [new ViewDateLabel            ('date',        ViewFormats ('dateDM')),
                     new ViewDateTextbox          ('date',        ViewFormats ('dateDM'), variance .getBudget() .getStartDate(), '', '', 'Date')],
@@ -32,7 +33,7 @@ class TransactionTableView extends TableView {
       account:     [new ViewLabel                ('account',     accFormat),
                     new ViewScalableSelect       ('account',     accFormat)],
       category:    [new ViewLabel                ('category',    catFormat),
-                    new ViewScalableCategoryEdit ('category',    catFormat, '', '', 'Category', getDate, getDebit, getCredit)],
+                    new ViewScalableCategoryEdit ('category',    catFormat, '', '', 'Category', getDate, getDebit, getCredit, getIsPriorYear)],
       description: [new ViewLabel                ('description', ViewFormats ('string')),
                     new ViewScalableTextbox      ('description', ViewFormats ('string'), '', '', 'Description')],
       nop0:        [new ViewLabel                ('nop0',        ViewFormats ('string')),
@@ -173,11 +174,12 @@ class ViewDateLabel extends ViewLabel {
 }
 
 class ViewCategoryEdit extends ViewTextbox {
-  constructor (name, format, prefix, suffix, placeholder, getDate, getDebit, getCredit) {
+  constructor (name, format, prefix, suffix, placeholder, getDate, getDebit, getCredit, getIsPriorYear) {
     super (name, format, prefix, suffix, placeholder);
-    this._getDate     = getDate;
-    this._getDebit    = getDebit;
-    this._getCredit   = getCredit;
+    this._getDate        = getDate;
+    this._getDebit       = getDebit;
+    this._getCredit      = getCredit;
+    this._getIsPriorYear = getIsPriorYear;
   }
   _open() {
     if (! this._isOpen) {
@@ -192,7 +194,7 @@ class ViewCategoryEdit extends ViewTextbox {
         $(this._html .find ('input') [0]) .focus();
         $(this._html .find ('input') [0]) .val(' '); // XXX workaround to clear placeholder in Safari 10.1.1
         this .set (id)
-      });
+      }, this._getIsPriorYear (this._html));
       this._isOpen = true;
       this.clearTooltip();
       this._modalStackEntry = ui .ModalStack .add (e => {

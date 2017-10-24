@@ -18,6 +18,16 @@ class CategoryPicker {
   }
 
   _show (id) {
+    let getChildren = c => {
+      let ch = c .children || [];
+      let zm = (this._includeZombies && c .zombies) || [];
+      if (zm .length) {
+        zm = Array .from (zm .reduce ((m,z) => {return m .set (z .name, z)}, new Map()) .values());
+        ch = ch .concat (zm);
+      }
+      return ch;
+    };
+    let hasChildren = c => {return (c .children || []) .length + (this._includeZombies? c .zombies || []: []) .length != 0};
     this._view .reset();
     this._id = id;
     var cat  = this._categories .get (id);
@@ -28,15 +38,25 @@ class CategoryPicker {
     this._cols = [];
     for (let c of path) {
       var col = []
-      for (let sib of this._categories .getSiblingsAndSelf (c))
-        col .push ({name: sib .name, id: sib._id, selected: sib==c, isLeaf: ! sib .children || sib .children .length == 0});
+      for (let sib of this._categories .getSiblingsAndSelf (c, this._includeZombies))
+        col .push ({
+          name:     sib .name,
+          id:       sib._id,
+          selected: sib==c,
+          isLeaf:   ! hasChildren (sib)
+        });
       this._cols .push (col);
     }
     this._selCol = Math .max (0, this._cols .length - 1);
     this._selRow = this._cols .length > 0? this._cols [this._selCol] .findIndex (r => {return r.selected}): -1;
-    var children = cat? cat.children: this._categories.getRoots();
-    if (children)
-      this._cols .push (children .map (c => {return {name: c.name, id: c._id, selected: false, isLeaf: ! c .children || c .children .length == 0}}));
+    var children = cat? (getChildren (cat)): this._categories.getRoots();
+    if (children && children .length)
+      this._cols .push (children .map (c => {return {
+        name:     c.name,
+        id:       c._id,
+        selected: false,
+        isLeaf:   ! hasChildren (c)
+      }}));
     var remove = this._cols .length - 3;
     if (remove > 0) {
       this._selCol -= remove;
@@ -64,9 +84,10 @@ class CategoryPicker {
     return this._budgetProgressHUD .contains (target);
   }
 
-  show (id, date, debit, credit, toHtml, onSelect) {
+  show (id, date, debit, credit, toHtml, onSelect, includeZombies) {
     if (id != this._id) {
-      this._onSelect = onSelect;
+      this._onSelect       = onSelect;
+      this._includeZombies = includeZombies;
       this._show (id);
       this._view .addHtml (toHtml, (id) => {this._select (id)});
       this._view .show();

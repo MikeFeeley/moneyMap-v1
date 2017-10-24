@@ -102,8 +102,18 @@ class Categories {
     return this .getSiblingsAndSelf (doc, parent, children) .filter (s => {return s._id != doc._id}) || [];
   }
 
-  getSiblingsAndSelf (doc, parent='parent', children='children') {
-    return (doc [parent]? doc [parent] [children]: this._roots) || [];
+  getSiblingsAndSelf (doc, includeZombies=false) {
+    let p = doc .parent;
+    if (p) {
+      let c = p .children || [];
+      let z = (includeZombies && p .zombies) || [];
+      if (z .length) {
+        z = Array .from (z .reduce ((m,z) => {return m .set (z .name, z)}, new Map()) .values());
+        c = c .concat (z);
+      }
+      return c;
+    } else
+      return this._roots || []
   }
 
   getRoots() {
