@@ -11,7 +11,8 @@ class Model extends Observable {
     super()
     this._ids        = new Set();
     this._groups     = new Map();
-    this._collection = _Collection .getInstanceForModel (collectionName, database || _default_database_id);
+    this._database   = database || _default_database_id;
+    this._collection = _Collection .getInstanceForModel (collectionName, this._database);
     this._observer   = this._collection .addObserver (this, this._handleCollectionEvent);
   }
 
@@ -20,8 +21,8 @@ class Model extends Observable {
     _Collection._resetUndo();
   }
 
-  static getDatabase() {
-    return _default_database_id;
+  getDatabase() {
+    return this._database;
   }
 
   static newUndoGroup() {
@@ -124,11 +125,11 @@ class Model extends Observable {
   /**
    * Query server and return matching documents
    */
-  async find (query, append = false) {
+  async find (query, append = false, cacheOnly = false) {
     this._options = query && query .$options;
     if (query && query .$options)
       query = Object .keys (query) .reduce ((o,k) => {if (k != '$options') o [k] = query [k]; return o}, {});
-    var docs    = await this._collection .find (query);
+    var docs = cacheOnly? this._collection .findFromCache (query): await this._collection .find (query);
     this._query = (this._query && append)? {$or: [this._query, query]}: query;
     if (this._options && this._options .groupBy) {
       var groups =
@@ -170,7 +171,7 @@ class Model extends Observable {
   }
 
   /**
-   * Query local cache of all requests to collection (all previous find from any model)
+   * Query local cache of all requests to collection (all previous find from any model) using isMatch callback
    */
   refine (isMatch) {
     return this._collection .refine (isMatch) .map (d => {
@@ -329,6 +330,10 @@ class _Collection extends Observable {
       for (let doc of docs)
         this._docs .set (doc._id, doc);
     return docs;
+  }
+
+  findFromCache (query) {
+    return Array .from (this._docs .values()) .filter (d => {return _query_ismatch (query,d)})
   }
 
   refine (ismatch) {

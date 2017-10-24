@@ -2,7 +2,7 @@ class ActualsModel extends Observable {
   constructor (budget) {
     super();
     this._budget = budget;
-    this._transactionModel = new Model ('transactions');
+    this._transactionModel = new TransactionModel();
     this._transactionModel .addObserver (this, this._onModelChange);
     this._transactionModel .observe ();
     this._categoriesModel = budget .getCat

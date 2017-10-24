@@ -123,7 +123,7 @@ class TransactionHUD extends TransactionAndRulesTable {
     this._query .date .$gte = Types .date .addMonthStart (this._query .date .$gte, delta);
     this._query .date .$lte = Types .date .monthEnd (Types .date .addMonthStart (this._query .date .$lte, delta));
     this._setTitleDate();
-    async (this, this .refreshHtml)();
+    (async () => {await this .refreshHtml()}) ();
   }
 
   _toggleMonthYear() {
@@ -140,7 +140,7 @@ class TransactionHUD extends TransactionAndRulesTable {
       this._query .date .$lte = this._monthEnd;
     }
     this._setTitleDate();
-    async (this, this .refreshHtml)();
+    (async () => {await this .refreshHtml()}) ();
   }
 
   _calendarYear() {
@@ -152,7 +152,7 @@ class TransactionHUD extends TransactionAndRulesTable {
     this._query .date .$gte = Types .date._date (y, 1,   1);
     this._query .date .$lte = Types .date._date (y, 12, 31);
     this._setTitleDate();
-    async (this, this .refreshHtml)();
+    (async () => {await this .refreshHtml()}) ();
   }
 
   _addFooter() {

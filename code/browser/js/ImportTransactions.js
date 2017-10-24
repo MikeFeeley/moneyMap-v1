@@ -8,7 +8,7 @@ class ImportTransactions extends Observable {
     this._view = new ImportTransactionsView (undefined, undefined, variance);
     this._view .addObserver (this, this._onViewChange);
     this._accounts             = accounts;
-    this._transactions         = new Model ('transactions');
+    this._transactions         = new TransactionModel()
     this._importRulesModel     = new ImportRulesModel();
     this._variance             = variance;
     ImportTransactionsInstance = this;

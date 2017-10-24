@@ -20,6 +20,7 @@ router.get('/', function(req, res, next) {
       'VarianceModel',
       'CategoriesModel',
       'SchedulesModel',
+      'TransactionModel',
       'BudgetYearGraph',
       'BudgetProgressGraph',
       'BudgetProgressHUD',

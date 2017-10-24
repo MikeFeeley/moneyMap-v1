@@ -124,7 +124,6 @@ var ui = {
         .append ($('<span>', {text: 'Map'}))
         .appendTo (tabs);
       var rightMatter = $('<div>', {class: '_login _nonTab'}) .appendTo (tabs);
-      var db = Model .getDatabase();
       var clickable    = true;
       var pendingClick;
       var tabMap = new Map();

@@ -517,9 +517,9 @@ class User extends Observable {
   }
 
   async _deleteBudget (id) {
-    let cm         = new Model ('categories',   this .getDatabaseName());
-    let sm         = new Model ('schedules',    this .getDatabaseName());
-    let tm         = new Model ('transactions', this .getDatabaseName());
+    let cm         = new Model            ('categories',   this .getDatabaseName());
+    let sm         = new Model            ('schedules',    this .getDatabaseName());
+    let tm         = new TransactionModel (this .getDatabaseName());
     let updateList = (await cm .find ({budgets: id}))
       .map (c => {
         let i = c .budgets .indexOf (id);

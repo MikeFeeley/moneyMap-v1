@@ -2,7 +2,7 @@ class ImportRulesModel extends Observable {
   constructor() {
     super();
     this._model     = new Model ('importRules');
-    this._tranModel = new Model ('transactions');
+    this._tranModel = new TransactionModel();
     this._model .addObserver (this, this._onModelChange);
   }
 

@@ -2,7 +2,7 @@ class AccountBalanceModel extends AccountsModel {
 
   constructor() {
     super ('accountBalance');
-    this._tranModel = new Model ('transactions');
+    this._tranModel = new TransactionModel();
     this._tranModel .observe ();
     this._tranModel .addObserver (this, this._onTranModelChange);
   }

@@ -22,7 +22,7 @@ class TransactionTable extends Table {
     if (! options .noGrouping)
       (query .$options = query .$options || {}) .groupBy = 'group';
     super (
-      new Model ('transactions'), view, query, _sort, options, columns
+      new TransactionModel(), view, query, _sort, options, columns
     );
     this._accounts          = accounts;
     this._variance          = variance;
