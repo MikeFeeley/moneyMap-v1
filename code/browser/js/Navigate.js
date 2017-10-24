@@ -398,7 +398,7 @@ class Navigate {
               st = Types .date .addYear (st, -1);
               en = Types .date .addYear (en, -1);
             }
-            var result = await this._actuals .getTransactions (cat, st, en)
+            var result = (await this._actuals .getTransactions (cat, st, en))
               .map (t => {
                 let stop = t .payee .match (payeeTruncate);
                 return (stop && stop .index? t .payee .slice (0, stop .index): t .payee) .split (' ') .slice (0,3) .join (' ');
@@ -423,7 +423,7 @@ class Navigate {
           return await Promise .all ((dates .filter (d => {return d .start <= Types .date .today()}) .map (async date => {
             let value = this._actuals .getAmountRecursively (cat, date .start, date .end) * (this._budget .isCredit (cat)? -1: 1);
             if (id .includes ('other_'))
-              value -= await this._getChildren (type, id, isLastYear) .reduce ((t, c) => {
+              value -= (await this._getChildren (type, id, isLastYear)) .reduce ((t, c) => {
                 if (! c .includes ('_')) {
                   let cat = this._categories .get (c);
                   if (this._budget .getAmount (cat, date .start, date .end) .amount == 0) {
@@ -478,7 +478,7 @@ class Navigate {
           let payee = ida .slice (-2) [0];
           return await Promise .all (dates .map (async date => {return {
             id:    id,
-            value: await this._actuals .getTransactions (cat, date .start, date .end)
+            value: (await this._actuals .getTransactions (cat, date .start, date .end))
                      .filter (t     => {return t .payee .startsWith (payee)})
                      .reduce ((s,t) => {return s - (t .credit || 0) + (t .debit || 0)}, 0)  * (isCredit? -1: 1)
           }}))
@@ -794,7 +794,7 @@ class Navigate {
    * Add TABLE (either budget or actual) showing children of specified root list
    */
   async _addMonthsTable (name, view, ids, dates, skipFoot, popup, position, toHtml, col, title, includeMonths, includeYears) {
-    var dataset = await this._getMonthsData (name .includes ('budget')? NavigateValueType .BUDGET: NavigateValueType .ACTUALS, dates, ids, false, includeMonths, includeYears);
+    var dataset = (await this._getMonthsData (name .includes ('budget'))? NavigateValueType .BUDGET: NavigateValueType .ACTUALS, dates, ids, false, includeMonths, includeYears);
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       var updater = this._addUpdater (view, async (eventType, model, ids) => {
         let update = await dataset .getUpdate (eventType, model, ids);
