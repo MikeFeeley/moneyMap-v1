@@ -8,7 +8,7 @@ class ImportTransactions extends Observable {
     this._view = new ImportTransactionsView (undefined, undefined, variance);
     this._view .addObserver (this, this._onViewChange);
     this._accounts             = accounts;
-    this._transactions         = new TransactionModel()
+    this._transactionModel     = new TransactionModel()
     this._importRulesModel     = new ImportRulesModel();
     this._variance             = variance;
     ImportTransactionsInstance = this;
@@ -16,7 +16,7 @@ class ImportTransactions extends Observable {
 
   delete() {
     this._importRulesModel .delete();
-    this._transactions     .delete();
+    this._transactionModel .delete();
     this._view .remove();
     if (this._lastImport)
       this._lastImport .delete();
@@ -59,7 +59,7 @@ class ImportTransactions extends Observable {
     var it = this._accounts .parseTransactions (csv .data);
     var st = it .reduce ((m,t) => {return Math .min (m, t .date)}, it [0] .date);
     var en = it .reduce ((m,t) => {return Math .max (m, t .date)}, 0);
-    var ct = await this._transactions .find ({date: {$gte: st, $lte: en}});
+    var ct = await this._transactionModel .find ({date: {$gte: st, $lte: en}});
     for (let i of it)
       i .duplicate = ct .filter (c => {
         return c .imported && Object .keys (c .imported) .reduce ((m,f) => {
@@ -76,7 +76,7 @@ class ImportTransactions extends Observable {
     var dc = it .filter (t => {return t .duplicate}) .length;
     var ic = it .length - dc;
     this._currentImportTime = (new Date()) .getTime();
-    var trans = await this._transactions .insertList (it .filter (t => {return ! t .duplicate}) .map (t => {
+    var trans = await this._transactionModel .insertList (it .filter (t => {return ! t .duplicate}) .map (t => {
       delete t .duplicate;
       t .imported   = Object .keys (t) .reduce ((o,f) => {o [f] = t [f]; return o}, {});
       t .importTime = this._currentImportTime;
@@ -104,6 +104,12 @@ class ImportTransactions extends Observable {
     this._importFile (file);
   }
 }
+
+
+
+/**
+ * TransactionAndRulesTable
+ */
 
 class TransactionAndRulesTable extends TransactionTable {
   constructor (
@@ -154,7 +160,7 @@ class TransactionAndRulesTable extends TransactionTable {
   _onViewChange (eventType, arg) {
     if (eventType == TupleViewEvent .INSERT && ! arg .insert .importTime) {
       if (arg .pos && arg .pos .inside)
-        arg .insert .importTime = this._parent._transactions .refine (t => {return t._id == arg .pos .id}) [0] .importTime;
+        arg .insert .importTime = this._parent._transactionModel .refine (t => {return t._id == arg .pos .id}) [0] .importTime;
       else {
         var now = (new Date()) .getTime();
         if (! this._parent._currentImportTime || (now - this._parent._currentImportTime) > ImportTransactions_MANUAL_IMPORT_TIME_RESOLUTION) {
@@ -231,11 +237,16 @@ class TransactionAndRulesTable extends TransactionTable {
   }
 }
 
+
+/**
+ * ImportBatchTable
+ */
+
 class ImportBatchTable extends TransactionAndRulesTable {
 
   constructor (parent) {
     super ({$options: {updateDoesNotRemove: true}}, '', parent);
-    this._setBatch();
+    this._transactionModel = parent._transactionModel;;
   }
 
   _onViewChange (eventType, arg) {
@@ -250,7 +261,7 @@ class ImportBatchTable extends TransactionAndRulesTable {
   }
 
   _setBatch (older) {
-    var trans = this._variance .getActuals() .getModel() .refine (t => {return t .importTime});
+    var trans = this._transactionModel .refine (t => {return t .importTime});
     if (this._batch) {
       var batch = trans .reduce ((b,t) => {
         var candidate = (older && t .importTime < this._batch) || (! older && t .importTime > this._batch);
@@ -285,6 +296,10 @@ class ImportBatchTable extends TransactionAndRulesTable {
   }
 
   async addHtml (toHtml) {
+    this._setBatch();
+    let tranWindowStart = Types .date .addMonthStart (Types .date .today(), -3);
+    let tranWindowEnd   = this._variance .getBudget() .getEndDate();
+    await this._transactionModel .find ({date: {$gte: tranWindowStart, $lte: tranWindowEnd}});
     this._view .addHtml (toHtml);
     this._view .addButton ('_older_button', '<', this._hasOlder, () => {this._setBatch (true);  (async () => {await this .refresh()}) ()});
     this._view .addButton ('_newer_button', '>', this._hasNewer, () => {this._setBatch (false); (async () => {await this .refresh()}) ()});
@@ -304,6 +319,11 @@ class ImportBatchTable extends TransactionAndRulesTable {
     await this .refreshHtml();
   }
 }
+
+
+/**
+ * NeedsAttentionTable
+ */
 
 class NeedsAttentionTable extends TransactionAndRulesTable {
   constructor (parent) {
