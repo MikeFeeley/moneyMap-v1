@@ -13,7 +13,11 @@ class ActualsModel extends Observable {
   }
 
   _onModelChange (eventType, tran, update) {
-    let updateActuals = (c,m,a) => {c .actuals = (c .actuals || new Map()) .set (m, ((c .actuals && c .actuals .get (m)) || 0) + a)};
+    let updateActuals = (c,m,a) => {
+      c .actuals = (c .actuals || new Map()) .set (m, ((c .actuals && c .actuals .get (m)) || 0) + a);
+      if (m < this._oldsetMonth)
+        this._oldestMonth = m;
+    };
     if (tran .category && tran .date) {
       let c = this._budget .getCategories() .get  (tran .category);
       if (c) {
@@ -38,7 +42,7 @@ class ActualsModel extends Observable {
         }
       }
     }
-    this._notifyObservers (eventType, doc, arg, source);
+    this._notifyObservers (eventType, tran, arg, source);
   }
 
   _add (data) {
@@ -50,10 +54,11 @@ class ActualsModel extends Observable {
   }
 
   async findCurrent () {
-    let st             = Types .date._yearMonth (Types .date .addYear (this._budget .getStartDate(), -1));
+    let st            = Types .date._yearMonth (Types .date .addYear (this._budget .getStartDate(), -1));
     let en            = Types .date._yearMonth (this._budget .getEndDate());
     this._haveHistory = false;
     this._curStart    = st;
+    this._oldestMonth = st;
     this._add (await this._actualsModel .find ({$and: [{month: {$gte: st}}, {month: {$lte: en}}]}));
   }
 
@@ -61,12 +66,23 @@ class ActualsModel extends Observable {
     if (! this._haveHistory) {
       let ac = await this._actualsModel .find ({month: {$lt: this._curStart}});
       this._add (ac);
+      this._oldestMonth = ac .reduce ((o,a) => {return a .month < o? a .month: o}, this._oldestMonth)
       this._haveHistory = true;
     }
   }
 
-  getOldestMonth() {
-    // XXX
+  getHistoricYears() {
+    let start  = Types .dateFY .getFYStart (Types .date._fromYearMonth (this._oldestMonth), this._budget .getStartDate(), this._budget .getEndDate());
+    let years  = [];
+    for (let st = start; st < this._budget .getStartDate(); st = Types .date .addYear (st, 1)) {
+      let en = Types .date .monthEnd (Types .date .addMonthStart (st, 11));
+      years .push ({
+        label: BudgetModel .getLabelForDates (st, en),
+        start: st,
+        end:   en
+      })
+    }
+    return years;
   }
 
   getModel() {
