@@ -8,7 +8,6 @@ class Navigate {
     this._updaters           = new Map();
     this._balances           = new Model ('balanceHistory');
     this._parameters         = new Model ('parameters');
-    this._history            = new Model ('history');
     this._accountsModel      = new Model ('accounts');
     this._varianceObserver   = this._variance      .addObserver (this, this._onModelChange);
     this._balancesObserver   = this._balances      .addObserver (this, (e,d,a) => {this._onModelChange (e,d,a,null,{constructor: {name: 'BalanceHistory'}})});
@@ -25,7 +24,6 @@ class Navigate {
     this._accounts      .deleteObserver (this._accountsObserver);
     this._balances      .delete();
     this._parameters    .delete();
-    this._history       .delete();
     this._accountsModel .delete();
     if (this._progressView)
       this._progressView .remove();
@@ -78,13 +76,6 @@ class Navigate {
 
   async _getModelValues() {
     await this._actuals .findHistory ();
-    if (this._historicBudgets === undefined)
-      this._historicBudgets = (await this._budget .getHistoricBudgets()) || null;
-    if (this._noTranAmounts === undefined) {
-      this._noTranAmounts = (await this._history .find()) || null;
-      for (let nta of this._noTranAmounts || [])
-        nta .category = this._categories .get (nta .category);
-    }
     if (this._historicBalances === undefined)
       this._historicBalances = (await this._balances .find()) || null
     if (this._rates === undefined)
@@ -1210,84 +1201,47 @@ class Navigate {
     parentIds           = parentIds || (defaultParents .map (p => {return p._id}));
     var parents         = parentIds .map (pid => {return this._categories .get (pid)});
     // get historic amounts
+    var historicYears = this._actuals .getHistoricYears();
     var historicAmounts = [];
-    for (let budget of this._historicBudgets)
-      if (budget .hasTransactions) {
-        // get actual amount from transaction history
-        historicAmounts .push (parents .map (parent => {
-          let isCredit = this._budget .isCredit (parent);
-          let isGoal   = this._budget .isGoal   (parent);
-          let amounts = Array .from ((parent .children || []) .concat (parent .zombies || []) .reduce ((m,c) => {
-              let a = this._actuals .getAmountRecursively (c, budget .start, budget .end) * (isCredit? -1: 1);
-              let e = m .get (c .name);
-              if (e) {
-                e .amount += a;
-              } else {
-                m .set (c .name, {
-                  id:       c._id,
-                  name:     c .name,
-                  sort:     c .sort,
-                  isCredit: isCredit,
-                  isGoal:   isGoal,
-                  amount:   a
-                })
-              }
-              return m;
-            }, new Map()) .values())
-          let parentAmount = this._actuals .getAmountRecursively (parent, budget .start, budget .end) * (isCredit? -1: 1);
-          let otherAmount  = parentAmount - amounts .reduce ((t,a) => {return t + a .amount}, 0);
-          if (otherAmount != 0)
-            amounts .push ({
-              name:     'Other',
+    for (let year of historicYears) {
+      historicAmounts .push (parents .map (parent => {
+        let isCredit = this._budget .isCredit (parent);
+        let isGoal   = this._budget .isGoal   (parent);
+        let amounts = Array .from ((parent .children || []) .concat (parent .zombies || []) .reduce ((m,c) => {
+          let a = this._actuals .getAmountRecursively (c, year .start, year .end) * (isCredit? -1: 1);
+          let e = m .get (c .name);
+          if (e) {
+            e .amount += a;
+          } else {
+            m .set (c .name, {
+              id:       c._id,
+              name:     c .name,
+              sort:     c .sort,
               isCredit: isCredit,
               isGoal:   isGoal,
-              amount:   otherAmount
+              amount:   a
             })
-          return {
-            id:      parent._id,
-            name:    parent .name,
-            amounts: amounts
           }
-        }))
-      } else {
-        // get summary amount from history model
-        let a = this._noTranAmounts
-          .filter (e => {return e .budget == budget._id})
-        historicAmounts .push (parents .map (parent => {
-          let isCredit = this._budget .isCredit (parent);
-          let isGoal   = this._budget .isGoal   (parent);
-          let amounts  = a .filter (e => {return e .category .parent._id == parent._id}) .map (e => {return {
-            id:       e .category._id,
-            name:     e .category .name,
-            sort:     e .category .sort,
+          return m;
+        }, new Map()) .values())
+        let parentAmount = this._actuals .getAmountRecursively (parent, year .start, year .end) * (isCredit? -1: 1);
+        let otherAmount  = parentAmount - amounts .reduce ((t,a) => {return t + a .amount}, 0);
+        if (otherAmount != 0)
+          amounts .push ({
+            name:     'Other',
             isCredit: isCredit,
             isGoal:   isGoal,
-            amount:   e .amount
-          }});
-          let parentAmount = (a .find (e => {return e .category._id == parent._id}) || {}) .amount;
-          if (parentAmount != null) {
-            let otherAmount  = parentAmount - amounts .reduce ((t,a) => {return t + a .amount}, 0);
-             if (otherAmount != 0)
-              amounts .push ({
-                name:     'Other',
-                isCredit: isCredit,
-                isGoal:   isGoal,
-                amount:   otherAmount
-              })
-          }
-          return {
-            id:      parent._id,
-            name:    parent .name,
-            amounts: amounts
-          }
-        }))
-      }
+            amount:   otherAmount
+          })
+        return {
+          id:      parent._id,
+          name:    parent .name,
+          amounts: amounts
+        }
+      }))
+    }
     // compute future budgets
-    var budgets = [{
-      name:  this._budget .getLabel(),
-      start: this._budget .getStartDate(),
-      end:   this._budget .getEndDate()
-    }] .concat (this._budget .getFutureBudgets());
+    var budgets = [this._budget .getDescriptor()] .concat (this._budget .getFutureBudgets());
     var budgetAmounts = [];
     for (let budget of budgets) {
       var budgetAmount = [];
@@ -1322,7 +1276,7 @@ class Navigate {
       }
     }
     // combine history and future and normalize to category name
-    budgets       = this._historicBudgets .concat (budgets);
+    budgets       = historicYears .concat (budgets);
     budgetAmounts = historicAmounts .concat (budgetAmounts);
     budgetAmounts = budgetAmounts .map (ba => {
       return Array .from (ba .reduce ((m, a) => {
@@ -1332,7 +1286,7 @@ class Navigate {
           e .id      = e .id      .concat (a .id);
         } else {
           a .id = [] .concat (a.id);
-          m.set (a.name, a);
+          m.set (a .name, a);
         }
         return m;
       }, new Map()) .values())
@@ -1357,9 +1311,9 @@ class Navigate {
     }, new Map())});
     // compute return values
     let result = {
-      cols:      budgets .map (b => {return b .name}),
+      cols:      budgets .map (b => {return b .label}),
       dates:     budgets .map (b => {return {start: b .start, end: b .end}}),
-      highlight: this._historicBudgets .length,
+      highlight: historicYears .length,
       groups: parentIds .map ((pid, i) => {
         let pids   = pid .sort() .join ('$');
         let parent = new Map();
@@ -1402,7 +1356,11 @@ class Navigate {
         }
       })
     }
-    result .startBal = [(this._historicBudgets && this._historicBudgets [0] && this._historicBudgets [0] .startCashBalance) || 0];
+    result .startBal = [this._budget .getStartCashBalance() - historicAmounts .reduce ((t, year) => {
+      return t + year .reduce ((t, root) => {
+        return t + root .amounts .reduce ((t, a) => {return t + (a .isCredit? 1: -1) * a .amount}, 0)
+      }, 0)
+    }, 0)];
     for (let i = 1; i < result .cols .length; i++)
       result .startBal [i] = result .startBal [i-1] + result .groups .reduce ((t,g) => {
         return t + g .rows .reduce ((t,r) => {
@@ -1563,7 +1521,7 @@ class Navigate {
    * }
    */
   _getNetWorthData() {
-  var accounts  = [
+    let accountTypes  = [
       [AccountType .PENSION,    'Pension'],
       [AccountType .RRSP,       'RRSP'],
       [AccountType .RESP,       'RESP'],
@@ -1572,106 +1530,129 @@ class Navigate {
       [AccountType .HOME,       'Home'],
       [AccountType .MORTGAGE,   'Mortgage']
     ];
-    var order = accounts .map (a => {return a[0]});
-    var param  = this._rates;
-    var hisBud = this._historicBudgets;
-    var futBud = this._budget .getFutureBudgets();
-    var his    = this._historicBalances;
-    return {
-      cols: hisBud
-        .map    (b => {return Types .dateMY. toString (b .end)})
-        .concat (Types .dateMY .toString (this._budget .getEndDate()))
-        .concat (futBud .map (b => {return Types .dateMY .toString (b .end)})),
-      highlight: hisBud .length,
-      rows: Array .from (
-        this._accounts .getAccounts()
-        .filter (a => {return order .includes (a .type)})
-        .sort   ((a,b) => {
-          var as = order .indexOf (a .type);
-          var bs = order .indexOf (b .type);
-          return as<bs? -1: as>bs? 1: a.sort<b.sort? -1: a.sort>b.sort? 1: 0;
-        })
-        .map (a => {
-          let rate = ((a .apr || param .apr) - (param .presentValue? param .inflation: 0)) / 3650000;
-          let sign = a .creditBalance? 1: -1;
-          let cat  = a .category && this._categories .get (a .category);
-          let dis  = a .disCategory && this._categories .get (a .disCategory);
-          let stb  = a .balance * sign || 0;
-          let bal = stb;
-          for (
-            let st = Types .date .addMonthStart (Types .date .today(), -1);
-            st    >= this._budget .getStartDate();
-            st     = Types .date .addMonthStart (st, -1)
-          ) {
-            let add = cat? (this._budget .getAmount (cat, st, Types .dateDMY .monthEnd (st)) .month || {}) .amount || 0 : 0;
-            let sub = dis? (this._budget .getAmount (dis, st, Types .dateDMY .monthEnd (st)) .month || {}) .amount || 0 : 0;
-            bal = bal / (1 + rate * Types .dateDMY .daysInMonth (st)) - add + sub;
+    let param   = this._rates;
+    let history  = this._historicBalances;
+    let hisDesc = history
+      .sort   ((a,b) => {return a .start < b .start? -1: a .start == b .start? 0: 1})
+      .reduce ((l, h) => {
+        if (l .length == 0 || l [l .length - 1] .start != h .start)
+          l .push (h);
+        return l;
+      }, [])
+      .map (h => {return {
+        label: BudgetModel .getLabelForDates (h .start, h .end),
+        start: h .start,
+        end:   h .end
+      }})
+    let years = hisDesc .concat ([this._budget .getDescriptor()]) .concat (this._budget .getFutureBudgets());
+    let accountAmounts = this._accounts .getAccounts() .map (account => {
+      let sign   = account .creditBalance? 1: -1;
+      let rate   = ((account .apr || param .apr) - (param .presentValue? param .inflation: 0)) / 3650000;
+      let addCat = account .category    && this._categories .get (account .category);
+      let subCat = account .disCategory && this._categories .get (account .disCategory);
+      let curBal = (account .balance || 0) * sign;
+       // project balance through budgets
+      let amounts = years .map (year => {
+        let months = [];
+        for (let st = year .start; st < year .end; st = Types .date .addMonthStart (st, 1))
+          months .push ({start: st, end: Types .date .monthEnd (st)});
+        let add, sub, begBal;
+        let endBal = (history .find (h => {return h .account == account ._id && h .start == year .start}) || {}) .amount;
+        endBal     = endBal && endBal * sign;
+        let getBudgetAmounts = cat => {
+          return months .map (m => {return cat? (this._budget .getAmount (cat, m .start, m .end) .month || {}) .amount || 0: 0})
+            .concat (cat? (this._budget .getAmount (cat, year .start, year .end) .year || {}) .amount || 0: 0)
+        }
+        if (year .start < this._budget .getStartDate()) {
+          add = months .map (m => {return addCat? this._actuals .getAmountRecursively (addCat, m .start, m .end): 0});
+          sub = months .map (m => {return subCat? this._actuals .getAmountRecursively (subCat, m .start, m .end): 0});
+        } else {
+          add = getBudgetAmounts (addCat);
+          sub = getBudgetAmounts (subCat);
+        }
+        if (year .start == this._budget .getStartDate()) {
+          begBal = curBal;
+          for (let st = Types .date .monthStart (Types .date .today()); st >= this._budget .getStartDate();  st = Types .date .addMonthStart (st, -1)) {
+            let en = Types .date .monthEnd (st);
+            let a  = addCat? this._actuals .getAmountRecursively (addCat, st, en): 0;
+            let s  = subCat? this._actuals .getAmountRecursively (subCat, st, en): 0;
+            begBal = (begBal - (a + s)) / (1 + rate * Types .date .daysInMonth (st));
           }
-          let yrs  = [{start: this._budget .getStartDate(), end: this._budget .getEndDate()}] .concat (futBud);
-          let amt  = [];
-          let det  = [];
-          for (let yr of yrs) {
-            let tInt = 0, tAdd = 0, tSub = 0;
-            for (let st = yr .start; st <= yr .end; st = Types .dateDMY .addMonthStart (st, 1)) {
-              let add  = cat? (this._budget .getAmount (cat, st, Types .dateDMY .monthEnd (st)) .month || {}) .amount || 0 : 0;
-              let sub  = dis? (this._budget .getAmount (dis, st, Types .dateDMY .monthEnd (st)) .month || {}) .amount || 0 : 0;
-              let int  = bal * (rate * Types .dateDMY .daysInMonth (st))
-              bal = bal + int + add + sub;
-              tInt += int;
-              tAdd += add;
-              tSub += sub;
-            }
-            let add = cat? (this._budget .getAmount (cat, yr.start, yr.end) .year || {}) .amount || 0 : 0;
-            let sub = dis? (this._budget .getAmount (dis, yr.start, yr.end) .year || {}) .amount || 0 : 0;
-            bal = Math .round (bal + add + sub);
-            tAdd += add;
-            tSub += sub;
-            amt .push (bal);
-            det .push ({
-              int: tInt,
-              addCat: cat,
-              addAmt: tAdd,
-              subCat: dis,
-              subAmt: tSub
+        }
+        return {
+          add:    add,
+          sub:    sub,
+          begBal: begBal,
+          endBal: endBal
+        }
+      });
+      return {
+        account: account,
+        rate:    rate,
+        curBal:  curBal,
+        amounts: amounts
+      }
+    });
+    // compute balances
+    let sum = (t,a) => {return t + a}
+    for (let accountAmount of accountAmounts) {
+      let yearIndex = 0;
+      for (let amount of accountAmount .amounts) {
+        let year     = years [yearIndex];
+        let pyEndBal = (yearIndex > 0 && accountAmount .amounts [yearIndex - 1] .endBal) || 0;
+        yearIndex   += 1;
+        if (amount .endBal !== undefined)
+          amount .int = amount .endBal - pyEndBal - amount .add .reduce (sum) + amount .sub .reduce (sum);
+        else {
+          let bal     = amount .begBal !== undefined? amount .begBal: pyEndBal;
+          amount .int = bal - pyEndBal;
+          let month   = year .start;
+          for (let i = 0; i < 12; i++) {
+            let int = bal * accountAmount .rate * Types .date .daysInMonth (month);
+            amount .int += int;
+            bal         += int + amount .add [i] + amount .sub [i];
+            month        = Types .date .addMonthStart (month, 1);
+          }
+          amount .endBal = bal + (amount .add [12] || 0) + (amount .sub [12] || 0);
+        }
+        amount .add = amount .add .reduce (sum);
+        amount .sub = amount .sub .reduce (sum);
+      }
+    }
+    // accumulate by account type
+    let accountTypeAmounts = accountTypes .map (accountType => {
+      return accountAmounts
+        .filter (aa => {return aa .account .type == accountType [0]})
+        .reduce ((total, aa) => {
+          return {
+            type:    accountType [0],
+            name:    accountType [1],
+            curBal:  total .curBal + aa .curBal,
+            amounts: aa .amounts .map ((a,i) => {
+              return Array .from (Object .keys (a)) .reduce ((o,k) => {
+                let t = (total .amounts [i] || {}) [k];
+                o [k] = a [k] !== undefined? (t || 0) + a [k]: t;
+                return o;
+              }, {})
             })
           }
-          var amounts = hisBud
-            .map (b => {return (his .find (h => {return h .account == a._id && h .budget == b._id}) || {}) .amount * sign})
-            .concat (amt);
-          return {
-            name:    a .name,
-            type:    a .type,
-            curBal:  stb,
-            amounts: amounts,
-            detail:  hisBud .map (b => {return null}) .concat (det)
-          }
-        })
-        .reduce ((m,e) => {
-          var typeValue = m .get (e .type) || {curBal: 0, amounts: [], detail: []};
-          m .set (e .type, {
-            curBal:  e .curBal + typeValue .curBal,
-            amounts: e .amounts .map ((a,i) => {return (a || 0) + (typeValue .amounts [i] || 0)}),
-            detail:  e .detail  .map ((d,i) => {return {
-              int:    ((typeValue .detail [i] || {}) .int || 0)       + ((d || {})       .int    || 0),
-              addCat: ((typeValue .detail [i] || {}) .addCat || [])   .concat ((d || {}) .addCat || []),
-              addAmt: ((typeValue .detail [i] || {}) .addAmt || 0)    + ((d || {})       .addAmt || 0),
-              subCat: ((typeValue .detail [i] || {}) .subCat || [])   .concat ((d || {}) .subCat || []),
-              subAmt: ((typeValue .detail [i] || {}) .subAmt || 0)    + ((d || {})       .subAmt || 0)
-            }})
-          })
-          return m;
-        }, new Map())
-        .entries())
-        .map (e => {
-          return {
-            name:    accounts .find (a => {return a[0] == e[0]}) [1],
-            type:    e [0],
-            curBal:  e [1] .curBal,
-            amounts: e [1] .amounts,
-            detail:  e [1]. detail
-          }
-        })
-        .filter (e => {return e .amounts .reduce ((s,a) => {return s+a}) != 0})
+        }, {curBal: 0, amounts: []})
+    })
+      .filter (ata => {return ata .amounts .find (a => {return a .endBal != 0})})
+    return {
+      cols:       years .map (b => {return Types .dateMY .toString (b .end)}),
+      highlight:  hisDesc .length,
+      rows:       accountTypeAmounts .map (a => {return {
+        type:     a .type,
+        name:     a .name,
+        curBal:   a .curBal,
+        amounts:  a .amounts .map (a => {return a .endBal}),
+        detail:   a .amounts .map (a => {return {
+          int:    a .int,
+          addAmt: a .add,
+          subAmt: a .sub
+        }})
+      }})
     }
   }
 

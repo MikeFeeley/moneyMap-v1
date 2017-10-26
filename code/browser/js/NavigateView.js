@@ -1215,7 +1215,8 @@ class NavigateView extends Observable  {
     var addPopup = (e, detail, isCredit) => {
       let target   = $(e .target);
       let html     = target .offsetParent();
-      let position = ui .calcPosition (target, html, {top: -34, left: -2})
+      let padding  = target.css ('padding-left');
+      let position = ui .calcPosition (target, html, {top: -34, left: -2 + Number (padding .slice (0, padding .indexOf ('px')))})
       if (detail .int || detail .addAmt || detail .subAmt) {
         let popup = $('<div>', {class: '_popup _netWorthTable'})
           .appendTo (html)

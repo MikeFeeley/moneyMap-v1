@@ -31,7 +31,7 @@ class ActualsModel extends Observable {
       let noOrigDate = '_original_date'     in update && ! update._original_category;
       let noOrigCat  = '_original_category' in update && ! update._original_category;
       if (! noOrigDate && ! noOrigCat) {
-        let c = this._budget .getCategories() .get (update._original_cateogory || tran .category);
+        let c = this._budget .getCategories() .get (update._original_category || tran .category);
         if (c) {
           let d = update._original_date || tran .date;
           if (d) {
@@ -83,10 +83,6 @@ class ActualsModel extends Observable {
       })
     }
     return years;
-  }
-
-  getModel() {
-    return this._transactionModel;
   }
 
   getAmountRecursively (cat, st = this._budget .getStartDate(), en = this._budget .getEndDate(), skip, includeMonths=true, includeYears=true) {

@@ -2,7 +2,7 @@ var ui = {
 
   scrollIntoView: (e, includeMargin = false, options = {}) => {
     var getScrollParent = node => {
-      if (node === null)
+      if (node === null || node == document)
         return null;
       else if (window .getComputedStyle (node) .overflowY == 'scroll' && node .scrollHeight > node .clientHeight) {
         return node;

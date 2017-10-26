@@ -309,7 +309,6 @@ async function getActuals (req, res, next) {
         return list;
       }, []);
       await actualsMeta .deleteMany ({type: 'blacklist'});
-      blacklistsCache .set (db .databaseName, blacklistsCache .get (db .databaseName) || new Set());
       for (let ble of blacklist)
         await updateActuals (actuals, transactions, ble .start, ble .end);
     } else {
@@ -317,6 +316,7 @@ async function getActuals (req, res, next) {
       await actualsMeta .insert ({type: 'isValid'});
     }
     res .json (await actuals .find (req .body .query || {}) .toArray());
+    (blacklistsCache .get (db .databaseName) || blacklistsCache .set (db .databaseName, new Set()) .get (db .databaseName)) .clear();
   } catch (e) {
     console .log (e);
   }

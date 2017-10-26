@@ -77,8 +77,9 @@ class TransactionModel extends Model {
 
   /**
    * If query contains a date or date range ($lte/gte) or a category, then
-   *   (a) switch to refine if a previous query has already fetched target transactions, and
-   *   (b) update list of previous queries
+   *   - switch to refine if a previous query has already fetched target transactions
+   * If query ONLY contains a date, date range or category (or combination), then
+   *   - update list of previous queries
    */
   async find (query, append) {
     let queries = this._getQueries();
@@ -103,12 +104,12 @@ class TransactionModel extends Model {
         categories = query .category .$in .sort();
     } else
       categories = null;
-    if (dates && categories !== undefined && ! Array .from (Object .keys (query)) .find (p => {return p != 'date' && p != 'category' && p != '$options'})) {
+    if (dates && categories !== undefined) {
       cacheOnly = queries .find (q => {
         return (dates .start >= q .start && dates .end <= q .end)  &&
                (! q .categories || (categories && this._isSubset (categories, q .categories)))
       });
-      if (! cacheOnly) {
+      if (! cacheOnly && ! Array .from (Object .keys (query)) .find (p => {return p != 'date' && p != 'category' && p != '$options'})) {
         let matched, infill;
         for (let q of queries) {
           // do real query only on part of range not already covered by previous query (if match)

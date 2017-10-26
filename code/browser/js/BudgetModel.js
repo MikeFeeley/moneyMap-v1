@@ -32,18 +32,6 @@ class BudgetModel extends Observable {
     await this._schModel .find ();
   }
 
-  // depricate
-  async getHistoricBudgets() {
-    return (await this._budModel .find ())
-      .filter (b     => {return b .end < this._budget .start})
-      .sort   ((a,b) => {return a .start < b .start? -1: a .start == b .start? 0: 1})
-  }
-
-  // depricate
-  getActiveBudgets() {
-    return this._budgets;
-  }
-
   getFutureBudgets() {
     var addYearToName = y => {
       var n = this .getLabel() .split ('/');
@@ -53,10 +41,12 @@ class BudgetModel extends Observable {
         return String (Number (n[0]) + y)
     }
     return [1,2,3,4,5,6,7,8,9,10,11,12,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40] .map (y => {
+      let st = Types .dateDMY .addYear (this._budget .start, y);
+      let en = Types .dateDMY .addYear (this._budget .end,   y);
       return {
-        name:  addYearToName           (y),
-        start: Types .dateDMY .addYear (this._budget .start, y),
-        end:   Types .dateDMY .addYear (this._budget .end,   y)
+        label: BudgetModel .getLabelForDates (st, en),
+        start: st,
+        end:   en
       }
     })
   }
@@ -67,12 +57,20 @@ class BudgetModel extends Observable {
     if (sy == ey)
       return sy .toString();
     else
-      return sy + '/'+ ((sy % 10) + 1)
+      return sy + '/'+ (((sy + 1) % 10))
 
   }
 
   getLabel (date = {start: this._budget .start, end: this._budget .end}) {
     return BudgetModel .getLabelForDates (date .start, date .end);
+  }
+
+  getDescriptor() {
+    return {
+      label: this .getLabel(),
+      start: this .getStartDate(),
+      end:   this .getEndDate()
+    }
   }
 
   getCategories() {
