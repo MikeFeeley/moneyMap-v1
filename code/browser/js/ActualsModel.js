@@ -12,7 +12,7 @@ class ActualsModel extends Observable {
     this._transactionModel .delete();
   }
 
-  _onModelChange (eventType, tran, update) {
+  _onModelChange (eventType, tran, update, source) {
     let updateActuals = (c,m,a) => {
       c .actuals = (c .actuals || new Map()) .set (m, ((c .actuals && c .actuals .get (m)) || 0) + a);
       if (m < this._oldsetMonth)
@@ -42,7 +42,7 @@ class ActualsModel extends Observable {
         }
       }
     }
-    this._notifyObservers (eventType, tran, arg, source);
+    this._notifyObservers (eventType, tran, update, source);
   }
 
   _add (data) {
