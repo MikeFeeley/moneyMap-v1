@@ -545,7 +545,7 @@ class Navigate {
       if (altDates .start == this._budget .getStartDate())
         yr = ' Last Year';
       else {
-        yr = (altDates .start < this._budget .getStartDate()? ' in ': ' for ') + BudgetModel .getLabelForDates (altDates .start, altDates .end);
+        yr = ' for ' + BudgetModel .getLabelForDates (altDates .start, altDates .end);
       }
     }
     switch (type) {
@@ -609,8 +609,9 @@ class Navigate {
       let realData  = data .filter (d => {return ! d .id .includes ('budget_')});
       let hasBudget = data .length != realData .length;
       let hasOther  = realData .length && realData [realData .length -1] .id .includes ('other_');
-      let one = data .length == 1 || (data .length == 2 && hasBudget);
-      if (one && (data [0] .id .includes ('other_') || ((await this._getChildren (type, data [0] .id, altDates)) .filter (c => {return ! c .includes ('budget_')}) .length == 0)))
+      let isLeaf    = (data .length == 1 || (data .length == 2 && hasBudget)) &
+          (await this._getChildren (type, data [0] .id, altDates)) .filter (c => {return ! c .includes ('budget_')}) .length == 0;
+      if (isLeaf)
         data [0] .id = 'leaf_' + data [0] .id;
       return {
         data:      data,
@@ -791,7 +792,7 @@ class Navigate {
       else if (dates .start == Types .date .addYear (this._budget .getStartDate(), -1))
         year = 'Last Year';
       else {
-        year = (dates .start < this._budget .getStartDate()? ' in ' : ' for ') + BudgetModel .getLabelForDates (dates .start, dates .end);
+        year = ' for ' + BudgetModel .getLabelForDates (dates .start, dates .end);
       }
       dataset .note = (type ==  NavigateValueType .BUDGET_YR_AVE_ACT? 'Budget ': 'Activity ') + year;
     }
@@ -1795,3 +1796,5 @@ const NavigateValueType = {
   ACTUALS:           3,
   ACTUALS_BUD:       4,
 }
+
+const NavigateValueType_BUDGET_TYPES = [NavigateValueType .BUDGET, NavigateValueType .BUDGET_YR_AVE, NavigateValueType .BUDGET_YR_AVE_ACT];

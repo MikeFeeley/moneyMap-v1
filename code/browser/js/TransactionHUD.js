@@ -5,8 +5,8 @@ class TransactionHUD extends TransactionAndRulesTable {
     super (query, null, undefined, '', undefined, undefined, options);
     this._title      = title;
     this._onClose    = onClose;
-    this._monthStart = monthStart;
-    this._monthEnd   = monthEnd;
+    this._monthStart = monthStart || query .date .$gte;
+    this._monthEnd   = monthEnd   || query .date .$lte;
   }
 
   delete() {
@@ -69,7 +69,7 @@ class TransactionHUD extends TransactionAndRulesTable {
       () => {return Types .date .today()},
       () => {return 0},
       () => {return 0},
-      () => {return false}
+      () => {return this._monthEnd < this._variance .getBudget() .getStartDate()}
     );
     let dialogue = $('<div>', {class: '_recategorizeDialogue'})
       .appendTo (this._content)
@@ -82,10 +82,10 @@ class TransactionHUD extends TransactionAndRulesTable {
       let cat = field .data ('field') .get();
       let ul = Array .from (this._view._tuples .keys())
         .filter (id => {return id})
-        .map    (id => {return {id: id, update: {category: cat}}})
-      async (this._model, this._model .updateList) (ul);
+        .map    (id => {return {id: id, update: {category: cat}}});
+      (async () => {await this._model .updateList (ul)})();
       dialogue .remove();
-      ui .ModalStack .delete (modalEntry);
+      (async () => {await ui .ModalStack .delete (modalEntry)})();
       e .stopPropagation();
       return false;
     }}) .appendTo (dialogue .children());
@@ -94,7 +94,7 @@ class TransactionHUD extends TransactionAndRulesTable {
       e => {
         return e && ! $.contains (dialogue [0], e .target) && dialogue [0] != e .target
       },
-      () => {dialogue.remove(); this._recategorizeUpdate = null}, true
+      () => {dialogue .remove(); this._recategorizeUpdate = null}, true
     );
   }
 

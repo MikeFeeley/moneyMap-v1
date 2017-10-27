@@ -347,7 +347,7 @@ class User extends Observable {
     this._notifyObservers (UserEvent .NEW_CONFIGURATION);
     if (this._onLabelChange)
       this._onLabelChange (this .getLabel());
-    async (null, Model .updateUser) (this._uid, this._accessCap, {curConfiguration: this._cid});
+    (async () => {Model .updateUser (this._uid, this._accessCap, {curConfiguration: this._cid})})();
   }
 
   _selectBudget (bid) {
@@ -356,13 +356,13 @@ class User extends Observable {
     this._notifyObservers (UserEvent .NEW_CONFIGURATION);
     if (this._onLabelChange)
       this._onLabelChange (this .getLabel());
-    async (this._configModel, this._configModel .update) (this._cid, {curBudget: this._bid});
+    (async () => {await this._configModel .update (this._cid, {curBudget: this._bid})}) ();
   }
 
   showMenu (toHtml) {
     let html = $('body');
     this._view .addMenu (html, {top: 48, right: 10}, toHtml, {top: 0, right: 10});
-    this._addMenuItem ('Edit Profile', () => {async (this, this._showAccountEdit) ()});
+    this._addMenuItem ('Edit Profile', () => {(async () => {await this._showAccountEdit()}) ()});
     if (this._configs .length > 1) {
       let items = this._configs
         .filter (c => {return c._id != this._cid})
@@ -370,7 +370,7 @@ class User extends Observable {
           name:   c .name,
           action: e => {
             this._view .removeMenu();
-            async (this, this._selectConfig) (c._id);
+            (async () => {await this._selectConfig (c._id)})();
           }
         }})
       this._view .addSubMenu ('Change Configuration', items);
@@ -397,8 +397,8 @@ class User extends Observable {
       this._budgetModel .delete();
     this._configModel = new Model ('configurations', 'user_' + this._uid + '_' + this._accessCap);
     this._budgetModel = new Model ('budgets',        this .getDatabaseName());
-    this._configModel .addObserver (null, (e,d,a,s) => {async (this, this._onConfigModelChange) (e,d,a,s)});
-    this._budgetModel .addObserver (null, (e,d,a,s) => {async (this, this._onBudgetModelChange) (e,d,a,s)});
+    this._configModel .addObserver (this, this._onConfigModelChange);
+    this._budgetModel .addObserver (this, this._onBudgetModelChange);
     this._configModel .observe();
     this._budgetModel .observe();
   }
@@ -423,7 +423,7 @@ class User extends Observable {
     this._view .addInput    ('New Password',     '', password, 'password');
     this._view .addInput    ('Confirm Password', '', password, 'password');
     this._view .addInput    ('Name',             this._name, name);
-    this._view .addButton   ('Update Profile',   async (this, this._updateAccount), update);
+    this._view .addButton   ('Update Profile',   (async () => {await this._updateAccount()}), update);
     this._accountEditError = this._view .addLabel ('', update, '_errorMessage');
   }
 
@@ -443,7 +443,7 @@ class User extends Observable {
       b._id, b .end, line, 'End'
     );
     this._view .addButton ('Delete Budget', () => {
-      async (this, this._deleteBudget) (b._id);
+      (async () => {await this._deleteBudget (b._id)}) ();
     }, this._view .addLine (budgetTab .content));
     if (b._id == this._bid)
       this._view .selectTab (budgetTab);
