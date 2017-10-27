@@ -42,9 +42,11 @@ class Categories {
 
   _removeParentLink (doc, parent='parent', children='children') {
     var list  = doc [parent]? doc [parent] [children]: this._roots;
-    var index = list .indexOf (doc);
-    if (index != -1)
-      list .splice (index, 1);
+    if (list) {
+      var index = list .indexOf (doc);
+      if (index != -1)
+        list .splice (index, 1);
+    }
   }
 
   _onModelChange (eventType, doc, arg, parent='parent', children='children') {
