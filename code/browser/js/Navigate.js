@@ -112,7 +112,7 @@ class Navigate {
     this._netWorthSliderLeft  = undefined;
     this._netWorthSliderRight = undefined;
     var ds = this._getNetWorthData ();
-    this._clearUpdatersForView                   (this._newWorthView);
+    this._clearUpdatersForView                   (this._netWorthView);
     let sc = this._netWorthView .addContainer    ('_sliderHeader');
     this._netWorthView .addHeading               ('Net Worth', '', sc);
     let lv = this._netWorthView .addSubHeading   ('', '', sc);
@@ -250,13 +250,22 @@ class Navigate {
         }
       } else if (arg .name == '_budgetHistoryGraph' && arg .id .length >= 1 && arg .id [0]) {
         if (arg .altClick) {
-          let activeId = arg .id .find (i => {let cat= this._categories .get (i); return cat && cat .budgets .includes (this._budget .getId())})
-          if (activeId && arg .date && arg .date .end && arg .date .end > this._budget .getStartDate())
-            BudgetProgressHUD .show (activeId, arg .html, arg .position, this._accounts, this._variance);
+          if (arg .date) {
+            if (arg .date .end > this._budget .getStartDate()) {
+              let activeId = arg .id .find (i => {let cat= this._categories .get (i); return cat && cat .budgets .includes (this._budget .getId())})
+              if (activeId)
+                BudgetProgressHUD .show (activeId, arg .html, arg .position, this._accounts, this._variance);
+            } else if (arg .id) {
+              TransactionHUD .showCategory (arg.id[0], arg .date, this._accounts, this._variance, arg .html, arg .position);
+            }
+          }
         } else {
-          let ids = [] .concat (arg .id);
+          let ids = [] .concat (arg .id) .filter (i => {return ! i .startsWith ('other_')});
           this._addHistoryGraph (ids, true, arg .position, arg .view, this._getHistoryData (ids, undefined, true), arg .html, arg .colorIndex);
         }
+      } else if (arg .name == '_budgetHistoryGraph_months') {
+        let name = (arg .date .start < this._budget .getStartDate()? '_activity': '_budget') + 'MonthsGraph';
+        await this._addMonthsGraph (name, arg .view, arg .id, true, arg .position, arg .html, true, true, [], arg .date);
       }
 
     } else if (eventType == NavigateViewEvent .BUDGET_GRAPH_TITLE_CLICK && arg .id) {
@@ -362,7 +371,7 @@ class Navigate {
   /*******************************************/
   /***** GET BUDGET / ACTUAL INFORMATION *****/
 
-  async _getChildren (type, id, isLastYear) {
+  async _getChildren (type, id, altDates) {
     switch (type) {
       case NavigateValueType .BUDGET: case NavigateValueType .BUDGET_YR_AVE: case NavigateValueType .BUDGET_YR_AVE_ACT:
         if (id .includes ('other_'))
@@ -385,9 +394,9 @@ class Navigate {
           if (children .length == 0 || id .includes ('other_')) {
             let st     = this._budget .getStartDate();
             let en     = this._budget .getEndDate();
-            if (isLastYear) {
-              st = Types .date .addYear (st, -1);
-              en = Types .date .addYear (en, -1);
+            if (altDates) {
+              st = altDates .start;
+              en = altDates .end;
             }
             var result = (await this._actuals .getTransactions (cat, st, en))
               .map (t => {
@@ -399,14 +408,14 @@ class Navigate {
               .map    (p       => {return 'payee_' + p + '_' + cat._id})
           } else
             var result = children .map (c => {return c._id});
-          if (type == NavigateValueType .ACTUALS_BUD && ! isLastYear)
+          if (type == NavigateValueType .ACTUALS_BUD && ! altDates)
             result = ['budget_' + id] .concat (result);
           return result;
         }
     }
   }
 
-  async _getAmounts (type, id, isCredit, dates, includeMonths = true, includeYears = true, addCats, isLastYear) {
+  async _getAmounts (type, id, isCredit, dates, includeMonths = true, includeYears = true, addCats, altDates) {
     switch (type) {
       case NavigateValueType .BUDGET: case NavigateValueType .BUDGET_YR_AVE: case NavigateValueType .BUDGET_YR_AVE_ACT:
         if (type == NavigateValueType .BUDGET_YR_AVE_ACT && id .includes ('budget_')) {
@@ -414,7 +423,7 @@ class Navigate {
           return await Promise .all ((dates .filter (d => {return d .start <= Types .date .today()}) .map (async date => {
             let value = this._actuals .getAmountRecursively (cat, date .start, date .end) * (this._budget .isCredit (cat)? -1: 1);
             if (id .includes ('other_'))
-              value -= (await this._getChildren (type, id, isLastYear)) .reduce ((t, c) => {
+              value -= (await this._getChildren (type, id, altDates)) .reduce ((t, c) => {
                 if (! c .includes ('_')) {
                   let cat = this._categories .get (c);
                   if (this._budget .getAmount (cat, date .start, date .end) .amount == 0) {
@@ -487,7 +496,7 @@ class Navigate {
                 return t + this._actuals .getAmountRecursively (cat, date .start, date .end, null, includeMonths, includeYears, addCats) * (isCredit? -1: 1)
               }, 0);
             return {
-              id:    isLastYear? tc .map (cat => {return cat._id}): cat._id,
+              id:    altDates? tc .map (cat => {return cat._id}): cat._id,
               value: value
             }})
         }
@@ -530,17 +539,24 @@ class Navigate {
     }
   }
 
-  _getNote (type, id, includeMonths, includeYears, isLastYear) {
+  _getNote (type, id, includeMonths, includeYears, altDates) {
+    let yr = '';
+    if (altDates) {
+      if (altDates .start == this._budget .getStartDate())
+        yr = ' Last Year';
+      else {
+        yr = (altDates .start < this._budget .getStartDate()? ' in ': ' for ') + BudgetModel .getLabelForDates (altDates .start, altDates .end);
+      }
+    }
     switch (type) {
       case NavigateValueType .BUDGET: case NavigateValueType .BUDGET_YR_AVE: case NavigateValueType .BUDGET_YR_AVE_ACT:
-        return 'Budget';
+        return 'Budget' + yr;
 
       case NavigateValueType .ACTUALS: case NavigateValueType .ACTUALS_BUD:
         let getRoot  = c => {return c.parent? getRoot (c .parent): c}
         let ym       = includeMonths && !includeYears? ' Monthly ': !includeMonths && includeYears? ' Anytime ': '';
         let gn       = getRoot (this._categories .get (id .split ('_') .slice (-1) [0])) .name;
-        let ly       = isLastYear? ' Last Year': ''
-        return 'Actual ' + ym + gn + ly;
+        return 'Actual ' + ym + gn + yr;
     }
   }
 
@@ -557,15 +573,15 @@ class Navigate {
     }
   }
 
-  async _getChildrenData (type, id, dates, allowLeaf, includeMonths = true, includeYears = true, addCats = [], isLastYear) {
-    let isLeaf = (id .includes ('other_') || id .includes ('payee_') || (await this._getChildren (type, id, isLastYear)) .filter (c => {return ! c .includes ('budget_')}) .length == 0);
+  async _getChildrenData (type, id, dates, allowLeaf, includeMonths = true, includeYears = true, addCats = [], altDates) {
+    let isLeaf = (id .includes ('other_') || id .includes ('payee_') || (await this._getChildren (type, id, altDates)) .filter (c => {return ! c .includes ('budget_')}) .length == 0);
     if (isLeaf && (! allowLeaf || id .includes ('leaf_')))
       return {data: []}
     else {
       let cat         = this._categories .get (id .split ('_') .slice (-1) [0]);
       let isCredit    = this._budget .isCredit (cat);
       let isGoal      = this._budget .isGoal   (cat);
-      let children    = await this._getChildren (type, id, isLastYear);
+      let children    = await this._getChildren (type, id, altDates);
       let hasChildren = children .length > 1 || (children .length == 1 && ! children [0] .includes ('budget_'));
       let data        = await Promise .all (((hasChildren && children) || [id] .concat (children))
         .map (async child => {return {
@@ -574,7 +590,7 @@ class Navigate {
           isCredit: isCredit,
           isGoal:   isGoal,
           isYear:   includeMonths != includeYears? this._categories .getType (this._categories .get (child .split ('_') .slice (-1) [0])) == ScheduleType .YEAR: undefined,
-          amounts:  await this._getAmounts (type, child, isCredit, dates, includeMonths, includeYears, addCats, isLastYear),
+          amounts:  await this._getAmounts (type, child, isCredit, dates, includeMonths, includeYears, addCats, altDates),
           type:     child .includes ('budget_') && 'line'
         }}));
       if (! id .includes ('other_')) {
@@ -584,7 +600,7 @@ class Navigate {
           id:       'other_' + cat._id,
           isCredit: isCredit,
           isGoal:   isGoal,
-          amounts:  (await this._getAmounts (type, id, isCredit, dates, includeMonths, includeYears, addCats, isLastYear)) .map ((a,i) => {
+          amounts:  (await this._getAmounts (type, id, isCredit, dates, includeMonths, includeYears, addCats, altDates)) .map ((a,i) => {
             return {id: 'other_' + cat._id, value: a .value - (totals [i] || 0)
           }})
         })
@@ -594,7 +610,7 @@ class Navigate {
       let hasBudget = data .length != realData .length;
       let hasOther  = realData .length && realData [realData .length -1] .id .includes ('other_');
       let one = data .length == 1 || (data .length == 2 && hasBudget);
-      if (one && (data [0] .id .includes ('other_') || ((await this._getChildren (type, data [0] .id, isLastYear)) .filter (c => {return ! c .includes ('budget_')}) .length == 0)))
+      if (one && (data [0] .id .includes ('other_') || ((await this._getChildren (type, data [0] .id, altDates)) .filter (c => {return ! c .includes ('budget_')}) .length == 0)))
         data [0] .id = 'leaf_' + data [0] .id;
       return {
         data:      data,
@@ -615,7 +631,7 @@ class Navigate {
               if (aff .length) {
                 let up = await Promise .all (aff .map (async af => {
                   let aid     = af .id .split ('_') .slice (-1) [0];
-                  let newData = await this._getChildrenData (type, id, dates, allowLeaf, includeMonths, includeYears, addCats, isLastYear);
+                  let newData = await this._getChildrenData (type, id, dates, allowLeaf, includeMonths, includeYears, addCats, altDates);
                   if (hasOther == (newData .data .length && newData .data [newData .data .length - 1] .id .includes ('other_'))) {
                     let newAff = newData .data .filter (d => {return d .id .split ('_') .slice (-1) [0] == aid});
                     if (newAff .length == 1) {
@@ -674,27 +690,27 @@ class Navigate {
     includeYears  = true,
     addCats       = []
   ) {
+    let altDates = dates && (dates .start != this._budget .getStartDate()) && dates;
     if (!dates || (dates .start && dates .end != Types .date .monthEnd (dates .start))) {
-      var st     = dates? dates .start: this._budget .getStartDate();
-      var en     = dates? dates .end:   this._budget .getEndDate();
-      var dates  = [];
+      var st = dates? dates .start: this._budget .getStartDate();
+      var en = dates? dates .end:   this._budget .getEndDate();
+      dates  = [];
       while (st <= en) {
         dates .push ({start: st, end: Types .dateMY .monthEnd (st)});
         st = Types .dateMY .addMonthStart (st, 1);
       }
     } else
       dates = [] .concat (dates);
-    let isLastYear = dates && (dates [0] .start < this._budget .getStartDate());
     let isYear = dates .length == 1 && Types .date._month (dates [0] .start) != Types .date._month (dates [0] .end);
     var months = isYear? 0: dates .length;
     var cols   = isYear? []: dates .map (d => {return Types .dateM .toString (d .start)});
     var groups = await Promise .all (ids
       .map (async id => {
-        let data = await this._getChildrenData (type, id, dates, allowLeaf, includeMonths, includeYears, addCats, isLastYear);
+        let data = await this._getChildrenData (type, id, dates, allowLeaf, includeMonths, includeYears, addCats, altDates);
         return {
           id:        id,
           name:      this._getName         (type, id),
-          note:      this._getNote         (type, id, includeMonths, includeYears, isLastYear),
+          note:      this._getNote         (type, id, includeMonths, includeYears, altDates),
           rows:      data .data,
           getUpdate: data .getUpdate
         }
@@ -768,6 +784,17 @@ class Navigate {
   async _addMonthsGraph (name, view, ids, popup, position, toHtml, includeMonths=true, includeYears=true, addCats=[], dates=null, startColor=0) {
     var type    = name .includes ('budget')? NavigateValueType .BUDGET_YR_AVE_ACT: NavigateValueType .ACTUALS_BUD;
     var dataset = await this._getMonthsData (type, dates, ids, true, includeMonths, includeYears, addCats);
+    if (!ids || ids .length > 1) {
+      let year;
+      if (!dates || dates .start == this._budget .getStartDate())
+        year = 'This Year';
+      else if (dates .start == Types .date .addYear (this._budget .getStartDate(), -1))
+        year = 'Last Year';
+      else {
+        year = (dates .start < this._budget .getStartDate()? ' in ' : ' for ') + BudgetModel .getLabelForDates (dates .start, dates .end);
+      }
+      dataset .note = (type ==  NavigateValueType .BUDGET_YR_AVE_ACT? 'Budget ': 'Activity ') + year;
+    }
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       var updater = this._addUpdater (view, async (eventType, model, ids) => {
         let update = await dataset .getUpdate (eventType, model, ids);
@@ -1228,6 +1255,7 @@ class Navigate {
         let otherAmount  = parentAmount - amounts .reduce ((t,a) => {return t + a .amount}, 0);
         if (otherAmount != 0)
           amounts .push ({
+            id:       'other_' + parent._id,
             name:     'Other',
             isCredit: isCredit,
             isGoal:   isGoal,
@@ -1268,6 +1296,7 @@ class Navigate {
         var otherAmount  = parentAmount - amounts .reduce ((t,a) => {return t + a .amount}, 0);
         if (otherAmount != 0)
           amounts .push ({
+            id:       'other_' + parent._id,
             name:     'Other',
             isCredit: isCredit,
             isGoal:   isGoal,

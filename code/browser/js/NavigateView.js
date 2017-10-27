@@ -440,7 +440,7 @@ class NavigateView extends Observable  {
     var graph  = $('<div>', {class: name + (popup? ' _popup': '')}) .appendTo (container) .append ($('<div>', {class: '_popupContent'}))
     processDataset();
     if (popup) {
-      if (data .length == 1) {
+      if (data .length >= 1) {
         let head = $('<div>', {class: '_heading'})
           .appendTo (graph .children('._popupContent'))
           .on ('click webkitmouseforcedown', e => {
@@ -459,9 +459,9 @@ class NavigateView extends Observable  {
             e .stopPropagation();
             return false;
           })
-        head [0] .addEventListener ('webkitmouseforcewillbegin', e => {e .preventDefault()}, true)
-        $('<span>', {class: '_heading', text: [] .concat (data [0] .name)}) .appendTo (head);
-        if (data [0] .note)
+        head [0] .addEventListener ('webkitmouseforcewillbegin', e => {e .preventDefault()}, true);
+        $('<span>', {class: '_heading', text: [] .concat (dataset .note? dataset .note: data [0] .name)}) .appendTo (head);
+        if (!dataset .note && data [0] .note)
           $('<span>', {class: '_subheading', text: data [0] .note}) .appendTo (head);
       }
       if (position)
@@ -502,8 +502,8 @@ class NavigateView extends Observable  {
         onClick: (e, elements) => {
           let element = chart .getElementAtEvent (e);
           if (element .length) {
-            let html        = container .closest ('div:not(._popup)');
-            let position    = ui .calcPosition (graph, html, {top: 50, left: 50});
+            let html     = container .closest ('div:not(._popup)');
+            let position = ui .calcPosition (graph, html, {top: 50, left: 50});
             this._notifyObservers (NavigateViewEvent .BUDGET_GRAPH_CLICK, {
               name:         name,
               id:           datasets [element [0] ._datasetIndex] .id,
@@ -517,6 +517,22 @@ class NavigateView extends Observable  {
               altClick:     e .webkitForce > 1 || e .altKey,
               view:         this
             })
+          } else {
+            let pos = Chart .helpers .getRelativePosition (e, chart);
+            if (pos .y > chart .chartArea .bottom) {
+              let html     = container .closest ('div:not(._popup)');
+              let position = ui .calcPosition (graph, html, {top: 50, left: 50});
+              let xax      = chart .scales ['x-axis-0'];
+              this._notifyObservers (NavigateViewEvent .BUDGET_GRAPH_CLICK, {
+                name:         name + '_months',
+                id:           dataset .groups .reduce ((l,g) => {return l .concat (g .id)}, []),
+                date:         Object .assign ({}, dataset .dates [Math .floor ((pos .x - xax .left) / (xax .width / xax .ticks .length)) + startCol]),
+                position:     position,
+                html:         html,
+                altClick:     e .webkitForce > 1 || e .altKey,
+                view:         this
+              });
+            }
           }
           e .stopPropagation();
           return false;
