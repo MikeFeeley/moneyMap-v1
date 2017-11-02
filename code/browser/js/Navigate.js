@@ -605,9 +605,7 @@ class Navigate {
           }})
         })
       }
-      data = data .filter (r => {
-        return (r .id .startsWith ('budget_') || r .id .startsWith ('actuals_')) || r .amounts .reduce ((s,a) => {return s + a .value}, 0) != 0
-      });
+      data          = data .filter (r => {return r .id .startsWith ('budget_') || r .amounts .reduce ((s,a) => {return s + a .value}, 0) != 0});
       let realData  = data .filter (d => {return ! d .id .includes ('budget_')});
       let hasBudget = data .length != realData .length;
       let hasOther  = realData .length && realData [realData .length -1] .id .includes ('other_');
