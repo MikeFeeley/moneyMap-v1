@@ -80,6 +80,7 @@ class NavigateView extends Observable  {
 
   addHelp (text) {
     let help = $('<div>') .appendTo ($('<div>', {class: '_helpInline'}) .appendTo (this._content));
+    $('<div>', {text: 'TIP'}) .appendTo (help);
     for (let t of text)
       $('<div>', {text: t}) .appendTo (help);
   }
@@ -541,7 +542,7 @@ class NavigateView extends Observable  {
           backgroundColor: 'rgba(0,0,0,0.6)',
           callbacks: {
             label: (t, d) => {
-              return d .datasets [t .datasetIndex] .label + ': ' +Types .moneyD .toString (t .yLabel);
+              return d .datasets [t .datasetIndex] .label + ': ' +Types .moneyDZ .toString (t .yLabel);
             }
           }
         },

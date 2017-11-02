@@ -605,12 +605,14 @@ class Navigate {
           }})
         })
       }
-      data          = data .filter (r => {return r .amounts .reduce ((s,a) => {return s + a .value}, 0) != 0});
+      data = data .filter (r => {
+        return (r .id .startsWith ('budget_') || r .id .startsWith ('actuals_')) || r .amounts .reduce ((s,a) => {return s + a .value}, 0) != 0
+      });
       let realData  = data .filter (d => {return ! d .id .includes ('budget_')});
       let hasBudget = data .length != realData .length;
       let hasOther  = realData .length && realData [realData .length -1] .id .includes ('other_');
-      let isLeaf    = (data .length == 1 || (data .length == 2 && hasBudget)) &
-          (await this._getChildren (type, data [0] .id, altDates)) .filter (c => {return ! c .includes ('budget_')}) .length == 0;
+      let isLeaf    = (data .length == 1 || (data .length == 2 && hasBudget)) & (data .length != 0 &&
+          (await this._getChildren (type, data [0] .id, altDates)) .filter (c => {return ! c .includes ('budget_')}) .length == 0);
       if (isLeaf)
         data [0] .id = 'leaf_' + data [0] .id;
       return {
@@ -630,21 +632,19 @@ class Navigate {
                   return i == eid || (! e .id .includes ('other_') && this._categories .getDescendants (this._categories .get (i)) .find (d => {return d._id == eid}))
                 });
               if (aff .length) {
-                let up = await Promise .all (aff .map (async af => {
+                let up = (await Promise .all (aff .map (async af => {
                   let aid     = af .id .split ('_') .slice (-1) [0];
                   let newData = await this._getChildrenData (type, id, dates, allowLeaf, includeMonths, includeYears, addCats, altDates);
                   if (hasOther == (newData .data .length && newData .data [newData .data .length - 1] .id .includes ('other_'))) {
                     let newAff = newData .data .filter (d => {return d .id .split ('_') .slice (-1) [0] == aid});
-                    if (newAff .length == 1) {
-                      newAff = newAff [0];
-                      return {update: {id: newAff .id, name: newAff .name, amounts: newAff .amounts}}
-                    } else if (newAff .length == 0)
+                    if (newAff .length == 0)
                       return {needUpdate: true, affected: aid}
                     else
-                      return needReplace
+                      return newAff .map (a => {return {update: {id: a .id, name: a .name, amounts: a .amounts}}})
                   } else
                     return needReplace
-                }));
+                })))
+                  .reduce ((c,e) => {c = c .concat (e); return c}, [])
                 if (up .find (u => {return u .needReplace}))
                   return [needReplace]
                 else
@@ -888,7 +888,7 @@ class Navigate {
     if (! id .includes ('_')) {
       var type = name == '_budgetChart'? NavigateValueType .BUDGET: NavigateValueType .ACTUALS;
       var data = await this._getYearsData (type, id, blackouts);
-      if (data .cats .length && (data .cats .length > 1 || ! data .cats [0] .id .includes ('leaf_'))) {
+      if (data .cats .length && (!popup || data .cats .length > 1 || ! data .cats [0] .id .includes ('leaf_'))) {
         let updater = this._addUpdater (view, async (eventType, model, ids) => {
           let update = await data .getUpdate (eventType, model, ids);
           if (update)
