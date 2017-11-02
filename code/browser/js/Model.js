@@ -35,9 +35,12 @@ class Model extends Observable {
   _contains (doc) {
     if (this._options && this._options .groupBy)
       var docs = this._groups .get (doc [this._options .groupBy])
-    for (let d of docs || [doc])
-      if ((this._options && this._options .updateDoesNotRemove && this._ids .has (d._id)) || _query_ismatch (this._query, d))
+    for (let d of docs || [doc]) {
+      let containsDoc = (this._options && this._options .updateDoesNotRemove && this._ids .has (d._id)) ||
+        _query_ismatch (this._query, d) || (this._isObserver && _query_ismatch (this._observerQuery, d));
+      if (containsDoc)
         return true;
+    }
     return false;
   }
 
@@ -166,8 +169,8 @@ class Model extends Observable {
    * Observe model changes that match query
    */
   observe (query) {
-    this._query      = query;
-    this._isObserver = true;
+    this._observerQuery = query;
+    this._isObserver    = true;
   }
 
   /**
@@ -252,16 +255,20 @@ class Model extends Observable {
     return ok;
   }
 
+  static async copyDatabase (from, to) {
+    return _Collection .copyDatabase (from, to);
+  }
+
   static async login (username, password) {
-    return await _Collection .login (username, password);
+    return _Collection .login (username, password);
   }
 
   static async signup (data) {
-    return await _Collection .signup (data);
+    return _Collection .signup (data);
   }
 
   static async updateUser (id, accessCap, update, password) {
-    return await _Collection .updateUser (id, accessCap, update, password);
+    return _Collection .updateUser (id, accessCap, update, password);
   }
 
   /**
@@ -269,6 +276,7 @@ class Model extends Observable {
    */
   delete() {
     this._collection .deleteObserver (this._observer);
+    this .deleteObservers();
   }
 }
 
@@ -462,16 +470,20 @@ class _Collection extends Observable {
     return results;
   }
 
+  static async copyDatabase (from, to) {
+    return _db .perform (DatabaseOperation .COPY_DATABASE, {from: from, to: to});
+  }
+
   static async login (username, password) {
-    return await _db .perform (DatabaseOperation .LOGIN, {username: username, password: password});
+    return _db .perform (DatabaseOperation .LOGIN, {username: username, password: password});
   }
 
   static async signup (data) {
-    return await _db .perform (DatabaseOperation .SIGNUP, data);
+    return _db .perform (DatabaseOperation .SIGNUP, data);
   }
 
   static async updateUser (id, accessCap, update, password) {
-    return await _db .perform (DatabaseOperation .UPDATE_USER, {id: id, accessCap: accessCap, update: update, password: password});
+    return _db .perform (DatabaseOperation .UPDATE_USER, {id: id, accessCap: accessCap, update: update, password: password});
   }
 
   static newUndoGroup() {
