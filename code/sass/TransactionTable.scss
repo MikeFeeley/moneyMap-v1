@@ -93,26 +93,7 @@ $table-stripe-background-occluded: rgba(248,248,248,.1);
   > div._fieldTip {
     @include popup-container();
     > div {
-      @include popup-content();
-      background-color: rgba(255, 250, 224, .3);
-      padding-left: 12px;
-      padding-right: 12px;
-      padding-bottom: 12px;
-      padding-top: 8px;
-      > div {
-        &:first-child {
-          font-size: 28px;
-          margin-bottom: 12px;
-          font-weight: 600;
-          color: #e6e600;
-        }
-        &:not(:first-child) {
-          font-weight: 300;
-          font-size: 18px;
-          margin-top: 4px;
-          color: #666600;
-        }
-      }
+      @include tip-popup();
     }
   }
 }

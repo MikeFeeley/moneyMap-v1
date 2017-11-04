@@ -121,9 +121,15 @@ body {
           margin-top: 12px;
           margin-right: 12px;
           > button {
-            background: #33b1ff;
+            &:not(._disabled) {
+              background: #33b1ff;
+              border:     4px solid #33b1ff;
+            }
+            &._disabled       {
+              background: rgb(204, 237, 255);
+              border:     4px solid rgb(204, 237, 255);
+            }
             color:      white;
-            border:     4px solid #33b1ff;
           }
         }
         > ._labeledField, > ._line > ._labeledField {
@@ -136,51 +142,56 @@ body {
       }
     }
   }
-  > ._addPopup {
-    @include user-select (none);
-    position: absolute;
-    z-index: 9999;
-    padding: 16px;
-    background: rgba(255,255,255,.80);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    border-radius: 6px;
-    box-shadow: $drop-shadow;
-    color: #555;
-    > div:first-child {
-      font-size: 22px;
-      color: #33b1ff;
-      font-width: 100;
-      margin-bottom: 16px;
-    }
-    > form {
-      margin-left: 16px;
-      > label {
-        > input:first-child {
-          margin-right: 8px;
+  > ._popupContainer {
+    @include popup-container();
+    > ._addPopup {
+      @include user-select (none);
+      position: relative;
+      padding: 16px;
+      background: rgba(255,255,255,.80);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      border-radius: 6px;
+      box-shadow: $drop-shadow;
+      color: #555;
+      > div:first-child {
+        font-size: 22px;
+        color: #33b1ff;
+        font-width: 100;
+        margin-bottom: 16px;
+      }
+      > form {
+        margin-left: 16px;
+        > div {
+          margin-top: 4px;
         }
-        > span {
-          margin-right: 4px;
-        }
-        > * {
-          vertical-align: top;
+        > div > label {
+          > input:first-child {
+            margin-right: 8px;
+          }
+          > span {
+            margin-right: 4px;
+          }
+          > * {
+            vertical-align: top;
+          }
         }
       }
-    }
-    > div:last-child {
-      margin-top: 16px;
-      > button {
-        border:     4px solid #33b1ff;
-        font-size:  16px;
-        font-weight: 500;
-        &:first-child {
-          margin-right: 32px;
-          background: #33b1ff;
-          color:      white;
-        }
-        &:last-child {
-          color:       #33b1ff;
-          background:  white;
+      > div:last-child {
+        margin-top: 16px;
+        > button {
+          border:     4px solid #33b1ff;
+          font-size:  16px;
+          font-weight: 500;
+          &:first-child {
+            margin-right: 32px;
+            background: #33b1ff;
+            color:      white;
+          }
+          &:last-child {
+            color:       #33b1ff;
+            background:  white;
+          }
         }
       }
     }

@@ -77,6 +77,26 @@ function* updateUser (req, res, next) {
   }
 }
 
+async function copyDatabase (req, res, next) {
+  try {
+    let fromDB = await req._getDB (req .body .from);
+    let toDB   = await req._getDB (req .body .to);
+    console.log('copy from ' + req.body.from + ' to ' + req.body.to);
+    for (let fromCollection of await fromDB .collections()) {
+      let toCollection = await toDB .collection (fromCollection .collectionName);
+      let fromDocs     = await fromCollection .find();
+      let promises = [];
+      while (await fromDocs .hasNext())
+        promises .push (toCollection .insert (await fromDocs .next()));
+      await Promise.all (promises);
+    }
+    res.json ({ok: true});
+  } catch (e) {
+    console .log ('copyDatabase: ', e);
+    next (e);
+  }
+}
+
 
 router.post ('/login', function(req, res, next) {
   async (login) (req, res, next);
@@ -88,6 +108,10 @@ router.post ('/signup', function(req, res, next) {
 
 router.post ('/updateUser', function(req, res, next) {
   async (updateUser) (req, res, next);
+});
+
+router.post('/copyDatabase', function(req, res, next) {
+  (async () => copyDatabase (req, res, next))();
 });
 
 module.exports = router;

@@ -13,6 +13,7 @@ var DatabaseOperation = {
   CHECK_UPDATE_LIST: 7,
   LOGIN:             8,
   SIGNUP:            9,
-  UPDATE_USER:      10
+  UPDATE_USER:      10,
+  COPY_DATABASE:    11
 }
 

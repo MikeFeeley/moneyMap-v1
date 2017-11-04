@@ -84,10 +84,6 @@ async function homonymCategories() {
             {parent:        cat._id},
             {$set: {parent: newCat._id}}
           )
-          await db .collection ('history') .updateMany (
-            {category:        cat._id},
-            {$set: {category: newCat._id}}
-          )
           await db .collection ('importRules') .updateMany (
             {category:        cat._id},
             {$set: {category: newCat._id}}
@@ -123,25 +119,34 @@ async function unreachableSchedules() {
 }
 
 async function unreachableCategories() {
-  let historyCats = (await db .collection ('history') .find() .toArray())
-    .reduce ((set, his) => {return set .add (his .category)}, new Set());
   let unreachable = Array .from (cats .values())
-    .filter (cat => {return ! historyCats .has (cat._id) && (!cat .budgets || cat .budgets .length == 0)})
-    .reduce ((set, cat) => {return set .add (cat._id)}, new Set())
-  for (let tran of await db .collection ('transactions') .find() .toArray())
-    unreachable .delete (tran .category)
-  let titlePrinted;
-  for (let catId of unreachable .keys()) {
-    if (! titlePrinted) {
-      titlePrinted = true;
-      console.log ('\nUnreachable Categories');
+    .filter (cat        => {return !cat .budgets || cat .budgets .length == 0})
+    .map    (cat        => {return cat._id});
+  let rt = (await db .collection ('transactions') .find ({category: {$in: unreachable}}) .toArray()) .reduce ((s,t) => {return s .add (t .category)}, new Set());
+  let an = new Set();
+  let addAncestors = id => {
+    let c = cats .get (id);
+    if (c .parent) {
+      an .add      (c .parent);
+      addAncestors (c .parent);
     }
-    let cat = cats .get (catId);
-    console.log ('  ' + getPathname (cat));
-    if (repair) {
-      await db .collection ('schedules')  .deleteMany ({category: catId});
-      await db .collection ('categories') .deleteOne  ({_id:      catId});
-      cats .delete (catId);
+  }
+  for (let id of rt)
+    addAncestors (id);
+  let titlePrinted;
+  for (let catId of unreachable) {
+    if (! rt .has (catId) && ! an .has (catId)) {
+      if (! titlePrinted) {
+        titlePrinted = true;
+        console.log ('\nUnreachable Categories');
+      }
+      let cat = cats .get (catId);
+      console.log ('  ' + getPathname (cat));
+      if (repair) {
+        await db .collection ('schedules')  .deleteMany ({category: catId});
+        await db .collection ('categories') .deleteOne  ({_id:      catId});
+        cats .delete (catId);
+      }
     }
   }
 }
@@ -166,6 +171,8 @@ async function main() {
     await unreachableCategories();
     await homonymCategories();
     await noScheduleCategories();
+    if (repair)
+      await db .collection ('actualsMeta') .deleteOne ({type: 'isValid'});
   } catch (e) {
     console .log(e);
   } finally {

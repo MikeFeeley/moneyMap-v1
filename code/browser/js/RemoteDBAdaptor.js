@@ -13,6 +13,7 @@ class RemoteDBAdaptor extends DBAdaptor {
     this._urls [DatabaseOperation .LOGIN]             = '/admin/login';
     this._urls [DatabaseOperation .SIGNUP]            = '/admin/signup';
     this._urls [DatabaseOperation .UPDATE_USER]       = '/admin/updateUser';
+    this._urls [DatabaseOperation .COPY_DATABASE]     = '/admin/copyDatabase';
   }
   async perform (operation, data) {
     return await $.ajax ({

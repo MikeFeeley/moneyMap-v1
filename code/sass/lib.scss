@@ -61,6 +61,29 @@ table > tbody > tr > td > ._field > div > ._content {
   position: relative;
 }
 
+@mixin tip-popup() {
+  @include popup-content();
+  background-color: rgba(255, 250, 224, .3);
+  padding-left: 12px;
+  padding-right: 12px;
+  padding-bottom: 12px;
+  padding-top: 8px;
+  > div {
+    &:first-child {
+      font-size: 28px;
+      margin-bottom: 12px;
+      font-weight: 700;
+      color: #e8d57a;
+    }
+    &:not(:first-child) {
+      font-weight: 300;
+      font-size: 18px;
+      margin-top: 4px;
+      color: #666600;
+    }
+  }
+}
+
 @mixin popup-content-less-transparent() {
   @include popup-content();
   background: rgba(255,255,255,.8);

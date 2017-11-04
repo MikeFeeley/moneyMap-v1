@@ -71,7 +71,7 @@ class App {
 
       /* tabs */
       this._tabs .setTab  (this._proT, html => {this._na .addProgressHtml     (html)});
-      this._tabs .setTab  (this._traT, html => {this._it.addHtml              (html)}, true);
+      this._tabs .setTab  (this._traT, html => {this._it .addHtml             (html)}, true);
       this._tabs .setTab  (this._actT, html => {this._na .addRealityHtml      (html)});
       this._tabs .setTab  (this._budT, html => {this._na .addPlanHtml         (html)});
       this._tabs. setTab  (this._plaT, html => {this._se .addHtml             (html)});

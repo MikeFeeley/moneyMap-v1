@@ -7,7 +7,10 @@ class BudgetModel extends Observable {
 
   delete() {
     this._budModel .delete();
+    if (this._schModel)
+      this._schModel .delete();
   }
+
 
   _onBudgetModelChange (eventType, doc, arg, source) {
     this._onModelChange (eventType, doc, arg, source, this._budModel)
@@ -131,10 +134,5 @@ class BudgetModel extends Observable {
 
   isGoal (cat) {
     return this._schModel .isGoal (cat);
-  }
-
-  delete() {
-    this._budModel .delete();
-    this._schModel .delete();
   }
 }

@@ -51,6 +51,7 @@ app.use(function (req, res, next) {
       if (req .url .startsWith ('/admin/'))
         database = 'admin';
       req .dbPromise = getDB (database);
+      req._getDB     = getDB;
       if (req .body .collection == 'actuals' && ! req .url. startsWith ('/actuals/'))
         req .url = '/transaction/actuals';
       else if (! req .url .startsWith ('/transaction/')) {

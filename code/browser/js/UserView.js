@@ -181,6 +181,10 @@ class UserView extends View {
     return b;
   }
 
+  setButtonDisabled (tab, isDisabled) {
+    tab .find ('> ._tabGroupContents > ._content > ._line > button') [isDisabled? 'addClass': 'removeClass'] ('_disabled');
+  }
+
   addTabGroup (name, toHtml) {
     let g = $('<div>', {class: '_tabGroup', data: {name: name}}) .appendTo (toHtml);
     let f = $('<div>', {class: '_filler', html: '&nbsp;'});
@@ -190,14 +194,14 @@ class UserView extends View {
       .append ($('<div>', {class: '_tabGroupContents'}))
   }
 
-  addTab (toGroup, subType='', noContent, text = '') {
+  addTab (toGroup, subType='', noContent, text='') {
     let sib = toGroup .find ('> ._tabGroupTabs > div');
-    let ib  = $(sib [sib .length - Math .min (2, sib .length)])
-    let t = $('<div>', {class: '_tab ' + subType, text: text}) .insertBefore (ib);
-    let c = ! noContent && $('<div>', {class: '_content'})     .appendTo     (toGroup .find ('> ._tabGroupContents'));
-    let r = noContent? {name: toGroup .data ('name')} : {tab: t, content: c};
+    let ib  = $(sib [sib .length - Math .min (2, sib .length)]);
+    let t  = $('<div>', {class: '_tab ' + subType, text: text}) .insertBefore (ib);
+    let c  = ! noContent && $('<div>', {class: '_content'})     .appendTo     (toGroup .find ('> ._tabGroupContents'));
+    let r  = noContent? {name: toGroup .data ('name')} : {tab: t};
     t .click (e => {r .target = $(e .target); this._notifyObservers (UserViewEvent .TAB_CLICK, r)})
-    return {tab: t, content: c}
+    return [t, c]
   }
 
   removeTab (tab) {
@@ -210,15 +214,22 @@ class UserView extends View {
   }
 
   selectTab (tab) {
-    if (! tab .tab .hasClass ('_selected')) {
-      let tabGroup = tab .tab .closest  ('._tabGroup');
-      let cs = tabGroup .find ('> ._tabGroupTabs > ._tab._selected ._field') .data ('field');
-      if (cs)
-        cs .setSelected (false);
-      tab .tab .find ('._field') .data('field') .setSelected (true);
-      tabGroup .find ('> ._tabGroupTabs > ._tab, > ._tabGroupContents > ._content') .removeClass ('_selected');
-      tab .tab     .addClass ('_selected');
-      tab .content .addClass ('_selected');
+    if (! tab .hasClass ('_selected')) {
+      let groupTabs     = tab .closest  ('._tabGroupTabs');
+      let groupContents = tab .closest  ('._tabGroup') .find ('> ._tabGroupContents');
+      let content      = $(groupContents .children() [groupTabs .children() .index (tab)]);
+      for (let fieldHtml of groupTabs .find ('> ._tab._selected ._field')) {
+        let field = $(fieldHtml) .data ('field');
+        if (field)
+          field .setSelected (false);
+      }
+      groupTabs     .find ('> ._tab')     .removeClass ('_selected');
+      groupContents .find ('> ._content') .removeClass ('_selected');
+      let field = tab .find ('> ._field') .data('field');
+      if (field)
+        field .setSelected (true);
+      tab     .addClass ('_selected');
+      content .addClass ('_selected');
     }
   }
 
@@ -233,21 +244,112 @@ class UserView extends View {
     this._accountEdit .removeClass ('background');
   }
 
-  addBudgetAddPopup (positionTarget, budgets) {
-    let popup = $('<div>', {class: '_addPopup'}) .appendTo (this._accountEdit .find ('> div'));
+  addConfirmDelete (positionTarget, id, type) {
+    let popup   = $('<div>', {class: '_popupContainer'}) .appendTo (this._accountEdit .find ('> div'));
+    let content = $('<div>', {class: '_addPopup'}) .appendTo (popup);
     popup .css (ui .calcPosition (positionTarget, this._accountEdit, {top: 40, left: 0}));
-    $('<div>', {text: 'Add New Budget'}) .appendTo (popup);
-    $('<form>') .appendTo (popup)
-      .append ($('<label>')
-        .append ($('<input>', {type: 'radio', prop: {checked: true}}))
+    $('<div>', {text: 'Do you really want to delete this ' + type + '?'}) .appendTo (content);
+    $('<div>', {text: 'This action can not be undone.'}) .appendTo (content);
+    $('<div>') .appendTo (content)
+    .append (
+      $('<button>', {text: 'Delete'})
+      .click (() => {
+        this._notifyObservers (UserViewEvent .DELETE_CONFIRMED, {id: id, type: type});
+        ui .ModalStack .delete (modal);
+        popup .remove();
+      })
+    )
+    .append (
+      $('<button>', {text: 'Cancel'})
+      .click (() => {
+        ui .ModalStack .delete (modal);
+        popup .remove();
+      })
+    )
+    let modal = ui .ModalStack .add (
+      e  => {return e && $.contains (document .body, e .target) && ! $.contains (popup .get (0), e .target)},
+      () => {popup .remove();},
+      true
+    );
+    ui .scrollIntoView (popup);
+  }
+
+  addConfigAddPopup (positionTarget, configs) {
+    let popup   = $('<div>', {class: '_popupContainer'}) .appendTo (this._accountEdit .find ('> div'));
+    let content = $('<div>', {class: '_addPopup'}) .appendTo (popup);
+    popup .css (ui .calcPosition (positionTarget, this._accountEdit, {top: 40, left: 0}));
+    $('<div>', {text: 'Add New Configuration'}) .appendTo (content);
+    $('<form>') .appendTo (content)
+      .append ($('<div>') .append ($('<label>')
+        .append ($('<input>', {type: 'radio', name: 'how', value: 'empty', prop: {checked: true}}))
+        .append ($('<span>',  {text: 'Create empty configuration'}))
+      ))
+      .append ($('<div>') .append ($('<label>')
+        .append ($('<input>', {type: 'radio', name: 'how', value: 'copy', prop: {checked: false}}))
+        .append ($('<span>',  {text: 'Copy configuration from '}))
+        .append ($('<select>'))
+      ))
+    $('<div>') .appendTo (content)
+    .append (
+      $('<button>', {text: 'Add'})
+      .click (() => {
+        switch (content .find ('input[name="how"]:checked') .val()) {
+          case 'empty':
+            this._notifyObservers (UserViewEvent .CONFIG_EMPTY);
+            break;
+          case 'copy':
+            this._notifyObservers (UserViewEvent .CONFIG_COPY, {from: content .find ('select') .val()})
+            break;
+        }
+        ui .ModalStack .delete (modal);
+        popup .remove();
+      })
+    )
+    .append (
+      $('<button>', {text: 'Cancel'})
+      .click (() => {
+        ui .ModalStack .delete (modal);
+        popup .remove();
+      })
+    )
+    for (let select of content .find ('select') .toArray())
+      for (let config of configs)
+        $('<option>', {value: config._id, text: config .name}) .appendTo (select);
+    let modal = ui .ModalStack .add (
+      e  => {return e && $.contains (document .body, e .target) && ! $.contains (popup .get (0), e .target)},
+      () => {popup .remove();},
+      true
+    );
+    ui .scrollIntoView (popup)
+  }
+
+  addBudgetAddPopup (positionTarget, budgets) {
+    let popup   = $('<div>', {class: '_popupContainer'}) .appendTo (this._accountEdit .find ('> div'));
+    let content = $('<div>', {class: '_addPopup'}) .appendTo (popup);
+    popup .css (ui .calcPosition (positionTarget, this._accountEdit, {top: 40, left: 0}));
+    $('<div>', {text: 'Add New Budget'}) .appendTo (content);
+    $('<form>') .appendTo (content)
+      .append ($('<div>') .append ($('<label>')
+        .append ($('<input>', {type: 'radio', name: 'how', value: 'empty', prop: {checked: true}}))
+        .append ($('<span>',  {text: 'Create empty budget'}))
+      ))
+      .append ($('<div>') .append ($('<label>')
+        .append ($('<input>', {type: 'radio', name: 'how', value: 'rollover', prop: {checked: false}}))
         .append ($('<span>',  {text: 'Rollover to next year from budget'}))
         .append ($('<select>'))
-      )
-    $('<div>') .appendTo (popup)
+      ))
+    $('<div>') .appendTo (content)
       .append (
         $('<button>', {text: 'Add'})
           .click (() => {
-            this._notifyObservers (UserViewEvent .BUDGET_ROLLOVER, {from: popup .find ('select') .val()})
+            switch (content .find ('input[name="how"]:checked') .val()) {
+              case 'empty':
+                this._notifyObservers (UserViewEvent .BUDGET_EMPTY);
+                break;
+              case 'rollover':
+                this._notifyObservers (UserViewEvent .BUDGET_ROLLOVER, {from: content .find ('select') .val()})
+                break;
+            }
             ui .ModalStack .delete (modal);
             popup .remove();
           })
@@ -259,7 +361,7 @@ class UserView extends View {
             popup .remove();
           })
       )
-    for (let select of popup .find ('select') .toArray())
+    for (let select of content .find ('select') .toArray())
       for (let budget of budgets)
         $('<option>', {value: budget._id, text: budget .name}) .appendTo (select);
     let modal = ui .ModalStack .add (
@@ -267,6 +369,7 @@ class UserView extends View {
       () => {popup .remove();},
       true
     );
+    ui .scrollIntoView (popup)
   }
 }
 
@@ -275,5 +378,9 @@ var UserViewEvent = {
   SIGNUP_ASK: 1,
   SIGNUP: 2,
   TAB_CLICK: 3,
-  BUDGET_ROLLOVER: 4
+  CONFIG_EMPTY: 4,
+  CONFIG_COPY: 5,
+  BUDGET_EMPTY: 6,
+  BUDGET_ROLLOVER: 7,
+  DELETE_CONFIRMED: 8
 }
