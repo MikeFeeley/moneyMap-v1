@@ -1258,7 +1258,7 @@ class NavigateView extends Observable  {
             .append ($('<td>', {text: Types .moneyD .toString (detail .int)})));
         if (detail .addAmt)
           tbody .append ($('<tr>')
-            .append ($('<td>', {text: isCredit? 'Principle': 'Contributions'}))
+            .append ($('<td>', {text: isCredit? 'Principal': 'Contributions'}))
             .append ($('<td>', {text: Types .moneyD .toString (detail .addAmt)})));
 // save this until netWorth (and this popup) can react to modelChanges
 //                      .click  (e => {
