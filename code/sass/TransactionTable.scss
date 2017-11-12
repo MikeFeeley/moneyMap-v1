@@ -162,16 +162,16 @@ $table-stripe-background-occluded: rgba(248,248,248,.1);
     float: right;
     padding-bottom: 6px;
   }
-  > table {
+  > form > table {
     clear: left;
   }
 }
 
-div._TransactionHUD > ._TransactionReadOnly > ._body > ._TransactionAndRulesTable > table {
+div._TransactionHUD > ._TransactionReadOnly > ._body > ._TransactionAndRulesTable > form > table {
   @include transaction-table-base (18px, 13px, 18px);
   tr > td:first-child, tr > th:first-child {display: none}
 }
-div._TransactionHUD > :not(._TransactionReadOnly) > ._body > ._TransactionAndRulesTable > table,
+div._TransactionHUD > :not(._TransactionReadOnly) > ._body > ._TransactionAndRulesTable > form > table,
 table._ImportTransactionsTable._TransactionAndRulesTable:not(._needsAttention) {
   @include transaction-table (18px, 13px, 26px, 1, 1, 2, 3, 6, 4, 5, 7, 8, 8, 4, 6, 7);
 }
@@ -273,7 +273,7 @@ table._TransactionAndRulesTable {
           vertical-align: 40%;
         }
       }
-      > table > tbody > tr {
+      > form > table > tbody > tr {
         > td {
           padding: 0px 2px;
         }
@@ -434,10 +434,10 @@ div._TransactionHUD {
   @include popup-container();
   padding: 8px;
   margin-top: -8px;
-  > ._TransactionReadOnly > ._body > div > table {
+  > ._TransactionReadOnly > ._body > div > form > table {
     border-collapse: collapse;
   }
-  > ._TransactionReadOnly > ._body > div > table > tbody > tr {
+  > ._TransactionReadOnly > ._body > div > form > table > tbody > tr {
     border: 0px!important;
     margin-top: 0px!important;
     margin-bottom: 0px!important;
@@ -451,7 +451,7 @@ div._TransactionHUD {
       border: 0px!important;
     }
   }
-  &:not(._occluded) > ._hudcontent > ._body > div > table > tbody > tr:nth-child(even) {
+  &:not(._occluded) > ._hudcontent > ._body > div > form > table > tbody > tr:nth-child(even) {
     background: $table-stripe-background-translucent!important;
   }
   > ._hudcontent {
@@ -489,7 +489,7 @@ div._TransactionHUD {
         font-weight: 100;
         margin-left: 6px;
       }
-      > div > table {
+      > div > form > table {
         margin-top: 16px;
         color: #444;
         width: 100%;
@@ -608,7 +608,7 @@ $import-sidebar-width: 220px;
     margin-top: 6px;
   }
   > ._ApplyToTable {
-    > table {
+    > form > table {
       > thead > tr > th {
         width: auto;
         font-weight: 600;
