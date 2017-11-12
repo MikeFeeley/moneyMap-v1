@@ -92,7 +92,7 @@ class TableView extends TupleView {
   }
 
   addHtml (toHtml) {
-    this._table = $('<table>', {class: '_Table ' + this._name}) .appendTo (toHtml);
+    this._table = $('<table>', {class: '_Table ' + this._name}) .appendTo ($('<form>').appendTo(toHtml));
     this._thead = $('<tr>') .appendTo ($('<thead>') .appendTo (this._table));
     this._tbody = $('<tbody>') .appendTo (this._table);
     this._tfoot = $('<tfoot>') .appendTo (this._table);
