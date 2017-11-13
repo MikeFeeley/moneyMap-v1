@@ -99,7 +99,7 @@ class ActualsModel extends Observable {
     .filter (s => {return s[0] == cat._id})
     .map    (s => {return Types .date._yearMonth (s[1])});
     st = Types .date._yearMonth (st);
-    en = Types .date._yearMonth (en);
+    en = Types .date._yearMonth (en < Types .date .monthStart (en)? Types .date .addMonthStart (en, -1): en);
     if (st == en)
       return (! sk .includes (st) && cat .actuals && cat .actuals .get (st)) || 0;
     else
