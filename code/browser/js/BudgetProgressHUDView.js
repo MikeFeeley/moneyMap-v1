@@ -244,16 +244,18 @@ class BudgetProgressHUDView extends View {
     var max = Object .keys (data) .filter (f => {return ['priorYear', 'budget', 'actual'] .includes (f)}) .reduce ((m,f) => {
       return Math .max (m, data [f] .reduce ((s,v) => {return Math .max (s, Math .abs(v))}, 0));
     }, 0);
-    chart .data .datasets = this._monthsDatasets .map (d => {return {
-      label:           d [0],
-      value:           data [d [1]] .map (v => {return Types .moneyDC .toString (v)}),
-      data:            data [d [1]] .map (v => {return Math .round (v * 98 / max)}),
-      backgroundColor: d [2], hoverBackgroundColor: d [2],
-      borderColor:     d [3], hoverBorderColor: d [3]
-    }});
-    if (chart .data .datasets [0] .data .reduce ((t,d) => {return t + d}) == 0)
-      chart .data .datasets .splice (0, 1);
-    chart .update();
+    if (chart && chart .data) {
+      chart .data .datasets = this._monthsDatasets .map (d => {return {
+        label:           d [0],
+        value:           data [d [1]] .map (v => {return Types .moneyDC .toString (v)}),
+        data:            data [d [1]] .map (v => {return Math .round (v * 98 / max)}),
+        backgroundColor: d [2], hoverBackgroundColor: d [2],
+        borderColor:     d [3], hoverBorderColor: d [3]
+      }});
+      if (chart .data .datasets [0] .data .reduce ((t,d) => {return t + d}) == 0)
+        chart .data .datasets .splice (0, 1);
+      chart .update();
+    }
   }
 
   setVisible (isVisible) {
