@@ -150,52 +150,11 @@ class Organize {
     await table .addHtml (this._view .getHtml());
   }
 
-  async _addBudgets() {
-    var catFormat = new ViewFormatOptions (
-      value => {var cat = this._categories .get (value); return cat? cat.name: value},
-      view  => {var cat = this._categories .findBestMatch (view); return cat? cat._id: view},
-      value => {return this._categories .getPathname (this._categories .get (value)) .join (' > ')},
-      ()    => {return this._categories .getRoots() .map (c => {return c .name})}
-    );
-    var fields = [
-      new ViewTextbox              ('name',             ViewFormats ('string')),
-      new ViewTextbox              ('start',            ViewFormats ('dateDMY')),
-      new ViewTextbox              ('end',              ViewFormats ('dateDMY')),
-      new ViewCheckbox             ('hasTransactions'),
-      new ViewSelect               ('incomeCategory',   catFormat),
-      new ViewSelect               ('savingsCategory',  catFormat),
-      new ViewSelect               ('expenseCategory',  catFormat),
-      new ViewSelect               ('suspenseCategory', catFormat),
-      new ViewTextbox              ('startCashBalance', ViewFormats ('moneyDCZ'))
-    ];
-    var columns = {
-      name:             'Name',
-      start:            'Start',
-      end:              'End',
-      hasTransactions:  'Has Transactions',
-      incomeCategory:   'Income',
-      savingsCategory:  'Savings',
-      expenseCategory:  'Expense',
-      suspenseCategory: 'Suspense',
-      startCashBalance: 'Starting Cash'
-    };
-    var headers = Object .keys (columns) .map (k => {return {name: k, header: columns [k]}});
-    var columns = Object .keys (columns);
-    var options;
-    var view    = new TableView ('_budgets', fields, headers, options);
-    var query;
-    var sort = (a,b) => {return a.name < b.name? -1: a .name == b .name? 0: 1};
-    var budgets = new Table (this._budModel, view, query, sort, options, columns);
-    this._view .addHeading ('Budgets', 'Budgets');
-    await budgets .addHtml (this._view .getHtml());
-  }
-  
   async addHtml (toHtml) {
     this._view .addHtml    (toHtml);
     await this._addAccounts();
     await this._addParameters();
     await this._addBalanceHistory();
-    await this._addBudgets();
   }
 }
 
