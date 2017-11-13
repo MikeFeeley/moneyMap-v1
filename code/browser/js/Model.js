@@ -456,14 +456,14 @@ class _Collection extends Observable {
   }
 
   async removeList (list, source, isUndo, tid) {
-    var results = await _db .perform (DatabaseOperation .REMOVE_LIST, {database: this._database, collection: this._name, list: list})
+    var results = await _db .perform (DatabaseOperation .REMOVE_LIST, {database: this._database, collection: this._name, list: list});
     var undo    = [];
     for (let i = 0; i < list .length; i++)
       if (results [i]) {
         var doc = this._docs .get (list [i]);
         undo .push (doc);
         this._docs .delete (list [i]);
-        await this._notifyObservers (ModelEvent.REMOVE, doc, undefined, this, source);
+        await this._notifyObservers (ModelEvent .REMOVE, doc, undefined, this, source);
       }
       if (undo .length)
         _Collection._logUndo (this, this .insertList, [undo], isUndo, tid);

@@ -1,11 +1,13 @@
 'use strict';
 
-const URL     = 'mongodb://localhost:27017/';
-const DB_NAME = 'config_598f8d9dea4ca56c04ecafbd_72918055392801760';
+var util = require ('../lib/util.js');
+
+const URL = 'mongodb://localhost:27017/';
+const MONTHS_TO_KEEP_DELETED_CONFIGS = 6;
+const DELETED_CONFIG_THRESHOLD       = util .Types .date .addMonthStart (util .Types .date .today(), - MONTHS_TO_KEEP_DELETED_CONFIGS);
 
 var repair = process .argv [2] == 'repair';
-var db     = require ('mongodb') .MongoClient .connect (URL + DB_NAME);
-var cats;
+var db, cats;
 
 function getPathname (cat) {
   let parent = cat .parent && cats .get (cat .parent);
@@ -133,6 +135,8 @@ async function unreachableCategories() {
   }
   for (let id of rt)
     addAncestors (id);
+  let ac = (await db .collection ('accounts') .find() .toArray())
+    .reduce ((s,a) => {if (a.category) s .add (a .category); if (a .disCategory) s .add (a .disCategory); return s}, new Set())
   let titlePrinted;
   for (let catId of unreachable) {
     if (! rt .has (catId) && ! an .has (catId)) {
@@ -150,33 +154,83 @@ async function unreachableCategories() {
     }
   }
 }
+
+async function checkTransactions() {
+  let cats  = (await db .collection ('categories') .find() .toArray()) .reduce ((set, cat) => {return set .add (cat._id)}, new Set());
+  let acts  = (await db .collection ('accounts')   .find() .toArray()) .reduce ((set, act) => {return set .add (act._id)}, new Set());
+  let printed;
+  let print = s => {
+    if (! printed) {
+      console.log ('\nTransaction integrity issues');
+      printed = true;
+    }
+    console .log ('  ' + s);
+  }
+  let trans = await db .collection ('transactions') .find();
+  while (await trans .hasNext()) {
+    let tran = await trans .next();
+    if (! cats .has (tran .category))
+      print ('Unknown category ' + tran .category + ' (transaction ' + tran .date + ' ' + tran._id + ')');
+    if (! acts .has (tran .account))
+      print ('Unknown account ' + tran .account   + ' (transaction ' + tran .date + ' ' + tran._id + ')');
+  }
+}
+
 async function main() {
+  let adminDB;
   try {
-    db   = await db;
-    cats = (await db .collection ('categories') .find() .toArray())
-      .reduce ((map, cat) => {return map .set (cat._id, cat)}, new Map());
-    for (let cat of Array .from (cats .values())) {
-      if (cat .parent) {
-        let parent = cats .get (cat .parent);
-        if (parent)
-          parent .children = (parent .children || []) .concat (cat);
-        else
-          console .log ('Missing category parent: ' + cat .parent
-            + ' in category ' + getPathname(cat) + ' (' + cat._id + ')');
+    adminDB = await require ('mongodb') .MongoClient .connect (URL + 'admin');
+    for (let user of await adminDB .collection ('users') .find() .toArray()) {
+      let userDB;
+      try {
+        userDB = await require ('mongodb') .MongoClient .connect (URL + 'user_' + user._id + '_' + user .accessCap);
+        for (let config of await userDB .collection ('configurations') .find() .toArray()) {
+          try {
+            db = await require ('mongodb') .MongoClient .connect (URL + 'config_' + config._id + '_' + user .accessCap);
+            let deleted = config .deleted? 'Deleted ' + config .deleted + ' ': ''
+            console.log ('\n*** User ' + user .name + ' (' + user._id + ') Config ' + config .name +' (' + config._id +') ' + deleted + '***');
+            if (config .deleted && config .deleted < DELETED_CONFIG_THRESHOLD) {
+              if (repair) {
+                console .log ('\nDropping configuration database');
+                await userDB .collection ('configurations') .removeOne ({_id: config._id});
+                await db .dropDatabase();
+              } else
+                console .log ('\nConfiguration database ready to be dropped');
+            } else {
+              cats = (await db .collection ('categories') .find() .toArray())
+                .reduce ((map, cat) => {return map .set (cat._id, cat)}, new Map());
+              for (let cat of Array .from (cats .values())) {
+                if (cat .parent) {
+                  let parent = cats .get (cat .parent);
+                  if (parent)
+                    parent .children = (parent .children || []) .concat (cat);
+                  else
+                    console .log ('Missing category parent: ' + cat .parent
+                      + ' in category ' + getPathname(cat) + ' (' + cat._id + ')');
+                }
+              }
+              if (repair)
+                  console .log ('*** Repairing ***');
+              await unreachableSchedules();
+              await unreachableCategories();
+              await homonymCategories();
+              await noScheduleCategories();
+              await checkTransactions();
+              if (repair)
+                await db .collection ('actualsMeta') .deleteOne ({type: 'isValid'});
+            }
+          } finally {
+            db .close();
+          }
+        }
+      } finally {
+        userDB .close();
       }
     }
-    if (repair)
-        console .log ('*** Repairing ***');
-    await unreachableSchedules();
-    await unreachableCategories();
-    await homonymCategories();
-    await noScheduleCategories();
-    if (repair)
-      await db .collection ('actualsMeta') .deleteOne ({type: 'isValid'});
   } catch (e) {
     console .log(e);
   } finally {
-    db .close();
+    adminDB .close();
   }
 }
 

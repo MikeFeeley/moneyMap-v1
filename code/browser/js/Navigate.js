@@ -778,7 +778,7 @@ class Navigate {
   }
 
   /**
-   * Add GRAPH (either budget or actual) showing children of specifie root list
+   * Add GRAPH (either budget or actual) showing children of specified root list
    */
   async _addMonthsGraph (name, view, ids, popup, position, toHtml, includeMonths=true, includeYears=true, addCats=[], dates=null, startColor=0) {
     var type    = name .includes ('budget')? NavigateValueType .BUDGET_YR_AVE_ACT: NavigateValueType .ACTUALS_BUD;
@@ -1222,7 +1222,7 @@ class Navigate {
    *     }]
    *   }
    */
-  _getHistoryData (parentIds, date, filter) {
+   _getHistoryData (parentIds, date, filter) {
     var defaultParents  = [this._budget .getIncomeCategory(), this._budget .getSavingsCategory(), this._budget .getExpenseCategory()];
     parentIds           = parentIds || (defaultParents .map (p => {return p._id}));
     var parents         = parentIds .map (pid => {return this._categories .get (pid)});
@@ -1414,14 +1414,14 @@ class Navigate {
     return result;
   }
 
-  _budgetHistoryUpdater (eventType, model, ids, dataset, parentIds, includeYearly, updateView, date) {
+  _budgetHistoryUpdater (eventType, model, ids, dataset, parentIds, includeYearly, updateView, date, filterBySlider) {
     var defaultRoots = [this._budget .getIncomeCategory(), this._budget .getSavingsCategory(), this._budget .getExpenseCategory()];
-    if (model == 'SchedulesModel')
-      return this._updateHistoryView (parentIds, updateView, date);
+    if (model == 'SchedulesModel' || model == 'ActualsModel')
+      return this._updateHistoryView (parentIds, updateView, date, filterBySlider);
   }
 
-  _updateHistoryView (parentIds, updateView, date) {
-    let ds = this._getHistoryData (parentIds, date);
+  _updateHistoryView (parentIds, updateView, date, filterBySlider) {
+    let ds = this._getHistoryData (parentIds, date, filterBySlider);
     updateView ([{replace: ds}]);
     return ds;
   }
@@ -1509,7 +1509,7 @@ class Navigate {
   _addHistoryGraph (parentIds, popup, position, view, dataset = this._getHistoryData(parentIds), toHtml, startColor) {
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       var updater = this._addUpdater (view, (eventType, model, ids) => {
-        let ds = this._budgetHistoryUpdater (eventType, model, ids, dataset, parentIds, false, updateView)
+        let ds = this._budgetHistoryUpdater (eventType, model, ids, dataset, parentIds, false, updateView, undefined, popup)
       });
       var updateView = view .addHistoryGraph (dataset, popup, position, () => {
         this._deleteUpdater (view, updater);
@@ -1523,7 +1523,7 @@ class Navigate {
     dataset .cols = dataset .cols .map (c => {return c .slice (-4)})
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       var updater = this._addUpdater (view, (eventType, model, ids) => {
-        let ds = this._budgetHistoryUpdater (eventType, model, ids, dataset, parentIds, true, updateView, date);
+        let ds = this._budgetHistoryUpdater (eventType, model, ids, dataset, parentIds, true, updateView, date, popup);
       });
       var updateView = view .addHistoryTable (dataset, dataset .cols .length == 1, skipFoot, popup, position, () => {
         this._deleteUpdater (view, updater);

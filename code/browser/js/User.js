@@ -788,42 +788,49 @@ class User extends Observable {
    * Delete specified budget and related categories and schedules from model
    */
   async _deleteBudget (id) {
-    let cm         = new Model            ('categories',   this .getDatabaseName());
-    let sm         = new Model            ('schedules',    this .getDatabaseName());
-    let tm         = new TransactionModel (this .getDatabaseName());
-    let updateList = (await cm .find ({budgets: id}))
-      .map (c => {
-          let i = c .budgets .indexOf (id);
-          if (i >= 0) {
-            c .budgets .splice (i, 1)
-            return {
-              id:     c._id,
-              update: {
-                budgets: c .budgets
-              }
-            }
-          }
-        })
-      .filter (c => {return c})
-    let removeList = updateList
-      .filter (u => {return u .update .budgets .length == 0})
-      .map    (u => {return u .id});
-    let b  = this._sortByName (await this._budgetModel .find ({_id: id}));
-    let rt = (await tm .find ({category: {$in: removeList}}))
-      .reduce ((s, t) => {
-        return s .add (t .category)
-      }, new Set());
-    removeList = removeList .filter (r => {return ! rt .has (r)});
-    let rs     = new Set (removeList);
-    updateList = updateList .filter (u => {return ! rs .has (u .id)});
-    let categoriesUpdate = cm .updateList (updateList);
-    let categoriesRemove = cm .removeList (removeList);
-    let schedulesRemove  = sm .removeList ((await sm .find ({budget: id})) .map (s => {return s._id}))
-    let budgetUpdate     = this._budgetModel .remove (id);
-    await categoriesUpdate;
-    await categoriesRemove;
-    await schedulesRemove;
-    await budgetUpdate;
+    let am = new Model            ('accounts',     this .getDatabaseName());
+    let cm = new Model            ('categories',   this .getDatabaseName());
+    let sm = new Model            ('schedules',    this .getDatabaseName());
+    let tm = new TransactionModel (this .getDatabaseName());
+    // remove budget from categories
+    let catsInBudget = await cm .find ({budgets: id});
+    if (catsInBudget .length)
+      await cm .updateList (catsInBudget .map (c => {
+        c .budgets .splice (c .budgets .indexOf (id), 1);
+        return {
+          id:      c._id,
+          update: {budgets: c .budgets}
+        }
+      })
+    );
+    // remove schedules
+    let schedulesInBudget = await sm .find ({budget: id});
+    if (schedulesInBudget .length)
+      await sm .removeList (schedulesInBudget .map (s => {return s._id}));
+    // get categories that are candidates for removal
+    let removeCandidates = (await cm .find ({budgets: []})) .map (c => {return c._id});
+    // find which these are used by a transaction
+    let keep = (await tm .find ({category: {$in: removeCandidates}}))
+      .reduce ((s,t) => {return s .add (t .category)}, new Set());
+    // find their ancestors, which must also be kept
+    let catParent = (await cm .find()) .reduce ((m,c) => {if (c .parent) m .set (c._id, c .parent); return m}, new Map());
+    let addAncestors = (cid) => {
+      let pid = catParent .get (cid);
+      if (pid) {
+        keep .add    (pid);
+        addAncestors (pid);
+      }
+    }
+    Array .from (keep .values()) .forEach (cid => {addAncestors (cid)});
+    // find are used by an account
+    (await am .find ({$or: [{category: {$in: removeCandidates}}, {disCategory: {$in: removeCandidates}}]}))
+      .forEach (a => {if (a .category) keep .add (a .catetory); if (a .disCategory) keep .add (a .disCategory)})
+    // remove all candidate categories that must not be kept
+    let removeCats = removeCandidates .filter (c => {return ! keep .has (c)});
+    if (removeCats .length)
+      await cm .removeList (removeCats);
+    await this._budgetModel .remove (id);
+    am .delete();
     cm .delete();
     sm .delete();
     tm .delete();

@@ -128,7 +128,7 @@ async function update (db, id, update) {
         update:  update
       }
       await accounts .updateOne ({_id: update .account}, {$push: {pendingTransactions: pt}});
-      await apply              (db, pt);
+      await apply               (db, pt);
     }
   } else if (update .category != null) {
     let tran = await transactions .findOne ({_id: id});
@@ -154,7 +154,7 @@ async function remove (db, id) {
       remove: true
     }
     await accounts .updateOne ({_id: tran .account}, {$push: {pendingTransactions: pt}});
-    await apply              (db, pt, tran .account);
+    await apply               (db, pt, tran .account);
     return true;
   }
   return (await transactions .deleteOne ({_id: id})) .deletedCount == 1;
@@ -271,7 +271,7 @@ async function replaceActual (actuals, month, category, amount) {
 }
 
 async function updateActuals (actuals, transactions, start, end) {
-  let rm    = actuals .deleteMany (start? {$and: [{month: {$gte: start}}, {month: {$lte: end}}]}: {});
+  let rm    = await actuals .deleteMany (start? {$and: [{month: {$gte: start}}, {month: {$lte: end}}]}: {});
   let query = start? {$and: [{date: {$gte: start * 100}}, {date: {$lte: end * 100 + 99}}]}: {};
   let trans = await transactions .find (query) .sort ({date: 1, category: 1});
   let acum  = new Map();
@@ -303,7 +303,7 @@ async function getActuals (req, res, next) {
     if (await actualsMeta .findOne ({type: 'isValid'})) {
       let blacklist = (await actualsMeta .find ({type: 'blacklist'}) .sort ({month: 1}) .toArray()) .reduce ((list,e) => {
         if (list .length && nextMonth (list [list .length - 1] .end) == e .month)
-          list [list .length - 1] .end == e .month;
+          list [list .length - 1] .end = e .month;
         else
           list .push ({start: e .month, end: e .month});
         return list;
