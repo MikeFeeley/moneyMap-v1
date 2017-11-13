@@ -126,7 +126,7 @@ class Categories {
     return ((doc && doc .children) || []) .reduce ((d,c) => {return d .concat (c) .concat (this .getDescendants (c))}, [])
   }
 
-  findBestMatch (name) {
+  findBestMatch (name, includeZombies) {
     var f = (name, cats) => {
       if (!cats || !cats.length)
         return false;
@@ -136,7 +136,7 @@ class Categories {
       return f (
         name,
         cats
-          .map    (c     => {return c.children})
+          .map    (c     => {return (c .children || []) .concat ((includeZombies && c .zombies) || [])})
           .filter (c     => {return c})
           .reduce ((a,c) => {return a .concat (c)}, [])
       );
