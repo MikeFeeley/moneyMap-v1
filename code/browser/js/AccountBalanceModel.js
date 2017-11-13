@@ -13,7 +13,7 @@ class AccountBalanceModel extends AccountsModel {
   }
 
   _onTranModelChange (eventType, doc, arg, source) {
-    if (doc .account) {
+    if (doc .account && doc .date && doc .date >= Types .date .monthStart (Types .date .today())) {
       var acc  = this._accounts .find (a => {return a._id == doc .account});
       var sign = acc .creditBalance? -1: 1;
       switch (eventType) {
