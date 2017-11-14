@@ -337,7 +337,7 @@ class Navigate {
       } else if (arg .name == '_budgetHistoryTable' && arg .id .length >= 1 && arg .id [0]) {
         if (arg .altClick) {
           if (arg .date) {
-            if (arg .date > this._budget .getStartDate()) {
+            if (arg .date .end > this._budget .getStartDate()) {
               let activeId = arg .id .find (i => {let cat= this._categories .get (i); return cat && cat .budgets .includes (this._budget .getId())});
               if (activeId)
                 BudgetProgressHUD .show (activeId, arg .html, arg .position, this._accounts, this._variance);
