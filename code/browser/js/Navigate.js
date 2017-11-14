@@ -1377,9 +1377,16 @@ class Navigate {
                   var group = ba .find (as => {return as .id .sort () .join ('$') == pids});
                   if (group) {
                     var a = group .amounts .find (a => {return a .name == cat .name}) || {};
+                    let a = group .amounts
+                      .filter (a => {return a .name == cat .name})
+                      .reduce ((o,e) => {
+                        o .id .push (e .id);
+                        o .amount += e .amount;
+                        return o;
+                      }, {id: [], amount: 0})
                     return {
                       id:    a .id,
-                      value: a .amount || 0
+                      value: a .amount
                     }
                   } else
                     return {value: 0}
