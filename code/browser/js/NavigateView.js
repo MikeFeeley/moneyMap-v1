@@ -370,8 +370,7 @@ class NavigateView extends Observable  {
 
   _addBudgetGraph (name, dataset, popup, position, onClose, toHtml, startColor=0) {
     var startCol, endCol;
-    dataset       = Object .assign ({}, dataset);
-    dataset .cols = dataset .cols .map (c => {return c});
+    dataset  = JSON .parse (JSON .stringify (dataset));
     startCol = 0;
     endCol   = dataset .cols .length - 1;
     var processDataset = () => {

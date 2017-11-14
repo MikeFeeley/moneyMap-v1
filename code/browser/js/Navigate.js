@@ -1227,7 +1227,7 @@ class Navigate {
    *     }]
    *   }
    */
-   _getHistoryData (parentIds, date, filter) {
+  _getHistoryData (parentIds, date, filter) {
     var defaultParents  = [this._budget .getIncomeCategory(), this._budget .getSavingsCategory(), this._budget .getExpenseCategory()];
     parentIds           = parentIds || (defaultParents .map (p => {return p._id}));
     var parents         = parentIds .map (pid => {return this._categories .get (pid)});
@@ -1383,7 +1383,7 @@ class Navigate {
                         o .id .push (e .id);
                         o .amount += e .amount;
                         return o;
-                      }, {id: [], amount: 0})
+                      }, {id: [], amount: 0});
                     return {
                       id:    a .id,
                       value: a .amount
@@ -1422,7 +1422,7 @@ class Navigate {
     for (let g of result .groups)
       g .rows = g .rows .filter (r => {
         return r .amounts .find (a => {return a .value != 0})
-      })
+      });
     return result;
   }
 
