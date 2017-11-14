@@ -1528,7 +1528,7 @@ class Navigate {
     dataset .cols = dataset .cols .map (c => {return c .slice (-4)})
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       var updater = this._addUpdater (view, (eventType, model, ids) => {
-        let ds = this._budgetHistoryUpdater (eventType, model, ids, dataset, parentIds, true, updateView, date, popup);
+        let ds = this._budgetHistoryUpdater (eventType, model, ids, dataset, parentIds, true, updateView, date, true);
       });
       var updateView = view .addHistoryTable (dataset, dataset .cols .length == 1, skipFoot, popup, position, () => {
         this._deleteUpdater (view, updater);
