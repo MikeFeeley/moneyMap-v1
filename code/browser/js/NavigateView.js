@@ -722,9 +722,9 @@ class NavigateView extends Observable  {
     this._resetColors();
     var backgroundColors = data .cats .map (c => {
       if (c .amount != 0 && ! c .blackout) {
-        var c = this._getColor (c .amount < 0? 0.2: 0.5);
+        var c = this._getColor (c .amount < 0? 0.2: 0.5, true);
         if (c .amount != 0)
-          this._nextColor();
+          this._nextColor (true);
       } else
         c = 'rgba(128,128,128,0.1)';
       return c;
@@ -732,8 +732,8 @@ class NavigateView extends Observable  {
     this._resetColors();
     var hoverBackgroundColors = data .cats .map (c => {
       if (c .amount != 0 && ! c .blackout) {
-        var c = this._getColor (0.9);
-          this._nextColor();
+        var c = this._getColor (0.9, true);
+          this._nextColor (true);
       } else
         c = 'rgba(128,128,128,0.1)';
       return c;
