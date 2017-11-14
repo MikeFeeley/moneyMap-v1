@@ -10,8 +10,8 @@ class NavigateView extends Observable  {
       [255,37,14],
       [113,64,158],
       [128,128,128],
-      [173,31,173],
-      [25,189,230]
+      [168,36,168],
+      [47,177,210]
     ];
     this._idSeq    = 0;
     this._accounts = accounts;
@@ -574,14 +574,16 @@ class NavigateView extends Observable  {
         let margin       = 4;
         let boxWidth     = (tickWidth - margin * 2);
         let startX       = scale .left + dataset .highlight * tickWidth + (tickWidth/2) - boxWidth/2;
-        ctx .beginPath();
-        ctx .rect (startX, 0, boxWidth, scale .bottom);
-        ctx .lineWidth   = 4;
-        ctx .strokeStyle = 'rgba(255,0,0,'+(percent * 0.3)+')';
-        ctx .globalCompositeOperation = 'destination-over';
-        ctx .stroke();
-        ctx .globalCompositeOperation = gco;
-        needRedraw       = false;
+        if (startX > chartArea .left && startX < chartArea .right) {
+          ctx .beginPath();
+          ctx .rect (startX, 0, boxWidth, scale .bottom);
+          ctx .lineWidth   = 4;
+          ctx .strokeStyle = 'rgba(255,0,0,'+(percent * 0.3)+')';
+          ctx .globalCompositeOperation = 'destination-over';
+          ctx .stroke();
+          ctx .globalCompositeOperation = gco;
+          needRedraw       = false;
+        }
       }
       config .options .animation = {
         onProgress: (ani) => {
