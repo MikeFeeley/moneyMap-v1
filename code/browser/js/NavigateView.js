@@ -9,7 +9,9 @@ class NavigateView extends Observable  {
       [255,113,19],
       [255,37,14],
       [113,64,158],
-      [128,128,128]
+      [128,128,128],
+      [173,31,173],
+      [25,189,230]
     ];
     this._idSeq    = 0;
     this._accounts = accounts;
