@@ -374,18 +374,6 @@ class NavigateView extends Observable  {
     startCol = 0;
     endCol   = dataset .cols .length - 1;
     var processDataset = () => {
-      let minResolution = dataset .groups .reduce ((t,g) => {
-        return t + g .rows .reduce ((t,r) => {
-          return t + r .amounts .reduce ((t,a) => {
-            return t + a .value;
-          }, 0)
-        }, 0)
-      }, 0) / 500;
-      for (let g of dataset .groups)
-        for (let r of g .rows)
-          for (let a of r .amounts)
-            if (a .value < 0 && - a .value < minResolution)
-              a .value = 0;
       labels = dataset .cols;
       data   = dataset .groups;
       var groups = data .map (g => {
@@ -498,6 +486,11 @@ class NavigateView extends Observable  {
       else
         mu = 3000000;
       max = Math .round ((max + (mu/2)) / mu) * mu;
+      let minResolution = max / 500;
+      for (let ds of datasets)
+        ds .data = ds .data .map (d => {
+          return d < 0 && -d < minResolution? 0: d
+        })
     }
     var chart;
     var config = {
