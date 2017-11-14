@@ -2,7 +2,7 @@ class NavigateView extends Observable  {
   constructor (accounts, variance) {
     super();
     this._name = '_Navigate';
-    this._colors = [
+    this._shortColors = [
       [26,101,202],
       [73, 167,46],
       [235,205,32],
@@ -10,9 +10,11 @@ class NavigateView extends Observable  {
       [255,37,14],
       [113,64,158],
       [128,128,128],
+    ];
+    this._longColors = this._shortColors .concat ([
       [168,36,168],
       [47,177,210]
-    ];
+    ]);
     this._idSeq    = 0;
     this._accounts = accounts;
     this._variance = variance;
@@ -61,16 +63,18 @@ class NavigateView extends Observable  {
     this._colorIndex = 0;
   }
 
-  _getColor (alpha) {
-    return 'rgba(' + (this._colors [this._colorIndex] .concat (alpha)) .join (',') + ')'
+  _getColor (alpha, useLong=false) {
+    let colors = useLong? this._longColors: this._shortColors;
+    return 'rgba(' + (colors [this._colorIndex] .concat (alpha)) .join (',') + ')'
   }
 
   isVisible() {
     return this._toHtml && ! this._toHtml .hasClass ('background');
   }
 
-  _nextColor() {
-    this._colorIndex = (this._colorIndex + 1) % this._colors .length;
+  _nextColor (useLong=false) {
+    let colors = useLong? this._longColors: this._shortColors;
+    this._colorIndex = (this._colorIndex + 1) % colors .length;
   }
 
   addHeading (text, name='', toHtml = this._content) {
@@ -404,21 +408,21 @@ class NavigateView extends Observable  {
         let idx = groups .indexOf (g);
         this._resetColors();
         for (let i = 0; i < startColor || 0; i ++)
-          this._nextColor();
+          this._nextColor (true);
         for (let d of g) {
           if (d .type == 'line') {
             d .borderColor     = 'rgba(221,0,0,1)';
             d .backgroundColor = 'rgba(0,0,0,0)';
             d .pointBackgroundColor = 'rgba(221,0,0,1)';
           } else {
-            d .backgroundColor = this._getColor (groups .length > 1? backgroundAlphas [idx]: 0.3);
-            d .borderColor     = this._getColor (borderAlphas     [idx]);
+            d .backgroundColor = this._getColor (groups .length > 1? backgroundAlphas [idx]: 0.3, true);
+            d .borderColor     = this._getColor (borderAlphas     [idx], true);
             d .stack           = stacks [idx];
             d .colorIndex      = this._colorIndex;
           }
           d .label           = labelPrefixes [idx] + d .label;
           if (d .type != 'line' && d .data .find (a => {return a != 0}))
-            this._nextColor();
+            this._nextColor (true);
         }
       }
       datasets = groups .length > 1? groups [0] .concat (groups [2]) .concat (groups [1]): groups [0];
