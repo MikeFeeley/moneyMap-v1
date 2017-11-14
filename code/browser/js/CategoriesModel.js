@@ -104,10 +104,10 @@ class Categories {
     return this .getSiblingsAndSelf (doc, parent, children) .filter (s => {return s._id != doc._id}) || [];
   }
 
-  getSiblingsAndSelf (doc, includeZombies=false) {
-    let p = doc .parent;
+  getSiblingsAndSelf (doc, parent='parent', children='children', includeZombies=false) {
+    let p = doc [parent];
     if (p) {
-      let c = p .children || [];
+      let c = p [children] || [];
       let z = (includeZombies && p .zombies) || [];
       if (z .length) {
         z = Array .from (z .reduce ((m,z) => {return m .set (z .name, z)}, new Map()) .values());

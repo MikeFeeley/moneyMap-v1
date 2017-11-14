@@ -38,7 +38,7 @@ class CategoryPicker {
     this._cols = [];
     for (let c of path) {
       var col = []
-      for (let sib of this._categories .getSiblingsAndSelf (c, this._includeZombies))
+      for (let sib of this._categories .getSiblingsAndSelf (c, 'parent', 'children', this._includeZombies))
         col .push ({
           name:     sib .name,
           id:       sib._id,
