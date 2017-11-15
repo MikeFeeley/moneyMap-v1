@@ -280,7 +280,7 @@ class ImportRules extends TuplePresenter {
   }
 
   addHtml (tran, toHtml) {
-    async (this, this._addHtml) (tran, toHtml);
+    (async () => {this._addHtml (tran, toHtml)})();
   }
 
   async _insert (insert, pos) {
