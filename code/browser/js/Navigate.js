@@ -243,8 +243,8 @@ class Navigate {
               : undefined;
             BudgetProgressHUD .show (id, arg .html, arg .position, this._accounts, this._variance, date);
           } else {
-            arg .date .start = Types .dateFY .getFYStart (arg .date .start, this._budget .getStartDate(), this._budget .getEndDate());
-            arg .date .end   = Types .dateFY .getFYEnd   (arg .date .end,   this._budget .getStartDate(), this._budget .getEndDate());
+            arg .date .start = arg .date .start? Types .dateFY .getFYStart (arg .date .start, this._budget .getStartDate(), this._budget .getEndDate()): this._budget .getStartDate();
+            arg .date .end   = arg .date .end?   Types .dateFY .getFYEnd   (arg .date .end,   this._budget .getStartDate(), this._budget .getEndDate()): this._budget .getEndDate();
             await this._addMonthsGraph (arg .name, arg .view, [arg .id], true, arg .position, arg .html, true, iy, sel && sel .addCats, arg .date, arg .colorIndex);
           }
         }
