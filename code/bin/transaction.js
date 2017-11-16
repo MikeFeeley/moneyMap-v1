@@ -90,7 +90,7 @@ async function insert (db, tran) {
   tran._id = tran._id || new ObjectID() .toString();
   await handleSeq (db, 'transactions', tran);
   addDateToActualsBlacklist (db, tran .date);
-  if (tran .account != null && (tran .debit != null || tran .credit != null) && tran .date && tran .date >= util .Types .date .monthStart (util .Types .date .today())) {
+  if (tran .account != null && (tran .debit != null || tran .credit != null)) {
     var pt = {
       uid:    await newUID (db),
       insert: tran
@@ -115,28 +115,26 @@ async function update (db, id, update) {
     if (update .debit != null || update .credit != null)
       addDateToActualsBlacklist (db, tran .date);
 
-    // update account balance for current-month transactions
-    if (tran .date && tran .date >= util .Types .date .monthStart (util .Types .date .today())) {
-      if (tran .account) {
-        let pt = {
-          uid:    await newUID (db),
-          _id:    id,
-          update: update,
-        }
-        pt._master = update .account != null;
-        await accounts .updateOne ({_id: tran .account}, {$push: {pendingTransactions: pt}});
-        await apply              (db, pt, tran .account);
-        return true;
-      } else if (update .account) {
-        let pt = {
-          uid:     await newUID (db),
-          _master: true,
-          _id:     id,
-          update:  update
-        }
-        await accounts .updateOne ({_id: update .account}, {$push: {pendingTransactions: pt}});
-        await apply               (db, pt);
+    // update account balance
+    if (tran .account) {
+      let pt = {
+        uid:    await newUID (db),
+        _id:    id,
+        update: update,
       }
+      pt._master = update .account != null;
+      await accounts .updateOne ({_id: tran .account}, {$push: {pendingTransactions: pt}});
+      await apply              (db, pt, tran .account);
+      return true;
+    } else if (update .account) {
+      let pt = {
+        uid:     await newUID (db),
+        _master: true,
+        _id:     id,
+        update:  update
+      }
+      await accounts .updateOne ({_id: update .account}, {$push: {pendingTransactions: pt}});
+      await apply               (db, pt);
     }
 
   } else if (update .category != null) {
@@ -156,7 +154,7 @@ async function remove (db, id) {
   if (!tran)
     throw 'Remove Transaction not found';
   addDateToActualsBlacklist (db, tran .date);
-  if (tran .account && tran .date && tran .date >= util .Types .date .monthStart (util .Types .date .today())) {
+  if (tran .account) {
     var pt = {
       uid:    await newUID (db),
       _id:    id,

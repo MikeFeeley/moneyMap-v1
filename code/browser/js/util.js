@@ -425,6 +425,5 @@ var Types = {
 
 // For node.js include
 if (typeof exports !== 'undefined') {
-  exports .Types       = Types;
-  exports .AccountType = AccountType;
+  exports .Types = Types;
 }
