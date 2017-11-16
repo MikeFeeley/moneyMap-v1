@@ -959,13 +959,12 @@ class NavigateView extends Observable  {
           col    = 0;
           target = $(target) .next() [0];
         }
-        let html     = $(target) .offsetParent();
-        let htmlo    = html .offset()
-        let position = $(target) .offset();
-        position .top  -= htmlo .top - 12;
-        position .left -= htmlo .left + 8;
+        target = $(target);
+        let html     = target .offsetParent();
+        let padding  = target.css ('padding-left');
+        let position = ui .calcPosition (target, html, {top: 12, left: -8 + Number (padding .slice (0, padding .indexOf ('px')))})
         if (dataset .cols .length && (col == -1 || col >= dataset .cols .length)) {
-          let prev = $(target) .closest ('div.' + name);
+          let prev = target .closest ('div.' + name);
           position .left = (prev .length? prev .position() .left + (prev .hasClass ('_popup')? 8: 0): 0) + 12;
         }
         if (id)
