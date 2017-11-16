@@ -395,19 +395,6 @@ class StringType extends FieldType {
   }
 }
 
-var AccountType = {
-  DEPOSIT:     0,
-  CREDIT_CARD: 1,
-  CASH:        2,
-  PENSION:     3,
-  RRSP:        4,
-  TFSA:        5,
-  RESP:        6,
-  INVESTMENT:  7,
-  MORTGAGE:    8,
-  HOME:        9
-}
-
 var Types = {
   date:         new DateType   (''),
   dateDM:       new DateType   ('DM'),

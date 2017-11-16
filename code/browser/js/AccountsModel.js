@@ -1,3 +1,16 @@
+/**
+ * Accounts Model
+ *     name
+ *     type                 AccountType
+ *     trackBalance         true if transactions update balance (will be replaced with account type)
+ *     number               bank number used to match transactions when importing
+ *     balance              $
+ *     creditBalance        true if credit increases balance (chequing); false if decreases (visa)
+ *     category             category for savings deposits
+ *     disCategory          category for savings withdrawals (distributions)
+ *     pendingTransactions  []
+ */
+
 class AccountsModel extends Observable {
   constructor (modelName = 'accounts') {
     super();
@@ -65,7 +78,26 @@ class AccountsModel extends Observable {
     return this._accounts;
   }
 
+  getCashFlowBalance() {
+    return this._accounts
+      .filter (a => {return a .trackBalance})
+      .reduce ((b, a) => {return b + a .balance * (a .creditBalance? 1: -1)}, 0)
+  }
+
   async find() {
     await this._updateModel();
   }
+}
+
+var AccountType = {
+  DEPOSIT:     0,
+  CREDIT_CARD: 1,
+  CASH:        2,
+  PENSION:     3,
+  RRSP:        4,
+  TFSA:        5,
+  RESP:        6,
+  INVESTMENT:  7,
+  MORTGAGE:    8,
+  HOME:        9
 }

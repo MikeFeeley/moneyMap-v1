@@ -570,8 +570,6 @@ class User extends Observable {
       name:             this._budgets && this._budgets .length? 'Untitled': 'Default',
       start:            Types .date._date (y,  1,  1),
       end:              Types .date._date (y, 12, 31),
-      startCashBalance: 0,
-      configuration:    this._cid
     });
     this._budgets = this._sortByName (await this._budgetModel .find());
     let cm = new Model ('categories', this .getDatabaseName());
@@ -646,11 +644,10 @@ class User extends Observable {
    */
   async _createRolloverBudget (from) {
     let b = Object .assign ({}, this._budgets .find (b => {return b._id == from}));
-    b .start            = Types .date .addYear (b .start, 1);
-    b .end              = Types .date .addYear (b .end,   1);
-    b .name             = BudgetModel .getLabelForDates (b .start, b .end);
-    b .startCashBalance = 0;
-    b._id               = undefined;
+    b .start = Types .date .addYear (b .start, 1);
+    b .end   = Types .date .addYear (b .end,   1);
+    b .name  = BudgetModel .getLabelForDates (b .start, b .end);
+    b._id    = undefined;
     b = await this._budgetModel .insert (b);
     this._budgets = this._sortByName (await this._budgetModel .find())
     let cm = new Model ('categories', this .getDatabaseName());

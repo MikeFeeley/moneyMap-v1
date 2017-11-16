@@ -1,7 +1,8 @@
 class ActualsModel extends Observable {
-  constructor (budget) {
+  constructor (budget, accounts) {
     super();
     this._budget = budget;
+    this._accounts = accounts;
     this._transactionModel = new TransactionModel();
     this._transactionModel .addObserver (this, this._onModelChange);
     this._transactionModel .observe ();
@@ -110,5 +111,21 @@ class ActualsModel extends Observable {
 
   async getTransactions (cat, st = this._budget .getStartDate(), en = this._budget .getEndDate()) {
     return this._transactionModel .find ({date: {$gte: st, $lte: en}, category: cat._id})
+  }
+
+  /**
+   * Returns starting cash flow balance for specified date
+   *     (a) start with current balance
+   *     (b) undo transactions since date to get starting balance
+   *     (c) undo suspense transactions again to anticipate future reconciliation
+   */
+  getCashFlowBalance (date) {
+    let bal      = this._accounts .getCashFlowBalance();
+    let start    = date;
+    let end      = Types .date .today();
+    let suspense = this._budget .getSuspenseCategory();
+    for (let cat of this._budget .getCategories() .getRoots())
+      bal += this .getAmountRecursively (cat, start, end) * (cat == suspense? 2: 1);
+    return bal;
   }
 }

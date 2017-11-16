@@ -746,7 +746,7 @@ class Navigate {
       dates:     dates,
       months:    months,
       groups:    groups,
-      startBal:  this._budget .getStartCashBalance(),
+      startBal:  this._actuals .getCashFlowBalance (this._budget .getStartDate()),
       highlight: highlight > 0? highlight: undefined,
       income:    this._getIncome (type),
       getUpdate: async (eventType, model, eventIds) => {
@@ -1124,7 +1124,7 @@ class Navigate {
         })
       else
         ovr = 0;
-      let stc = this._budget .getStartCashBalance();
+      let stc = this._actuals .getCashFlowBalance (this._budget .getStartDate());
       if (stc < -50 || stc > 50) {
         let tt =
             'You will end the year with a ' +
@@ -1132,7 +1132,7 @@ class Navigate {
             ' cash-flow ' +
             (stc + una + ovr < 0? ' deficit.': stc + una + ovr == 0? 'balance.': 'surplus.');
         list .push ({
-          name:    'Starting Year Cash',
+          name:    'Starting Cash Flow',
           amount:  stc,
           tooltip: tt
         });
@@ -1396,7 +1396,7 @@ class Navigate {
         }
       })
     }
-    result .startBal = [this._budget .getStartCashBalance() - historicAmounts .reduce ((t, year) => {
+    result .startBal = [this._actuals .getCashFlowBalance (this._budget .getStartDate()) - historicAmounts .reduce ((t, year) => {
       return t + year .reduce ((t, root) => {
         return t + root .amounts .reduce ((t, a) => {return t + (a .isCredit? 1: -1) * a .amount}, 0)
       }, 0)

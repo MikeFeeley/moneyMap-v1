@@ -1,3 +1,18 @@
+/**
+ * Budget Model
+ *     name
+ *     start
+ *     end
+ *     incomeCategory
+ *     expenseCategory
+ *     savingsCategory
+ *     suspenseCategory
+ *   DEPRECATED
+ *     hasTransactions
+ *     startCashBalance
+ *     configuration
+ */
+
 class BudgetModel extends Observable {
   constructor() {
     super();
