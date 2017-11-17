@@ -1325,11 +1325,11 @@ class Navigate {
       }, new Map()) .values())
     });
     // get name-normalized parent id list
-    parentIds = Array .from (budgetAmounts .reduce ((s,ba) => {
+    let normalizedIds = Array .from (budgetAmounts .reduce ((s,ba) => {
       return ba .reduce ((s, a) => {return s .add (a .id .join ('$'))}, new Set ())
     })) .map (ba => {return ba .split ('$')});
     // invert list from [period,cats] to [cat,periods] for each parent
-    var cats = parentIds .map (pid => {return budgetAmounts .reduce ((map, budgetAmount) => {
+    var cats = normalizedIds .map (pid => {return budgetAmounts .reduce ((map, budgetAmount) => {
       return (budgetAmount .find (ba => {return ba .id .find (i => {return pid .includes (i)})}) || {amounts: []}) .amounts
         .reduce ((m,a) => {
           if (a .amount != 0) {
@@ -1343,58 +1343,72 @@ class Navigate {
         }, map)
     }, new Map())});
     // compute return values
+    let groups = normalizedIds .map ((pid, i) => {
+      let pids   = pid .sort() .join ('$');
+      let parent = new Map();
+      for (let ba of budgetAmounts) {
+        let p = (ba .find (as => {return as .id .find (i => {return pid .includes (i)}) && as .name}));
+        if (p)
+          parent .set (p .id .join ('$'), p .name);
+      }
+      return {
+        name: Array .from (parent .values()) [0],
+        id:   Array .from (parent .keys()) [0] .split('$'),
+        rows: Array .from (cats [i] .values())
+        .sort ((a,b) => {return a.sort==null? 1: b.sort==null? -1: a.sort<b.sort? -1: 1})
+        .map (cat => {
+          var ids = Array .from (budgetAmounts .reduce ((s,ba) => {
+            return ba [i] .amounts .reduce ((s,a) => {
+              if (a .name == cat .name)
+                s .add (a .id);
+              return s;
+            }, s)
+          }, new Set()));
+          return {
+            name:     cat .name,
+            id:       ids,
+            isCredit: cat .isCredit,
+            isGoal:   cat .isGoal,
+            amounts:  budgetAmounts .map (ba => {
+              var group = ba .find (as => {return as .id .sort () .join ('$') == pids});
+              if (group) {
+                var a = group .amounts .find (a => {return a .name == cat .name}) || {};
+                let a = group .amounts
+                .filter (a => {return a .name == cat .name})
+                .reduce ((o,e) => {
+                  o .id .push (e .id);
+                  o .amount += e .amount;
+                  return o;
+                }, {id: [], amount: 0});
+                return {
+                  id:    a .id,
+                  value: a .amount
+                }
+              } else
+                return {value: 0}
+            })
+          }
+        })
+      }
+    });
     let result = {
       cols:      budgets .map (b => {return b .label}),
       dates:     budgets .map (b => {return {start: b .start, end: b .end}}),
       highlight: historicYears .length,
-      groups: parentIds .map ((pid, i) => {
-        let pids   = pid .sort() .join ('$');
-        let parent = new Map();
-        for (let ba of budgetAmounts) {
-          let p = (ba .find (as => {return as .id .find (i => {return pid .includes (i)}) && as .name}));
-          if (p)
-            parent .set (p .id .join ('$'), p .name);
+      groups:    groups,
+      getUpdate: eventIds => {
+        let update  = [];
+        let newData = this._getHistoryData (parentIds, date, filter);
+        for (let g of newData .groups) {
+          if (eventIds .includes (g .id))
+            update .push ({update: {id: g .id, name: g .name}});
+          for (let r of g .rows)
+            if (r .id .find (i => {return eventIds .includes (i)}))
+              update .push ({update: {id: r .id, name: r .name, amounts: r .amounts}});
         }
-        return {
-          name: Array .from (parent .values()) [0],
-          id:   Array .from (parent .keys()) [0] .split('$'),
-          rows: Array .from (cats [i] .values())
-            .sort ((a,b) => {return a.sort==null? 1: b.sort==null? -1: a.sort<b.sort? -1: 1})
-            .map (cat => {
-              var ids = Array .from (budgetAmounts .reduce ((s,ba) => {
-                return ba [i] .amounts .reduce ((s,a) => {
-                  if (a .name == cat .name)
-                    s .add (a .id);
-                  return s;
-                }, s)
-              }, new Set()));
-              return {
-                name:     cat .name,
-                id:       ids,
-                isCredit: cat .isCredit,
-                isGoal:   cat .isGoal,
-                amounts:  budgetAmounts .map (ba => {
-                  var group = ba .find (as => {return as .id .sort () .join ('$') == pids});
-                  if (group) {
-                    var a = group .amounts .find (a => {return a .name == cat .name}) || {};
-                    let a = group .amounts
-                      .filter (a => {return a .name == cat .name})
-                      .reduce ((o,e) => {
-                        o .id .push (e .id);
-                        o .amount += e .amount;
-                        return o;
-                      }, {id: [], amount: 0});
-                    return {
-                      id:    a .id,
-                      value: a .amount
-                    }
-                  } else
-                    return {value: 0}
-                })
-              }
-            })
-        }
-      })
+        return update;
+      }
+
     }
     result .startBal = [this._actuals .getCashFlowBalance (this._budget .getStartDate()) - historicAmounts .reduce ((t, year) => {
       return t + year .reduce ((t, root) => {
@@ -1424,18 +1438,6 @@ class Navigate {
         return r .amounts .find (a => {return a .value != 0})
       });
     return result;
-  }
-
-  _budgetHistoryUpdater (eventType, model, ids, dataset, parentIds, includeYearly, updateView, date, filterBySlider) {
-    var defaultRoots = [this._budget .getIncomeCategory(), this._budget .getSavingsCategory(), this._budget .getExpenseCategory()];
-    if (model == 'SchedulesModel' || model == 'ActualsModel')
-      return this._updateHistoryView (parentIds, updateView, date, filterBySlider);
-  }
-
-  _updateHistoryView (parentIds, updateView, date, filterBySlider) {
-    let ds = this._getHistoryData (parentIds, date, filterBySlider);
-    updateView ([{replace: ds}]);
-    return ds;
   }
 
   _filterHistoryBySlider (dataset) {
@@ -1521,7 +1523,8 @@ class Navigate {
   _addHistoryGraph (parentIds, popup, position, view, dataset = this._getHistoryData(parentIds), toHtml, startColor) {
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       var updater = this._addUpdater (view, (eventType, model, ids) => {
-        let ds = this._budgetHistoryUpdater (eventType, model, ids, dataset, parentIds, false, updateView, undefined, popup)
+        if (model == 'SchedulesModel' || model == 'ActualsModel')
+          updateView (dataset .getUpdate (ids));
       });
       var updateView = view .addHistoryGraph (dataset, popup, position, () => {
         this._deleteUpdater (view, updater);
@@ -1535,7 +1538,7 @@ class Navigate {
     dataset .cols = dataset .cols .map (c => {return c .slice (-4)})
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       var updater = this._addUpdater (view, (eventType, model, ids) => {
-        let ds = this._budgetHistoryUpdater (eventType, model, ids, dataset, parentIds, true, updateView, date, true);
+        updateView ([{replace: this._getHistoryData (parentIds, date, true)}])
       });
       var updateView = view .addHistoryTable (dataset, dataset .cols .length == 1, skipFoot, popup, position, () => {
         this._deleteUpdater (view, updater);

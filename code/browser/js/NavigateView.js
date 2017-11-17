@@ -473,19 +473,7 @@ class NavigateView extends Observable  {
         for (let ds of datasets)
           if (ds .stack)
             height [ds .stack - 1] [i] = (height [ds .stack - 1] [i] || 0) + ds .data [i];
-      var max = height .reduce ((m,h) => {return Math .max (m, h .reduce ((m,v) => {return Math .max (m, v)}, 0))}, 0);
-      var mu  = max / 10;
-      if (mu <= 200000)
-        mu = 200000;
-      else if (mu <= 500000)
-        mu = 500000;
-      else if (mu < 1000000)
-        mu = 1000000;
-      else if (mu < 2000000)
-        mu = 2000000;
-      else
-        mu = 3000000;
-      max = Math .round ((max + (mu/2)) / mu) * mu;
+      let max = height .reduce ((m,h) => {return Math .max (m, h .reduce ((m,v) => {return Math .max (m, v)}, 0))}, 0);
       let minResolution = max / 500;
       for (let ds of datasets)
         ds .data = ds .data .map (d => {
@@ -549,7 +537,6 @@ class NavigateView extends Observable  {
             stacked: true,
             ticks: {
               beginAtZero: true,
-              max: max,
               userCallback: (value, index, values) => {
                 return Types .moneyDZ .toString (value);
               }
@@ -663,16 +650,26 @@ class NavigateView extends Observable  {
     return (updates) => {
       for (let update of updates || [])
         if (update .update) {
-          var ds = config .data .datasets .find (d => {return d .id == update .update .id});
+          let findMatch = ds => {
+            return ds .find (d => {return [] .concat (d .id) .find (i => {return [] .concat (update .update .id) .includes (i)})})
+          };
+          let ds = findMatch (config .data .datasets);
           if (ds) {
+            if (update .update .amounts) {
+              if (datasetsCopy) {
+                let dsc = findMatch (datasetsCopy);
+                if (dsc) {
+                  dsc .data = update .update .amounts .map (a => {return a .value});
+                  ds  .data = dsc .data .slice (startCol, endCol + 1);
+                }
+              } else
+                ds .data = update .update .amounts .map (a => {return a .value});
+            }
             if (update .update .name != null)
               ds .label = update .update .name;
-            if (update .update .amounts != null)
-              ds .data  = update .update .amounts .map (a => {return a .value});
           }
           if (data [0] .id == update .update .id && update .update .name)
             graph .find ('span._heading') .text (update .update .name)
-
         } else if (update .filterCols) {
           filter (update .filterCols .start, update .filterCols .end);
         } else if (update .replace) {
@@ -1020,20 +1017,24 @@ class NavigateView extends Observable  {
     return updates => {
       for (let update of updates || [])
         if (update .update) {
+          let group, row;
           outerLoop: for (let g of dataset .groups)
             for (let r of g .rows)
-              if (r .id == update .update .id) {
+              if ([] .concat (r .id) .find (i => {return [] .concat (update .update .id) .includes (i)})) {
                 if (update .update .name != null)
                   r .name    = update .update .name;
                 if (update .update .amounts != null)
                   r .amounts = update .update .amounts;
-                var group = g;
-                var row   = r;
+                group = g;
+                row   = r;
                 break outerLoop;
               }
-          updateGroup (group);
-          updateRow   (row);
-          updateFoot();
+          if (group)
+            updateGroup (group);
+          if (row)
+            updateRow   (row);
+          if (group || row)
+            updateFoot();
         } else if (update .replace) {
           dataset = update .replace;
           table .remove();
