@@ -7,10 +7,6 @@
  *     expenseCategory
  *     savingsCategory
  *     suspenseCategory
- *   DEPRECATED
- *     hasTransactions
- *     startCashBalance
- *     configuration
  */
 
 class BudgetModel extends Observable {
