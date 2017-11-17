@@ -1231,6 +1231,7 @@ class NavigateView extends Observable  {
 
     var addPopup = (e, detail, isCredit) => {
       let target   = $(e .target);
+      let column   = target .index();
       let html     = target .offsetParent();
       let padding  = target.css ('padding-left');
       let position = ui .calcPosition (target, html, {top: -34, left: -2 + Number (padding .slice (0, padding .indexOf ('px')))})
@@ -1244,8 +1245,7 @@ class NavigateView extends Observable  {
         let table = $('<table>') .appendTo (popup.children('._popupContent'));
         if ([detail .int, detail .addAmt, detail .subAmt] .filter (v => {return v}) .length > 1) {
           let net = detail .int + detail .addAmt + detail .subAmt;
-          let row = $('<tr>') .appendTo ($('<tfoot>') .appendTo (table));
-          row
+          let row = $('<tr>') .appendTo ($('<tfoot>') .appendTo (table))
            .append ($('<td>', {text: 'Net ' + (net>=0 && !isCredit? 'Increase': 'Decrease')}))
            .append ($('<td>', {text: Types .moneyD .toString (net)}))
          if (net < 0)
@@ -1257,24 +1257,38 @@ class NavigateView extends Observable  {
             .append ($('<td>', {text: isCredit? 'Inflation': 'Earnings'}))
             .append ($('<td>', {text: Types .moneyD .toString (detail .int)})));
         if (detail .addAmt)
-          tbody .append ($('<tr>')
+          $('<tr>')
+            .appendTo (tbody)
             .append ($('<td>', {text: isCredit? 'Principal': 'Contributions'}))
-            .append ($('<td>', {text: Types .moneyD .toString (detail .addAmt)})));
-// save this until netWorth (and this popup) can react to modelChanges
-//                      .click  (e => {
-//                        let html = target .offsetParent();
-//                        let pos  = ui .calcPosition (target, html, {top: 6, left: -250});
-//                        BudgetProgressHUD .show (detail .subCat[0]._id, html, pos, this._accounts, this._variance);
-//                      })
+            .append ($('<td>', {text: Types .moneyD .toString (detail .addAmt)}))
+            .click  (ce => {
+              let html = target .offsetParent();
+              this._notifyObservers (NavigateViewEvent .NETWORTH_TABLE_CLICK, {
+                id:        detail .addCat [0]._id,
+                column:    column,
+                label:     dataset .cols [column],
+                highlight: dataset .highlight,
+                html:      html,
+                position:  ui .calcPosition (target, html, {top: 6, left: -250})
+              })
+            })
         if (detail .subAmt)
-          tbody .append ($('<tr>')
+          $('<tr>')
+            .appendTo (tbody)
             .append ($('<td>', {text: 'Withdrawals'}))
-            .append ($('<td>', {text: Types .moneyD .toString (detail .subAmt), class: 'negative'})))
-//                      .click  (e => {
-//                        let html = target .offsetParent();
-//                        let pos  = ui .calcPosition (target, html, {top: 6, left: -250});
-//                        BudgetProgressHUD .show (detail .subCat[0]._id, html, pos, this._accounts, this._variance);
-//                      })
+            .append ($('<td>', {text: Types .moneyD .toString (detail .subAmt), class: 'negative'}))
+            .click  (ce => {
+              let html = target .offsetParent();
+              this._notifyObservers (NavigateViewEvent .NETWORTH_TABLE_CLICK, {
+                id:        detail .subCat [0]._id,
+                column:    column,
+                label:     dataset .cols [column],
+                highlight: dataset .highlight,
+                html:      html,
+                position:  ui .calcPosition (target, html, {top: 6, left: -250})
+              })
+              let pos  = ui .calcPosition (target, html, {top: 6, left: -250});
+            })
         ui .scrollIntoView (popup);
         popup .css (position);
         ui .ModalStack .add (
@@ -1355,6 +1369,7 @@ var NavigateViewEvent = Object.create (ViewEvent,{
   BUDGET_TABLE_TITLE_CLICK:   {value: 206},
   PROGRESS_GRAPH_TITLE_CLICK: {value: 207},
   PROGRESS_SIDEBAR_CLICK:     {value: 208},
+  NETWORTH_TABLE_CLICK:       {value: 209}
 });
 
 

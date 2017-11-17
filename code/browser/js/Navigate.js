@@ -367,6 +367,18 @@ class Navigate {
       let parent = this._categories .get (arg .data [0]._id) .parent;
       if (parent)
         BudgetProgressHUD .show (parent._id, arg .html, arg .position, this._accounts, this._variance);
+
+    } else if (eventType == NavigateViewEvent .NETWORTH_TABLE_CLICK) {
+      if (arg .column > arg .highlight)
+        BudgetProgressHUD .show (arg .id, arg .html, arg .position, this._accounts, this._variance);
+      else {
+        let date = Types .dateDMY .fromString ('1-' + arg .label);
+        let dateRange = {
+          start: Types .dateFY .getFYStart (date, this._budget .getStartDate(), this._budget .getEndDate()),
+          end:   Types .dateFY .getFYEnd   (date, this._budget .getStartDate(), this._budget .getEndDate())
+        }
+        TransactionHUD .showCategory (arg .id, dateRange, this._accounts, this._variance, arg .html, arg .position);
+      }
     }
   }
 
@@ -1625,6 +1637,8 @@ class Navigate {
         return {
           add:    add,
           sub:    sub,
+          addCat: addCat,
+          subCat: subCat,
           begBal: begBal,
           endBal: endBal
         }
@@ -1637,7 +1651,7 @@ class Navigate {
       }
     });
     // compute balances
-    let sum = (t,a) => {return t + a}
+    let sum    = (t,a) => {return t + a};
     for (let accountAmount of accountAmounts) {
       let yearIndex = 0;
       for (let amount of accountAmount .amounts) {
@@ -1674,7 +1688,13 @@ class Navigate {
             amounts: aa .amounts .map ((a,i) => {
               return Array .from (Object .keys (a)) .reduce ((o,k) => {
                 let t = (total .amounts [i] || {}) [k];
-                o [k] = a [k] !== undefined? (t || 0) + a [k]: t;
+                if (a [k] !== undefined) {
+                  if (Array .isArray (t) || isNaN (a [k]))
+                    o [k] = a [k]? (t || []) .concat (a [k]): t;
+                  else
+                    o [k] = (t || 0) + a [k];
+                } else
+                  o [k] = t;
                 return o;
               }, {})
             })
@@ -1693,7 +1713,9 @@ class Navigate {
         detail:   a .amounts .map (a => {return {
           int:    a .int,
           addAmt: a .add,
-          subAmt: a .sub
+          subAmt: a .sub,
+          addCat: a .addCat,
+          subCat: a .subCat
         }})
       }})
     }
