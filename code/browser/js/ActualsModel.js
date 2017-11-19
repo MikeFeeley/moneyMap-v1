@@ -20,7 +20,7 @@ class ActualsModel extends Observable {
         this._oldestMonth = m;
     };
     if (tran .category && tran .date) {
-      let c = this._budget .getCategories() .get  (tran .category);
+      let c = this._budget .getCategories() .get (tran .category);
       if (c) {
         let a = (tran .debit || 0) - (tran .credit || 0);
         let s = eventType == ModelEvent .REMOVE? -1: 1;
@@ -29,17 +29,16 @@ class ActualsModel extends Observable {
       }
     }
     if (eventType == ModelEvent .UPDATE) {
-      let noOrigDate = '_original_date'     in update && ! update._original_category;
-      let noOrigCat  = '_original_category' in update && ! update._original_category;
-      if (! noOrigDate && ! noOrigCat) {
-        let c = this._budget .getCategories() .get (update._original_category || tran .category);
+      // remove original amount
+      let original = {};
+      for (let p of ['date', 'category', 'debit', 'credit'])
+        original [p] = '_original_' + p in update? update ['_original_' + p]: tran [p];
+      if (original .date && original .category) {
+        let c = this._budget .getCategories() .get (original .category);
         if (c) {
-          let d = update._original_date || tran .date;
-          if (d) {
-            let a = (update._original_debit || tran .debit || 0) - (update._original_credit || tran .credit || 0);
-            let m = Types .date._yearMonth (d);
-            updateActuals (c, m, -a);
-          }
+          let a = (original .debit || 0) - (original .credit || 0);
+          let m = Types .date._yearMonth (original .date);
+          updateActuals (c, m, -a);
         }
       }
     }

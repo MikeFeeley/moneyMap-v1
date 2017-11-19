@@ -107,11 +107,15 @@ async function update (db, id, update) {
   let accounts     = db .collection ('accounts');
   let transactions = db .collection ('transactions');
 
+  let tran;
+  if (update .debit != null || update .credit != null || update .account != null || update .category != null || update .date != null) {
+    tran = await transactions .findOne ({_id: id});
+    if (!tran)
+      throw 'Update transaction not found ' + id
+  }
+
   if (update .debit != null || update .credit != null || update .account != null) {
 
-    let tran = await transactions .findOne ({_id: id});
-    if (!tran)
-      throw 'Update transaction not found ' + id;
     if (update .debit != null || update .credit != null)
       addDateToActualsBlacklist (db, tran .date);
 
@@ -138,11 +142,13 @@ async function update (db, id, update) {
     }
 
   } else if (update .category != null) {
-    let tran = await transactions .findOne ({_id: id});
-    if (!tran)
-      throw 'Update transaction not found ' + id;
     addDateToActualsBlacklist (db, tran .date);
+
+  } else if (update .date != null) {
+    addDateToActualsBlacklist (db, update .date);
+    addDateToActualsBlacklist (db, tran   .date);
   }
+
   await transactions .updateOne ({_id: id}, {$set: update});
   return true;
 }

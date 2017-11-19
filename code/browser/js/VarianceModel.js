@@ -388,7 +388,6 @@ class VarianceModel extends Observable {
           else {
             amount .year  .actual [per] += Math .round (amount .none .actual [per] * percentYear);
             amount .month .actual [per] += Math .round (amount .none .actual [per] * (1 - percentYear));
-            amount .none  .actual [per]  = 0;
           }
         } else if (amountUp .nearestType != 'none') {
           if (! amount [amountUp .nearestType])
@@ -399,6 +398,7 @@ class VarianceModel extends Observable {
             amount .month = {actual: {prev: 0, cur: 0}, budget: {prev: 0, cur: 0}};
           amount .month .actual [per] += amount .none .actual [per];
         }
+        amount .none  .actual [per]  = 0;
       }
     return {amount: amount, addCats: amountUp .addCats};
   }
