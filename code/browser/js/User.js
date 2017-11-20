@@ -595,6 +595,13 @@ class User extends Observable {
       credit: true,
       goal: true
     })
+    let wth = await cm .insert ({
+      name: 'Withdrawals',
+      parent: null,
+      sort: 4,
+      budgets: [b._id],
+      credit: true,
+    })
     let sus = await cm .insert ({
       name: 'Suspense',
       parent: null,
@@ -602,18 +609,16 @@ class User extends Observable {
       budgets: [b._id]
     })
     await this._budgetModel .update (b._id, {
-      incomeCategory:   inc._id,
-      savingsCategory:  sav._id,
-      expenseCategory:  exp._id,
-      suspenseCategory: sus._id
+      incomeCategory:      inc._id,
+      withdrawalsCategory: wth._id,
+      savingsCategory:     sav._id,
+      expenseCategory:     exp._id,
+      suspenseCategory:    sus._id
     });
     let defaultCategories = [
       {parent: exp, list: [
         'Food', 'Alcohol', 'Housing', 'Utilities', 'Household', 'Children', 'Health & Personal', 'Transportation', 'Subscriptions',
         'Gifts', 'Recreation', 'Travel', 'Furniture & Equipment', 'Home Improvement'
-      ]},
-      {parent: sav, list: [
-        'Mortgage Principal', 'Retirement', 'Rainy Day', 'Future Spending'
       ]},
       {parent: inc, list: [
         'Salary', 'Other Income'

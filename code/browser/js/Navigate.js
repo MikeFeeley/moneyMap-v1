@@ -211,10 +211,12 @@ class Navigate {
             position .left = 0;
           else
             position .right = 200;
+          if (arg .id .startsWith ('leaf_'))
+            arg .id = arg .id .split ('_') [1];
           await this._addMonthsGraph (name, arg .view, [arg .id], true, position, html);
         }
       } else
-        await this._addYearCategoriesGraph (arg .name, arg .id, null, arg .view, true, arg .position, arg .direction);
+        await this._addYearCategoriesGraph (arg .name, [arg .id], null, arg .view, true, arg .position, arg .direction);
 
     } else if (eventType == NavigateViewEvent .BUDGET_GRAPH_CLICK && arg .id) {
       /* Monthly or History Graph (Budget or Actual) */
@@ -520,17 +522,16 @@ class Navigate {
     }
   }
 
-  _getIncome (type) {
+  _getIncome (type, start = this._budget .getStartDate(), end = this._budget .getEndDate()) {
     switch (type) {
       case NavigateValueType .BUDGET: case NavigateValueType .BUDGET_YR_AVE: case NavigateValueType .BUDGET_YR_AVE_ACT:
-        return - this._budget .getAmount (
-          this._budget .getIncomeCategory(), this._budget .getStartDate(), this._budget .getEndDate()
-        ) .amount
-
+        return - [this._budget .getIncomeCategory(), this._budget .getWithdrawalsCategory()] .reduce ((t,c) => {
+          return t + this._budget .getAmount (c, start, end) .amount
+        }, 0);
       case NavigateValueType .ACTUALS: case NavigateValueType .ACTUALS_BUD:
-        return - this._actuals .getAmountRecursively (
-          this._budget .getIncomeCategory(), this._budget .getStartDate(), this._budget .getEndDate()
-        )
+      return - [this._budget .getIncomeCategory(), this._budget .getWithdrawalsCategory()] .reduce ((t,c) => {
+        return t + this._actuals .getAmountRecursively (c, start, end)
+      }, 0);
     }
   }
 
@@ -686,7 +687,8 @@ class Navigate {
    *     months: number of months (for computing average)
    *     income: total income (for budget comparison)
    *     groups: [{
-   *       name: name for this group
+   *       name:          name for this group
+   *       stackPosition: [i,j] where i is stack number and j is position in stack (ordered left to right, bottom to top)
    *       rows: [{
    *         name:     name for this row
    *         id:       category id for this row
@@ -700,7 +702,7 @@ class Navigate {
   async _getData (
     type,
     dates,
-    ids           = [this._budget .getIncomeCategory()._id, this._budget .getSavingsCategory()._id, this._budget .getExpenseCategory()._id],
+    ids           = [this._budget .getIncomeCategory()._id, this._budget .getWithdrawalsCategory()._id, this._budget .getSavingsCategory()._id, this._budget .getExpenseCategory()._id],
     allowLeaf,
     includeMonths = true,
     includeYears  = true,
@@ -720,17 +722,23 @@ class Navigate {
     let isYear = dates .length == 1 && Types .date._month (dates [0] .start) != Types .date._month (dates [0] .end);
     var months = isYear? 0: dates .length;
     var cols   = isYear? []: dates .map (d => {return Types .dateM .toString (d .start)});
-    var groups = await Promise .all (ids
+    var groups = (await Promise .all (ids
       .map (async id => {
-        let data = await this._getChildrenData (type, id, dates, allowLeaf, includeMonths, includeYears, addCats, altDates);
+        let data          = await this._getChildrenData (type, id, dates, allowLeaf, includeMonths, includeYears, addCats, altDates);
+        let stackPosition = ids .length > 1 &&
+          (id == this._budget .getIncomeCategory()._id? [0,0]:
+            id == this._budget .getWithdrawalsCategory()._id? [0,1]:
+              id == this._budget .getExpenseCategory()._id? [1,0]: [1,1]);
         return {
-          id:        id,
-          name:      this._getName         (type, id),
-          note:      this._getNote         (type, id, includeMonths, includeYears, altDates),
-          rows:      data .data,
-          getUpdate: data .getUpdate
+          id:            id,
+          name:          this._getName         (type, id),
+          stackPosition: stackPosition,
+          note:          this._getNote         (type, id, includeMonths, includeYears, altDates),
+          rows:          data .data,
+          getUpdate:     data .getUpdate
         }
-      }))
+      })))
+      .filter (g => {return g .rows .find (r => {return r .amounts .find (a => {return a .value != 0})})})
     if ((type == NavigateValueType .BUDGET_YR_AVE_ACT || type == NavigateValueType .ACTUALS_BUD) && groups .length > 1)
       groups = groups .map (g => {
         g .rows = g .rows .filter (r => {return ! r .id .includes ('budget_')})
@@ -758,9 +766,9 @@ class Navigate {
       dates:     dates,
       months:    months,
       groups:    groups,
-      startBal:  this._actuals .getCashFlowBalance (this._budget .getStartDate()),
+      startBal:  this._actuals .getCashFlowBalance (dates [0] .start),
       highlight: highlight > 0? highlight: undefined,
-      income:    this._getIncome (type),
+      income:    this._getIncome (type, dates [0] .start, dates [dates .length - 1] .end),
       getUpdate: async (eventType, model, eventIds) => {
         let update = [];
         for (let g of groups) {
@@ -770,7 +778,7 @@ class Navigate {
           if (u) {
             if (u [0] .needReplace)
               u = [{replace: await this._getData (type, dates, ids, allowLeaf, includeMonths, includeYears, addCats)}]
-            update = update .concat (u);
+            update = update .concat (u) .concat ({updateIncome: this._getIncome (type, dates [0] .start, dates [dates .length - 1] .end)});
           }
         }
         return update;
@@ -853,25 +861,34 @@ class Navigate {
     var getBlackouts = async (d) => {
       var boAmts  = await Promise .all (blackouts .map (async b => {return (await this._getAmounts (type, b._id, this._budget .isCredit (b), dates)) [0]}));
       var amts    = d .reduce ((s,c) => {return s + c .amounts[0] .value}, 0);
-      var unalloc = Math .max (0, boAmts [0] .value - boAmts [1] .value - amts);
-      return [{
-        id:      'unallocated_',
-        name:    'Unallocated',
-        amounts: [{id: 'unallocated_', value: unalloc}]
-      }, {
-        id:       'blackout_' + boAmts [1] .id,
-        name:     blackouts [1] .name,
-        amounts:  [boAmts [1]],
-        blackout: true
-      }]
+      var inAmt   = boAmts .slice (0, -1) .reduce ((t,a) => {return t + a .value}, 0);
+      var outAmt  = boAmts [boAmts .length - 1] .value
+      var unalloc = Math .max (0, inAmt - outAmt - amts);
+      return {
+        data: [{
+          id:      'unallocated_',
+          name:    'Unallocated',
+          amounts: [{id: 'unallocated_', value: unalloc}]
+        }, {
+          id:       'blackout_' + boAmts [boAmts .length - 1] .id,
+          name:     blackouts [boAmts .length - 1] .name,
+          amounts:  [boAmts [boAmts .length - 1]],
+          blackout: true
+        }],
+        getUpdate: async data => {
+          let nb = await getBlackouts (data .data);
+          return [{update: nb .data [0]}, {update: nb .data [1]}]
+        }
+      }
     }
     var dates = [{start: this._budget .getStartDate(), end: this._budget .getEndDate()}];
     var data  = await this._getChildrenData (type, id, dates);
+    let blackoutData;
     if (blackouts) {
-      let bo = await getBlackouts (data .data);
-      for (let i=0; i<2; i++)
-        if (bo [i] .amounts [0] .value != 0)
-          data .data .push (bo [i]);
+      blackoutData = await getBlackouts (data .data);
+      for (let i = 0; i < 2; i++)
+        if (blackoutData .data [i] .amounts [0] .value != 0)
+          data .data .push (blackoutData .data [i]);
     }
     return {
       name: this._categories .get (id .split ('_') .slice (-1) [0]) .name,
@@ -882,31 +899,43 @@ class Navigate {
         blackout:  c .blackout,
       }}),
       getUpdate: async (e,m,i) => {
-        let update = await data .getUpdate (e,m,i);
-        if (update) {
-          let nu = [];
-          for (let u of update)
-            if (u .needReplace) {
-              nu .push ({replace: await this._getYearsData (type, id, blackouts)})
-            } else if (u .needUpdate && u .affected .startsWith ('blackout_')) {
-              let bo = await getBlackouts ((await this._getChildrenData (type, id, dates)) .data);
-              nu .push ({update: bo [0]}, {update: bo [1]})
-            } else
-              nu .push (u);
-          return nu;
-        }
+        let updates = await data .getUpdate (e,m,i);
+        if (blackoutData)
+          updates = (updates || []) .concat (await blackoutData .getUpdate (await this._getChildrenData (type, id, dates)));
+        return updates;
       }
     }
   }
 
-  async _addYearCategoriesGraph (name, id, blackouts, view, popup, position, direction) {
-    if (! id .includes ('_')) {
+  async _addYearCategoriesGraph (name, ids, blackouts, view, popup, position, direction) {
+    ids = ids
+      .map    (id => {return id .startsWith ('leaf_')? id .split('_') [1]: id})
+      .filter (id => {return ! id .includes ('_')});
+    if (ids .length) {
       var type = name == '_budgetChart'? NavigateValueType .BUDGET: NavigateValueType .ACTUALS;
-      var data = await this._getYearsData (type, id, blackouts);
+      var data = await Promise .all (ids .map (async (id,i) => {
+        let data = await this._getYearsData (type, id, blackouts);
+        if (i != 0)
+          for (let c of data .cats) {
+            c .name        = data .name + ': ' + c .name;
+            c .isSecondary = true;
+          }
+        return data;
+      }));
+      data = data .reduce ((u,d) => {
+        u .cats = (u .cats || []) .concat (d .cats);
+        u .getUpdate = (u .getUpdate || []) .concat (d .getUpdate);
+        if (! u .name)
+          u .name = d .name;
+        return u
+      }, {})
       if (data .cats .length && (!popup || data .cats .length > 1 || ! data .cats [0] .id .includes ('leaf_'))) {
         let updater = this._addUpdater (view, async (eventType, model, ids) => {
-          let update = await data .getUpdate (eventType, model, ids);
-          if (update)
+          let update = (await Promise .all (data .getUpdate .map (async g => {return g (eventType, model, ids)})))
+            .reduce ((update, u) => {
+              return u? update .concat (u): update;
+            }, [])
+          if (update .length)
             updateView (update);
         })
         var updateView = view .addDoughnut (data, name, popup, position, direction, () => {
@@ -917,12 +946,13 @@ class Navigate {
   }
 
   async _addYearCategoriesGraphs (name, view, toHtml) {
-    var income  = this._budget .getIncomeCategory();
-    var savings = this._budget .getSavingsCategory();
-    var expense = this._budget .getExpenseCategory();
+    var income      = this._budget .getIncomeCategory();
+    var withdrawals = this._budget .getWithdrawalsCategory();
+    var savings     = this._budget .getSavingsCategory();
+    var expense     = this._budget .getExpenseCategory();
     view .addGroup (name + 's', toHtml);
-    for (let root of [income, savings, expense])
-      await this._addYearCategoriesGraph (name, root._id, root == savings && [income, expense], view);
+    for (let root of [[income,withdrawals], [savings], [expense]])
+      await this._addYearCategoriesGraph (name, root .map (r => {return r._id}), root .includes (savings) && [income, withdrawals, expense], view);
   }
 
 
@@ -959,6 +989,7 @@ class Navigate {
       }});
       let total = ['month', 'year'] .reduce ((total, per) => {
         total [per] = amounts .reduce ((o, entry) => {
+          if (entry .amount [per])
           if (entry .amount [per])
             for (let p of Object .keys (entry .amount [per] .amounts))
               o[p] = (o[p] || 0) + entry .amount [per] .amounts [p];
@@ -1085,7 +1116,7 @@ class Navigate {
 
   _addProgressGraphs() {
     var date       = Types .dateMY .today();
-    var roots      = [this._budget .getExpenseCategory(), this._budget .getSavingsCategory(), this._budget .getIncomeCategory()];
+    var roots      = [this._budget .getExpenseCategory(), this._budget .getSavingsCategory(), this._budget .getIncomeCategory(), this._budget .getWithdrawalsCategory()];
     var labelWidth = this._getProgressGraphLabels (roots);
     let added      = false;
     for (let root of roots)
@@ -1104,9 +1135,10 @@ class Navigate {
   _addBigPicture() {
     let updateView = this._progressView .addProgressSidebarGroup('Savings this Year', '');
     let update = varianceList => {
-      let sav = this._budget .getAmount (this._budget .getSavingsCategory()) .amount;
-      let inc = this._budget .getAmount (this._budget .getIncomeCategory())  .amount;
-      let exp = this._budget .getAmount (this._budget .getExpenseCategory()) .amount;
+      let sav = this._budget .getAmount (this._budget .getSavingsCategory())     .amount;
+      let inc = this._budget .getAmount (this._budget .getIncomeCategory())      .amount;
+      let exp = this._budget .getAmount (this._budget .getExpenseCategory())     .amount;
+      let wth = this._budget .getAmount (this._budget .getWithdrawalsCategory()) .amount;
       let ovp = varianceList .reduce ((t,v) => {return t + (v .prev < 0? v .prev: 0)}, 0);
       let ovc = varianceList .reduce ((t,v) => {
         let a = Math .max (0, v .prev) + v .cur;
@@ -1148,9 +1180,11 @@ class Navigate {
           tooltip: tt
         });
       }
-      list .push ({name: 'Net Savings',          amount: sav + una + ovr + stc});
+      if (wth < 0)
+        list .push ({name: 'Savings Withdrawals', amount: wth})
+      list .push ({name: 'Net Savings',          amount: sav + una + ovr + stc + wth});
       if (inc != 0)
-        list .push ({name: 'Savings Rate',         percent: (sav + una + ovr + stc) * 1.0 / (-inc)});
+        list .push ({name: 'Savings Rate',         percent: (sav + una + ovr + stc + wth) * 1.0 / (-inc)});
       updateView (list);
     }
     return update;
@@ -1229,6 +1263,7 @@ class Navigate {
    *     dates:  date ranges for each column
    *     groups: [{
    *       name: name for this group
+   *       stackPosition: [i,j] i is stack # and j is position in stack
    *       rows: [{
    *         name:    name for this row
    *         id:      category id(s) for this row
@@ -1239,7 +1274,7 @@ class Navigate {
    *   }
    */
   _getHistoryData (parentIds, date, filter) {
-    var defaultParents  = [this._budget .getIncomeCategory(), this._budget .getSavingsCategory(), this._budget .getExpenseCategory()];
+    var defaultParents  = [this._budget .getIncomeCategory(), this._budget .getWithdrawalsCategory(), this._budget .getSavingsCategory(), this._budget .getExpenseCategory()];
     parentIds           = parentIds || (defaultParents .map (p => {return p._id}));
     var parents         = parentIds .map (pid => {return this._categories .get (pid)});
     // get historic amounts
@@ -1362,8 +1397,13 @@ class Navigate {
         if (p)
           parent .set (p .id .join ('$'), p .name);
       }
+      let stackPosition = normalizedIds .length > 1 &&
+        (pid == this._budget .getIncomeCategory()._id? [0,0]:
+          pid == this._budget .getWithdrawalsCategory()._id? [0,1]:
+            pid == this._budget .getExpenseCategory()._id? [1,0]: [1,1]);
       return {
         name: Array .from (parent .values()) [0],
+        stackPosition: stackPosition,
         id:   Array .from (parent .keys()) [0] .split('$'),
         rows: Array .from (cats [i] .values())
         .sort ((a,b) => {return a.sort==null? 1: b.sort==null? -1: a.sort<b.sort? -1: 1})
@@ -1461,6 +1501,7 @@ class Navigate {
       for (let r of g .rows)
         r .amounts = r .amounts .slice (first, last);
     dataset .highlight -= this._historySliderLeft || 0;
+    dataset .groups = dataset .groups .filter (g => {return g .rows .find (r => {return r .amounts .find (a => {return a.value != 0})})})
     return dataset;
   }
 
@@ -1494,6 +1535,7 @@ class Navigate {
         rds .highlight -= this._historySliderLeft;
         for (let g of rds .groups)
           g .rows = g .rows .filter (r => {return r .amounts .find (a => {return a .value})})
+        rds .groups = rds .groups .filter (g => {return g .rows .find (r => {return r .amounts .find (a => {return a .value != 0})})})
         if (graphUpdater)
           graphUpdater ([{filterCols: {start: this._historySliderLeft, end: this._historySliderRight}}]);
         if (tableUpdater)
@@ -1716,7 +1758,11 @@ class Navigate {
           addCat: a .addCat,
           subCat: a .subCat
         }})
-      }})
+      }}),
+      getUpdate: id => {
+        let nd = this .getNetWorthData();
+        // XXX
+      }
     }
   }
 

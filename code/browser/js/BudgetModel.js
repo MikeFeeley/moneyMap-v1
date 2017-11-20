@@ -127,6 +127,10 @@ class BudgetModel extends Observable {
     return this._schModel .getCategories() .get (this._budget .savingsCategory);
   }
 
+  getWithdrawalsCategory() {
+    return this._schModel .getCategories() .get (this._budget .withdrawalsCategory);
+  }
+
   getSuspenseCategory() {
     return this._schModel. getCategories() .get (this._budget .suspenseCategory);
   }

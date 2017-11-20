@@ -314,7 +314,7 @@ $indent:       24px;
     color: $left-color;
   }
   ._selectedIndex > ._field ._content {
-    color: #222;
+    color: #333;
     font-weight: 400;
   }
   > ul {
@@ -330,7 +330,12 @@ $indent:       24px;
     }
   }
   > ul > li > ._field  ._content {
-    font-weight: 100;
+    font-weight: 200;
+    color: #111;
     font-size: $left-head-font-size;
+  }
+  > ul > li._selectedIndex > ._field ._content {
+    font-weight: 300;
+    color: black;
   }
 }

@@ -387,12 +387,12 @@ class NavigateView extends Observable  {
           }
         })
       });
-      var backgroundAlphas = [0.9, 0.1, 0.5];
-      var borderAlphas     = [1,   0.4, 0.8];
-      var stacks           = [1,2,2];
-      var labelPrefixes    = data .length > 1? [data [0] .name + ': ', data [1] .name + ': ', data [2] .name + ': ']: [data [0] .name + ': '];
+      const backgroundAlphas = [0.5, 0.075];
+      const borderAlphas     = [1,   0.55];
+      let   stacks = [];
       for (let g of groups) {
         let idx = groups .indexOf (g);
+        let stackPosition = dataset .groups [idx] .stackPosition || [0,0];
         this._resetColors();
         for (let i = 0; i < startColor || 0; i ++)
           this._nextColor (true);
@@ -402,17 +402,24 @@ class NavigateView extends Observable  {
             d .backgroundColor = 'rgba(0,0,0,0)';
             d .pointBackgroundColor = 'rgba(221,0,0,1)';
           } else {
-            d .backgroundColor = this._getColor (groups .length > 1? backgroundAlphas [idx]: 0.3, true);
-            d .borderColor     = this._getColor (borderAlphas     [idx], true);
-            d .stack           = stacks [idx];
+            d .backgroundColor = this._getColor (groups .length > 1? backgroundAlphas [stackPosition [1]]: 0.3, true);
+            d .borderColor     = this._getColor (borderAlphas     [stackPosition [1]], true);
+            d .stack           = stackPosition [0];
             d .colorIndex      = this._colorIndex;
           }
-          d .label           = labelPrefixes [idx] + d .label;
+          d .label           = data [idx] .name + ':' + d .label;
           if (d .type != 'line' && d .data .find (a => {return a != 0}))
             this._nextColor (true);
         }
+        if (stackPosition [1])
+          stacks [stackPosition [0]] = (stacks [stackPosition [0]] || []) .concat (g)
+        else
+          stacks [stackPosition [0]] = g .concat (stacks [stackPosition [0]] || []);
       }
-      datasets = groups .length > 1? groups [0] .concat (groups [2]) .concat (groups [1]): groups [0];
+      datasets = [];
+      for (let stack of stacks)
+        for (let group of stack)
+          datasets = datasets .concat (group);
     }
 
     var setDataset = () => {
@@ -719,7 +726,7 @@ class NavigateView extends Observable  {
     this._resetColors();
     var backgroundColors = data .cats .map (c => {
       if (c .amount != 0 && ! c .blackout) {
-        var c = this._getColor (c .amount < 0? 0.2: 0.5, true);
+        var c = this._getColor (c .amount < 0? 0.2: c .isSecondary? 0.2: 0.5, true);
         if (c .amount != 0)
           this._nextColor (true);
       } else
@@ -729,7 +736,7 @@ class NavigateView extends Observable  {
     this._resetColors();
     var hoverBackgroundColors = data .cats .map (c => {
       if (c .amount != 0 && ! c .blackout) {
-        var c = this._getColor (0.9, true);
+        var c = this._getColor (c .isSecondary? 0.6: 0.9, true);
           this._nextColor (true);
       } else
         c = 'rgba(128,128,128,0.1)';
@@ -881,7 +888,7 @@ class NavigateView extends Observable  {
 
     var updateGroup = group => {
       if (group) {
-        var tr     = groupTrs [dataset .groups .indexOf (group)];
+        var tr = groupTrs [dataset .groups .indexOf (group)];
         if (tr) {
           var totals = group .rows .reduce ((total, row) => {
             return row .amounts .map ((a,i) => {
@@ -903,6 +910,25 @@ class NavigateView extends Observable  {
               text: values [i],
               class: (values [i] && values [i] .charAt (0) == '-'? 'negative': '') + (dataset .highlight == i - 1? ' _highlight': '')
             }) .appendTo (tr);
+        }
+      }
+    }
+
+    var updateIncome = income => {
+      dataset .income = income;
+      for (let group of dataset .groups) {
+        var tr = groupTrs [dataset .groups .indexOf (group)];
+        if (tr) {
+          let tds = tr .children ('td');
+          let totals = group .rows .reduce ((total, row) => {
+            return row .amounts .map ((a,i) => {
+              return a .value + (total [i] || 0)
+            })
+          },[]);
+          if (totals .length == 0)
+            totals = dataset .cols .map (c => {return ''})
+          let grandTotal = totals .reduce ((s,a) => {return s + a}, 0);
+          $(tds [tds .length -1]) .text (Types .percent .toString (grandTotal / dataset .income));
         }
       }
     }
@@ -984,7 +1010,7 @@ class NavigateView extends Observable  {
         for (let i=0; i<cols.length; i++)
           $('<th>', {text: cols [i], class: dataset .highlight == i - 1? '_highlight': ''}) .appendTo (headTr);
       for (let group of dataset .groups) {
-        if (! skipHead) {
+        if (!skipHead) {
           groupTrs .push ($('<tr>', {class: '_subtotal'}) .appendTo (tbody));
           updateGroup (group);
         }
@@ -1035,6 +1061,8 @@ class NavigateView extends Observable  {
             updateRow   (row);
           if (group || row)
             updateFoot();
+        } else if (update .updateIncome) {
+          updateIncome (update .updateIncome);
         } else if (update .replace) {
           dataset = update .replace;
           table .remove();
