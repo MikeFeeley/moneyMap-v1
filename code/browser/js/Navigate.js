@@ -702,7 +702,7 @@ class Navigate {
   async _getData (
     type,
     dates,
-    ids           = [this._budget .getIncomeCategory()._id, this._budget .getWithdrawalsCategory()._id, this._budget .getSavingsCategory()._id, this._budget .getExpenseCategory()._id],
+    ids           = [this._budget .getWithdrawalsCategory()._id, this._budget .getIncomeCategory()._id, this._budget .getSavingsCategory()._id, this._budget .getExpenseCategory()._id],
     allowLeaf,
     includeMonths = true,
     includeYears  = true,
@@ -1274,7 +1274,7 @@ class Navigate {
    *   }
    */
   _getHistoryData (parentIds, date, filter) {
-    var defaultParents  = [this._budget .getIncomeCategory(), this._budget .getWithdrawalsCategory(), this._budget .getSavingsCategory(), this._budget .getExpenseCategory()];
+    var defaultParents  = [this._budget .getWithdrawalsCategory(), this._budget .getIncomeCategory(), this._budget .getSavingsCategory(), this._budget .getExpenseCategory()];
     parentIds           = parentIds || (defaultParents .map (p => {return p._id}));
     var parents         = parentIds .map (pid => {return this._categories .get (pid)});
     // get historic amounts
