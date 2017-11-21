@@ -591,49 +591,56 @@ class Navigate {
     }
   }
 
-  async _getChildrenData (type, id, dates, allowLeaf, includeMonths = true, includeYears = true, addCats = [], altDates) {
-    let isLeaf = (id .includes ('other_') || id .includes ('payee_') || (await this._getChildren (type, id, altDates)) .filter (c => {return ! c .includes ('budget_')}) .length == 0);
-    if (isLeaf && (! allowLeaf || id .includes ('leaf_')))
+  async _getChildrenData (type, id, dates, includeMonths = true, includeYears = true, addCats = [], altDates) {
+    if (id .includes ('leaf_'))
       return {data: []}
     else {
-      let cat         = this._categories .get (id .split ('_') .slice (-1) [0]);
-      let isCredit    = this._budget .isCredit (cat);
-      let isGoal      = this._budget .isGoal   (cat);
-      let children    = await this._getChildren (type, id, altDates);
-      let hasChildren = children .length > 1 || (children .length == 1 && ! children [0] .includes ('budget_'));
-      let data        = (await Promise .all (((hasChildren && children) || [id] .concat (children))
-        .map (async child => {return {
-          name:     this._getName (type, child) || '',
-          id:       child,
-          isCredit: isCredit,
-          isGoal:   isGoal,
-          isYear:   includeMonths != includeYears? this._categories .getType (this._categories .get (child .split ('_') .slice (-1) [0])) == ScheduleType .YEAR: undefined,
-          amounts:  await this._getAmounts (type, child, isCredit, dates, includeMonths, includeYears, addCats, altDates),
-          type:     child .includes ('budget_') && 'line'
-        }})))
-       .filter (d => {return d .amounts .find (a => {return a .value != 0})})
-      if (data .length == 1 && data [0] .id .startsWith ('budget_'))
-        data = [];
-      if (! id .includes ('other_')) {
-        let totals = data .reduce ((t,r) => {return ! r .id .includes ('budget_')? r .amounts .map ((a,i) => {return (t[i] || 0) + a .value}): t}, []);
-        data .push ({
-          name:     'Other',
-          id:       'other_' + cat._id,
-          isCredit: isCredit,
-          isGoal:   isGoal,
-          amounts:  (await this._getAmounts (type, id, isCredit, dates, includeMonths, includeYears, addCats, altDates)) .map ((a,i) => {
-            return {id: 'other_' + cat._id, value: a .value - (totals [i] || 0)
-          }})
-        })
+      let getAmounts  = async id => {return await this._getAmounts (type, id, isCredit, dates, includeMonths, includeYears, addCats, altDates)}
+      let thisCat     = this._categories .get (id .split ('_') .slice (-1) [0]);
+      let isCredit    = this._budget .isCredit (thisCat);
+      let isGoal      = this._budget .isGoal   (thisCat);
+      let thisAmounts = await this._getAmounts (type, thisCat._id, isCredit, dates, includeMonths, includeYears, addCats, altDates);
+      let children    = (await Promise .all ((await this._getChildren (type, id, altDates))
+        .map    (async cat => {return {cat: cat, amounts: await getAmounts (cat)}})))
+        .filter (child     => {return child .amounts .find (a => {
+          return a .value != 0  || [] .concat (a .id) .find (i => {return i .startsWith ('budget_')})
+        })});
+      let realChildren = children .filter (child => {return ! child .cat .startsWith ('budget_')});
+      if (realChildren .length == 1) {
+        let isLeaf = await (await this._getChildren (type, children [0] .cat, altDates))
+          .filter (cat       => {return ! cat .startsWith ('budget_')})
+          .find   (async cat => {return (await getAmounts (cat)) .find (a => {return a .value != 0})})
+        if (isLeaf)
+          children [0] .cat = 'leaf_' + children [0] .cat;
+      } else if (realChildren .length == 0) {
+        children .push ({cat: 'leaf_' + id, amounts: thisAmounts});
       }
-      data          = data .filter (r => {return r .id .startsWith ('budget_') || r .amounts .reduce ((s,a) => {return s + a .value}, 0) != 0});
-      let realData  = data .filter (d => {return ! d .id .includes ('budget_')});
-      let hasBudget = data .length != realData .length;
-      let hasOther  = realData .length && realData [realData .length -1] .id .includes ('other_');
-      let isLeaf    = (data .length == 1 || (data .length == 2 && hasBudget)) & (data .length != 0 &&
-          (await this._getChildren (type, data [0] .id, altDates)) .filter (c => {return ! c .includes ('budget_')}) .length == 0);
-      if (isLeaf)
-        data [0] .id = 'leaf_' + data [0] .id;
+      let data = children .map (child => {
+        let isYear = includeMonths != includeYears && this._categories .getType (this._categories .get (child .cat .split ('_') .slice (-1) [0])) == ScheduleType .YEAR;
+        return {
+          name:     this._getName (type, child .cat) || '',
+          id:       child .cat,
+          isCredit: isCredit,
+          isGoal:   isGoal,
+          isYear:   isYear,
+          amounts:  child .amounts,
+          type:     child .cat .includes ('budget_') && 'line'
+        }
+      });
+      let hasOther;
+      if (! id .includes ('other_')) {
+        let totals = data   .reduce ((t,d) => {return ! d .id .includes ('budget_')? d .amounts .map ((a,i) => {return (t[i] || 0) + a .value}): t}, []);
+        let others = totals .map    ((t,i) => {return thisAmounts [i] .value - t});
+        hasOther   = others .find   (o     => {return o != 0})
+        if (hasOther)
+          data .push ({
+            name:     'Other',
+            id:       'other_' + thisCat._id,
+            isCredit: isCredit,
+            isGoal:   isGoal,
+            amounts:  others .map (o => {return {id: 'other_' + thisCat._id, value: o}})
+          })
+      }
       return {
         data:      data,
         getUpdate: async (eventType, model, ids) => {
@@ -653,7 +660,7 @@ class Navigate {
               if (aff .length) {
                 let up = (await Promise .all (aff .map (async af => {
                   let aid     = af .id .split ('_') .slice (-1) [0];
-                  let newData = await this._getChildrenData (type, id, dates, allowLeaf, includeMonths, includeYears, addCats, altDates);
+                  let newData = await this._getChildrenData (type, id, dates, includeMonths, includeYears, addCats, altDates);
                   if (hasOther == (newData .data .length && newData .data [newData .data .length - 1] .id .includes ('other_'))) {
                     let newAff = newData .data .filter (d => {return d .id .split ('_') .slice (-1) [0] == aid});
                     if (newAff .length == 0)
@@ -706,7 +713,6 @@ class Navigate {
     type,
     dates,
     ids           = [this._budget .getWithdrawalsCategory()._id, this._budget .getIncomeCategory()._id, this._budget .getSavingsCategory()._id, this._budget .getExpenseCategory()._id],
-    allowLeaf,
     includeMonths = true,
     includeYears  = true,
     addCats       = []
@@ -727,7 +733,7 @@ class Navigate {
     var cols   = isYear? []: dates .map (d => {return Types .dateM .toString (d .start)});
     var groups = (await Promise .all (ids
       .map (async id => {
-        let data          = await this._getChildrenData (type, id, dates, allowLeaf, includeMonths, includeYears, addCats, altDates);
+        let data          = await this._getChildrenData (type, id, dates, includeMonths, includeYears, addCats, altDates);
         let stackPosition = ids .length > 1 &&
           (id == this._budget .getIncomeCategory()._id? [0,0]:
             id == this._budget .getWithdrawalsCategory()._id? [0,1]:
@@ -780,7 +786,7 @@ class Navigate {
           let u = await g .getUpdate (eventType, model, eventIds);
           if (u) {
             if (u [0] .needReplace)
-              u = [{replace: await this._getData (type, dates, ids, allowLeaf, includeMonths, includeYears, addCats)}]
+              u = [{replace: await this._getData (type, dates, ids, includeMonths, includeYears, addCats)}]
             update = update .concat (u) .concat ({updateIncome: this._getIncome (type, dates [0] .start, dates [dates .length - 1] .end)});
           }
         }
@@ -789,13 +795,13 @@ class Navigate {
     }
   }
 
-  async _getMonthsData (type, dates, ids, allowLeaf, includeMonths, includeYears, addCats) {
-    let data = await this._getData (type, dates, ids, allowLeaf, includeMonths, includeYears, addCats);
+  async _getMonthsData (type, dates, ids, includeMonths, includeYears, addCats) {
+    let data = await this._getData (type, dates, ids, includeMonths, includeYears, addCats);
     let parentUpdate = data .getUpdate;
     data .getUpdate = async (e,m,i) => {
       let up = await Promise .all ((await parentUpdate (e,m,i)) .map (async u => {
         if (u .needUpdate)
-          return {replace: await this._getData (type, dates, ids, allowLeaf, includeMonths, includeYears, addCats)}
+          return {replace: await this._getData (type, dates, ids, includeMonths, includeYears, addCats)}
         else
           return u;
       }))
@@ -810,7 +816,7 @@ class Navigate {
    */
   async _addMonthsGraph (name, view, ids, popup, position, toHtml, includeMonths=true, includeYears=true, addCats=[], dates=null, startColor=0) {
     var type    = name .includes ('budget')? NavigateValueType .BUDGET_YR_AVE_ACT: NavigateValueType .ACTUALS_BUD;
-    var dataset = await this._getMonthsData (type, dates, ids, true, includeMonths, includeYears, addCats);
+    var dataset = await this._getMonthsData (type, dates, ids, includeMonths, includeYears, addCats);
     if (!ids || ids .length > 1) {
       let year;
       if (!dates || dates .start == this._budget .getStartDate())
@@ -839,7 +845,7 @@ class Navigate {
    * Add TABLE (either budget or actual) showing children of specified root list
    */
   async _addMonthsTable (name, view, ids, dates, skipFoot, popup, position, toHtml, col, title, includeMonths, includeYears) {
-    var dataset = await this._getMonthsData (name .includes ('budget')? NavigateValueType .BUDGET: NavigateValueType .ACTUALS, dates, ids, false, includeMonths, includeYears);
+    var dataset = await this._getMonthsData (name .includes ('budget')? NavigateValueType .BUDGET: NavigateValueType .ACTUALS, dates, ids, includeMonths, includeYears);
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       var updater = this._addUpdater (view, async (eventType, model, ids) => {
         let update = await dataset .getUpdate (eventType, model, ids);

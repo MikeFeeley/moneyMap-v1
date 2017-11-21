@@ -27,13 +27,13 @@ class App {
 
       this._tabs = new ui.Tabs ($('body'));
       this._proT = this._tabs .addTab  ('Progress');
-      this._traT = this._tabs .addTab  ('Transactions');
+      this._traT = this._tabs .addTab  ('Synchronize');
       this._actT = this._tabs .addTab  ('Activity');
       this._budT = this._tabs .addTab  ('Budget');
       this._plaT = this._tabs. addTab  ('Plan');
       this._perT = this._tabs .addTab  ('Perspective');
       this._weaT = this._tabs .addTab  ('Wealth');
-      this._setT = this._tabs .addTab  ('Settings');
+      this._setT = this._tabs .addTab  ('Accounts');
       let tl = this._tabs .addTool (this._user .getLabel (l => {
         this._tabs .changeToolName (tl, l);
       }), e => {this._user .showMenu ($(e .target))})

@@ -407,7 +407,8 @@ class NavigateView extends Observable  {
             d .stack           = stackPosition [0];
             d .colorIndex      = this._colorIndex;
           }
-          d .label           = data [idx] .name + ':' + d .label;
+          if (data [idx] .name != d .label)
+            d .label = data [idx] .name + ':' + d .label;
           if (d .type != 'line' && d .data .find (a => {return a != 0}))
             this._nextColor (true);
         }
