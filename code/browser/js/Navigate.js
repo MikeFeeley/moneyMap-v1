@@ -601,7 +601,7 @@ class Navigate {
       let isGoal      = this._budget .isGoal   (cat);
       let children    = await this._getChildren (type, id, altDates);
       let hasChildren = children .length > 1 || (children .length == 1 && ! children [0] .includes ('budget_'));
-      let data        = await Promise .all (((hasChildren && children) || [id] .concat (children))
+      let data        = (await Promise .all (((hasChildren && children) || [id] .concat (children))
         .map (async child => {return {
           name:     this._getName (type, child) || '',
           id:       child,
@@ -610,7 +610,10 @@ class Navigate {
           isYear:   includeMonths != includeYears? this._categories .getType (this._categories .get (child .split ('_') .slice (-1) [0])) == ScheduleType .YEAR: undefined,
           amounts:  await this._getAmounts (type, child, isCredit, dates, includeMonths, includeYears, addCats, altDates),
           type:     child .includes ('budget_') && 'line'
-        }}));
+        }})))
+       .filter (d => {return d .amounts .find (a => {return a .value != 0})})
+      if (data .length == 1 && data [0] .id .startsWith ('budget_'))
+        data = [];
       if (! id .includes ('other_')) {
         let totals = data .reduce ((t,r) => {return ! r .id .includes ('budget_')? r .amounts .map ((a,i) => {return (t[i] || 0) + a .value}): t}, []);
         data .push ({
