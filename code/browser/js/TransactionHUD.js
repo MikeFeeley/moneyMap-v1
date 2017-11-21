@@ -187,22 +187,29 @@ class TransactionHUD extends TransactionAndRulesTable {
     this._html = $('<div>', {class: '_TransactionHUD'}) .appendTo (toHtml);
     this._html [0] .addEventListener ('webkitmouseforcewillbegin', e => {e .preventDefault()}, true)
     this._content = $('<div>', {class: '_hudcontent _TransactionReadOnly'}) .appendTo (this._html);
-    let mousedownFired;
-    this._content .on ('mousedown webkitmouseforcedown', () => {mousedownFired = true})
+    let mousedownFired, mousedownTarget, mousedownPageY;
+    this._content .on ('mousedown webkitmouseforcedown', e => {mousedownFired = true; mousedownTarget = $(e .target); mousedownPageY = e .pageY})
     this._content .on ('mouseup webkitmouseforceup', e => {
       if (this._view._options .readOnly && mousedownFired) {
         mousedownFired = false;
-        var target = $(e .target);
-        var field  = target .hasClass ('_content') && target .parent() .parent ('._field') .data ('field');
+        let target = mousedownTarget || $(e .target);
+        let pageY  = mousedownPageY || e .pageY;
+        let field  = target .hasClass ('_content') && target .parent() .parent ('._field') .data ('field');
         if (field) {
           if ((e .originalEvent .webkitForce > 1 || e .originalEvent .altKey) && field._name == 'category') {
-            let date     = $(e .target) .closest ('tr') .find ('._field_date') .data ('field')._value;
-            let html     = $(e .target) .offsetParent();
-            let position = ui .calcPosition ($(e .target), html, {top: 20, left: -470});
+            let date     = target .closest ('tr') .find ('._field_date') .data ('field')._value;
+            let html     = target .offsetParent();
+            let position = ui .calcPosition (target, html, {top: 20, left: -470});
             BudgetProgressHUD .show (field._value, html, position, this._accounts, this._variance, date);
           } else {
-            let selectedText = window.getSelection().toString();
-            let top          = e .pageY + this._html .offsetParent() .scrollTop() - this._html .offsetParent() .offset() .top;
+            let selectedText;
+            if (field._name == 'date') {
+              let endField = $(e.target) .closest ('tr') .find ('._field_date');
+              selectedText = endField .data ('field');
+            } else
+              selectedText =  window .getSelection() .toString() .split ('\n') [0];
+            window .getSelection() .empty();
+            let top = pageY + this._html .offsetParent() .scrollTop() - this._html .offsetParent() .offset() .top;
             TransactionHUD .showRefineByField (
               this._title, JSON .parse (JSON .stringify (this._query)), field, selectedText, this._accounts, this._variance, this._html .offsetParent(),
               {top: top, left: this._html .position() .left + 50, right: 'auto'},
@@ -269,19 +276,36 @@ class TransactionHUD extends TransactionAndRulesTable {
 
   static showRefineByField (title, query, field, selectedText, accounts, variance, toHtml, position, onClose, monthStart, monthEnd) {
     query = Object .keys (query) .reduce ((o,f) => {o[f] = query[f]; return o}, {});
-    if (selectedText .length && ['payee', 'description'] .includes (field._name)) {
-      var selectValue = selectedText;
+    let desc;
+    if (field._name == 'date') {
+      if (selectedText && selectedText != field) {
+        let otherField = selectedText;
+        let startField, endField;
+        if (field._value < otherField._value) {
+          startField = field;
+          endField   = otherField;
+        } else {
+          startField = otherField;
+          endField   = field;
+        }
+        query .date = {$gte: startField._value, $lte: endField._value};
+        desc        = ' is between ' + startField._get() + ' and ' + endField._get();
+      } else {
+        query .date = field._value;
+        desc        = ' is ' + field._get();
+      }
+    } else if (selectedText .length && ['payee', 'description'] .includes (field._name)) {
+      let selectValue = selectedText, selectType;
       if (field._value .startsWith (selectedText)) {
-        var selectType = 'starts with';
+        selectType = 'starts with';
         query [field._name] = {$regex: '^' + selectedText .replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + '.*'};
       } else {
-        var selectType = 'contains';
+        selectType = 'contains';
         query [field._name] = {$regex: '.*' + selectedText .replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + '.*'};
       }
+      desc = ' ' + selectType + ' "' + selectValue + '"';
     } else {
-      var selectType  = 'is';
-      var selectValue = field._get();
-      let value       = field._value;
+      let value = field._value;
       if (field._name == 'category') {
         let c = variance .getBudget() .getCategories() .get (value);
         let p = c .parent || {};
@@ -290,12 +314,11 @@ class TransactionHUD extends TransactionAndRulesTable {
           value = {$in: h}
       }
       query [field._name] = value;
+      desc                = ' is ' + field._get();
     }
-    if (['payee', 'description'] .includes (field._name))
-      selectValue = '"' + selectValue + '"';
     var name = field._name .charAt (0) .toUpperCase() + field._name .slice (1);
     var [t,s] = Array .isArray (title)? title: [title,''];
-    s = s + (s.length? ' and ': 'Where ') + name + ' ' + selectType + ' ' + selectValue;
+    s = s + (s.length? ' and ': 'Where ') + name + ' ' + desc;
     TransactionHUD .show ([t,s], query, accounts, variance, toHtml, position, onClose, monthStart, monthEnd);
   }
 
