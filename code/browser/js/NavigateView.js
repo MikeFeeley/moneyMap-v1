@@ -402,10 +402,11 @@ class NavigateView extends Observable  {
             d .backgroundColor = 'rgba(0,0,0,0)';
             d .pointBackgroundColor = 'rgba(221,0,0,1)';
           } else {
-            d .backgroundColor = this._getColor (groups .length > 1? backgroundAlphas [stackPosition [1]]: 0.3, true);
-            d .borderColor     = this._getColor (borderAlphas     [stackPosition [1]], true);
-            d .stack           = stackPosition [0];
-            d .colorIndex      = this._colorIndex;
+            d .backgroundColor      = this._getColor (groups .length > 1? backgroundAlphas [stackPosition [1]]:       0.3,       true);
+            d .hoverBackgroundColor = this._getColor (groups .length > 1? backgroundAlphas [stackPosition [1]] + 0.0: 0.3 + 0.0, true);
+            d .borderColor          = this._getColor (borderAlphas     [stackPosition [1]], true);
+            d .stack                = stackPosition [0];
+            d .colorIndex           = this._colorIndex;
           }
           if (data [idx] .name != d .label)
             d .label = data [idx] .name + ':' + d .label;
