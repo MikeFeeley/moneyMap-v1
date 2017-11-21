@@ -574,64 +574,60 @@ class User extends Observable {
     this._budgets = this._sortByName (await this._budgetModel .find());
     let cm = new Model ('categories', this .getDatabaseName());
     let sm = new Model ('schedules',  this .getDatabaseName());
-    let exp = await cm .insert ({
-      name: 'Spending',
-      parent: null,
-      sort: 1,
-      budgets: [b._id]
-    })
-    let sav = await cm .insert ({
-      name: 'Savings',
-      parent: null,
-      sort: 2,
-      budgets: [b._id],
-      goal: true
-    })
-    let inc = await cm .insert({
-      name: 'Income',
-      parent: null,
-      sort: 3,
-      budgets: [b._id],
-      credit: true,
-      goal: true
-    })
-    let wth = await cm .insert ({
-      name: 'Withdrawals',
-      parent: null,
-      sort: 4,
-      budgets: [b._id],
-      credit: true,
-    })
-    let sus = await cm .insert ({
-      name: 'Suspense',
-      parent: null,
-      sort: 4,
-      budgets: [b._id]
-    })
+    let roots = [
+      ['Spending',    false, false],
+      ['Savings',     true,  false],
+      ['Income',      true,  true],
+      ['Withdrawals', false, true],
+      ['Suspense',    false, false]
+    ]
+    let rootCats = await Promise .all (roots .map (async (root, index) => {
+      let cat = await cm .find ({name: root[0], parent: null})
+      if (cat .length > 0) {
+        cat = cat [0];
+        await cm .update (cat._id, {budgets: cat .budgets .concat (b._id)})
+      } else
+        cat = await cm .insert({
+          name:    root[0],
+          goal:    root[1],
+          credit:  root[2],
+          parent:  null,
+          budgets: [b._id],
+          sort:    index + 1,
+        })
+      return cat;
+    }));
     await this._budgetModel .update (b._id, {
-      incomeCategory:      inc._id,
-      withdrawalsCategory: wth._id,
-      savingsCategory:     sav._id,
-      expenseCategory:     exp._id,
-      suspenseCategory:    sus._id
+      expenseCategory:     rootCats [0]._id,
+      savingsCategory:     rootCats [1]._id,
+      incomeCategory:      rootCats [2]._id,
+      withdrawalsCategory: rootCats [3]._id,
+      suspenseCategory:    rootCats [4]._id
     });
     let defaultCategories = [
-      {parent: exp, list: [
+      {parent: rootCats [0]._id, list: [
         'Food', 'Alcohol', 'Housing', 'Utilities', 'Household', 'Children', 'Health & Personal', 'Transportation', 'Subscriptions',
         'Gifts', 'Recreation', 'Travel', 'Furniture & Equipment', 'Home Improvement'
       ]},
-      {parent: inc, list: [
+      {parent: rootCats [2]._id, list: [
         'Salary', 'Other Income'
       ]},
-      {parent: sus, list: [
+      {parent: rootCats [4]._id, list: [
         'Transfer', 'Reimbursed'
       ]}
     ]
     for (let group of defaultCategories) {
       let sort = 0;
       group .cats = []
-      for (let name of group .list)
-        group .cats .push (await cm .insert ({name: name, parent: group .parent._id, sort: sort++, budgets: [b._id]}));
+      for (let name of group .list) {
+        let cat = await cm .find ({name: name, parent: group .parent, budgets: b._id});
+        if (cat .length > 0) {
+          cat = cat [0];
+          await cm .update (cat._id, {budgets: cat .budgets .concat (b._id)});
+        } else
+          cat = await cm .insert ({name: name, parent: group .parent, sort: sort++, budgets: [b._id]})
+        group .cats .push (cat);
+      }
     }
     let cats = defaultCategories .reduce ((cats, group) => {return cats .concat (group .cats)}, [])
       .concat (defaultCategories .map (group => {return group .parent}));
