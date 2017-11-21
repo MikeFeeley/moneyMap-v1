@@ -421,6 +421,17 @@ class NavigateView extends Observable  {
       for (let stack of stacks)
         for (let group of stack)
           datasets = datasets .concat (group);
+      if (data .length > 1) {
+        var height = [[],[]];
+        for (let i = 0; i < labels .length; i++)
+          for (let ds of datasets)
+            if (ds .stack)
+              height [ds .stack - 1] [i] = (height [ds .stack - 1] [i] || 0) + ds .data [i];
+        let max = height .reduce ((m,h) => {return Math .max (m, h .reduce ((m,v) => {return Math .max (m, v)}, 0))}, 0);
+        let minResolution = max / 50;
+        for (let ds of datasets)
+          ds .data = ds .data .map (d => {return d < 0 && -d < minResolution? 0: d});
+      }
     }
 
     var setDataset = () => {
@@ -475,19 +486,6 @@ class NavigateView extends Observable  {
         );
     }
     var canvas = $('<canvas>') .appendTo (graph .children('._popupContent'));
-    if (data .length > 1) {
-      var height = [[],[]];
-      for (let i = 0; i < labels .length; i++)
-        for (let ds of datasets)
-          if (ds .stack)
-            height [ds .stack - 1] [i] = (height [ds .stack - 1] [i] || 0) + ds .data [i];
-      let max = height .reduce ((m,h) => {return Math .max (m, h .reduce ((m,v) => {return Math .max (m, v)}, 0))}, 0);
-      let minResolution = max / 500;
-      for (let ds of datasets)
-        ds .data = ds .data .map (d => {
-          return d < 0 && -d < minResolution? 0: d
-        })
-    }
     var chart;
     var config = {
       type: 'bar',
