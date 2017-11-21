@@ -563,6 +563,10 @@ class User extends Observable {
 
   /**
    * Create and initialize an empty budget
+   *    XXX UNRESOLVED: What happens when you create a new budget for an existing period
+   *    and there are transactions for that period with categories that are not part of
+   *    default list?  These transactions will not be part of actuals.  There is a related
+   *    problem with changing budget dates.
    */
   async _createEmptyBudget (notifyObservers) {
     let y  = Types .date._year (Types .date .today());
