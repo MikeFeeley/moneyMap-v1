@@ -1454,8 +1454,7 @@ class Navigate {
           if (eventIds .includes (g .id))
             update .push ({update: {id: g .id, name: g .name}});
           for (let r of g .rows)
-            if (r .id .find (i => {return eventIds .includes (i)}))
-              update .push ({update: {id: r .id, name: r .name, amounts: r .amounts}});
+            update .push ({update: {id: r .id, name: r .name, amounts: r .amounts}});
         }
         return update;
       }
