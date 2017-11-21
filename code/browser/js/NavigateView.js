@@ -1417,7 +1417,7 @@ Chart .controllers .doughnut = Chart .controllers .doughnut .extend ({
     var chart        = thisChart .chart;
     var ctx          = chart .ctx;
     var centerLabel  = thisChart .config .centerLabel;
-    if (centerLabel) {
+    if (centerLabel && centerLabel [1]) {
       ctx.textAlign    = 'center';
       ctx.textBaseline = 'middle';
       ctx.font         = '20px Helvetica';
