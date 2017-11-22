@@ -98,17 +98,33 @@ class TransactionHUD extends TransactionAndRulesTable {
     );
   }
 
-  _setTitleDate() {
+  _setTitleDate (clearDateSubtitle) {
     var budget = this._variance .getBudget();
     var t = (Array .isArray (this._title)? this._title[0] : this._title) .split (' ');
     t.length -= 1;
-    if (Types .date._difMonths (this._query .date .$lte, this._query .date .$gte) > 1) {
+    let toYear = Types .date._difMonths (this._query .date .$lte, this._query .date .$gte) > 1;
+    if (toYear || clearDateSubtitle) {
+      if (this._title [1]) {
+        let sub = this._title [1] .split (' ');
+        let pos = sub .findIndex (w => {return w == 'Date'});
+        if (pos != -1) {
+          sub .splice (pos - 1, sub [pos + 2] == 'between'? 7: 4);
+          sub = sub .join (' ');
+          this._content .find ('._subtitle') .text (sub);
+          if (! toYear)
+            this._title [1] = sub;
+        }
+      }
+    }
+    if (toYear) {
       if (Types .date._month (this._query .date .$gte) == 1)
         t [t .length - 1] = ' Year ' + Types .date._year (this._query .date .$gte)
       else
         t [t .length - 1] = ' Year ' + Types .dateFY .toString (this._query .date .$lte, budget .getStartDate(), budget .getEndDate())
     } else {
       t [t .length - 1] = Types .dateMonthY .toString (this._query .date .$gte);
+      if (this._title [1])
+        this._content .find ('._subtitle') .text (this._title [1])
     }
     t = t .join (' ');
     if (Array.isArray (this._title))
@@ -123,7 +139,7 @@ class TransactionHUD extends TransactionAndRulesTable {
       delta *= Types .date._difMonths (this._query .date .$lte, this._query .date .$gte);
     this._query .date .$gte = Types .date .addMonthStart (this._query .date .$gte, delta);
     this._query .date .$lte = Types .date .monthEnd (Types .date .addMonthStart (this._query .date .$lte, delta));
-    this._setTitleDate();
+    this._setTitleDate (true);
     (async () => {await this .refreshHtml()}) ();
   }
 
@@ -289,10 +305,10 @@ class TransactionHUD extends TransactionAndRulesTable {
           endField   = field;
         }
         query .date = {$gte: startField._value, $lte: endField._value};
-        desc        = ' is between ' + startField._get() + ' and ' + endField._get();
+        desc        = 'is between ' + startField._get() + ' and ' + endField._get();
       } else {
-        query .date = field._value;
-        desc        = ' is ' + field._get();
+        query .date = {$gte: field._value, $lte: field._value};
+        desc        = 'is ' + field._get();
       }
     } else if (selectedText .length && ['payee', 'description'] .includes (field._name)) {
       let selectValue = selectedText, selectType;
@@ -314,7 +330,7 @@ class TransactionHUD extends TransactionAndRulesTable {
           value = {$in: h}
       }
       query [field._name] = value;
-      desc                = ' is ' + field._get();
+      desc                = 'is ' + field._get();
     }
     var name = field._name .charAt (0) .toUpperCase() + field._name .slice (1);
     var [t,s] = Array .isArray (title)? title: [title,''];
@@ -342,7 +358,7 @@ class TransactionHUD extends TransactionAndRulesTable {
     let budget     = variance .getBudget();
     let categories = budget .getCategories();
     let cat        = categories .get (id) || {};
-    let qualifier  = includeMonths && !includeYears? ' (Monthly) ': includeYears && !includeMonths? ' (Anytime) ': '';
+    let qualifier  = includeMonths && !includeYears? ' (Monthly)': includeYears && !includeMonths? ' (Anytime)': '';
     dates = dates || {start: budget .getStartDate(), end: budget .getEndDate()};
     var title      = [(isOther? 'Other ': '') + cat .name + qualifier + ' for XXX XXX', ''];
     if (selectPayee)
