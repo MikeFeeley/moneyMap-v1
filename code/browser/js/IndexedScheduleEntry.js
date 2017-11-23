@@ -94,18 +94,25 @@ class ScheduleEntryIndex extends ScheduleEntry {
   }
 
   getSelected() {
-    var prev;
+    let prev, group, content;
     if (this._selected) {
-      var e = $('#' + this._name + this._selected);
+      let e = $('#' + this._name + this._selected);
       if (! e .closest ('ul') .closest ('li') .length) {
         prev = e .prev() .find ('ul') .find ('li');
         prev = $(prev [prev .length - 1]);
+        if (prev .length == 0)
+          group = e .closest ('li');
       } else {
         prev = e .prev();
-        if (! prev .length) {
-          prev = e .closest ('ul') .closest ('li') .prev() .find ('ul') .find ('li');
-          prev = $(prev [prev .length - 1])
-        }
+        if (prev .length == 0)
+          group = e .closest ('ul') .closest ('li')
+      }
+      if (prev .length == 0) {
+        do {
+          group   = group .prev();
+          content = group .find ('ul') .find ('li');
+        } while (group .length && content .length == 0);
+        prev = $(content [content .length -1])
       }
       return {
         selected: this._selected,
