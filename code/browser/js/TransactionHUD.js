@@ -3,7 +3,7 @@ class TransactionHUD extends TransactionAndRulesTable {
     let columns      = ['date','payee','debit','credit','account','category','description'];
     let options      = {readOnly: false, noGrouping: true};
     super (query, null, undefined, '', undefined, undefined, options);
-    this._title      = title;
+    this._title      = [] .concat (title);
     this._onClose    = onClose;
     this._monthStart = monthStart || query .date .$gte;
     this._monthEnd   = monthEnd   || query .date .$lte;
@@ -98,40 +98,38 @@ class TransactionHUD extends TransactionAndRulesTable {
     );
   }
 
-  _setTitleDate (clearDateSubtitle) {
-    var budget = this._variance .getBudget();
-    var t = (Array .isArray (this._title)? this._title[0] : this._title) .split (' ');
-    t.length -= 1;
-    let toYear = Types .date._difMonths (this._query .date .$lte, this._query .date .$gte) > 1;
-    if (toYear || clearDateSubtitle) {
-      if (this._title [1]) {
-        let sub = this._title [1] .split (' ');
-        let pos = sub .findIndex (w => {return w == 'Date'});
-        if (pos != -1) {
-          sub .splice (pos - 1, sub [pos + 2] == 'between'? 7: 4);
-          sub = sub .join (' ');
-          this._content .find ('._subtitle') .text (sub);
-          if (! toYear)
-            this._title [1] = sub;
-        }
-      }
+  _setTitleDate() {
+    let budget = this._variance .getBudget();
+    let [title, subtitle]  = this._title .map (t => {return t .split (' ')})
+    title.length = 1;
+    if (subtitle) {
+      let pos = subtitle .findIndex (w => {return w == 'Date'});
+      if (pos != -1)
+        subtitle .splice (pos - 1, subtitle [pos + 2] == 'between'? 7: 4);
     }
-    if (toYear) {
-      if (Types .date._month (this._query .date .$gte) == 1)
-        t [t .length - 1] = ' Year ' + Types .date._year (this._query .date .$gte)
-      else
-        t [t .length - 1] = ' Year ' + Types .dateFY .toString (this._query .date .$lte, budget .getStartDate(), budget .getEndDate())
-    } else {
-      t [t .length - 1] = Types .dateMonthY .toString (this._query .date .$gte);
-      if (this._title [1])
-        this._content .find ('._subtitle') .text (this._title [1])
-    }
-    t = t .join (' ');
-    if (Array.isArray (this._title))
-      this._title [0] = t;
+    let st = this._query .date .$gte, en = this._query .date .$lte, dsc = [];
+    let bst = budget .getStartDate(), ben = budget .getEndDate();
+    if (Types .date ._difMonths (en, st) == 1) {
+      dsc = Types .dateMonthY .toString (st) .split (' ');
+      if (st != Types .date .monthStart (st) || en != Types .date .monthEnd (en))
+        if (st == en)
+          dsc .splice (1, 0, Types .date._day (st) + ', ')
+        else
+          dsc .splice (1, 0, Types .date._day (st) + '-' + Types .date._day (en) + ',');
+    } else if (st == Types .dateFY .getFYStart (st, bst, ben) && en == Types .dateFY .getFYEnd (en, bst, ben))
+      dsc = ('Year ' + Types .dateFY .toString (st, bst, ben)) .split (' ');
+    else if (Types .date._year (st) == Types .date._year(en) && Types .date._month (st) == 1 && Types .date._month (en) == 12)
+      dsc = ('Year ' + Types .date._year (st)) .split (' ');
+    else if (Types .date._year (st) == Types .date._year (en))
+      dsc = (Types .dateMY .toString (st) .split ('-') [0] + ' ' + Types .date._day (st) + ' - ' +
+             Types .dateMY .toString (en) .split ('-') [0] + ' ' + Types .date._day (en) + ', ' + Types .date._year (st)) .split (' ')
     else
-      this._title = t;
-    this._content .find ('._title') .text (t);
+      dsc = (Types .dateMY .toString (st) .split ('-') [0] + ' ' + Types .date._day (st) +  ', ' + Types .date._year (st) + ' - ' +
+        Types .dateMY .toString (en) .split ('-') [0] + ' ' + Types .date._day (en) + ', ' + Types .date._year (en)) .split (' ')
+    title = (title .join (' ') + ' for ' + dsc .join (' ')) .split (' ');
+    this._title = [title, subtitle]    .map  (t => {return (t && t .join (' ')) || ''})
+    this._content .find ('._title')    .text (this._title [0]);
+    this._content .find ('._subtitle') .text (this._title [1])
   }
 
   _changeMonth (delta) {
@@ -139,13 +137,12 @@ class TransactionHUD extends TransactionAndRulesTable {
       delta *= Types .date._difMonths (this._query .date .$lte, this._query .date .$gte);
     this._query .date .$gte = Types .date .addMonthStart (this._query .date .$gte, delta);
     this._query .date .$lte = Types .date .monthEnd (Types .date .addMonthStart (this._query .date .$lte, delta));
-    this._setTitleDate (true);
+    this._setTitleDate();
     (async () => {await this .refreshHtml()}) ();
   }
 
   _toggleMonthYear() {
-    var budget = this._variance .getBudget();
-    var t = (Array .isArray (this._title)? this._title[0] : this._title) .split (' ');
+    let budget = this._variance .getBudget();
     if (Types .date._difMonths (this._query .date .$lte, this._query .date .$gte) == 1) {
       this._monthStart = this._query .date .$gte;
       this._monthEnd   = this._query .date .$lte;
@@ -240,7 +237,7 @@ class TransactionHUD extends TransactionAndRulesTable {
     });
     if (position)
       this._html .css ({top: position .top, right: position .right, left: position .left});
-    $('<div>', {class: '_title', text: Array .isArray (this._title)? this._title[0]: this._title}) .appendTo (this._content)
+    $('<div>', {class: '_title', text: this._title [0]}) .appendTo (this._content)
       .on ('click',                     e => {this._toggleMonthYear(); e .stopPropagation(); return false})
       .on ('webkitmouseforcedown',      e => {this._calendarYear(); e .stopPropagation(); return false})
     var buttons = $('<div>', {class: '_buttons'}) .appendTo (this._content);
@@ -265,7 +262,7 @@ class TransactionHUD extends TransactionAndRulesTable {
       return false;
     });
     var body = $('<div>', {class: '_body'}) .appendTo (this._content);
-    if (Array .isArray (this._title))
+    if (this._title [1])
       $('<div>', {text: this._title [1], class: '_subtitle'}) .appendTo (body);
     this._view._options .readOnly = true;
     this._setTitleDate();
@@ -281,8 +278,7 @@ class TransactionHUD extends TransactionAndRulesTable {
     let query = JSON .parse (JSON .stringify (this._query));
     query .date .$gte = start;
     query .date .$lte = end;
-    let [t, s] = Array .isArray (this._title)? this._title: [this._title,''];
-    TransactionHUD .show ([t, s], query, this._accounts, this._variance, this._html .offsetParent(),
+    TransactionHUD .show (this._title, query, this._accounts, this._variance, this._html .offsetParent(),
       {top: this._html .position() .top + 50, left: this._html .position() .left + 50, right: 'auto'},
       () => {this._html .removeClass ('_occluded')},
       this._monthStart, this._monthend
@@ -292,7 +288,7 @@ class TransactionHUD extends TransactionAndRulesTable {
 
   static showRefineByField (title, query, field, selectedText, accounts, variance, toHtml, position, onClose, monthStart, monthEnd) {
     query = Object .keys (query) .reduce ((o,f) => {o[f] = query[f]; return o}, {});
-    let desc;
+    let desc = '';
     if (field._name == 'date') {
       if (selectedText && selectedText != field) {
         let otherField = selectedText;
@@ -305,11 +301,8 @@ class TransactionHUD extends TransactionAndRulesTable {
           endField   = field;
         }
         query .date = {$gte: startField._value, $lte: endField._value};
-        desc        = 'is between ' + startField._get() + ' and ' + endField._get();
-      } else {
+      } else
         query .date = {$gte: field._value, $lte: field._value};
-        desc        = 'is ' + field._get();
-      }
     } else if (selectedText .length && ['payee', 'description'] .includes (field._name)) {
       let selectValue = selectedText, selectType;
       if (field._value .startsWith (selectedText)) {
@@ -360,7 +353,7 @@ class TransactionHUD extends TransactionAndRulesTable {
     let cat        = categories .get (id) || {};
     let qualifier  = includeMonths && !includeYears? ' (Monthly)': includeYears && !includeMonths? ' (Anytime)': '';
     dates = dates || {start: budget .getStartDate(), end: budget .getEndDate()};
-    var title      = [(isOther? 'Other ': '') + cat .name + qualifier + ' for XXX XXX', ''];
+    var title      = [(isOther? 'Other ': '') + cat .name + qualifier, ''];
     if (selectPayee)
       title [1] = 'Where Payee starts with "' + selectPayee + '"';
     let p = cat .parent || {};
