@@ -115,14 +115,15 @@ var ui = {
   },
 
   Tabs: class {
-    constructor (toElement) {
+    constructor (toElement, onNameClick) {
       var html         = $('<div>', {class: 'tabbed'})                          .appendTo (toElement);
       var tabs         = $('<div>', {class: 'tabs'})                            .appendTo (html);
       var contents     = $('<div>') .appendTo ($('<div>',  {class: 'contents'}) .appendTo (html));
       $('<div>', {class: '_appName _nonTab'})
         .append ($('<span>', {text: 'money'}))
         .append ($('<span>', {text: 'Map'}))
-        .appendTo (tabs);
+        .appendTo (tabs)
+        .click (onNameClick);
       var rightMatter = $('<div>', {class: '_login _nonTab'}) .appendTo (tabs);
       var clickable    = true;
       var pendingClick;

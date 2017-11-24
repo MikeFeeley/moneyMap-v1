@@ -32,6 +32,21 @@ body {
   }
 }
 
+._about {
+  @include popup-content();
+  display: inline-block;
+  border-radius: 6px;
+  padding: 16px;
+  > div:first-child {
+    color: #33b1ff;
+    font-size: 32px;
+    margin-bottom: 24px;
+  }
+  > div:not(:first-child) {
+    margin-top: 6px;
+  }
+}
+
 ._PathPicker {
   font-size: 13px;
   display: none;
@@ -390,8 +405,9 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
     }
     ._progressGraph > div {
       > ._heading {
-        font-size:     48px;
-        font-weight:   100;
+        font-size:     42px;
+        font-weight:   300;
+        color:         #33b1ff;
         margin-bottom: 24px;
       }
       > ._text {
@@ -415,8 +431,11 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
     margin-bottom: 24px;
     display: flex;
     width: 100%;
+    color: #33b1ff;
+    * {font-weight: 300!important}
     > ._heading {
       margin-bottom: 0px;
+      white-space: nowrap;
     }
     > div:first-child {
       margin-right: 20px;
@@ -708,13 +727,16 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
     height: 100%;
     overflow-y: scroll;
     &::-webkit-scrollbar { width: 0 !important }
-    border-right: $left-border;
+    //border-right: $left-border;
+    box-shadow: 0px 0px 3px 0 rgba(0,0,0,0.3), 2px 0px 6px 0 rgba(0,0,0,0.1);
     width: $left-width;
-    background-color: $left-background;
+    //background-color: $left-background;
+    background: #fafafa;
   }
   > ._head {
     background-color: $left-background;
-    border-bottom: $left-border;
+    //border-bottom: $left-border;
+    box-shadow: 3px 0px 3px 0 rgba(0,0,0,0.3), 6px 2px 6px 0 rgba(0,0,0,0.1);
     position: absolute;
     left: $left-width;
     width: calc(100% - 210px);
@@ -762,7 +784,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
   }
 }
 
-$progress-min-width:     1024px;
+$progress-min-width:     900px;
 $progress-sidebar-width: 260px;
 ._progressContents {
   @include sidebar-right-main($progress-min-width, $progress-sidebar-width);

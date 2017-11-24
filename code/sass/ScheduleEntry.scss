@@ -105,7 +105,8 @@ $indent:       24px;
     > ._field_name  {
       * {
         font-size: $h1Font;
-        font-weight: 100;
+        font-weight: 400;
+        color: #33b1ff;
       }
     }
     > div > ._field_scheduleLine {
@@ -116,6 +117,8 @@ $indent:       24px;
     > ul > li {
       margin-left: $indent * 1;
       > ._field_name ._content {
+        font-weight: 300;
+        color: #0081cc;
         @include adaptive-width($name-narrow - $indent * 1, $name-wide - $indent * 1);
       }
       > ul > li {
@@ -311,10 +314,11 @@ $indent:       24px;
     margin:  0px;
     padding: 0px;
     border:  0px;
-    color: $left-color;
+    //color: $left-color;
+    color: #aaaaaa;
   }
   ._selectedIndex > ._field ._content {
-    color: #333;
+    color: #0081cc;
     font-weight: 400;
   }
   > ul {
@@ -330,12 +334,12 @@ $indent:       24px;
     }
   }
   > ul > li > ._field  ._content {
-    font-weight: 200;
-    color: #111;
+    font-weight: 400;
+    color: #33b1ff;
     font-size: $left-head-font-size;
   }
   > ul > li._selectedIndex > ._field ._content {
-    font-weight: 300;
-    color: black;
+    font-weight: 400;
+    color: #257fb3;
   }
 }

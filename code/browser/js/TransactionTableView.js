@@ -99,6 +99,8 @@ class TransactionTableView extends TableView {
   }
 
   showFieldTip (tipText, id, fieldName) {
+    if (this._fieldTip)
+        this._fieldTip .remove();
     let field    = this._getFieldHtml (id, fieldName) .closest ('td');
     let html     = field .offsetParent();
     let tip      = $('<div>', {class: '_fieldTip hidden'}) .appendTo (html) .append ($('<div>'));
@@ -126,6 +128,7 @@ class TransactionTableView extends TableView {
         }, 5000);
       });
     }, 0);
+    this._fieldTip = tip;
   }
 }
 

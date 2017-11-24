@@ -4,6 +4,91 @@ body {
   margin: 0px;
 }
 
+._accountsEdit {
+  width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+  > ._group {
+    margin-top: 32px;
+    margin-bottom: 32px;
+    ._title {
+      font-size: 32px;
+      color: #33b1ff;
+      font-width: 100;
+      margin-bottom: 8px;
+    }
+    > ._content._dark {background: #fafafa}
+    > ._content {
+      > ._line {
+        > div, input[type=checkbox], div._suffix {display: inline-block}
+        input[type=checkbox] {margin-right: 10px}
+        input[type=checkbox] {vertical-align: 8%}
+        input[type=text]     {text-align: right; width: 80px;}
+        div._suffix {margin-top: 5px}
+        > div:not(:first-child) {
+          margin-left: 32px;
+        }
+      }
+      > ._line:not(:first-child) {
+        margin-top: 32px;
+      }
+      ._label {
+        font-size: 18px;
+        color: #aaa;
+      }
+      padding: 12px;
+      border: solid 0.1px #aaa;
+      * {
+        color: #555;
+        font-size: 20px;
+      }
+    }
+  }
+}
+
+
+._preferencesEdit {
+  width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  > ._group {
+    margin-top: 32px;
+    margin-bottom: 32px;
+    ._title {
+      font-size: 32px;
+      color: #33b1ff;
+      font-width: 100;
+      margin-bottom: 8px;
+    }
+    > ._content._dark {background: #fafafa}
+    > ._content {
+      > ._line {
+        > div, input[type=checkbox], div._suffix {display: inline-block}
+        input[type=checkbox] {margin-right: 10px}
+        input[type=checkbox] {vertical-align: 8%}
+        input[type=text]     {text-align: right; width: 80px;}
+        div._suffix {margin-top: 5px}
+        > div:not(:first-child) {
+          margin-left: 32px;
+        }
+      }
+      > ._line:not(:first-child) {
+        margin-top: 32px;
+      }
+      ._label {
+        font-size: 18px;
+        color: #aaa;
+      }
+      padding: 12px;
+      border: solid 0.1px #aaa;
+      * {
+        color: #555;
+        font-size: 20px;
+      }
+    }
+  }
+}
+
 ._accountEdit {
   width: 940px;
   margin-left: auto;
@@ -267,24 +352,24 @@ body {
   padding-left: 10px;
   padding-right: 10px;
   font-weight: 300;
-  @media (min-width: 1300px) {
+  @media (min-width: $wide-lower) {
     height: 48px - 14px;
     padding-top: 14px;
     font-size: 20px;
   }
-  @media (min-width: 1130px) and (max-width: 1299px) {
+  @media (min-width: $medium-lower) and (max-width: $medium-upper) {
     height: 48px - 16px;
     padding-top: 16px;
     font-size: 18px;
   }
-  @media (max-width: 1129px) {
+  @media (max-width: $narrow-upper) {
     height: 48px - 18px;
     padding-top: 18px;
     font-size: 15px;
   }
 }
 
-._user_menu {
+._user_menu, ._preferences_menu {
   @include user-select (none);
   position: absolute;
   z-index: 9999;
@@ -343,6 +428,66 @@ body {
   }
 }
 
+body > ._preferences_menu_head {
+  padding-left: 8px;
+  margin-left: 6px;
+  position:   absolute;
+  z-index:    9999;
+  color:      white;
+  background: #008ee6;
+  padding-left: 10px;
+  padding-right: 10px;
+  font-weight: 300;
+  @media (min-width: $wide-lower) {
+    height: 48px - 4px;
+    padding-top: 14px;
+    font-size: 20px;
+  }
+  @media (min-width: $medium-lower) and (max-width: $medium-upper) {
+    height: 48px - 8px;
+    padding-top: 16px;
+    font-size: 18px;
+  }
+  @media (max-width: $narrow-upper) {
+    height: 48px - 12px;
+    padding-top: 18px;
+    font-size: 15px;
+    }
+}
+
+.tabbed  > .tabs > ._appName {
+  margin-left: 16px;
+}
+
+.tabbed  > .tabs > ._appName, body > ._preferences_menu_head {
+  padding-top: 4px;
+  @media (min-width: $wide-lower) {
+    margin-right: 60px;
+    font-size: 30px;
+  }
+  @media (min-width: $medium-lower) and (max-width: $medium-upper) {
+    padding-top: 8px;
+    margin-right: 40px;
+    font-size: 26px;
+  }
+  @media (max-width: $narrow-upper) {
+    padding-top: 12px;
+    margin-right: 30px;
+    font-size: 22px;
+  }
+  span:nth-child(1) {
+    font-style: italic;
+    font-weight: 100;
+    margin-right: 5px;
+    color: #b3e2ff;
+  }
+  span:nth-child(2) {
+    color: #e6f5ff;
+    font-weight: 600
+  }
+}
+
+
 .tabbed {
   @include user-select(none);
   position: fixed;
@@ -360,34 +505,6 @@ body {
       float: left;
       overflow: hidden;
     }
-    ._appName {
-      padding-top: 4px;
-      @media (min-width: 1300px) {
-        margin-right: 60px;
-        font-size: 30px;
-      }
-      @media (min-width: 1130px) and (max-width: 1299px) {
-        padding-top: 8px;
-        margin-right: 40px;
-        font-size: 26px;
-      }
-      @media (max-width: 1129px) {
-        padding-top: 12px;
-        margin-right: 30px;
-        font-size: 22px;
-      }
-      span:nth-child(1) {
-        font-style: italic;
-        font-weight: 100;
-        margin-right: 5px;
-        color: #b3e2ff;
-      }
-      span:nth-child(2) {
-        color: #e6f5ff;
-        font-weight: 600
-      }
-      margin-left: 12px;
-    }
     > div._login {
       float: right;
       > ._menu_showing {
@@ -399,17 +516,17 @@ body {
       margin-right: 20px!important;
     }
     > div:not(._appName) {
-      @media (min-width: 1300px) {
+      @media (min-width: $wide-lower) {
         padding-top: 14px;
         margin-right: 22px;
         font-size: 20px;
       }
-      @media (min-width: 1130px) and (max-width: 1299px) {
+      @media (min-width: $medium-lower) and (max-width: $medium-upper) {
         padding-top: 16px;
         margin-right: 18px;
         font-size: 18px;
       }
-      @media (max-width: 1129px) {
+      @media (max-width: $narrow-upper) {
         padding-top: 18px;
         margin-right: 12px;
         font-size: 15px;

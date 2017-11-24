@@ -22,18 +22,22 @@ class App {
   }
 
   async _configurationChange (eventType) {
+
+    let handleNameClick = e => {
+      this._prefs .showMenu ($(e .target));
+    }
   
     if (eventType == UserEvent .NEW_USER) {
 
-      this._tabs = new ui.Tabs ($('body'));
+      this._tabs = new ui.Tabs ($('body'), handleNameClick);
       this._proT = this._tabs .addTab  ('Progress');
-      this._traT = this._tabs .addTab  ('Synchronize');
+      this._traT = this._tabs .addTab  ('Transactions');
       this._actT = this._tabs .addTab  ('Activity');
       this._budT = this._tabs .addTab  ('Budget');
       this._plaT = this._tabs. addTab  ('Plan');
       this._perT = this._tabs .addTab  ('Perspective');
       this._weaT = this._tabs .addTab  ('Wealth');
-      this._setT = this._tabs .addTab  ('Accounts');
+      this._accT = this._tabs .addTab  ('Accounts');
       let tl = this._tabs .addTool (this._user .getLabel (l => {
         this._tabs .changeToolName (tl, l);
       }), e => {this._user .showMenu ($(e .target))})
@@ -48,7 +52,8 @@ class App {
       this._accModel = new AccountsModel ();
       this._actModel = new ActualsModel  (this._budModel, this._accModel);
       this._varModel = new VarianceModel (this._budModel, this._actModel);
-      this._models   = [this._budModel, this._actModel, this._varModel, this._accModel];
+      this._prefs    = new Preferences();
+      this._models   = [this._budModel, this._actModel, this._varModel, this._accModel, this._prefs];
 
       /* queries */
       this._accounts = this._accModel .find();
@@ -61,13 +66,13 @@ class App {
         this._it .delete();
         this._na .delete();
         this._se .delete();
-        this._or .delete();
+        this._ac .delete();
       }
       this._it = new ImportTransactions   (this._accModel, this._varModel);
       this._na = new Navigate             (this._accModel, this._varModel);
       this._na .prime();
       this._se = new IndexedScheduleEntry ('_CategoryMenu', '_ScheduleEntry', this._accModel, this._varModel);
-      this._or = new Organize             (this._accModel, this._varModel);
+      this._ac = new Accounts             (this._accModel, this._varModel);
 
       /* tabs */
       this._tabs .setTab  (this._proT, html => {this._na .addProgressHtml     (html)});
@@ -77,7 +82,7 @@ class App {
       this._tabs. setTab  (this._plaT, html => {this._se .addHtml             (html)});
       this._tabs .setTab  (this._perT, html => {this._na .addPerspectiveHtml  (html)});
       this._tabs .setTab  (this._weaT, html => {this._na .addNetWorthHtml     (html)});
-      this._tabs .setTab  (this._setT, html => {this._or .addHtml             (html)});
+      this._tabs .setTab  (this._accT, html => {this._ac .addHtml             (html)});
 
       this._user .newConfigurationAccepted();
 

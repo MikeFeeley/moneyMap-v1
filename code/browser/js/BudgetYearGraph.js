@@ -34,7 +34,7 @@ class BudgetYearGraph {
   _setDataset() {
     var data      = this._getData();
     var variance  = data [0] .amount + data [2] .amount - (data [1] .amount + data [3] .amount);
-    var max       = Math .max (data [0] .amount + data [1] .amount, data [2] .amount + data [3] .amount);
+    var max       = Math .max (data [0] .amount + data [2] .amount, data [1] .amount + data [3] .amount);
     var norm      = data .map (d => {return Math .round (d .amount * 98 / max)});
     var datasets  = data .map ((d,i) => {
       return {

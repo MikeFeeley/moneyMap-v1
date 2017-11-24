@@ -4,53 +4,14 @@ var express  = require ('express');
 var async    = require ('../lib/async.js');
 var router   = express.Router();
 
-function* checkUpdate (req, collection, id, update) {
-  if (collection == 'categories' && update .budgets) {
-    var db = yield req .dbPromise;
-    var category = (yield db .collection ('categories') .findOne ({_id: id}));
-    if (category)
-      for (let bid of category .budgets .filter (b => {return ! update .budgets .includes (b)})) {
-        var budget = yield db .collection ('budgets')      .findOne ({_id: bid});
-        var trans  = yield db .collection ('transactions') .findOne ({$and: [{date: {$gte: budget .start}}, {date: {$lte: budget .end}}], category: id});
-        if (trans)
-          return false;
-      }
-    else
-      return true;
-    return true;
-  } else
-    return true;
-}
-
 function* updateOne (req, res, next) {
   try {
     if (!req.body.update)
       throw 'No update in body';
-    if (yield* checkUpdate (req, req .body .collection, req .body .id, req .body .update))
-      var result = yield (yield req .dbPromise) .collection (req.body.collection) .update ({_id: req.body.id}, {$set: req.body.update});
-    else
-      var result = false;
+    var result = yield (yield req .dbPromise) .collection (req.body.collection) .update ({_id: req.body.id}, {$set: req.body.update});
     res.json (result && result .result .ok);
   } catch (e) {
     console .log ('updateOne: ', e, req.body);
-    next (e);
-  }
-}
-
-function* checkUpdateList (req, res, next) {
-  try {
-    if (!req.body.list)
-      throw 'No list in body';
-    var allOkay = true;
-    for (let item of req .body .list) {
-      if (! (yield* checkUpdate (req .body .collection, item .id, item .update))) {
-        allOkay = false;
-        break;
-      }
-    }
-    res.json (allOkay);
-  } catch (e) {
-    console .log ('checkUpdateList: ', e, req.body);
     next (e);
   }
 }
@@ -60,18 +21,12 @@ function* updateList (req, res, next) {
     if (!req.body.list)
       throw 'No list in body';
     var allOkay = true;
-    for (let item of req .body .list)
-      if (! (yield* checkUpdate (req .body .collection, item .id, item .update))) {
-        allOkay = false;
-        break;
-      }
-    if (allOkay)
-      for (let item of req.body.list) {
-        if (!item .update)
-          throw 'No update in list';
-        var result = yield (yield req .dbPromise) .collection (req.body.collection) .update ({_id: item .id}, {$set: item .update});
-        allOkay &= result && result .result .ok;
-      }
+    for (let item of req.body.list) {
+      if (!item .update)
+        throw 'No update in list';
+      var result = yield (yield req .dbPromise) .collection (req.body.collection) .update ({_id: item .id}, {$set: item .update});
+      allOkay &= result && result .result .ok;
+    }
     res.json (allOkay);
   } catch (e) {
     console .log ('updateList: ', e, req.body);
@@ -85,10 +40,6 @@ router.post ('/one', function(req, res, next) {
 
 router.post ('/list', function(req, res, next) {
   async (updateList) (req, res, next);
-});
-
-router.post ('/checkList', function(req, res, next) {
-  async (checkUpdateList) (req, res, next);
 });
 
 module.exports = router;

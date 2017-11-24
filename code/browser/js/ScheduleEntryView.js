@@ -45,6 +45,57 @@ class ScheduleEntryView extends ListView {
         return this._hud .isShowing()  && e && ! this._hud .contains (e .target)
       }, () => {this._hud .hide()}, false);
   }
+
+  _showFieldTip (field, html, tipText) {
+    let target = field._html;
+    let tip    = $('<div>', {class: '_fieldTip hidden'}) .appendTo (html) .append ($('<div>'));
+    $('<div>', {text: 'TIP'}) .appendTo (tip .children());
+    for (let tl of tipText)
+      $('<div>', {text: tl}) .appendTo (tip .children());
+    setTimeout (() => {
+      let pos = ui .calcPosition (target, html, {top: - tip .height() -16, left: -16});
+      if (pos .top < 16)
+        pos = ui .calcPosition (target, html, {top: 32, left: -16})
+      tip .css (pos);
+      tip .fadeIn (300, () => {
+        let mo = ui .ModalStack .add (() => {return true}, () => {
+          if (mo) {
+            mo = null;
+            clearTimeout (to);
+            tip .fadeOut (300, () => {
+              tip .remove();
+            })
+          }
+        }, true);
+        let to = setTimeout (() => {
+          tip .fadeOut (1000, () => {
+            tip .remove();
+            if (mo)
+              ui .ModalStack .delete (mo);
+          })
+        }, 5000);
+      });
+    }, 0);
+  }
+
+  showTipNameChange (id) {
+    let now = new Date() .getTime() / (1000 * 60); // no more frequently than once a minute
+    if (! this._lastNameChangeTip || (now - this._lastNameChangeTip) > 1) {
+      this._lastNameChangeTip = now;
+      this._showFieldTip (this._getField (id, 'name'), this._html, [
+        'Change applies to transactions in every year.',
+        'To change only this year, delete and add new category.'
+      ]);
+    }
+  }
+
+  showTipNoRemove (id) {
+    this._showFieldTip (this._getField (id, 'name'), this._html, [
+      'Current-year transactions use category (or subcategory).',
+      'Recategorize transactions before deleting.'
+    ]);
+  }
+
 }
 
 class ScheduleEntryTotal extends ViewLabel {

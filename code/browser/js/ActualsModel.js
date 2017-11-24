@@ -112,6 +112,10 @@ class ActualsModel extends Observable {
     return this._transactionModel .find ({date: {$gte: st, $lte: en}, category: cat._id})
   }
 
+  async hasTransactions (query) {
+    return this._transactionModel .has (query);
+  }
+
   /**
    * Returns starting cash flow balance for specified date
    *     (a) start with current balance

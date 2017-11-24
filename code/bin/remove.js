@@ -7,22 +7,6 @@ var router  = express.Router();
 
 function* remove (req, collection, id) {
   var db = yield req .dbPromise;
-//  if (collection == 'categories') {
-//    var categories   = db .collection ('categories');
-//    var transactions = db .collection ('transactions');
-//    var cat          = yield categories .findOne ({_id: id});
-//    if (cat && cat .parent) {
-//      var as   = [];
-//      for (let t of yield transactions .find ({category: id}) .toArray())
-//        as .push (transactions .update ({_id: t._id, category: id}, {$set: {
-//          category:    cat .parent,
-//          description: t .description? cat .name + ': ' + t .description: cat .name
-//        }}))
-//      for (let a of as)
-//        yield a;
-//    } else
-//      return false;
-//  }
   yield db .collection (collection) .remove ({_id: id});
   return true;
 }

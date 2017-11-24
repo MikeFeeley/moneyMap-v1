@@ -190,9 +190,9 @@ class Navigate {
         }
         let sel = arg .data .find (d => {return d._id == arg .id});
         if (arg .altClick)
-          TransactionHUD .showCategory (arg .id, dates, this._accounts, this._variance, arg .html, {top: arg .position .top, left: 0}, ! sel .isYear, sel .isYear, sel .addCats);
+          TransactionHUD .showCategory (arg .id, dates, this._accounts, this._variance, arg .html, {top: arg .position .top, left: 0}, sel .hasMonth, sel .hasYear, sel .addCats);
         else
-          await this._addMonthsGraph ('_activityMonthsGraph', arg.view, [arg .id], true, arg .position, arg .html, ! sel .isYear, sel .isYear, sel .addCats);
+          await this._addMonthsGraph ('_activityMonthsGraph', arg.view, [arg .id], true, arg .position, arg .html, sel .hasMonth, sel .hasYear, sel .addCats);
       }
 
     } else if (eventType == NavigateViewEvent .PROGRESS_SIDEBAR_CLICK) {
@@ -222,8 +222,8 @@ class Navigate {
       /* Monthly or History Graph (Budget or Actual) */
       if (['_budgetMonthsGraph', '_activityMonthsGraph'] .includes (arg .name)) {
         let sel = arg .data && arg .data .reduce ((s,d) => {return s || d .rows .find (r => {return r .id == arg .id})}, null);
-        let im  = !sel || sel .isYear === undefined || ! sel.isYear;
-        let iy  = !sel || sel .isYear === undefined || sel .isYear;
+        let im  = sel && sel .hasMonth;
+        let iy  = sel && sel .hasYear;
         if (arg .altClick) {
           let id = arg .id .split ('_') .slice (-1) [0];
           var today = Types .date .today();
@@ -298,8 +298,8 @@ class Navigate {
           let parent = this._categories .get ([] .concat (arg .id) [0]) .parent;
           if (parent) {
             let sel = arg .data [0] .rows [1];
-            let im  = !sel || sel .isYear === undefined || ! sel.isYear;
-            let iy  = !sel || sel .isYear === undefined || sel .isYear;
+            let im  = sel && sel .hasMonth;
+            let iy  = sel && sel .hasYear;
             arg .date .start = Types .dateFY .getFYStart (arg .date .start, this._budget .getStartDate(), this._budget .getEndDate());
             arg .date .end   = Types .dateFY .getFYEnd   (arg .date .end,   this._budget .getStartDate(), this._budget .getEndDate());
             await this._addMonthsGraph (arg .name, arg .view, [parent._id], true, arg .position, arg .html, im, iy, sel && sel .addCats, arg .date);
@@ -606,23 +606,26 @@ class Navigate {
           return a .value != 0  || [] .concat (a .id) .find (i => {return i .startsWith ('budget_')})
         })});
       let realChildren = children .filter (child => {return ! child .cat .startsWith ('budget_')});
-      if (realChildren .length == 1) {
-        let isLeaf = await (await this._getChildren (type, children [0] .cat, altDates))
+      if (realChildren .length == 1 && ! realChildren [0] .cat .includes ('_')) {
+         let isLeaf = await (await this._getChildren (type, realChildren [0] .cat, altDates))
           .filter (cat       => {return ! cat .startsWith ('budget_')})
-          .find   (async cat => {return (await getAmounts (cat)) .find (a => {return a .value != 0})})
+          .filter (async cat => {return (await getAmounts (cat)) .find (a => {return a .value != 0})})
+          .length == 0;
         if (isLeaf)
           children [0] .cat = 'leaf_' + children [0] .cat;
       } else if (realChildren .length == 0) {
         children .push ({cat: 'leaf_' + id, amounts: thisAmounts});
       }
       let data = children .map (child => {
-        let isYear = includeMonths != includeYears && this._categories .getType (this._categories .get (child .cat .split ('_') .slice (-1) [0])) == ScheduleType .YEAR;
+        let hasMonth, hasYear;
+        let cat = this._categories .get (child .cat .split ('_') .slice (-1) [0]);
         return {
           name:     this._getName (type, child .cat) || '',
           id:       child .cat,
           isCredit: isCredit,
           isGoal:   isGoal,
-          isYear:   isYear,
+          hasMonth: includeMonths && this._categories .hasType (cat, ScheduleType .MONTH),
+          hasYear:  includeYears  && this._categories .hasType (cat, ScheduleType .YEAR),
           amounts:  child .amounts,
           type:     child .cat .includes ('budget_') && 'line'
         }

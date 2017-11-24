@@ -55,9 +55,9 @@ app.use(function (req, res, next) {
       if (req .body .collection == 'actuals' && ! req .url. startsWith ('/actuals/'))
         req .url = '/transaction/actuals';
       else if (! req .url .startsWith ('/transaction/')) {
-        if ((req .body .collection == 'transactions' && req .url != '/find'))
+        if (req .body .collection == 'transactions' && ! req .url .startsWith ('/find/'))
           req .url = '/transaction' + req.url;
-        else if (req .body .collection == 'accountBalance' && req .url == '/find')
+        else if (req .body .collection == 'accountBalance' && req .url == '/find/get')
           req .url = '/transaction/findAccountBalance';
       }
       next();

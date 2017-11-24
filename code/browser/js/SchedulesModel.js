@@ -168,37 +168,31 @@ class SchedulesModel extends Observable {
    *
    */
   async remove (mi) {
-    var result = true;
-    var mis = this._splitMI (mi);
+    let result = true;
+    let mis = this._splitMI (mi);
     Model .newUndoGroup();
     if (mis .model == this._schModel) {
-      var sch = this._categories .get (mi);
+      let sch = this._categories .get (mi);
       if (sch .category && (sch .category .schedule || []) .length == 1 && (sch .category .schedule || []) .includes (sch)) {
         mi  = sch .category._id;
         mis = this._splitMI (mi);
       } else
-        var result = await mis .model .remove (mis .id);
+        result = await mis .model .remove (mis .id);
     }
     if (mis .model == this._catModel) {
-      var cat = this._categories .get (mi);
-      var bid = this._budget .getId();
-      var cl  = [cat] .concat (this._categories .getDescendants (cat));
-      var ul  = cl .map (c => {
+      let cat = this._categories .get (mi);
+      let bid = this._budget .getId();
+      let cl  = [cat] .concat (this._categories .getDescendants (cat));
+      let ul  = cl .map (c => {
         return {
           id:     c._id,
           update: {budgets: c .budgets .filter (b => {return b != bid})}
         }
       });
-      var sl  = cl. reduce ((l,c) => {
+      let sl = cl .reduce ((l,c) => {
         return l .concat ((c .schedule || []) .map (s => {return this._splitMI (s._id) .id}));
       }, []);
-      result = (await this._catModel .checkUpdateList (ul));
-      if (! result && sch)
-        await this._schModel .update (this._splitMI (sch._id) .id, {amount: 0, start: 0, end: 0, limit: 0, repeat: 0});
-      if (result)
-        result = (await this._schModel .removeList (sl));
-      if (result)
-        result = (await this._catModel .updateList (ul));
+      result = (await this._schModel .removeList (sl)) && (await this._catModel .updateList (ul));
     }
     return result;
   }
@@ -313,5 +307,16 @@ class Schedules extends Categories {
         return ScheduleType .MONTH;
     }
     return ScheduleType .NONE;
+  }
+
+  hasType (cat, type) {
+    if (cat == null)
+      return false
+    else if (this .getType (cat) == type)
+      return true;
+    else
+      return ((cat .children || []) .concat (cat .zombies || [])) .find (c => {
+        return this .hasType (c, type);
+      }) != null
   }
 }

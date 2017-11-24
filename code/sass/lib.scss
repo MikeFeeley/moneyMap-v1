@@ -1,6 +1,6 @@
 $drop-shadow: 0px 0px 8px rgba(0,0,0,.4);
 
-$left-background: #eee;
+$left-background: #fafafa;
 $left-border: 1px solid #ddd;
 $left-color: #888;
 $left-title-font-size: 36px;
@@ -10,6 +10,11 @@ $left-font-size: 14px;
 $left-width: 210px;
 $left-padding-left: 8px;
 $left-margin-sep: 20px;
+
+$medium-lower: 1060px;
+$wide-lower:   1160px;
+$narrow-upper: $medium-lower - 1px;
+$medium-upper: $wide-lower   - 1px;
 
 table > tbody > tr > td > ._field > div > ._content {
   color: #666;

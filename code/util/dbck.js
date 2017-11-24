@@ -156,9 +156,10 @@ async function unreachableCategories() {
 }
 
 async function checkTransactions() {
-  let cats  = (await db .collection ('categories') .find() .toArray()) .reduce ((set, cat) => {return set .add (cat._id)}, new Set());
-  let acts  = (await db .collection ('accounts')   .find() .toArray()) .reduce ((set, act) => {return set .add (act._id)}, new Set());
-  let printed;
+  let budgets = await  db .collection ('budgets')    .find() .toArray();
+  let cats    = (await db .collection ('categories') .find() .toArray()) .reduce ((map, cat) => {return map .set (cat._id, cat)}, new Map());
+  let acts    = (await db .collection ('accounts')   .find() .toArray()) .reduce ((set, act) => {return set .add (act._id)}, new Set());
+  let printed, catPrinted;
   let print = s => {
     if (! printed) {
       console.log ('\nTransaction integrity issues');
@@ -166,13 +167,56 @@ async function checkTransactions() {
     }
     console .log ('  ' + s);
   }
+  let path = c => {
+    if (c)
+      return (path (cats .get (c .parent)) || []) .concat (c .name)
+  }
+  let printCat = (bname, c) => {
+    if (!catPrinted) {
+      console.log ('\nCategory paths not in budget that have transactions in budget period');
+      catPrinted = true;
+    }
+    console .log ('  Budget ' + bname + ': ' + path (cats .get (c)) .join (' > '))
+  }
+  let validPath = (cat, bid) => {
+    if (! cat)
+      return true;
+    else if (cat .budgets .includes (bid))
+      return validPath (cats .get (cat .parent), bid)
+    else
+      return false
+  }
+  let addBudgetToPath = async (bid, cid) => {
+    let cat = cats .get (cid);
+    if (cat) {
+      if (! (await db .collection ('categories') .findOne ({_id: cid})) .budgets .includes (bid)) {
+        await db .collection ('schedules')  .insertOne ({category: cat._id, budget: bid});
+        await db .collection ('categories') .updateOne ({_id: cid}, {$addToSet: {budgets: bid}});
+      }
+      await addBudgetToPath (bid, cat .parent);
+    }
+  }
   let trans = await db .collection ('transactions') .find();
   while (await trans .hasNext()) {
     let tran = await trans .next();
-    if (! cats .has (tran .category))
+    let cat  = cats .get (tran .category);
+    if (! cat)
       print ('Unknown category ' + tran .category + ' (transaction ' + tran .date + ' ' + tran._id + ')');
+    else {
+      for (let budget of budgets)
+        if (tran .date && (tran .debit != 0 || tran .credit != 0) && tran .date >= budget .start && tran .date <= budget .end)
+          if (!validPath (cat, budget._id))
+            budget .unaccounted = (budget .unaccounted || new Set()) .add (cat._id)
+    }
     if (! acts .has (tran .account))
       print ('Unknown account ' + tran .account   + ' (transaction ' + tran .date + ' ' + tran._id + ')');
+  }
+  for (let budget of budgets) {
+    for (let cid of budget .unaccounted || []) {
+      printCat (budget .name, cid);
+      if (repair)
+        await addBudgetToPath (budget._id, cid);
+    }
   }
 }
 

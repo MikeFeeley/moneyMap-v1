@@ -76,14 +76,14 @@ class TransactionModel extends Model {
   }
 
   /**
-   * If query contains a date or date range ($lte/gte) or a category, then
-   *   - switch to refine if a previous query has already fetched target transactions
-   * If query ONLY contains a date, date range or category (or combination), then
+   * Iff query contains a date or date range ($lte/gte) or a category, then
+   *   - return true iff a previous query has already fetched target transactions
+   * On cache miss, if loadOnMiss is true AND query ONLY contains a date, date range or category (or combination), then
    *   - update list of previous queries
    */
-  async find (query, append) {
+  async _checkCache (query, append, loadOnMiss) {
     let queries = this._getQueries();
-    let dates, categories, cacheOnly;
+    let dates, categories, cacheHit;
     if (query .date) {
       if (typeof query .date == 'number')
         dates = {start: query .date, end: query .date}
@@ -105,11 +105,11 @@ class TransactionModel extends Model {
     } else
       categories = null;
     if (dates && categories !== undefined) {
-      cacheOnly = queries .find (q => {
+      cacheHit = queries .find (q => {
         return (dates .start >= q .start && dates .end <= q .end)  &&
-               (! q .categories || (categories && this._isSubset (categories, q .categories)))
-      });
-      if (! cacheOnly && ! Array .from (Object .keys (query)) .find (p => {return p != 'date' && p != 'category' && p != '$options'})) {
+          (! q .categories || (categories && this._isSubset (categories, q .categories)))
+      }) != null;
+      if (! cacheHit && loadOnMiss && ! Array .from (Object .keys (query)) .find (p => {return p != 'date' && p != 'category' && p != '$options'})) {
         let matched, infill;
         for (let q of queries) {
           // do real query only on part of range not already covered by previous query (if match)
@@ -144,9 +144,10 @@ class TransactionModel extends Model {
             }
           }
         }
-        if (matched)
+        if (matched) {
           await super .find (infill, append, false);
-        else {
+          cacheHit = true;
+        } else {
           let i;
           for (i = 0; i < queries .length; i++)
             if (dates .start >= queries [i] .start)
@@ -159,6 +160,21 @@ class TransactionModel extends Model {
         }
       }
     }
-    return super .find (query, append, cacheOnly);
+    return cacheHit;
   }
+
+  /**
+   * Perform a find through local cache
+   */
+  async find (query, append) {
+    return super .find (query, append, await this._checkCache (query, append, true));
+  }
+
+  /**
+   * Perform a has through local cache
+   */
+  async has (query) {
+    return super .has (query, await this._checkCache (query, undefined, false));
+  }
+
 }

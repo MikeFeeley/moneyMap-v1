@@ -90,13 +90,15 @@ $table-stripe-background-occluded: rgba(248,248,248,.1);
       {text-align: right;}
     }
   }
-  > div._fieldTip {
-    @include popup-container();
-    > div {
-      @include tip-popup();
-    }
+}
+
+div._fieldTip {
+  @include popup-container();
+  > div {
+    @include tip-popup();
   }
 }
+
 
 @mixin transaction-table ($head-font, $body-font, $height, $stCol, $gx0, $gx1, $gx2, $gx3, $gi0, $gi1, $gi2, $gi3, $gi4, $ge0, $ge1, $ge2) {
   @include transaction-table-base ($head-font, $body-font, $height);
@@ -154,6 +156,8 @@ $table-stripe-background-occluded: rgba(248,248,248,.1);
     font-size: 36px;
     font-weight: 100;
     margin-bottom: 12px;
+    color: #33b1ff;
+    font-weight: 300;
   }
   > ._button {
     margin-top: 10px;

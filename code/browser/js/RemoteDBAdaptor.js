@@ -2,10 +2,10 @@ class RemoteDBAdaptor extends DBAdaptor {
   constructor() {
     super();
     this._urls = [];
-    this._urls [DatabaseOperation .FIND]              = '/find';
+    this._urls [DatabaseOperation .FIND]              = '/find/get';
+    this._urls [DatabaseOperation .HAS]               = '/find/has';
     this._urls [DatabaseOperation .UPDATE_ONE]        = '/update/one';
     this._urls [DatabaseOperation .UPDATE_LIST]       = '/update/list';
-    this._urls [DatabaseOperation .CHECK_UPDATE_LIST] = '/update/checkList';
     this._urls [DatabaseOperation .INSERT_ONE]        = '/insert/one';
     this._urls [DatabaseOperation .INSERT_LIST]       = '/insert/list';
     this._urls [DatabaseOperation .REMOVE_ONE]        = '/remove/one';

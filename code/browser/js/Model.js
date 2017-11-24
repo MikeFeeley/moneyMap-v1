@@ -126,6 +126,13 @@ class Model extends Observable {
   }
 
   /**
+   * Query server to determine if any documents match query
+   */
+  async has (query, cacheOnly = false) {
+    return this._collection .hasFromCache (query) || (! cacheOnly && this._collection .has (query));
+  }
+
+  /**
    * Query server and return matching documents
    */
   async find (query, append = false, cacheOnly = false) {
@@ -200,13 +207,6 @@ class Model extends Observable {
    */
   async updateList (list, source) {
     return await this._collection .updateList (list, source);
-  }
-
-  /**
-   * Check update list
-   */
-  async checkUpdateList (list, source) {
-    return await this._collection .checkUpdateList (list, source);
   }
 
   /**
@@ -332,6 +332,10 @@ class _Collection extends Observable {
     return   cd           .get (database) || cd           .set (database, new _Collection (name, database)) .get (database);
   }
 
+  async has (query) {
+    return _db .perform (DatabaseOperation .HAS, {database: this._database, collection: this._name, query: query});
+  }
+
   async find (query) {
     var docs = await _db .perform (DatabaseOperation .FIND, {database: this._database, collection: this._name, query: query});
     if (docs)
@@ -342,6 +346,10 @@ class _Collection extends Observable {
 
   findFromCache (query) {
     return Array .from (this._docs .values()) .filter (d => {return _query_ismatch (query,d)})
+  }
+
+  hasFromCache (query) {
+    return Array .from (this._docs .values()) .find (d => {return _query_ismatch (query,d)}) != null;
   }
 
   refine (ismatch) {
@@ -407,12 +415,6 @@ class _Collection extends Observable {
       _Collection._logUndo (this, this .updateList, [undo], isUndo, tid);
     }
     return ok;
-  }
-
-  async checkUpdateList (list, source, isUndo, tid) {
-    if (list .length == 0)
-      return true;
-    return await _db .perform (DatabaseOperation .CHECK_UPDATE_LIST, {database: this._database, collection: this._name, list: list});
   }
 
   async insert (insert, source, isUndo, tid) {

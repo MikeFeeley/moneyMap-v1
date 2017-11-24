@@ -36,7 +36,7 @@ class View extends Observable {
     return fields;
   }
 
-  _getFieldHtml (html) {}
+  _getFieldHtml (id, name) {}
 
   _getField (id, name) {
     return this._getFieldFromHtml (this._getFieldHtml (id, name));

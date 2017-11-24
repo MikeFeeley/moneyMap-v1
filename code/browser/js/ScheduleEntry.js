@@ -4,6 +4,7 @@ class ScheduleEntry extends List {
     let budget = variance .getBudget();
     super (budget .getSchedulesModel(), new ScheduleEntryView (name, options, accounts, variance), options);
     this._budget     = budget;
+    this._variance   = variance;
     this._categories = this._model .getCategories();
   }
 
@@ -156,6 +157,8 @@ class ScheduleEntry extends List {
             }
           }
         }
+        if (arg .fieldName == 'name')
+          this._view .showTipNameChange (arg .id);
         if (eventType != ListViewEvent .CANCELLED)
           this ._setVisibility (arg.id, arg);
         break;
@@ -179,6 +182,15 @@ class ScheduleEntry extends List {
         }
         if (this._options .noRemoveLastSchedule && target .category && (target .category .schedule || []) .length == 1) {
           this._onViewChange (ListViewEvent .UPDATE, {id: arg, fieldName: 'start', value: ''});
+          eventType = ListViewEvent .CANCELLED;
+        }
+        let query = {
+          category: {$in: [target] .concat (this._categories .getDescendants (target)) .map (c => {return c._id})},
+          date:     {$gte: this._budget .getStartDate(), $lte: this._budget .getEndDate()}
+        }
+        if (await this._variance .getActuals() .hasTransactions (query)) {
+          this._view .flagTupleError  (arg);
+          this._view .showTipNoRemove (arg);
           eventType = ListViewEvent .CANCELLED;
         }
         break;
