@@ -360,14 +360,18 @@ class NumberType extends FieldType {
       return Number (s);
   }
   toString (v) {
-    if (this._isPercent)
-      v = v * 100;
-    if (this._inThousands)
-      v = v / 1000;
+    if (v != null) {
+      if (this._isPercent)
+        v = v * 100;
+      if (this._inThousands)
+        v = v / 1000;
+    }
     return v != null? (v || this._showZero? this._format .format (v * Math .pow (10, -this._digits))
       + (this._isPercent? '%': '') + (this._inThousands? 'K': ''): ''): '';
   }
   fromString (s) {
+    if (this._showZero && s == '')
+      return null;
     s = s .trim() .replace (/[$,]*/g, '');
     if (this._isPercent)
       s = s .replace (/%/g, '');
@@ -421,6 +425,7 @@ var Types = {
   numberNG:     new NumberType ({style:'decimal', minimumFractionDigits:0, useGrouping: false}, 0),
   percent:      new NumberType ({style:'decimal', minNumFractionDigits: 1, maximumFractionDigits:1}, 0, false, true),
   percent2:     new NumberType ({style:'decimal', minNumFractionDigits: 0, maximumFractionDigits:2}, 4, false, true),
+  percent2Z:    new NumberType ({style:'decimal', minNumFractionDigits: 0, maximumFractionDigits:2}, 4, true, true),
   string:       new StringType (),
   boolean:      new BooleanType ()
 }
