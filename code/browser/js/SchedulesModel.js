@@ -1,9 +1,10 @@
 class SchedulesModel extends Observable {
-  constructor (budget) {
+  constructor (budget, actModel) {
     super();
     this._budget   = budget;
     this._catModel = new Model ('categories');
     this._schModel = new Model ('schedules');
+    this._actModel = actModel;
     this._catModel .addObserver (this, this._onCatModelChange);
     this._schModel .addObserver (this, this._onSchModelChange);
     this._catModel .parent   = 'parent';
@@ -130,39 +131,95 @@ class SchedulesModel extends Observable {
    *
    */
   async insert (data, pos) {
-    var mis = this._splitMI (pos .id);
-    if (mis .model == this._schModel)
-      data.budget  = this._budget .getId();
-    else
-      data.budgets = [this._budget .getId()];
-    if (pos .inside) {
-      data [mis .model .parent] = mis .id;
-      var siblings              = this._categories .get (pos .id) [mis .model .children] || [];
-      data .sort                = pos .before? 0: siblings .reduce ((m,s) => {return Math.max (m, s .sort)}, 0) + 1;
-    } else {
-      var ref                   = this._categories .get (pos .id);
-      if (ref [mis .model .parent])
-        data [mis .model .parent] = this._splitMI (ref [mis .model .parent] ._id) .id;
-      var siblings              = this._categories .getSiblings (ref, mis .model .parent, mis .model .children) .concat (ref);
-      data .sort                = (ref .sort || 0) + (pos .before? 0: 1);
+    let updateSort = (ref, siblings) => {
+      let sort = pos .inside
+        ? (pos .before?         0: siblings .reduce ((m, e) => {return Math .max (m, e .sort || 0)}, 0) + 1)
+        : (pos .before? ref .sort: (ref .sort || 0) + 1);
+      let sortUpdate = siblings
+        .filter (e => {return e .sort >= sort})
+        .map    (e => {return {id: this._splitMI (e._id) .id, update: {sort: (e .sort || 0) + 1}}});
+      return [sort, sortUpdate];
     }
-    var changes = [];
-    for (let s of siblings || [])
-      if (s.sort >= data .sort)
-        changes .push ({id: this._splitMI (s._id) .id, update: {sort: s.sort + 1}})
-    await mis .model .updateList (changes);
-    await mis .model .insert (data);
-    if (data._id) {
-      var ids = [this._joinMI (mis. model, data._id)];
-      if (mis .model == this._catModel) {
-        data = {budget: this._budget .getId(), category: data._id, sort: 0};
-        await this._schModel .insert (data);
-        if (data._id)
-          ids .push (this._joinMI (this._schModel, data._id));
+    let mis = this._splitMI (pos .id);
+    let bid = this._budget .getId();
+    let promises = [], insertedIds = [];
+    if (mis .model == this._catModel) {
+      let ref      = this._categories .get (pos .id);
+      let parent   = pos .inside? ref: ref .parent
+      data .parent = parent._id;
+      let siblings = parent .children || [];
+      let cat      = data .name && (parent .zombies || []) .find (z => {return z .name == data .name});
+      let sortUpdate;
+      [data .sort, sortUpdate] = updateSort (ref, siblings);
+      if (! cat) {
+        data .budgets = [bid];
+        cat = await this._catModel .insert (data);
+        if (! cat) return;
+      } else {
+        data .budgets = cat .budgets .includes (bid)? cat .budgets: cat .budgets .concat (bid);
+        promises .push (this._catModel .update (cat._id, {
+          parent:  data .parent,
+          sort:    data .sort,
+          budgets: data .budgets
+         }));
       }
+      insertedIds .push (cat._id);
+      if (sortUpdate .length)
+        promises .push (this._catModel .updateList (sortUpdate));
+      pos  = {inside: true, id: cat._id};
+      data = {}
     }
-    return ids;
+    if (pos .id) {
+      let ref        = this._categories .get (pos .id);
+      let cat        = pos .inside? ref: ref .category;
+      let siblings   = cat .schedule || [];
+      let sortUpdate;
+      [data .sort, sortUpdate] = updateSort (ref, siblings);
+      data .budget   = bid;
+      data .category = cat._id;
+      let sch = await this._schModel .insert (data);
+      if (sch)
+        insertedIds .push (this._joinMI (this._schModel, sch._id));
+      if (sortUpdate .length)
+        promises .push (this._schModel .updateList (sortUpdate));
+    }
+    await Promise .all (promises);
+    return insertedIds;
   }
+
+
+  //   if (mis .model == this._schModel)
+  //     data.budget  = this._budget .getId();
+  //   else
+  //     data.budgets = [this._budget .getId()];
+  //   if (pos .inside) {
+  //     data [mis .model .parent] = mis .id;
+  //     var siblings              = this._categories .get (pos .id) [mis .model .children] || [];
+  //     data .sort                = pos .before? 0: siblings .reduce ((m,s) => {return Math.max (m, s .sort)}, 0) + 1;
+  //   } else {
+  //     var ref                   = this._categories .get (pos .id);
+  //     if (ref [mis .model .parent])
+  //       data [mis .model .parent] = this._splitMI (ref [mis .model .parent] ._id) .id;
+  //     var siblings              = this._categories .getSiblings (ref, mis .model .parent, mis .model .children) .concat (ref);
+  //     data .sort                = (ref .sort || 0) + (pos .before? 0: 1);
+  //   }
+  //   var changes = [];
+  //   for (let s of siblings || [])
+  //     if (s.sort >= data .sort)
+  //       changes .push ({id: this._splitMI (s._id) .id, update: {sort: s.sort + 1}})
+  //   await mis .model .updateList (changes);
+  //   await mis .model .insert (data);
+  //   if (data._id) {
+  //     var ids = [this._joinMI (mis. model, data._id)];
+  //     if (mis .model == this._catModel) {
+  //       data = {budget: this._budget .getId(), category: data._id, sort: 0};
+  //       await this._schModel .insert (data);
+  //       if (data._id)
+  //         ids .push (this._joinMI (this._schModel, data._id));
+  //     }
+  //   }
+  //   return ids;
+  // }
 
   /**
    *
@@ -195,6 +252,14 @@ class SchedulesModel extends Observable {
       result = (await this._schModel .removeList (sl)) && (await this._catModel .updateList (ul));
     }
     return result;
+  }
+
+  async hasTransactions (cat) {
+    let query = {
+      category: {$in: [cat] .concat (this._categories .getDescendants (cat)) .map (c => {return c._id})},
+      date:     {$gte: this._budget .getStartDate(), $lte: this._budget .getEndDate()}
+    }
+    return this._actModel .hasTransactions (query);
   }
 
   isCredit (cat) {
