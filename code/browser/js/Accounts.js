@@ -1,7 +1,5 @@
 class Accounts extends Observable {
 
-  // TODO: is AccountBalance update needed when account added or removed?
-
   constructor (accountsModel, budget) {
     super();
     this._model               = accountsModel .getModel();
