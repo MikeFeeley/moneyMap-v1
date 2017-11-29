@@ -20,9 +20,9 @@ class ImportTransactionsView extends View {
     $('body') .on ({
       dragover: e => {e .preventDefault()},
       drop:     e => {
-        console.log ('drop', e, e .originalEvent .dataTransfer .files [0]);
         e.preventDefault();
-        this ._notifyObservers (ImportTransactionsViewEvent .DROPPED, e .originalEvent .dataTransfer .files [0])
+        if (e .originalEvent .dataTransfer .files [0])
+         this ._notifyObservers (ImportTransactionsViewEvent .DROPPED, e .originalEvent .dataTransfer .files [0])
       }
     });
     await (new AccountBalance (this._variance)) .addHtml (this._html);

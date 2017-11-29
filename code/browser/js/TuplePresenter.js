@@ -44,14 +44,22 @@ class TuplePresenter extends Presenter {
     super._onViewChange (eventType, arg);
     switch (eventType) {
       case TupleViewEvent .INSERT:
-        Model .newUndoGroup();
-        if (! this._options .noInsert)
+        if (! this._options .noInsert) {
+          Model .newUndoGroup();
           this._insert (arg.insert, arg.pos);
+        }
         break;
       case TupleViewEvent .REMOVE:
-        Model .newUndoGroup();
-        if (! this._options .noRemove)
-          this._remove (arg);
+        if (! this._options .noRemove) {
+          Model .newUndoGroup();
+          if (this._options .keepOneEntry && this._view .getNumberOfTuples() == 1) {
+            let [id, html] = this._view .getFirstTuple();
+            let fieldNames = this._view._getFieldHtmlFromTuple (html) .toArray() .map (f => {return $(f) .data ('field')._name});
+            for (let fieldName of fieldNames)
+              this .updateField (id, fieldName, null);
+          } else
+            this._remove (arg);
+        }
         break;
     }
   }

@@ -22,7 +22,7 @@ class Table extends TuplePresenter {
   }
 
   _getTupleData (doc) {
-    return this._columns .reduce ((o,f) => {o [f] = doc [f] || ''; return o}, {_id: doc._id});
+    return this._columns .reduce ((o,f) => {o [f] = doc [f]; return o}, {_id: doc._id});
   }
 
   async _getModelData() {

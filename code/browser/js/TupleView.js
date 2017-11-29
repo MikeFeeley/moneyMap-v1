@@ -150,4 +150,12 @@ class TupleView extends View {
   empty() {
     this._tuples .clear();
   }
+
+  getNumberOfTuples() {
+    return Array .from (this._tuples .entries()) .length;
+  }
+
+  getFirstTuple() {
+    return Array .from (this._tuples .entries()) [0];
+  }
 }

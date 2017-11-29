@@ -184,11 +184,7 @@ class ScheduleEntry extends List {
           this._onViewChange (ListViewEvent .UPDATE, {id: arg, fieldName: 'start', value: ''});
           eventType = ListViewEvent .CANCELLED;
         }
-        let query = {
-          category: {$in: [target] .concat (this._categories .getDescendants (target)) .map (c => {return c._id})},
-          date:     {$gte: this._budget .getStartDate(), $lte: this._budget .getEndDate()}
-        }
-        if (await this._variance .getActuals() .hasTransactions (query)) {
+        if (await this._model .hasTransactions (target)) {
           this._view .flagTupleError  (arg);
           this._view .showTipNoRemove (arg);
           eventType = ListViewEvent .CANCELLED;

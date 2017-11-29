@@ -159,6 +159,8 @@ class DateType extends FieldType {
     s = s .trim() .toLowerCase();
     if (s == '')
       return this._format == 'MYorYear'? '': undefined;
+    if (s == 't' || s == 'today' || s == '.')
+      return this .today();
     switch (this._format) {
       case 'DMY':
       case 'DM':

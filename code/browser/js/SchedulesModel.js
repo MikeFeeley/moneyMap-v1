@@ -16,6 +16,7 @@ class SchedulesModel extends Observable {
   delete() {
     this._catModel .delete();
     this._schModel .delete();
+    this._accModel .delete();
   }
 
   _onCatModelChange (eventType, doc, arg, source) {
@@ -187,40 +188,6 @@ class SchedulesModel extends Observable {
     return insertedIds;
   }
 
-
-  //   if (mis .model == this._schModel)
-  //     data.budget  = this._budget .getId();
-  //   else
-  //     data.budgets = [this._budget .getId()];
-  //   if (pos .inside) {
-  //     data [mis .model .parent] = mis .id;
-  //     var siblings              = this._categories .get (pos .id) [mis .model .children] || [];
-  //     data .sort                = pos .before? 0: siblings .reduce ((m,s) => {return Math.max (m, s .sort)}, 0) + 1;
-  //   } else {
-  //     var ref                   = this._categories .get (pos .id);
-  //     if (ref [mis .model .parent])
-  //       data [mis .model .parent] = this._splitMI (ref [mis .model .parent] ._id) .id;
-  //     var siblings              = this._categories .getSiblings (ref, mis .model .parent, mis .model .children) .concat (ref);
-  //     data .sort                = (ref .sort || 0) + (pos .before? 0: 1);
-  //   }
-  //   var changes = [];
-  //   for (let s of siblings || [])
-  //     if (s.sort >= data .sort)
-  //       changes .push ({id: this._splitMI (s._id) .id, update: {sort: s.sort + 1}})
-  //   await mis .model .updateList (changes);
-  //   await mis .model .insert (data);
-  //   if (data._id) {
-  //     var ids = [this._joinMI (mis. model, data._id)];
-  //     if (mis .model == this._catModel) {
-  //       data = {budget: this._budget .getId(), category: data._id, sort: 0};
-  //       await this._schModel .insert (data);
-  //       if (data._id)
-  //         ids .push (this._joinMI (this._schModel, data._id));
-  //     }
-  //   }
-  //   return ids;
-  // }
-
   /**
    *
    */
@@ -249,7 +216,24 @@ class SchedulesModel extends Observable {
       let sl = cl .reduce ((l,c) => {
         return l .concat ((c .schedule || []) .map (s => {return this._splitMI (s._id) .id}));
       }, []);
-      result = (await this._schModel .removeList (sl)) && (await this._catModel .updateList (ul));
+      let accModel = this._actModel .getAccountsModel();
+      let accounts = accModel .getAccounts();
+      let al = cl
+        .map (c => {
+          if (c .account) {
+            let account = accounts .find (a => {return a._id == c .account});
+            if (account) {
+              for (let field of ['category', 'disCategory'])
+                if (account [field] == c._id)
+                  return {id: account._id, update: {[field]: null}}
+            }
+          }
+        })
+        .filter (u => {return u});
+      let accUpd = al .length == 0 || accModel .getModel() .updateList (al);
+      let schUpd = sl .length == 0 || this._schModel .removeList (sl);
+      let catUpd = ul .length == 0 || this._catModel .updateList (ul);
+      result = (await sl) && (await cl);
     }
     return result;
   }

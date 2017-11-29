@@ -14,7 +14,6 @@ router.get('/', function(req, res, next) {
       'View',
       'Presenter',
       'AccountsModel',
-      'AccountBalanceModel',
       'ActualsModel',
       'BudgetModel',
       'VarianceModel',

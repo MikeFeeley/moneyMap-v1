@@ -1,6 +1,6 @@
 class AccountBalance extends TuplePresenter {
   constructor (variance) {
-    super (new AccountBalanceModel(), new AccountBalanceView(), {})
+    super (variance .getActuals() .getAccountsModel(), new AccountBalanceView(), {})
     this._variance        = variance;
     this._actuals         = variance .getActuals();
     this._budget          = variance .getBudget();
@@ -8,6 +8,7 @@ class AccountBalance extends TuplePresenter {
     this._netZeroTuples   = [];
     this._budgetObserver  = this._budget  .addObserver (this, this._onBudgetChange);
     this._actualsObserver = this._actuals .addObserver (this, this._onActualsChange);
+    this._accountsObserver = this._model  .addObserver (this, this._onAccountsChange)
   }
 
   delete() {
@@ -15,6 +16,7 @@ class AccountBalance extends TuplePresenter {
     this._model .delete();
     this._budget  .removeObserver (this._budgetObserver);
     this._actuals .removeObserver (this._actualsObserver);
+    this._model   .removeObserver (this._accountsObserver);
   }
 
   _onBudgetChange (eventType, doc, arg, source, model) {
@@ -25,6 +27,10 @@ class AccountBalance extends TuplePresenter {
   _onActualsChange (eventType, doc, arg) {
     if (this._isNetZeroCategory (doc .category) || (arg && arg._original_category && this._isNetZeroCategory (arg._original_category)))
       this._updateNetToZero();
+  }
+
+  _onAccountsChange (eventType, doc, arg) {
+    this._view .resetHtml();
   }
 
   _onViewChange (eventType, arg) {
@@ -43,13 +49,12 @@ class AccountBalance extends TuplePresenter {
       super._onViewChange (eventType, arg);
   }
 
-  _addGroup (accountType, name, flag) {
-    let g        = this._view .addGroup (name, flag);
-    let accounts = this._model .getAccounts();
-    for (let acc of accounts)
-      if (acc .trackBalance && acc .type == accountType)
+  _addGroup (name, accounts) {
+    if (accounts .length > 0) {
+      let g = this._view .addGroup (name, accounts [0] .creditBalance? '_flagGood': '_flagBad');
+      for (let acc of accounts)
         this._addTuple (acc, g);
-    this._view .setGroupVisible (g, accounts .length > 0);
+    }
   }
 
   _addNetToZero() {
@@ -97,12 +102,16 @@ class AccountBalance extends TuplePresenter {
     }
   }
 
+  _buildHtml() {
+    let accounts = this._model .getAccounts() .sort ((a,b) => {return a .sort < b .sort? -1: 1});
+    for (let group of accounts .filter (a => {return a .type == AccountType .GROUP && a .cashFlow}))
+      this._addGroup (group .name, accounts .filter (a => {return a .group == group._id}))
+    this._addNetToZero();
+  }
+
   async addHtml (toHtml) {
     await this._model .find();
-    this._view .addHtml (toHtml);
-    this._addGroup (AccountType .DEPOSIT,     'Bank Accounts', '_flagGood');
-    this._addGroup (AccountType .CASH,        'Cash',          '_flagGood');
-    this._addGroup (AccountType .CREDIT_CARD, 'Credit Cards',  '_flagBad');
-    this._addNetToZero();
+    this._view .addHtml (toHtml, () => {this._buildHtml()});
+    this._buildHtml();
   }
 }

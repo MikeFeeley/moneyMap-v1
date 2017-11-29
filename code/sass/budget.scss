@@ -348,9 +348,15 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
     position: relative;
   }
 
+  table._budgetTable, table._activityTable, table._budgetHistoryTable, table._netWorthTable {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+
   /* Freeze first column on scroll */
    div._budgetHistoryTable:not(._popup) > div, div._netWorthTableContainer:not(._popup) {
-        width: calc(100vw - 80px)!important;
+     width: calc(100vw - 80px)!important;
         overflow-x: scroll;
           > table > * > tr > td:first-child,  > table > * > tr > th:first-child {
               position:absolute;

@@ -191,6 +191,7 @@ class ListView extends SortedTupleView {
         dropOnEmpty:          true,
         doNotClear:           true,
         opacity:              0.75,
+        protectRoot:          this._options .protectRoot,
         toleranceElement:     '> div',
         stop: (e,ui) => {
           if (Math .abs (ui .originalPosition .top - ui .position .top) >= 16 || Math .abs (ui .originalPosition .left - ui .position .left) >= 16) {

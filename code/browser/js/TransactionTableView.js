@@ -56,7 +56,7 @@ class TransactionTableView extends TableView {
     var fields = Object .keys (fieldDesc) .map (f => {
       var ro = options .readOnly || (options .readOnlyFields && options .readOnlyFields .includes (f));
       return fieldDesc [f] [ro? 0: 1];
-    })
+    });
     var headerDesc = {
       date:        'Date',
       payee:       'Payee',
@@ -109,6 +109,7 @@ class TransactionTableView extends TableView {
       $('<div>', {text: tl}) .appendTo (tip .children());
     setTimeout (() => {
       tip .css (ui .calcPosition (field, html, {top: - tip .height() - 32, left: - tip .width() / 2 + field .width() / 2}));
+      ui .scrollIntoView (tip);
       tip .fadeIn (300, () => {
         let mo = ui .ModalStack .add (() => {return true}, () => {
           if (mo) {

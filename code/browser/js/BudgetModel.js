@@ -35,13 +35,13 @@ class BudgetModel extends Observable {
     this._notifyObservers (eventType, doc, arg, source, model);
   }
 
-  async find (id) {
+  async find (id, actualsModel) {
     let today = Types .date .today();
     this._budgets = await this._budModel .find ();
     this._budget  = this._budgets .find (b => {return b._id == id});
     if (this._schModel)
       this._schModel .delete();
-    this._schModel = new SchedulesModel (this);
+    this._schModel = new SchedulesModel (this, actualsModel);
     this._schModel .addObserver (this, this._onSchedulesModelChange);
     await this._schModel .find ();
   }

@@ -121,6 +121,12 @@ $indent:       24px;
         color: #0081cc;
         @include adaptive-width($name-narrow - $indent * 1, $name-wide - $indent * 1);
       }
+      ._field_name._account ._content {
+        color: #3d993d
+      }
+      > ._field_name._account ._content {
+        color: #4d994d;
+      }
       > ul > li {
         margin-left: $indent * 1;
         > ._field_name ._content {

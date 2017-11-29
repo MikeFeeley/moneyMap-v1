@@ -1,6 +1,8 @@
 'use strict';
 
-var util = require ('../lib/util.js');
+var util     = require ('../lib/util.js');
+var ObjectID = require('mongodb').ObjectID
+
 
 const URL = 'mongodb://localhost:27017/';
 const MONTHS_TO_KEEP_DELETED_CONFIGS = 6;
@@ -30,6 +32,7 @@ async function noScheduleCategories() {
         console.log ('  ' + buds .get (bud) .name + ' - ' + getPathname (cat));
         if (repair) {
           await db .collection ('schedules') .insertOne ({
+            _id:      new ObjectID() .toString(),
             category: cat._id,
             budget:   bud
           })
@@ -190,7 +193,7 @@ async function checkTransactions() {
     let cat = cats .get (cid);
     if (cat) {
       if (! (await db .collection ('categories') .findOne ({_id: cid})) .budgets .includes (bid)) {
-        await db .collection ('schedules')  .insertOne ({category: cat._id, budget: bid});
+        await db .collection ('schedules')  .insertOne ({_id: new ObjectID() .toString(), category: cat._id, budget: bid});
         await db .collection ('categories') .updateOne ({_id: cid}, {$addToSet: {budgets: bid}});
       }
       await addBudgetToPath (bid, cat .parent);

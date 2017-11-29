@@ -139,11 +139,11 @@ class UserView extends View {
     if (this._accountEdit)
       this._accountEdit .remove();
     this._accountEdit = $('<div>')                          .appendTo (this._tabbedContents);
-    let content       = $('<div>', {class: '_accountEdit'}) .appendTo (this._accountEdit);
+    let content       = $('<div>', {class: '_profileEdit'}) .appendTo (this._accountEdit);
     return content;
   }
 
-  addGroup (title, toHtml, additionalClass) {
+  addGroup (title, toHtml, additionalClass = '') {
     let g = $('<div>', {class: '_group'})                     .appendTo (toHtml);
     $('<div>', {class: '_title', text: title})                .appendTo (g);
     return $('<div>', {class: '_content ' + additionalClass}) .appendTo (g);

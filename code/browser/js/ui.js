@@ -195,7 +195,7 @@ var ui = {
               let visible = tab .data ('content') .data ('visible');
               let hidden  = prevContent .data ('hidden');
               if (visible)
-                visible();
+                (async() => {await visible()})();
               if (hidden)
                 hidden();
               handleClick();

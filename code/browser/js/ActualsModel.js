@@ -53,6 +53,10 @@ class ActualsModel extends Observable {
     }
   }
 
+  getAccountsModel () {
+    return this._accounts;
+  }
+
   async findCurrent () {
     let st            = Types .date._yearMonth (Types .date .addYear (this._budget .getStartDate(), -1));
     let en            = Types .date._yearMonth (this._budget .getEndDate());

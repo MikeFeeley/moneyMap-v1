@@ -10,42 +10,139 @@ body {
   margin-right: auto;
   > ._group {
     margin-top: 32px;
-    margin-bottom: 32px;
+    margin-bottom: 64px;
     ._title {
       font-size: 32px;
       color: #33b1ff;
       font-width: 100;
       margin-bottom: 8px;
     }
-    > ._content._dark {background: #fafafa}
+    padding: 0px;
     > ._content {
-      > ._line {
-        > div, input[type=checkbox], div._suffix {display: inline-block}
-        input[type=checkbox] {margin-right: 10px}
-        input[type=checkbox] {vertical-align: 8%}
-        input[type=text]     {text-align: right; width: 80px;}
-        div._suffix {margin-top: 5px}
-        > div:not(:first-child) {
-          margin-left: 32px;
+      .ui-sortable {
+        margin: 0px;
+      }
+      .ui-sortable-helper {
+        background: white;
+      }
+      ._placeholder {
+        border: 1px dashed #73bbe6;
+        background: #f2fbff;
+      }
+      padding: 0px;
+      > ul {
+        list-style: none;
+        padding-left: 0px;
+        ul {
+          list-style: none;
+          padding-left: 0px;
         }
-      }
-      > ._line:not(:first-child) {
-        margin-top: 32px;
-      }
-      ._label {
-        font-size: 18px;
-        color: #aaa;
-      }
-      padding: 12px;
-      border: solid 0.1px #aaa;
-      * {
-        color: #555;
-        font-size: 20px;
+        > li > ._label {
+          margin-top: 16px;
+          margin-bottom: 48px;
+          > ._field > div ._content {
+            font-size: 24px;
+            color: #33b1ff;
+            font-width: 100;
+            border: 0px solid white;
+          }
+          margin-bottom: 2px;
+        }
+        > li > ul {
+          * {
+            color: #555;
+            font-size: 16px;
+          }
+          border: solid 0.1px #aaa;
+          padding-left: 0px;
+          list-style: none;
+          > li {
+            > div {
+              padding: 16px;
+            }
+            border-top: 6px solid #33b1ff;
+          }
+        }
+        ._entry {
+          display: flex;
+          flex-direction: row;
+          > ._left {
+            flex-grow: 1
+          }
+          > ._right {
+            flex-grow: 0
+          }
+        }
+        ._line {
+          ._labeledField {
+            vertical-align: top;
+            margin-right: 20px;
+            > ._label {
+              font-size: 14px;
+              color: #aaa;
+            }
+            > ._field_apr ._content, ._field_balance ._content {
+              text-align: right
+            }
+            > ._field_apr ._content {
+              width: 100px
+            }
+            > ._field_balance ._content {
+              width: 110px
+            }
+            > ._field_type {
+              padding-top: 2px;
+            }
+            > ._field_category, ._field_disCategory, ._field_liquid {
+              padding-top: 6px;
+              > div > ._content ._suffix {
+                padding-left: 6px;
+              }
+            }
+          }
+          > div, input[type=checkbox], div._suffix {
+            display: inline-block
+          }
+        }
+        ._line:not(:last-child) {
+          margin-bottom: 16px;
+        }
+        ._right {
+          > ._label {
+            font-size: 14px;
+            color: #aaa;
+          }
+          > ._content {
+            border: solid 1px #ccc;
+            max-height: 150px;
+            overflow-y: scroll;
+            ._balanceHistoryTable {
+              td ._content {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                padding: 0px;
+                margin: 2px;
+              }
+              td div._content, td label._content {
+                border: 2px solid transparent;
+              }
+              position: relative;
+              > tbody > tr > td {
+                > ._field_date ._content {
+                  width: 100px
+                }
+                > ._field_amount ._content {
+                  width: 110px;
+                  text-align: right
+                }
+              }
+            }
+          }
+        }
       }
     }
   }
 }
-
 
 ._preferencesEdit {
   width: 600px;
@@ -89,7 +186,7 @@ body {
   }
 }
 
-._accountEdit {
+._profileEdit {
   width: 940px;
   margin-left: auto;
   margin-right: auto;

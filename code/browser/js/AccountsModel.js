@@ -1,36 +1,88 @@
 /**
  * Accounts Model
  *     name
- *     type                 AccountType
- *     trackBalance         true if transactions update balance (will be replaced with account type)
+ *     type                 AccountType; GROUP or ACCOUNT
+ *     cashFlow             true if account is used for cashflow for transactions
+ *     sort
+ *  ACCOUNT only:
+ *     group                account id of group
  *     number               bank number used to match transactions when importing
  *     balance              $
  *     creditBalance        true if credit increases balance (chequing); false if decreases (visa)
+ *  Cash-Flow only:
+ *     pendingTransactions  []
+ *  Non Cash-Flow only:
+ *     liquid               true iff liquid asset / liability
  *     category             category for savings deposits
  *     disCategory          category for savings withdrawals (distributions)
- *     pendingTransactions  []
+ *  DELETED:
+ *     trackBalance
+ *
+ *  BalanceHistory Model
+ *     date
+ *     account
+ *     amount
+ *  DELETED:
+ *     start
+ *     end
+ *     sort
  */
 
 class AccountsModel extends Observable {
-  constructor (modelName = 'accounts') {
+  constructor() {
     super();
-    this._model = new Model (modelName);
+    this._model = new Model ('accounts');
     this._model .addObserver (this, this._onModelChange);
+    this._tranModel = new TransactionModel();
+    this._tranModel .observe ();
+    this._tranModel .addObserver (this, this._onTranModelChange);
   }
 
   delete() {
-    this._model .delete();
+    this._model     .delete();
+    this._tranModel .delete();
   }
 
   async _onModelChange (eventType, doc, arg) {
     if (this._updateModel)
-      this._updateModel();
+      await this._updateModel();
     this._notifyObservers (eventType, doc, arg);
   }
 
   async _updateModel() {
     this._accounts = await this._model .find();
   }
+
+  _onTranModelChange (eventType, doc, arg, source) {
+    if (doc .account) {
+      var acc  = this._accounts .find (a => {return a._id == doc .account});
+      var sign = acc .creditBalance? -1: 1;
+      switch (eventType) {
+        case ModelEvent .UPDATE:
+          if (arg .debit != null)
+            acc .balance += (arg .debit  - (arg._original_debit || 0)) * sign;
+          if (arg .credit != null)
+            acc .balance -= (arg .credit - (arg._original_credit || 0)) * sign;
+          if (arg .account != null) {
+            acc .balance += ((doc .debit || 0) - (doc .credit || 0)) * sign;
+            var pacc = this._accounts .find (a => {return a._id == arg ._original_account});
+            if (pacc) {
+              pacc .balance -= ((doc .debit || 0) - (doc .credit || 0)) * sign;
+              this._notifyObservers (ModelEvent .UPDATE, pacc, {balance: pacc .balance});
+            }
+          }
+          break;
+        case ModelEvent .INSERT:
+          acc .balance += ((doc .debit || 0) - (doc .credit || 0)) * sign;
+          break;
+        case ModelEvent .REMOVE:
+          acc .balance -= ((doc .debit || 0) - (doc .credit || 0)) * sign;
+          break;
+      }
+      this._notifyObservers (ModelEvent .UPDATE, acc, {balance: acc .balance});
+    }
+  }
+
 
   _smartLowerCase (s) {
     var allCaps      = ['UBC', 'CA', 'BC', 'AB', 'WWW', 'DDA', 'IDP', 'IBC', 'DCGI', 'ICBC', 'IGA', 'SA', 'RBC', 'NY', 'EI', 'UNA', 'PAP', 'EB', 'US'];
@@ -87,17 +139,13 @@ class AccountsModel extends Observable {
   async find() {
     await this._updateModel();
   }
+
+  getModel() {
+    return this._model;
+  }
 }
 
 var AccountType = {
-  DEPOSIT:     0,
-  CREDIT_CARD: 1,
-  CASH:        2,
-  PENSION:     3,
-  RRSP:        4,
-  TFSA:        5,
-  RESP:        6,
-  INVESTMENT:  7,
-  MORTGAGE:    8,
-  HOME:        9
+  GROUP:   0,
+  ACCOUNT: 1
 }

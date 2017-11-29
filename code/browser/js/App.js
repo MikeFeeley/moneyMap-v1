@@ -57,7 +57,7 @@ class App {
 
       /* queries */
       this._accounts = this._accModel .find();
-      await this._budModel .find (this._user .getBudgetId());
+      await this._budModel .find (this._user .getBudgetId(), this._actModel);
       await this._actModel .findCurrent ();
       await this._accModel .find ();
 
@@ -72,7 +72,7 @@ class App {
       this._na = new Navigate             (this._accModel, this._varModel);
       this._na .prime();
       this._se = new IndexedScheduleEntry ('_CategoryMenu', '_ScheduleEntry', this._accModel, this._varModel);
-      this._ac = new Accounts             (this._accModel, this._varModel);
+      this._ac = new Accounts             (this._accModel, this._budModel);
 
       /* tabs */
       this._tabs .setTab  (this._proT, html => {this._na .addProgressHtml     (html)});

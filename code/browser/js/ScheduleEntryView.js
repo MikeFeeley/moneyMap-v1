@@ -15,6 +15,7 @@ class ScheduleEntryView extends ListView {
     );
     var fields = [
       new ViewScalableTextbox          ('name',            ViewFormats ('string'),       '', '', 'Name'),
+      new ScheduleEntryAccount         ('account',         ViewFormats ('string')),
       new ViewEmpty                    ('scheduleLine',    ViewFormats ('string')),
       new ScheduleEntryTotal           ('total',           ViewFormats ('moneyDC'), hud),
       new ScheduleEntryViewUnallocated ('unallocated',     ViewFormats ('moneyDC')),
@@ -26,9 +27,10 @@ class ScheduleEntryView extends ListView {
       new ViewScalableTextbox          ('notes',           ViewFormats ('string'),       '', '', 'Notes')
     ];
     var lineTypes = {
-      categoryLine: ['name', 'scheduleLine', 'unallocated', 'total'],
+      categoryLine: ['name', 'account', 'scheduleLine', 'unallocated', 'total'],
       scheduleLine: ['start', 'end', 'amount', 'repeat', 'limit', 'notes']
     }
+    options .protectRoot = true;
     super (name, fields, lineTypes, options);
     this._hud = hud;
   }
@@ -53,10 +55,11 @@ class ScheduleEntryView extends ListView {
     for (let tl of tipText)
       $('<div>', {text: tl}) .appendTo (tip .children());
     setTimeout (() => {
-      let pos = ui .calcPosition (target, html, {top: - tip .height() -16, left: -16});
+      let pos = ui .calcPosition (target, html, {top: - tip .height() -16, left: 0});
       if (pos .top < 16)
-        pos = ui .calcPosition (target, html, {top: 32, left: -16})
+        pos = ui .calcPosition (target, html, {top: 32, left: 0})
       tip .css (pos);
+      ui .scrollIntoView (tip);
       tip .fadeIn (300, () => {
         let mo = ui .ModalStack .add (() => {return true}, () => {
           if (mo) {
@@ -130,6 +133,12 @@ class ScheduleEntryViewUnallocated extends ViewLabel {
   }
   _set (value) {
     super ._set (value? (this._isNegative? '(Over: ': '(Unallocated: ') + value + ')': '');
+  }
+}
+
+class ScheduleEntryAccount extends ViewEmpty {
+  set (value) {
+    this._html .prev ('._field_name') [value? 'addClass': 'removeClass'] ('_account');
   }
 }
 

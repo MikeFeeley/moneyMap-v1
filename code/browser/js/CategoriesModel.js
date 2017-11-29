@@ -67,10 +67,8 @@ class Categories {
               cat .parent .zombies = (cat .parent .zombies || []) .concat (cat);
           } else {
             let zombieIdx = cat .parent .zombies .indexOf (cat);
-            if (zombieIdx != -1) {
+            if (zombieIdx != -1)
               cat .parent .zombies .splice (zombieIdx, 1);
-              cat .parent .children .push  (cat);
-            }
           }
         }
         break;
