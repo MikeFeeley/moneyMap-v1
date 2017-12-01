@@ -462,7 +462,7 @@ class ViewCheckbox extends ViewEdit {
   _set (val) {
     this._input  .prop ('checked', Boolean (val));
     if (this._labels)
-      this._html .find ('._suffix') .text (this._labels [Number (val) || 0]);
+      this._html .find ('._suffix') .text (this._labels [Number (Boolean (val)) || 0]);
   }
   _get() {
     return this._input .prop ('checked')? true: false;

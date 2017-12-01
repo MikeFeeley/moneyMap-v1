@@ -1605,9 +1605,10 @@ class Navigate {
     if (datasetCopy .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       var updater = this._addUpdater (view, (eventType, model, ids) => {
         dataset .groups   = this._getHistoryData (parentIds, date, date) .groups;
-        datasetCopy       = Object .assign ({}, dataset);
-        datasetCopy .cols = datasetCopy .cols .map (c => {return c .slice (-4)})
-        updateView ([{replace: datasetCopy}])
+        let ds            = JSON .parse (JSON .stringify (dataset));
+        ds .cols = ds .cols .map (c => {return c .slice (-4)})
+        this._filterHistoryBySlider (ds)
+        updateView ([{replace: ds}])
       });
       var updateView = view .addHistoryTable (datasetCopy, datasetCopy .cols .length == 1, skipFoot, popup, position, () => {
         this._deleteUpdater (view, updater);
