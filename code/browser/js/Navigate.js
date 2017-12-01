@@ -1825,7 +1825,6 @@ class Navigate {
       highlight: Types .date._year (budgetStart) - Types .date._year (startDate) + 1,
       rows:      rowsData
     }
-    console.log(result);
     return result;
   }
 
