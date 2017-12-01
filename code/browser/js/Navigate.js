@@ -111,7 +111,7 @@ class Navigate {
     await this._getModelValues();
     this._netWorthSliderLeft  = undefined;
     this._netWorthSliderRight = undefined;
-    var ds = this._getNetWorthData ();
+    var ds = await this._getNetWorthData ();
     this._clearUpdatersForView                   (this._netWorthView);
     let sc = this._netWorthView .addContainer    ('_sliderHeader');
     this._netWorthView .addHeading               ('Net Worth', '', sc);
@@ -120,8 +120,8 @@ class Navigate {
     let rv = this._netWorthView .addSubHeading   ('', '', sc);
     this._addNetworthSlider (
       this._netWorthView, ds, sc, lv, rv,
-      this._addNetWorthGraph                (this._netWorthView, ds),
-      this._addNetWorthTable                (this._netWorthView, ds)
+      this._addNetWorthGraph                      (this._netWorthView, ds),
+      await this._addNetWorthTable                (this._netWorthView, ds)
     );
   }
 
@@ -1331,7 +1331,9 @@ class Navigate {
       }))
     }
     // compute future budgets
-    var budgets = [this._budget .getDescriptor()] .concat (this._budget .getFutureBudgets());
+    let budgets = [];
+    for (let y = 0; y < PreferencesInstance .get() .futureYears; y++)
+      budgets .push (this._budget .getDescriptor (y))
     var budgetAmounts = [];
     for (let budget of budgets) {
       var budgetAmount = [];
@@ -1598,13 +1600,16 @@ class Navigate {
   }
 
   _addHistoryTable (parentIds, date, skipFoot, popup, position, view, dataset = this._getHistoryData (parentIds, date), toHtml) {
-    dataset = Object .assign ({}, dataset);
-    dataset .cols = dataset .cols .map (c => {return c .slice (-4)})
-    if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
+    let datasetCopy   = Object .assign ({}, dataset);
+    datasetCopy .cols = datasetCopy .cols .map (c => {return c .slice (-4)})
+    if (datasetCopy .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       var updater = this._addUpdater (view, (eventType, model, ids) => {
-        updateView ([{replace: this._getHistoryData (parentIds, date, true)}])
+        dataset .groups   = this._getHistoryData (parentIds, date, date) .groups;
+        datasetCopy       = Object .assign ({}, dataset);
+        datasetCopy .cols = datasetCopy .cols .map (c => {return c .slice (-4)})
+        updateView ([{replace: datasetCopy}])
       });
-      var updateView = view .addHistoryTable (dataset, dataset .cols .length == 1, skipFoot, popup, position, () => {
+      var updateView = view .addHistoryTable (datasetCopy, datasetCopy .cols .length == 1, skipFoot, popup, position, () => {
         this._deleteUpdater (view, updater);
       }, toHtml);
       return updateView;
@@ -1621,164 +1626,211 @@ class Navigate {
   /**
    * returns {
    *   cols:    array of column names (budgets)
+   *   highlight:  hisDesc .length,
    *   rows: [{
    *      name:    account name
    *      amounts: array of amounts, one for each column
+   *      detail: [{
+   *       int:    a .int,
+   *       addAmt: a .add,
+   *       subAmt: a .sub,
+   *       addCat: a .addCat,
+   *       subCat: a .subCat
+   *     }]
    *   }]
    * }
    */
-  _getNetWorthData() {
-    let accountTypes  = [
-      [AccountType .PENSION,    'Pension'],
-      [AccountType .RRSP,       'RRSP'],
-      [AccountType .RESP,       'RESP'],
-      [AccountType .TFSA,       'TFSA'],
-      [AccountType .INVESTMENT, 'Non-Registered Investments'],
-      [AccountType .HOME,       'Home'],
-      [AccountType .MORTGAGE,   'Mortgage']
-    ];
-    let param   = this._rates;
-    let history  = this._historicBalances;
-    let hisDesc = history
-      .sort   ((a,b) => {return a .start < b .start? -1: a .start == b .start? 0: 1})
-      .reduce ((l, h) => {
-        if (l .length == 0 || l [l .length - 1] .start != h .start)
-          l .push (h);
-        return l;
-      }, [])
-      .map (h => {return {
-        label: BudgetModel .getLabelForDates (h .start, h .end),
-        start: h .start,
-        end:   h .end
-      }})
-    let years = hisDesc .concat ([this._budget .getDescriptor()]) .concat (this._budget .getFutureBudgets());
-    let accountAmounts = this._accounts .getAccounts() .map (account => {
-      let sign   = account .creditBalance? 1: -1;
-      let rate   = ((account .apr || param .apr) - (param .presentValue? param .inflation: 0)) / 3650000;
-      let addCat = account .category    && this._categories .get (account .category);
-      let subCat = account .disCategory && this._categories .get (account .disCategory);
-      let curBal = (account .balance || 0) * sign;
-       // project balance through budgets
-      let amounts = years .map (year => {
-        let months = [];
-        for (let st = year .start; st < year .end; st = Types .date .addMonthStart (st, 1))
-          months .push ({start: st, end: Types .date .monthEnd (st)});
-        let add, sub, begBal;
-        let endBal = (history .find (h => {return h .account == account ._id && h .start == year .start}) || {}) .amount;
-        endBal     = endBal && endBal * sign;
-        let getBudgetAmounts = cat => {
-          return months .map (m => {return cat? (this._budget .getAmount (cat, m .start, m .end) .month || {}) .amount || 0: 0})
-            .concat (cat? (this._budget .getAmount (cat, year .start, year .end) .year || {}) .amount || 0: 0)
-        }
-        if (year .start < this._budget .getStartDate()) {
-          add = months .map (m => {return addCat? this._actuals .getAmountRecursively (addCat, m .start, m .end): 0});
-          sub = months .map (m => {return subCat? this._actuals .getAmountRecursively (subCat, m .start, m .end): 0});
-        } else {
-          add = getBudgetAmounts (addCat);
-          sub = getBudgetAmounts (subCat);
-        }
-        if (year .start == this._budget .getStartDate()) {
-          begBal = curBal;
-          for (let st = Types .date .monthStart (Types .date .today()); st >= this._budget .getStartDate();  st = Types .date .addMonthStart (st, -1)) {
-            let en = Types .date .monthEnd (st);
-            let a  = addCat? this._actuals .getAmountRecursively (addCat, st, en): 0;
-            let s  = subCat? this._actuals .getAmountRecursively (subCat, st, en): 0;
-            begBal = (begBal - (a + s)) / (1 + rate * Types .date .daysInMonth (st));
-          }
-        }
-        return {
-          add:    add,
-          sub:    sub,
-          addCat: addCat,
-          subCat: subCat,
-          begBal: begBal,
-          endBal: endBal
-        }
-      });
-      return {
-        account: account,
-        rate:    rate,
-        curBal:  curBal,
-        amounts: amounts
+
+
+  async _getNetWorthData (rows) {
+
+    // initialize
+    let accounts = this._accounts .getAccounts()
+      .filter (a => {return ! a .cashFlow})
+      .sort   ((a,b) => {return a .sort < b .sort? -1: 1});
+    let accountIds = accounts .map (a => {return a._id});
+    let balances = (await this._balances .find ({}))
+      .filter (b => {return accountIds .find (aid => {return accountIds .includes (aid)})})
+      .sort   ((a,b) => {return a .date < b .date? -1: a .date == b .date? 0: 1});
+    if (! rows)
+      rows = accounts .filter (a => {return ! a .cashFlow && a .type == AccountType .GROUP})
+    let budgetStart = this._budget .getStartDate();
+    let budgetEnd   = this._budget .getEndDate();
+
+    // compute column dates
+    let startDate = Types .dateFY .getFYEnd (
+      balances .map (b => {return b .date}) .reduce ((m ,d) => {return Math .min (m, d)}),
+      budgetStart, budgetEnd
+    );
+    let today   = Types .date .today();
+    let endDate = Types .date .addYear (Types .dateFY .getFYEnd (today, budgetStart, budgetEnd), PreferencesInstance .get() .futureYears || 0);
+    let colDates = [];
+    for (let d = startDate; d <= endDate; d = Types .date .addYear (d, 1))
+      colDates .push(d);
+
+    // get balance for specified date from list of balances
+    let getHistoryBalance = (history, date) => {
+      let getAmountFromInterval = (st, en, date) => {
+        if (en .date == st .date)
+          return en .amount;
+        let slope = (en .amount - st .amount) / Types .date .subDays (en .date, st .date);
+        return Math .round (st .amount + slope * Types .date .subDays (date, st .date));
       }
-    });
+      if (history .length == 1)
+        return history [0] .amount;
+      for (let [i, interval] of history .entries()) {
+        if (interval .date == date)
+          return interval .amount;
+        if (interval .date >= date)
+          return getAmountFromInterval (i > 0? history [i-1]: interval, i > 0? interval: i <history .length? history [i+1]: interval, date)
+      }
+      return getAmountFromInterval (history [history .length - 2], history [history .length - 1], date);
+    }
+
+    // get actual amount (up/down) for category
+    // allocates up-stream amounts evenly to account children
+    let getActual = (cid, start, end) => {
+      let getAmountUp = (cat, child) => {
+        if (cat) {
+          let amt = this._actuals .getAmount (cat, start, end) + getAmountUp (cat .parent, cat);
+          let nas = (cat .children || []) .concat (cat .zombies || []) .filter (c => {return c .account || c._id == child._id}) .length;
+          return Math .round (amt / nas);
+        } else
+          return 0;
+      }
+      let cat = this._categories .get (cid);
+      return this._actuals .getAmountRecursively (cat, start, end) + getAmountUp (cat .parent, cat);
+    }
+
     // compute balances
-    let sum    = (t,a) => {return t + a};
-    for (let accountAmount of accountAmounts) {
-      let yearIndex = 0;
-      for (let amount of accountAmount .amounts) {
-        let year     = years [yearIndex];
-        let pyEndBal = (yearIndex > 0 && accountAmount .amounts [yearIndex - 1] .endBal) || 0;
-        yearIndex   += 1;
-        if (amount .endBal !== undefined)
-          amount .int = amount .endBal - pyEndBal - amount .add .reduce (sum) + amount .sub .reduce (sum);
-        else {
-          let bal     = amount .begBal !== undefined? amount .begBal: pyEndBal;
-          amount .int = bal - pyEndBal;
-          let month   = year .start;
-          for (let i = 0; i < 12; i++) {
-            let int = bal * accountAmount .rate * Types .date .daysInMonth (month);
-            amount .int += int;
-            bal         += int + amount .add [i] + amount .sub [i];
-            month        = Types .date .addMonthStart (month, 1);
-          }
-          amount .endBal = bal + (amount .add [12] || 0) + (amount .sub [12] || 0);
-        }
-        amount .add = amount .add .reduce (sum);
-        amount .sub = amount .sub .reduce (sum);
-      }
-    }
-    // accumulate by account type
-    let accountTypeAmounts = accountTypes .map (accountType => {
-      return accountAmounts
-        .filter (aa => {return aa .account .type == accountType [0]})
-        .reduce ((total, aa) => {
+    let rowsData = rows .map (row => {
+      let rowAccounts = row .type == AccountType .GROUP
+        ? accounts .filter (a => {return a .group == row._id})
+        : [row];
+      let rowData = rowAccounts
+        .map (account => {
+          let sign = account .creditBalance? 1: -1;
+          let historyBalances = balances
+            .filter (bal => {return bal .account == account._id})
+            .map    (bal => {bal .amount = bal .amount * sign; return bal});
+          let rate = (
+            (account .apr != null? account .apr: PreferencesInstance .get() .apr) -
+            (PreferencesInstance .get() .presentValue? PreferencesInstance .get() .inflation: 0)
+          ) / 3650000;
+          let bal;
+
+          let accountData = colDates .map (endDate => {
+            let pyEndDate = Types .date .addYear (endDate, -1);
+            let startDate = Types .date .addMonthStart (pyEndDate, 1);
+
+            // history
+            if (endDate < budgetStart) {
+              let bal       = getHistoryBalance (historyBalances, endDate);
+              let pyBal     = getHistoryBalance (historyBalances, pyEndDate);
+              let add       = account .category?    getActual (account .category,    startDate, endDate): 0;
+              let sub       = account .disCategory? getActual (account .disCategory, startDate, endDate): 0
+              return {
+                amount: bal,
+                detail: {
+                  int:    (bal - add - sub) - pyBal,
+                  addAmt: add,
+                  subAmt: sub,
+                  addCat: account .category    && this._categories .get (account .category),
+                  subCat: account .disCategory && this._categories .get (account .disCategory)
+                }
+              }
+            }
+
+            // current and future years
+            else {
+
+              // init
+              let int = 0, addAmt = 0, subAmt = 0;
+
+              // adjust for current year transactions
+              if (endDate <= budgetEnd) {
+                bal = getHistoryBalance (historyBalances, startDate);
+                let actBal = account .balance * sign;
+                for (let month = today; month >= budgetStart; month = Types .date .addMonthStart (month, -1)) {
+                  let st  = Types .date .monthStart (month);
+                  let en  = Types .date .monthEnd   (month);
+                  let add = account .category?    getActual (account .category, st, en): 0;
+                  let sub = account .disCategory? getActual (account .disCategory, st, en): 0;
+                  actBal = (actBal - (add + sub)) / (1 + rate * Types .date .daysInMonth (month));
+                }
+                int = (actBal - bal);
+              }
+
+              // go through budget for each month
+              let addCat = account .category    && this._categories .get (account .category);
+              let subCat = account .disCategory && this._categories .get (account .disCategory);
+              for (let month = startDate; month < endDate; month = Types .date .addMonthStart (month, 1)) {
+                let st  = Types .date .monthStart (month);
+                let en  = Types .date .monthEnd   (month);
+                let add = (addCat && (this._budget .getAmount (addCat, st, en) .month || {}) .amount) || 0;
+                let sub = (subCat && (this._budget .getAmount (subCat, st, en) .month || {}) .amount) || 0;
+                int += bal * rate * Types .date .daysInMonth (month);
+                bal += (add + sub);
+                addAmt += add;
+                subAmt += sub;
+              }
+              let add = (addCat && (this._budget .getAmount (addCat, startDate, endDate) .year || {}) .amount) || 0;
+              let sub = (subCat && (this._budget .getAmount (subCat, startDate, endDate) .year || {}) .amount) || 0;
+              int = Math .round (int);
+              bal += int + add + sub;
+              addAmt += add;
+              subAmt += sub;
+
+              return {
+                amount: bal,
+                detail: {
+                  int: int,
+                  addAmt: addAmt,
+                  subAmt: subAmt,
+                  addCat: addCat,
+                  subCat: subCat
+                }
+              }
+            }
+          });
           return {
-            type:    accountType [0],
-            name:    accountType [1],
-            curBal:  total .curBal + aa .curBal,
-            amounts: aa .amounts .map ((a,i) => {
-              return Array .from (Object .keys (a)) .reduce ((o,k) => {
-                let t = (total .amounts [i] || {}) [k];
-                if (a [k] !== undefined) {
-                  if (Array .isArray (t) || isNaN (a [k]))
-                    o [k] = a [k]? (t || []) .concat (a [k]): t;
-                  else
-                    o [k] = (t || 0) + a [k];
-                } else
-                  o [k] = t;
-                return o;
-              }, {})
-            })
+            curBal:  account .balance * sign,
+            liquid:  account .liquid,
+            amounts: accountData .map (d => {return d && d .amount}),
+            detail:  accountData .map (d => {return d && d .detail})
           }
-        }, {curBal: 0, amounts: []})
+        });
+      return {
+        name:   row .name,
+        curBal: rowData .reduce ((s,acc) => {return s + (acc .curBal || 0)}, 0),
+        liquid: rowData .reduce ((s,acc) => {return s & (acc .liquid || false)}, true),
+        amounts: rowData
+          .reduce ((s, acc) => {return acc .amounts .map ((a, i) => {
+            return (s[i] || 0) + (a || 0)
+          })}, []),
+        detail:  rowData
+          .reduce ((s, acc) => {return acc .detail  .map ((d, i) => {
+            return {
+              int:    ((s[i] && s[i] .int)    || 0) + ((d && d .int) || 0),
+              addAmt: ((s[i] && s[i] .addAmt) || 0) + ((d && d .addAmt) || 0),
+              subAmt: ((s[i] && s[i] .subAmt) || 0) + ((d && d .subAmt) || 0),
+              addCat: ((s[i] && s[i] .addCat) || []) .concat ((d && d. addCat) || []),
+              subCat: ((s[i] && s[i] .subCat) || []) .concat ((d && d. subCat) || [])
+            }
+          })}, [])
+      };
     })
-      .filter (ata => {return ata .amounts .find (a => {return a .endBal != 0})})
-    return {
-      cols:       years .map (b => {return Types .dateMY .toString (b .end)}),
-      highlight:  hisDesc .length,
-      rows:       accountTypeAmounts .map (a => {return {
-        type:     a .type,
-        name:     a .name,
-        curBal:   a .curBal,
-        amounts:  a .amounts .map (a => {return a .endBal}),
-        detail:   a .amounts .map (a => {return {
-          int:    a .int,
-          addAmt: a .add,
-          subAmt: a .sub,
-          addCat: a .addCat,
-          subCat: a .subCat
-        }})
-      }}),
-      getUpdate: id => {
-        let nd = this .getNetWorthData();
-        // XXX
-      }
+    let result = {
+      cols:      colDates .map (d => {return Types .dateMY .toString (d)}),
+      highlight: Types .date._year (budgetStart) - Types .date._year (startDate) + 1,
+      rows:      rowsData
     }
+    console.log(result);
+    return result;
   }
 
+
   _addNetWorthGraph (view, dataset, toHtml) {
-    var homeTypes = [AccountType .HOME, AccountType .MORTGAGE];
     dataset = {
       cols:      dataset .cols .map (c => {return c}),
       rows:      dataset .rows .map (r => {r = Object .assign ({}, r); r .amounts = r .amounts .map (a => {return a}); return r}),
@@ -1789,19 +1841,6 @@ class Navigate {
           (Types .date .subDays (this._budget .getEndDate(), this._budget .getStartDate()) + 1)
       }
     }
-    var equity = dataset .rows .reduce ((s,r) => {
-      return homeTypes .includes (r.type)? r .amounts .map ((a,i) => {return (s [i] || 0) + a}): s
-    }, [])
-    var curEquity = dataset .rows .reduce ((s,r) => {
-      return homeTypes .includes (r .type)? r .curBal + s: s
-    }, 0);
-    dataset .rows = dataset .rows
-      .filter (r => {return ! homeTypes .includes (r .type)})
-      .concat ({
-        name:   'Home Equity',
-        curBal:  curEquity,
-        amounts: equity
-      });
     let updater = this._addUpdater (view, (eventType, model, ids) => {
       if (['Accounts', 'ActualsModel', 'BalanceHistory'] .includes (model))
         updateView();
@@ -1812,7 +1851,7 @@ class Navigate {
     return updateView;
   }
 
-  _addNetWorthTable (view, dataset) {
+  async _addNetWorthTable (view, dataset) {
     let updater = this._addUpdater (view, (eventType, model, ids) => {
       if (['Accounts', 'ActualsModel', 'BalanceHistory'] .includes (model))
         updateView();

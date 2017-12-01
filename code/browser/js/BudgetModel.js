@@ -46,25 +46,6 @@ class BudgetModel extends Observable {
     await this._schModel .find ();
   }
 
-  getFutureBudgets() {
-    var addYearToName = y => {
-      var n = this .getLabel() .split ('/');
-      if (n .length == 2)
-        return (Number (n[0]) + y) + '/' + String ((Number (n[1]) + y)) .slice (-1)
-      else
-        return String (Number (n[0]) + y)
-    }
-    return [1,2,3,4,5,6,7,8,9,10,11,12,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40] .map (y => {
-      let st = Types .dateDMY .addYear (this._budget .start, y);
-      let en = Types .dateDMY .addYear (this._budget .end,   y);
-      return {
-        label: BudgetModel .getLabelForDates (st, en),
-        start: st,
-        end:   en
-      }
-    })
-  }
-
   static getLabelForDates (start, end) {
     let sy = Types .date._year (start);
     let ey = Types .date._year (end);
@@ -79,11 +60,13 @@ class BudgetModel extends Observable {
     return BudgetModel .getLabelForDates (date .start, date .end);
   }
 
-  getDescriptor() {
+  getDescriptor (yearIncrement = 0) {
+    let start = Types .date .addYear (this .getStartDate(), yearIncrement);
+    let end   = Types .date .addYear (this .getEndDate(), yearIncrement)
     return {
-      label: this .getLabel(),
-      start: this .getStartDate(),
-      end:   this .getEndDate()
+      label: BudgetModel .getLabelForDates (start, end),
+      start: start,
+      end:   end
     }
   }
 

@@ -65,6 +65,12 @@ async function main() {
           trackBalance: true
         }
       });
+      for (let cid of [account .category, account .disCategory])
+        if (cid) {
+          let cat = await db .collection ('categories') .findOne ({_id: cid});
+          if (cat)
+            await db .collection ('categories') .updateOne ({_id: cid}, {$set: {account: account._id, name: account .name}});
+        }
     }
     let order = (a,b) => {return a .start < b .start? -1: a .start == b .start? 0: 1};
     sort = 1;
@@ -78,7 +84,8 @@ async function main() {
           start: true,
           end:   true
         }
-      })
+      });
+    await db .collection ('parameters') .updateOne ({name: 'rates'}, {$set: {futureYears: 40}});
   } catch (e) {
     console .log(e);
   } finally {

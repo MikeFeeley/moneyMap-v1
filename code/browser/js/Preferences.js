@@ -1,3 +1,5 @@
+var PreferencesInstance;
+
 class Preferences extends Observable {
 
   constructor() {
@@ -6,6 +8,7 @@ class Preferences extends Observable {
     this._view .addObserver (this, this._onViewChange);
     this._paramModel = new Model ('parameters');
     this._paramModel .addObserver (this, this._onParamModelChange);
+    PreferencesInstance = this;
   }
 
   delete() {
@@ -19,6 +22,7 @@ class Preferences extends Observable {
     if (eventType == ModelEvent .UPDATE) {
       let fieldName = Array .from (Object .keys (arg)) [0];
       this._view .updateField (doc._id, fieldName, arg [fieldName]);
+      await this .init();
     }
   }
 
@@ -26,6 +30,10 @@ class Preferences extends Observable {
     if (eventType == ViewEvent .UPDATE) {
       await this._paramModel .update (arg .id, {[arg .fieldName]: arg .value})
     }
+  }
+
+  async init() {
+    this._data = (await this._paramModel .find ({name: 'rates'})) [0];
   }
 
   /**
@@ -42,6 +50,10 @@ class Preferences extends Observable {
 
   _addMenuItem (name, action) {
     this._view .addMenuItem (name, () => {this._view .removeMenu(); action()});
+  }
+
+  get() {
+    return this._data;
   }
 
   async _addAbout() {
@@ -62,22 +74,26 @@ class Preferences extends Observable {
    * Add Profile / Configurations edit to the view
    */
   async _addPreferencesEdit() {
-    let param = (await this._paramModel .find ({name: 'rates'})) [0];
     let ae = this._view .addPreferencesEdit();
     let pr = this._view .addGroup ('Preferences', ae);
-    let rrLine = this._view .addLine (pr);
-    let inLine = this._view .addLine (pr);
+    let l0 = this._view .addLine (pr);
+    let l1 = this._view .addLine (pr);
+    let l2 = this._view .addLine (pr);
     this._view .addField (
       new ViewTextbox ('apr', ViewFormats ('percent2'), '', '', 'Rate'),
-      param._id, param .apr, rrLine, 'Investment Return'
+      this._data._id, this._data .apr, l0, 'Default Investment Return'
     );
     this._view .addField (
       new ViewTextbox ('inflation', ViewFormats ('percent2'), '', '', 'Rate'),
-      param._id, param .inflation, inLine, 'Inflation'
+      this._data._id, this._data .inflation, l1, 'Inflation'
     );
     this._view .addField (
       new ViewCheckbox ('presentValue', ['Not Adjusted', 'Adjusted']),
-      param._id, param .presentValue, inLine, 'Show Inflation-Adjusted Values'
+      this._data._id, this._data .presentValue, l1, 'Show Inflation-Adjusted Values'
+    );
+    this._view .addField (
+      new ViewTextbox ('futureYears', ViewFormats ('number', '', '', 'Years')),
+      this._data._id, this._data .futureYears, l2, 'Number of Years to Project into the Future'
     );
   }
 

@@ -1073,12 +1073,13 @@ class NavigateView extends Observable  {
     }
   }
 
+
   /**
    * addNetWorthGraph
    */
   addNetWorthGraph (dataset, toHtml, onClose) {
     var options = {
-      legend: {display: false},
+      legend: {display: true},
       tooltips: {
         backgroundColor: 'rgba(0,0,0,0.6)',
         callbacks: {
@@ -1190,8 +1191,8 @@ class NavigateView extends Observable  {
       $('<td>', {text: Types .moneyD .toString (c .curBal)}) .appendTo (tr);
     }
     var fvs = [
-      ['Liquid', Types .moneyD .toString (dataset .rows .filter (r => {return r .type}) .reduce ((s,r) => {return s + r .curBal}, 0))],
-      ['TOTAL',  Types .moneyD .toString (dataset .rows                                 .reduce ((s,r) => {return s + r .curBal}, 0))]
+      ['Liquid', Types .moneyD .toString (dataset .rows .filter (r => {return r .liquid}) .reduce ((s,r) => {return s + r .curBal}, 0))],
+      ['TOTAL',  Types .moneyD .toString (dataset .rows                                   .reduce ((s,r) => {return s + r .curBal}, 0))]
     ];
     for (let fv of fvs) {
       var tr = $('<tr>') .appendTo (tfoot);
@@ -1349,10 +1350,10 @@ class NavigateView extends Observable  {
           row .amounts .map (a => {return Types .moneyK .toString (a)})
         )
         net = row .amounts .map ((a,i) => {return a + (net [i] || 0)});
-        if (! [AccountType .MORTGAGE, AccountType .HOME] .includes (row .type))
+        if (row .liquid)
           liquid = row .amounts .map ((a,i) => {return a + (liquid [i] || 0)});
         for (let i=0; i<vs.length; i++) {
-          $('<td>', {text: vs [i], class: dataset .highlight == i - 1? '_highlight': ''}) .appendTo (tr)
+          $('<td>', {html: vs [i]+'&nbsp;', class: dataset .highlight == i - 1? '_highlight': ''}) .appendTo (tr)
             .click (e => {if (i > 0) addPopup (e, row .detail [i-1], vs[i-1] .startsWith ('-'))})
         }
       }
@@ -1367,7 +1368,7 @@ class NavigateView extends Observable  {
             .appendTo (tr)
             .click (e => {
               let total = dataset .rows .reduce ((t, r) => {
-                if (vss .indexOf (vs) == 1 || ! [AccountType .MORTGAGE, AccountType .HOME] .includes (r .type))
+                if (vss .indexOf (vs) == 1 || ! r .liquid)
                   for (let p of ['int', 'addAmt', 'subAmt'])
                     t [p] += r .detail [i-1] [p];
                 return t;
