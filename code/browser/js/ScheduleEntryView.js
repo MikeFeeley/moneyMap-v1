@@ -99,6 +99,13 @@ class ScheduleEntryView extends ListView {
     ]);
   }
 
+  showNoAccountNameChange (id) {
+    this._showFieldTip (this._getField (id, 'name'), this._html, [
+      'This category is associated with and Asset or Liability account.',
+      'To change its name, change the name of the account.'
+    ]);
+  }
+
 }
 
 class ScheduleEntryTotal extends ViewLabel {
