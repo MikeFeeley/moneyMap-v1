@@ -1690,18 +1690,29 @@ class Navigate {
 
     // get actual amount (up/down) for category
     // allocates up-stream amounts evenly to account children
-    let getActual = (cid, start, end) => {
+    let getAmount = (cat, start, end, get, getRecursively) => {
       let getAmountUp = (cat, child) => {
         if (cat) {
-          let amt = this._actuals .getAmount (cat, start, end) + getAmountUp (cat .parent, cat);
+          let amt = get (cat, start, end) + getAmountUp (cat .parent, cat);
           let nas = (cat .children || []) .concat (cat .zombies || []) .filter (c => {return c .account || c._id == child._id}) .length;
           return Math .round (amt / nas);
         } else
           return 0;
       }
-      let cat = this._categories .get (cid);
-      return this._actuals .getAmountRecursively (cat, start, end) + getAmountUp (cat .parent, cat);
+      return getRecursively (cat, start, end) + getAmountUp (cat .parent, cat);
     }
+    let getActual = (cat, start, end) => {return getAmount (cat, start, end,
+      (c,s,e) => {return this._actuals .getAmount (c,s,e)},
+      (c,s,e) => {return this._actuals .getAmountRecursively (c,s,e)}
+    )}
+    let getBudgetMonth = (cat, start, end) => {return getAmount (cat, start, end,
+      (c,s,e) => {return (this._budget .getIndividualAmount(c,s,e) .month || {}) .amount || 0},
+      (c,s,e) => {return (this._budget .getAmount (c,s,e) .month || {}) .amount || 0}
+    )}
+    let getBudgetYear = (cat, start, end) => {return getAmount (cat, start, end,
+      (c,s,e) => {return (this._budget .getIndividualAmount(c,s,e) .year || {}) .amount || 0},
+      (c,s,e) => {return (this._budget .getAmount (c,s,e) .year || {}) .amount || 0}
+    )}
 
     // compute balances
     let rowsData = rows .map (row => {
@@ -1755,8 +1766,10 @@ class Navigate {
                 for (let month = today; month >= budgetStart; month = Types .date .addMonthStart (month, -1)) {
                   let st  = Types .date .monthStart (month);
                   let en  = Types .date .monthEnd   (month);
-                  let add = account .category?    getActual (account .category, st, en): 0;
-                  let sub = account .disCategory? getActual (account .disCategory, st, en): 0;
+                  let addCat = this._categories .get (account .category);
+                  let subCat = this._categories .get (account .disCategory);
+                  let add = addCat? getActual (addCat, st, en): 0;
+                  let sub = subCat? getActual (subCat, st, en): 0;
                   actBal = (actBal - (add + sub)) / (1 + rate * Types .date .daysInMonth (month));
                 }
                 int = (actBal - bal);
@@ -1768,15 +1781,15 @@ class Navigate {
               for (let month = startDate; month < endDate; month = Types .date .addMonthStart (month, 1)) {
                 let st  = Types .date .monthStart (month);
                 let en  = Types .date .monthEnd   (month);
-                let add = (addCat && (this._budget .getAmount (addCat, st, en) .month || {}) .amount) || 0;
-                let sub = (subCat && (this._budget .getAmount (subCat, st, en) .month || {}) .amount) || 0;
+                let add = addCat? getBudgetMonth (addCat, st, en): 0;
+                let sub = subCat? getBudgetMonth (subCat, st, en): 0;
                 int += bal * rate * Types .date .daysInMonth (month);
                 bal += (add + sub);
                 addAmt += add;
                 subAmt += sub;
               }
-              let add = (addCat && (this._budget .getAmount (addCat, startDate, endDate) .year || {}) .amount) || 0;
-              let sub = (subCat && (this._budget .getAmount (subCat, startDate, endDate) .year || {}) .amount) || 0;
+              let add = addCat? getBudgetYear (addCat, startDate, endDate): 0
+              let sub = subCat? getBudgetYear (subCat, startDate, endDate): 0;
               int = Math .round (int);
               bal += int + add + sub;
               addAmt += add;

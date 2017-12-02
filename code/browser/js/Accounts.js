@@ -84,15 +84,23 @@ class Accounts extends Observable {
             // remove category
             let cat = categories .get (account [arg .fieldName]);
             if (cat) {
-              if (await schModel .hasTransactions (cat)) {
+              let removeCat = false;
+              if (categories .hasType (cat, ScheduleType .NOT_NONE)) {
+                this._view .showFieldTip (arg .id, arg .fieldName, [
+                  'This category has scheduled budget amounts.',
+                  'It was not removed from your budget.'
+                ]);
+              } else if (await schModel .hasTransactions (cat)) {
                 this._view .showFieldTip (arg .id, arg .fieldName, [
                   'Current-year transactions use this category.',
                   'It was not removed from your budget.'
                 ]);
-                await schModel .update (cat._id, {account: null});
-              } else {
+              } else
+                removeCat = true;
+              if (removeCat)
                 await schModel .remove (cat._id);
-              }
+              else
+                await schModel .update (cat._id, {account: null});
               await this._model .update (account._id, {[arg .fieldName]: null});
             }
           }
@@ -152,7 +160,7 @@ class Accounts extends Observable {
             if (cid) {
               let cat = categories .get (cid);
               if (cat) {
-                if (await schModel .hasTransactions (cat))
+                if (categories .hasType (cat, ScheduleType .NON_NONE) || await schModel .hasTransactions (cat))
                   await schModel .update (cid, {account: null});
                 else
                   await schModel .remove (cid);

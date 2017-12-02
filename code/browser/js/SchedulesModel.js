@@ -335,6 +335,7 @@ var ScheduleType = {
   NONE:  0,
   MONTH: 1,
   YEAR:  2,
+  NOT_NONE: [1,2]
 }
 
 class Schedules extends Categories {
@@ -359,9 +360,10 @@ class Schedules extends Categories {
   }
 
   hasType (cat, type) {
+    let typeMatch = catType => {return Array .isArray (type)? type .includes (catType): catType == type}
     if (cat == null)
       return false
-    else if (this .getType (cat) == type)
+    else if (typeMatch (this .getType (cat)))
       return true;
     else
       return ((cat .children || []) .concat (cat .zombies || [])) .find (c => {
