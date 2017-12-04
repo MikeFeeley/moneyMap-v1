@@ -132,7 +132,7 @@ class AccountsModel extends Observable {
 
   getCashFlowBalance() {
     return this._accounts
-      .filter (a => {return a .trackBalance})
+      .filter (a => {return a .cashFlow && a .type == AccountType .ACCOUNT})
       .reduce ((b, a) => {return b + a .balance * (a .creditBalance? 1: -1)}, 0)
   }
 
