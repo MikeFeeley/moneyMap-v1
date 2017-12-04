@@ -643,7 +643,7 @@ class Navigate {
       if (! id .includes ('other_')) {
         let totals = data   .reduce ((t,d) => {return ! d .id .includes ('budget_')? d .amounts .map ((a,i) => {return (t[i] || 0) + a .value}): t}, []);
         let others = totals .map    ((t,i) => {return thisAmounts [i] .value - t});
-        hasOther   = others .find   (o     => {return o != 0})
+        hasOther   = others .find   (o     => {return o != 0}) != null;
         if (hasOther)
           data .push ({
             name:     'Other',
