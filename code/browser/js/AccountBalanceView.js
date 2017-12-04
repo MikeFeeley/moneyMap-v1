@@ -1,8 +1,9 @@
 class AccountBalanceView extends TupleView {
   constructor() {
     var fields = [
-      new ViewLabel ('name',    ViewFormats ('string')),
-      new ViewLabel ('balance', ViewFormats ('moneyDCZ'))
+      new ViewLabel   ('name',             ViewFormats ('string')),
+      new ViewLabel   ('balance',          ViewFormats ('moneyDCZ')),
+      new ViewTextbox ('editable_balance', ViewFormats ('moneyDCZ'))
     ];
     super ('_AccountBalanceView', fields);
   }
@@ -22,7 +23,6 @@ class AccountBalanceView extends TupleView {
       if (this._html .find ('div') .length == 0)
         rebuild();
     });
-
   }
 
   resetHtml() {
@@ -41,7 +41,7 @@ class AccountBalanceView extends TupleView {
   addGroup (title, name='') {
     return $('<div>', {class: name + ' _sidebar_group _group '})
       .appendTo (this._html)
-      .append   ($('<div>', {class: '_heading', text: title}));
+      .append   ($('<div>', {class: '_heading', text: title}))
   }
 
   removeGroup (name) {
@@ -56,7 +56,7 @@ class AccountBalanceView extends TupleView {
     if (tuple)
       tuple = $('<div>') .appendTo (tuple);
     var tuple = super .addTuple (data, tuple, getToHtml);
-    tuple .click (e => {
+    tuple .find ('._field_name, ._field_balance') .click (e => {
       let target   = $(e .target) .parent();
       let html     = target .offsetParent() .parent();
       this._notifyObservers (AccountBalanceViewEvent .CLICK, {

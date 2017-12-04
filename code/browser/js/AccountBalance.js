@@ -1,14 +1,15 @@
 class AccountBalance extends TuplePresenter {
   constructor (variance) {
-    super (variance .getActuals() .getAccountsModel(), new AccountBalanceView(), {})
-    this._variance        = variance;
-    this._actuals         = variance .getActuals();
-    this._budget          = variance .getBudget();
-    this._categories      = this._budget .getCategories();
-    this._netZeroTuples   = [];
-    this._budgetObserver  = this._budget  .addObserver (this, this._onBudgetChange);
-    this._actualsObserver = this._actuals .addObserver (this, this._onActualsChange);
-    this._accountsObserver = this._model  .addObserver (this, this._onAccountsChange)
+    super (variance .getActuals() .getAccountsModel() .getModel(), new AccountBalanceView(), {})
+    this._variance         = variance;
+    this._actuals          = variance .getActuals();
+    this._budget           = variance .getBudget();
+    this._accounts         = this._actuals .getAccountsModel();
+    this._categories       = this._budget .getCategories();
+    this._netZeroTuples    = [];
+    this._budgetObserver   = this._budget  .addObserver (this, this._onBudgetChange);
+    this._actualsObserver  = this._actuals .addObserver (this, this._onActualsChange);
+    this._accountsObserver = this._accounts  .addObserver (this, this._onAccountsChange)
   }
 
   delete() {
@@ -30,10 +31,22 @@ class AccountBalance extends TuplePresenter {
   }
 
   _onAccountsChange (eventType, doc, arg) {
-    this._view .resetHtml();
+    super._onModelChange (eventType, doc, arg);
+  }
+
+  _onModelChange (eventType, doc, arg) {
+    for (let p of Object .keys (arg)) {
+      let newP = p .split('_');
+      newP .splice (-1, 0, 'editable');
+      arg [newP .join ('_')] = arg [p];
+      delete arg [p];
+    }
+    super._onModelChange (eventType, doc, arg);
   }
 
   _onViewChange (eventType, arg) {
+    if (eventType == ViewEvent .UPDATE && arg .fieldName .startsWith ('editable_'))
+      arg .fieldName = arg .fieldName .split ('_') .slice (-1);
     if (eventType == AccountBalanceViewEvent .CLICK) {
       var dates = {
         start: Types .date .monthStart (Types .date .today()),
@@ -55,6 +68,21 @@ class AccountBalance extends TuplePresenter {
       for (let acc of accounts)
         this._addTuple (acc, g);
     }
+  }
+
+  _addEditableGroup (name, accounts) {
+    if (accounts .length > 0) {
+      let g = this._view .addGroup (name, '_editable ' + (accounts [0] .creditBalance? '_flagGood': '_flagBad'));
+      for (let acc of accounts)
+        this._addEditableTuple (acc, g);
+    }
+  }
+
+  _addEditableTuple (acc, group) {
+    acc = Object .assign ({}, acc);
+    acc .editable_balance = acc .balance;
+    delete acc .balance;
+    this._addTuple (acc, group);
   }
 
   _addNetToZero() {
@@ -102,15 +130,21 @@ class AccountBalance extends TuplePresenter {
     }
   }
 
+  _addAssetLiability (accounts) {
+    this._addEditableGroup ('Assets',      accounts .filter (a => {return a .type == AccountType .ACCOUNT && ! a .cashFlow && a .creditBalance}));
+    this._addEditableGroup ('Liabilities', accounts .filter (a => {return a .type == AccountType .ACCOUNT && ! a .cashFlow && ! a .creditBalance}))
+  }
+
   _buildHtml() {
-    let accounts = this._model .getAccounts() .sort ((a,b) => {return a .sort < b .sort? -1: 1});
+    let accounts = this._accounts .getAccounts() .sort ((a,b) => {return a .sort < b .sort? -1: 1});
     for (let group of accounts .filter (a => {return a .type == AccountType .GROUP && a .cashFlow}))
       this._addGroup (group .name, accounts .filter (a => {return a .group == group._id}))
     this._addNetToZero();
+    this._addAssetLiability(accounts);
   }
 
   async addHtml (toHtml) {
-    await this._model .find();
+    await this._accounts .find();
     this._view .addHtml (toHtml, () => {this._buildHtml()});
     this._buildHtml();
   }

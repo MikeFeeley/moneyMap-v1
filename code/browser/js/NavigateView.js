@@ -1256,14 +1256,25 @@ class NavigateView extends Observable  {
     }
   }
 
-  addNetWorthTable (dataset, onClose) {
+  addNetWorthTable (dataset, popup, html, position, onClose) {
+
+    let addSubTablePopup = (e, row) => {
+      let target = $(e .target);
+      let html   = target .offsetParent();
+      this._notifyObservers (NavigateViewEvent .NETWORTH_TABLE_ROW_CLICK, {
+        id:       row .id,
+        view:     this,
+        html:     html,
+        position: ui .calcPosition (target, html, {top: 12, left: 0})
+      });
+    };
 
     var addPopup = (e, detail, isCredit) => {
       let target   = $(e .target);
       let column   = target .index();
       let html     = target .offsetParent();
       let padding  = target.css ('padding-left');
-      let position = ui .calcPosition (target, html, {top: -34, left: -2 + Number (padding .slice (0, padding .indexOf ('px')))})
+      let position = ui .calcPosition (target, html, {top: 12, left: -2 + Number (padding .slice (0, padding .indexOf ('px')))})
       if (detail .int || detail .addAmt || detail .subAmt) {
         let popup = $('<div>', {class: '_popup _netWorthTable'})
           .appendTo (html)
@@ -1285,39 +1296,32 @@ class NavigateView extends Observable  {
           tbody .append ($('<tr>')
             .append ($('<td>', {text: isCredit? 'Inflation': 'Earnings'}))
             .append ($('<td>', {text: Types .moneyD .toString (detail .int)})));
+        let handleCellClick = (e, ids, cats) => {
+          let target = $(e .target);
+          let html   = target .offsetParent();
+          this._notifyObservers (NavigateViewEvent .NETWORTH_TABLE_CLICK, {
+            ids:       ids,
+            cats:      cats,
+            label:     dataset .cols [column - 1],
+            column:    column,
+            highlight: dataset .highlight,
+            view:      this,
+            html:      html,
+            position:  ui .calcPosition (target, html, {top: 12, left: 0})
+          })
+        }
         if (detail .addAmt)
           $('<tr>')
             .appendTo (tbody)
             .append ($('<td>', {text: isCredit? 'Principal': 'Contributions'}))
             .append ($('<td>', {text: Types .moneyD .toString (detail .addAmt)}))
-            .click  (ce => {
-              let html = target .offsetParent();
-              this._notifyObservers (NavigateViewEvent .NETWORTH_TABLE_CLICK, {
-                id:        detail .addCat [0]._id,
-                column:    column,
-                label:     dataset .cols [column],
-                highlight: dataset .highlight,
-                html:      html,
-                position:  ui .calcPosition (target, html, {top: 6, left: -250})
-              })
-            })
+            .click  (ce => {handleCellClick (ce, detail .ids, detail .addCat)})
         if (detail .subAmt)
           $('<tr>')
             .appendTo (tbody)
             .append ($('<td>', {text: 'Withdrawals'}))
             .append ($('<td>', {text: Types .moneyD .toString (detail .subAmt), class: 'negative'}))
-            .click  (ce => {
-              let html = target .offsetParent();
-              this._notifyObservers (NavigateViewEvent .NETWORTH_TABLE_CLICK, {
-                id:        detail .subCat [0]._id,
-                column:    column,
-                label:     dataset .cols [column],
-                highlight: dataset .highlight,
-                html:      html,
-                position:  ui .calcPosition (target, html, {top: 6, left: -250})
-              })
-              let pos  = ui .calcPosition (target, html, {top: 6, left: -250});
-            })
+            .click  (ce => {handleCellClick (ce, detail .ids, detail .subCat)})
         ui .scrollIntoView (popup);
         popup .css (position);
         ui .ModalStack .add (
@@ -1331,17 +1335,29 @@ class NavigateView extends Observable  {
 
     /** main code **/
 
-    var table = $('<table>', {class: '_netWorthTable'});
-    table .appendTo ($('<div>', {class: '_netWorthTableContainer'}) .appendTo (this._content));
+    let table = $('<table>', {class: '_netWorthTable'});
+    if (popup) {
+      let container = $('<div>', {class: '_netWorthTable _popup'}) .appendTo (html) .append ($('<div>', {class: '_popupContent'}) .append (table))
+      container .css (position);
+      ui .ModalStack .add (
+        e  => {return e && !$.contains (container .get (0), e .target) && container .get (0) != e .target},
+        () => {container .remove(); onClose()},
+        true
+      );
+    } else
+      table .appendTo ($('<div>', {class: '_netWorthTableContainer' + (popup? ' _popup': '')}) .appendTo (this._content));
+    let showHeadFoot = dataset .cols .length > 1;
     var buildTable = () => {
       table.empty();
       var thead = $('<thead>') .appendTo (table);
       var tbody = $('<tbody>') .appendTo (table);
       var tfoot = $('<tfoot>') .appendTo (table);
-      var tr    = $('<tr>') .appendTo (thead);
-      var cols  = ['Account'] .concat (dataset .cols);
-      for (let i=0; i<cols.length; i++)
-        $('<th>', {text: cols [i], class: dataset .highlight == i - 1? '_highlight': ''}) .appendTo (tr);
+      if (showHeadFoot) {
+        var tr    = $('<tr>') .appendTo (thead);
+        var cols  = ['Account'] .concat (dataset .cols);
+        for (let i=0; i<cols.length; i++)
+          $('<th>', {text: cols [i], class: dataset .highlight == i - 1? '_highlight': ''}) .appendTo (tr);
+      }
       var liquid = [];
       var net    = [];
       for (let row of dataset .rows) {
@@ -1354,27 +1370,35 @@ class NavigateView extends Observable  {
           liquid = row .amounts .map ((a,i) => {return a + (liquid [i] || 0)});
         for (let i=0; i<vs.length; i++) {
           $('<td>', {html: vs [i]+'&nbsp;', class: dataset .highlight == i - 1? '_highlight': ''}) .appendTo (tr)
-            .click (e => {if (i > 0) addPopup (e, row .detail [i-1], vs[i-1] .startsWith ('-'))})
+            .click (e => {
+              if (i > 0)
+                addPopup (e, row .detail [i-1], vs[i-1] .startsWith ('-'))
+              else
+                addSubTablePopup (e, row);
+            })
         }
       }
-      var vss = [
-        ['Liquid'] .concat (liquid .map (a => {return Types .moneyK .toString (a)})),
-        ['TOTAL']  .concat (net    .map (a => {return Types .moneyK .toString (a)}))
-      ]
-      for (let vs of vss) {
-        var tr = $('<tr>') .appendTo (tfoot);
-        for (let i=0; i<vs.length; i++)
-          $('<td>', {text: vs [i], class: dataset .highlight == i - 1? '_highlight': ''})
-            .appendTo (tr)
-            .click (e => {
-              let total = dataset .rows .reduce ((t, r) => {
-                if (vss .indexOf (vs) == 1 || ! r .liquid)
-                  for (let p of ['int', 'addAmt', 'subAmt'])
-                    t [p] += r .detail [i-1] [p];
-                return t;
-              }, {int: 0, addAmt: 0, subAmt: 0})
-              addPopup (e, total);
-            })
+      if (showHeadFoot) {
+        var vss = [
+          ['Liquid'] .concat (liquid .map (a => {return Types .moneyK .toString (a)})),
+          ['TOTAL']  .concat (net    .map (a => {return Types .moneyK .toString (a)}))
+        ]
+        for (let vs of vss) {
+          var tr = $('<tr>') .appendTo (tfoot);
+          if (vs .slice (1) .find (v => {return v != ''}))
+            for (let i = 0; i < cols .length; i++)
+              $('<td>', {text: vs [i] || '', class: dataset .highlight == i - 1? '_highlight': ''})
+                .appendTo (tr)
+                .click (e => {
+                  let total = dataset .rows .reduce ((t, r) => {
+                    if (vss .indexOf (vs) == 1 || r .liquid)
+                      for (let p of ['int', 'addAmt', 'subAmt'])
+                        t [p] += r .detail [i-1] [p];
+                    return t;
+                  }, {int: 0, addAmt: 0, subAmt: 0})
+                  addPopup (e, total);
+                })
+        }
       }
     }
     buildTable();
@@ -1398,7 +1422,8 @@ var NavigateViewEvent = Object.create (ViewEvent,{
   BUDGET_TABLE_TITLE_CLICK:   {value: 206},
   PROGRESS_GRAPH_TITLE_CLICK: {value: 207},
   PROGRESS_SIDEBAR_CLICK:     {value: 208},
-  NETWORTH_TABLE_CLICK:       {value: 209}
+  NETWORTH_TABLE_CLICK:       {value: 209},
+  NETWORTH_TABLE_ROW_CLICK:   {value: 210}
 });
 
 

@@ -371,16 +371,25 @@ class Navigate {
         BudgetProgressHUD .show (parent._id, arg .html, arg .position, this._accounts, this._variance);
 
     } else if (eventType == NavigateViewEvent .NETWORTH_TABLE_CLICK) {
-      if (arg .column > arg .highlight)
-        BudgetProgressHUD .show (arg .id, arg .html, arg .position, this._accounts, this._variance);
-      else {
-        let date = Types .dateDMY .fromString ('1-' + arg .label);
-        let dateRange = {
-          start: Types .dateFY .getFYStart (date, this._budget .getStartDate(), this._budget .getEndDate()),
-          end:   Types .dateFY .getFYEnd   (date, this._budget .getStartDate(), this._budget .getEndDate())
+      if (arg .ids .length > 1) {
+        this._addNetWorthTable (arg .view, await this._getNetWorthData (arg .ids, arg .label), true, arg .html, arg .position);
+      } else {
+        arg .id = arg .cats [0]._id;
+        if (arg .column > arg .highlight)
+          BudgetProgressHUD .show (arg .id, arg .html, arg .position, this._accounts, this._variance);
+        else {
+          let date = Types .dateDMY .fromString ('1-' + arg .label);
+          let dateRange = {
+            start: Types .dateFY .getFYStart (date, this._budget .getStartDate(), this._budget .getEndDate()),
+            end:   Types .dateFY .getFYEnd   (date, this._budget .getStartDate(), this._budget .getEndDate())
+          }
+          TransactionHUD .showCategory (arg .id, dateRange, this._accounts, this._variance, arg .html, arg .position);
         }
-        TransactionHUD .showCategory (arg .id, dateRange, this._accounts, this._variance, arg .html, arg .position);
       }
+    } else if (eventType == NavigateViewEvent .NETWORTH_TABLE_ROW_CLICK) {
+      let rows =  this._accounts .getAccounts() .filter (a => {return a .group == arg .id}) .map (a => {return a._id});
+      if (rows .length > 1)
+        this._addNetWorthTable (arg .view, this._filterNetWorthBySlider (await this._getNetWorthData (rows, arg .label)), true, arg .html, arg .position);
     }
   }
 
@@ -1437,14 +1446,13 @@ class Navigate {
             amounts:  budgetAmounts .map (ba => {
               var group = ba .find (as => {return as .id .sort () .join ('$') == pids});
               if (group) {
-                var a = group .amounts .find (a => {return a .name == cat .name}) || {};
                 let a = group .amounts
-                .filter (a => {return a .name == cat .name})
-                .reduce ((o,e) => {
-                  o .id .push (e .id);
-                  o .amount += e .amount;
-                  return o;
-                }, {id: [], amount: 0});
+                  .filter (a => {return a .name == cat .name})
+                  .reduce ((o,e) => {
+                    o .id .push (e .id);
+                    o .amount += e .amount;
+                    return o;
+                  }, {id: [], amount: 0});
                 return {
                   id:    a .id,
                   value: a .amount
@@ -1557,6 +1565,18 @@ class Navigate {
     }, toHtml)
   }
 
+  _filterNetWorthBySlider (dataset) {
+    let first = this._netWorthSliderLeft || 0;
+    let last  = this._netWorthSliderRight? this._netWorthSliderRight + 1: dataset .cols .length;
+    dataset .cols  = dataset .cols .slice  (first, last);
+    for (let r of dataset .rows) {
+      r .amounts = r .amounts .slice (first, last);
+      r .detail  = r .detail .slice (first, last);
+    }
+    dataset .highlight -= this._netWorthSliderLeft || 0;
+    return dataset;
+  }
+
   _addNetworthSlider (view, dataset, toHtml, leftValue, rightValue, graphUpdater, tableUpdater) {
     let cbi = dataset .cols .indexOf (Types .dateMY .toString (this._budget .getEndDate())) - 1;
     if (cbi < 0)
@@ -1643,18 +1663,21 @@ class Navigate {
    */
 
 
-  async _getNetWorthData (rows) {
+  async _getNetWorthData (accountIds, columnLabel) {
 
     // initialize
     let accounts = this._accounts .getAccounts()
       .filter (a => {return ! a .cashFlow})
       .sort   ((a,b) => {return a .sort < b .sort? -1: 1});
-    let accountIds = accounts .map (a => {return a._id});
+    let idIndex = accounts .map (a => {return a._id});
     let balances = (await this._balances .find ({}))
-      .filter (b => {return accountIds .find (aid => {return accountIds .includes (aid)})})
+      .filter (b => {return idIndex .find (aid => {return idIndex .includes (aid)})})
       .sort   ((a,b) => {return a .date < b .date? -1: a .date == b .date? 0: 1});
-    if (! rows)
+    let rows;
+    if (! accountIds)
       rows = accounts .filter (a => {return ! a .cashFlow && a .type == AccountType .GROUP})
+    else
+      rows = accounts .filter (a => {return accountIds .includes (a._id)})
     let budgetStart = this._budget .getStartDate();
     let budgetEnd   = this._budget .getEndDate();
 
@@ -1739,16 +1762,19 @@ class Navigate {
             if (endDate < budgetStart) {
               let bal       = getHistoryBalance (historyBalances, endDate);
               let pyBal     = getHistoryBalance (historyBalances, pyEndDate);
-              let add       = account .category?    getActual (account .category,    startDate, endDate): 0;
-              let sub       = account .disCategory? getActual (account .disCategory, startDate, endDate): 0
+              let addCat    = this._categories .get (account .category);
+              let subCat    = this._categories .get (account .disCategory)
+              let add       = account .category?    getActual (addCat,    startDate, endDate): 0;
+              let sub       = account .disCategory? getActual (subCat, startDate, endDate): 0
               return {
                 amount: bal,
                 detail: {
+                  id:     account._id,
                   int:    (bal - add - sub) - pyBal,
                   addAmt: add,
                   subAmt: sub,
-                  addCat: account .category    && this._categories .get (account .category),
-                  subCat: account .disCategory && this._categories .get (account .disCategory)
+                  addCat: addCat,
+                  subCat: subCat
                 }
               }
             }
@@ -1798,7 +1824,8 @@ class Navigate {
               return {
                 amount: bal,
                 detail: {
-                  int: int,
+                  id:     account._id,
+                  int:    int,
                   addAmt: addAmt,
                   subAmt: subAmt,
                   addCat: addCat,
@@ -1815,6 +1842,7 @@ class Navigate {
           }
         });
       return {
+        id:     row._id,
         name:   row .name,
         curBal: rowData .reduce ((s,acc) => {return s + (acc .curBal || 0)}, 0),
         liquid: rowData .reduce ((s,acc) => {return s & (acc .liquid || false)}, true),
@@ -1825,6 +1853,7 @@ class Navigate {
         detail:  rowData
           .reduce ((s, acc) => {return acc .detail  .map ((d, i) => {
             return {
+              ids:    ((s[i] && s[i] .ids)    || []) .concat ((d && d .id) || []),
               int:    ((s[i] && s[i] .int)    || 0) + ((d && d .int) || 0),
               addAmt: ((s[i] && s[i] .addAmt) || 0) + ((d && d .addAmt) || 0),
               subAmt: ((s[i] && s[i] .subAmt) || 0) + ((d && d .subAmt) || 0),
@@ -1838,6 +1867,17 @@ class Navigate {
       cols:      colDates .map (d => {return Types .dateMY .toString (d)}),
       highlight: Types .date._year (budgetStart) - Types .date._year (startDate) + 1,
       rows:      rowsData
+    }
+    if (columnLabel) {
+      let ci = result .cols .indexOf (columnLabel);
+      if (ci != -1) {
+        result .cols = [result .cols [ci]];
+        result .rows = result .rows .map (row => {
+          row .amounts = [row .amounts [ci]];
+          row .detail  = [row .detail  [ci]];
+          return row;
+        })
+      }
     }
     return result;
   }
@@ -1864,12 +1904,12 @@ class Navigate {
     return updateView;
   }
 
-  async _addNetWorthTable (view, dataset) {
+  async _addNetWorthTable (view, dataset, popup, html, position) {
     let updater = this._addUpdater (view, (eventType, model, ids) => {
       if (['Accounts', 'ActualsModel', 'BalanceHistory'] .includes (model))
         updateView();
     })
-    let updateView = view .addNetWorthTable (dataset, () => {
+    let updateView = view .addNetWorthTable (dataset, popup, html, position, () => {
       this._deleteUpdater (view, updater);
     });
     return updateView;

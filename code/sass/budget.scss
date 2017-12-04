@@ -382,7 +382,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
       }
     }
   }
-  > ._list > div._netWorthTable._popup {
+  > ._list div._netWorthTable._popup {
     > div {
       > table {
         border-collapse: collapse;
@@ -492,7 +492,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
       margin-bottom: 8px;
       margin-left: 8px;
     }
-    > div {
+    > div:not(._popup) {
       margin-top:    50px;
       margin-bottom: 100px;
     }

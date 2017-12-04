@@ -403,23 +403,44 @@ table._TransactionAndRulesTable {
     font-size:   $left-head-font-size;
     margin-top:    32px;
     margin-bottom: 12px;
-    color: red;
   }
   ._group {
+    &._editable {
+      > ._tuple {
+        margin-top: 6px!important;
+        margin-bottom: 6px!important;
+      }
+    }
     > ._tuple {
+      display:        flex;
+      flex-direction: row;
+      justify-content: space-between;
       > ._field > ._content {
         font-weight: 100;
         font-size: 14px;
       }
       ._field:nth-child(1) {
-        float: left;
+         > ._content {
+           width:         90px;
+           white-space:   nowrap;
+           overflow:      hidden;
+           text-overflow: ellipsis;
+        }
+        flex-grow: 1;
       }
       ._field:nth-child(2) {
-        float: right;
+        flex-grow: 0;
       }
-      clear:    both;
-      overflow: hidden;
+      ._field_editable_balance > div ._content {
+        padding: 0px;
+        margin: 2px;
+        border: 2px solid transparent;
+        background: transparent;
+        width: 75px;
+        text-align: right;
+      }
     }
+    > ._tuple:last-child > ._field_editable_balance {margin-bottom: 6px} // last child doesn't get focus outline without this in Safari (Dec 2017)
   }
 }
 
