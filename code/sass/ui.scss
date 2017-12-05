@@ -4,6 +4,54 @@ body {
   margin: 0px;
 }
 
+body > div._blockEverything {
+  z-index: 99999;
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  height: 100%;
+  width: 100%;
+  background: transparent;
+}
+
+div._systemStatus {
+  display:  none;
+  position: fixed;
+  right:   12px;
+  top:     60px;
+  text-align: center;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  box-shadow: 0px 0px 1px rgba(0,0,0,.3), 0px 0px 3px rgba(0,0,0,.15);
+  z-index: 99999;
+  border-radius: 8px;
+  &._pending {
+    font-size: 12px;
+    height:  30px;
+    line-height: 30px;
+    width:   150px;
+    color: rgb(102, 128, 102);
+    background-color: rgba(100, 255, 100, 0.3);
+  }
+  &._delayed {
+    font-size: 18px;
+    height:  40px;
+    line-height: 40px;
+    width:   220px;
+    text-align: center;
+    color: rgb(128, 128, 25);
+    background-color: rgba(255, 255, 0, 0.4);
+  }
+  &._down {
+    font-size: 32px;
+    height:  80px;
+    line-height: 80px;
+    width:  350px;
+    color: rgb(255,245,245);
+    background-color: rgba(255, 50, 50 , 0.7);
+  }
+}
+
 ._accountsEdit {
   width: 940px;
   margin-left: auto;

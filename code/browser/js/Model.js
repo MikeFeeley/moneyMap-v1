@@ -8,7 +8,7 @@ class Model extends Observable {
    * collectionName
    */
   constructor (collectionName, database) {
-    super()
+    super();
     this._ids        = new Set();
     this._groups     = new Map();
     this._database   = database || _default_database_id;
@@ -301,6 +301,10 @@ var _default_database_id;
 var _tid;
 var _undoLog;
 var _redoLog;
+
+function Model_addDatabaseObserver (thisArg, observer) {
+  _db .addObserver (thisArg, observer);
+}
 
 /**
  * Database collection
