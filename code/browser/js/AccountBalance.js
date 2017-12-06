@@ -55,9 +55,9 @@ class AccountBalance extends TuplePresenter {
       if (arg .isCat) {
         if (arg .name == 'Other')
           arg .id = 'other_' + arg .id;
-        TransactionHUD .showCategory (arg .id, dates, this._model, this._variance, arg .toHtml, arg .position);
+        TransactionHUD .showCategory (arg .id, dates, this._accounts, this._variance, arg .toHtml, arg .position);
       } else
-        TransactionHUD .showAccount  (arg .id, dates, this._model, this._variance, arg .toHtml, arg .position);
+        TransactionHUD .showAccount  (arg .id, dates, this._accounts, this._variance, arg .toHtml, arg .position);
     } else
       super._onViewChange (eventType, arg);
   }

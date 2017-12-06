@@ -98,18 +98,27 @@ class ActualsModel extends Observable {
     return amt;
   }
 
+  /**
+   * Get actual amount category for period
+   *    cat   category
+   *    st    starting date
+   *    en    ending date
+   *    skip  [[cat_id, date, amount]]  list of amounts subtracted from matching category/date
+   */
   getAmount (cat, st = this._budget .getStartDate(), en = this._budget .getEndDate(), skip) {
-    let sk = (skip || [])
-    .filter (s => {return s[0] == cat._id})
-    .map    (s => {return Types .date._yearMonth (s[1])});
+    let skipAmount = (skip || [])
+      .filter (skipEntry        => {return skipEntry [0] == cat._id && skipEntry [1] >= st && skipEntry [1] <= en})
+      .reduce ((sum, skipEntry) => {return sum + skipEntry [2]}, 0)
     st = Types .date._yearMonth (st);
     en = Types .date._yearMonth (en < Types .date .monthStart (en)? Types .date .addMonthStart (en, -1): en);
+    let amount;
     if (st == en)
-      return (! sk .includes (st) && cat .actuals && cat .actuals .get (st)) || 0;
+      amount = ((cat .actuals && cat .actuals .get (st)) || 0);
     else
-      return ((cat .actuals && Array .from (cat .actuals .entries())) || [])
-      .filter (a     => {return a[0] >= st && a[0] <= en && ! sk .includes (a[0])})
-      .reduce ((s,a) => {return s + a[1]}, 0)
+      amount = ((cat .actuals && Array .from (cat .actuals .entries())) || [])
+        .filter (a     => {return a[0] >= st && a[0] <= en})
+        .reduce ((s,a) => {return s + a[1]}, 0);
+    return amount - skipAmount;
   }
 
   async getTransactions (cat, st = this._budget .getStartDate(), en = this._budget .getEndDate()) {
