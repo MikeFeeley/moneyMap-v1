@@ -1788,7 +1788,7 @@ class Navigate {
               // adjust for current year transactions
               if (endDate <= budgetEnd) {
                 bal = getHistoryBalance (historyBalances, startDate);
-                let actBal = account .balance * sign;
+                let actBal = (account .balance || 0) * sign;
                 for (let month = today; month >= budgetStart; month = Types .date .addMonthStart (month, -1)) {
                   let st  = Types .date .monthStart (month);
                   let en  = Types .date .monthEnd   (month);
