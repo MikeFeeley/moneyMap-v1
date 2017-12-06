@@ -54,12 +54,14 @@ var ui = {
   ModalStack: class {
 
     static _onMouseDown (e) {
-      ui .ModalStack._stopRemainingMouseEvents = false;
-      ui .ModalStack._handleClick (e);
+      if (! ui .ModalStack._isBlocked) {
+        ui .ModalStack._stopRemainingMouseEvents = false;
+        ui .ModalStack._handleClick (e);
+      }
     }
 
     static _onClick (e) {
-      if (ui .ModalStack._stopRemainingMouseEvents) {
+      if (! ui .ModalStack._isBlocked && ui .ModalStack._stopRemainingMouseEvents) {
         e .stopPropagation()
         e .stopImmediatePropagation();
         e .preventDefault();
@@ -67,7 +69,7 @@ var ui = {
     }
 
     static _handleClick (e) {
-      while (ui._modalStack && ui._modalStack .length) {
+      while (ui._ModalStack && ui._modalStack .length) {
         var m = ui._modalStack [ui._modalStack .length - 1];
         if (m .guard (e)) {
           m .action();
@@ -89,8 +91,10 @@ var ui = {
     }
 
     static _onForceClick (e) {
-      ui .ModalStack._stopRemainingMouseEvents = true;
-      ui .ModalStack._handleClick (e)
+      if (! ui .ModalStack .isBlocked) {
+        ui .ModalStack._stopRemainingMouseEvents = true;
+        ui .ModalStack._handleClick (e)
+      }
     }
 
     static add (guard, action, remove) {
@@ -111,6 +115,10 @@ var ui = {
       $('body') [0] .addEventListener ('mousedown',            e => {ui .ModalStack._onMouseDown (e)},         true);
       $('body') [0] .addEventListener ('webkitmouseforcedown', e => {ui .ModalStack._onForceClick (e)},        true);
       $('body') [0] .addEventListener ('click',                e => {ui .ModalStack._onClick (e)},             true);
+    }
+
+    static setBlocked (isBlocked) {
+      ui .ModalStack._isBlocked = isBlocked;
     }
   },
 

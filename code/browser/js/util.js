@@ -432,7 +432,16 @@ var Types = {
   boolean:      new BooleanType ()
 }
 
+var SERVER_KEEP_ALIVE_INTERVAL = 5 * 60 * 1000;
+var CLIENT_KEEP_ALIVE_INTERVAL = SERVER_KEEP_ALIVE_INTERVAL + 2000;
+var CLIENT_RETRY_INTERVAL      = 2000;
+var PENDING_INITIAL_PAUSE      = 2000;
+var PENDING_LOWER_BOUND        = 1;
+var DELAYED_LOWER_BOUND        = 6;
+var DOWN_LOWER_BOUND           = 12;
+
 // For node.js include
 if (typeof exports !== 'undefined') {
   exports .Types = Types;
+  exports .SERVER_KEEP_ALIVE_INTERVAL = SERVER_KEEP_ALIVE_INTERVAL;
 }

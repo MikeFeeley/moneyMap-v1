@@ -11,11 +11,14 @@ body > div._blockEverything {
   left: 0px;
   height: 100%;
   width: 100%;
-  background: transparent;
+  background: rgba(255,255,255,0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  @include user-select (none);
 }
 
 div._systemStatus {
-  display:  none;
+  opacity: 0;
   position: fixed;
   right:   12px;
   top:     60px;
@@ -39,8 +42,8 @@ div._systemStatus {
     line-height: 40px;
     width:   220px;
     text-align: center;
-    color: rgb(128, 128, 25);
-    background-color: rgba(255, 255, 0, 0.4);
+    color: rgb(102, 95, 61);
+    background-color: rgba(255, 225, 0, 0.4);
   }
   &._down {
     font-size: 32px;

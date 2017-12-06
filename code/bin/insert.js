@@ -3,6 +3,7 @@
 var express  = require ('express');
 var assert   = require ('assert');
 var async    = require ('../lib/async.js');
+var app      = require ('./app.js');
 var router   = express.Router();
 var ObjectID = require('mongodb').ObjectID
 
@@ -21,6 +22,7 @@ function* insertOne (req, res, next) {
     yield* handleSeq (yield req .dbPromise, req .body .collection, req .body .insert);
     var doc = yield (yield req .dbPromise) .collection (req .body .collection) .insert (req .body .insert);
     res.json ({_id: doc .ops [0] ._id, _seq: doc .ops [0] ._seq});
+    app .notifyOtherClients (req .body .sessionId, {database: req .body .database, collection: req .body .collection, insert: doc .ops [0]});
   } catch (e) {
     console .log ('insertOne: ', e, req.body);
     next (e);
@@ -32,15 +34,17 @@ function* insertList (req, res, next) {
   try {
     if (! req .body .list)
       throw 'No list in body';
-    var ids = [];
+    var ids = [], docs = [];
     for (let item of req .body .list) {
       if (! item._id)
         item._id = new ObjectID() .toString();
       yield* handleSeq (db, req .body .collection, item);
       var doc = yield db .collection (req .body .collection) .insert (item);
       ids .push ({_id: doc .ops [0] ._id, _seq: doc .ops [0] ._seq});
+      docs .push (doc .ops [0]);
     }
     res .json (ids);
+    app .notifyOtherClients (req .body .sessionId, {database: req .body .database, collection: req .body .collection, insertList: docs});
   } catch (e) {
     console .log ('insert: ', e, req.body);
     next (e);

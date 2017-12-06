@@ -1,8 +1,8 @@
 'use strict';
 
 var express  = require ('express');
-var async    = require ('../lib/async.js');
 var util     = require ('../lib/util.js');
+var app      = require ('./app.js');
 var router   = express.Router();
 var ObjectID = require('mongodb').ObjectID
 
@@ -180,6 +180,7 @@ async function insertOne (req, res, next) {
       throw 'Missing insert';
     var tran = await insert (await req .dbPromise, req .body .insert);
     res .json ({_id: tran._id, _seq: tran._seq});
+    app .notifyOtherClients (req .body .sessionId, {database: req .body .database, collection: req .body .collection, insert: tran});
   } catch (e) {
     console .log ('transactions insertOne: ', e, req .body);
     next (e);
@@ -194,6 +195,7 @@ async function insertList (req, res, next) {
     for (let tran of req .body .list)
       trans .push (await insert (await req .dbPromise, tran));
     res .json (trans);
+    app .notifyOtherClients (req .body .sessionId, {database: req .body .database, collection: req .body .collection, insertList: trans});
   } catch (e) {
     console .log ('transactions insertList: ', e, req .body);
     next (e);
@@ -206,6 +208,7 @@ async function updateOne (req, res, next) {
       throw 'Missing id or update';
     await update (await req .dbPromise, req .body .id, req .body .update);
     res .json (true);
+    app .notifyOtherClients (req .body .sessionId, {database: req .body .database, collection: req .body .collection, id: req .body .id, update: req .body .update});
   } catch (e) {
     console .log ('transactions updateOne: ', e, req .body);
     next (e);
@@ -222,6 +225,7 @@ async function updateList (req, res, next) {
       await update (await req .dbPromise, item .id, item .update);
     }
     res .json (true);
+    app .notifyOtherClients (req .body .sessionId, {database: req .body .database, collection: req .body .collection, updateList: req .body .list});
   } catch (e) {
     console .log ('transactions updateList: ', e, req .body);
     next (e);
@@ -233,6 +237,7 @@ async function removeOne (req, res, next) {
     if (! req .body .id)
       throw 'Missing id';
     res .json (await remove (await req .dbPromise, req .body .id));
+    app .notifyOtherClients (req .body .sessionId, {database: req .body .database, collection: req .body .collection, remove: req .body .id});
   } catch (e) {
     console .log ('transactions removeOne: ', e, req .body);
   }
@@ -247,6 +252,7 @@ async function removeList (req, res, next) {
       results .push (await remove (await req .dbPromise, id));
     }
     res .json (results);
+    app .notifyOtherClients (req .body .sessionId, {database: req .body .database, collection: req .body .collection, removeList: req .body .list});
   } catch (e) {
     console .log ('transactions removeList: ', e, req .body);
   }

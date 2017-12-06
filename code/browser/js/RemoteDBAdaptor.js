@@ -28,8 +28,31 @@ class RemoteDBAdaptor extends DBAdaptor {
       });
       this._updatePendingOperations (operation, -1);
     } catch (rejection) {
-      this._setState (DBAdaptorState .DOWN);
+      response = null;
+      this._updatePendingOperations (operation, -1);
+      this._setState                (DBAdaptorState .PERMANENTLY_DOWN);
     }
     return response;
- }
+  }
+
+  connect() {
+    if (this._getState() != DBAdaptorState .PERMANENTLY_DOWN) {
+      let timeoutId = setTimeout (() => {
+        this._setState (DBAdaptorState .DOWN);
+      }, CLIENT_KEEP_ALIVE_INTERVAL)
+      $.ajax ({url: '/upcall', type: 'POST', contentType: 'application/json', processData: false,
+        data: JSON .stringify (this._processPayload({respondImmediately: this._getState() == DBAdaptorState .DOWN})),
+        success: data => {
+          this._setState (DBAdaptorState .UP);
+          clearTimeout (timeoutId);
+          setTimeout (() => {this .connect()}, 0);
+        },
+        error: () => {
+          this._setState (DBAdaptorState .DOWN);
+          clearTimeout (timeoutId);
+          setTimeout (() => {this .connect()}, CLIENT_RETRY_INTERVAL);
+        }
+      })
+    }
+  }
 }

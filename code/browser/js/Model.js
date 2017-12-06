@@ -306,6 +306,10 @@ function Model_addDatabaseObserver (thisArg, observer) {
   _db .addObserver (thisArg, observer);
 }
 
+function Model_databaseConnect() {
+  _db .connect();
+}
+
 /**
  * Database collection
  * Cashes union of all requests for refine and update.

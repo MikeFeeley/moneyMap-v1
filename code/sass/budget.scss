@@ -492,7 +492,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
       margin-bottom: 8px;
       margin-left: 8px;
     }
-    > div:not(._popup) {
+    > div:not(._popup):not(._budgetYearGraph) {
       margin-top:    50px;
       margin-bottom: 100px;
     }
@@ -512,7 +512,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
       > ._graph {
         width: 85%;
       }
-      margin-top: 0px;
+      margin-top: 4px;
       margin-bottom: 32px;
     }
     ._budgetTable > div > table > tbody > tr > td, ._activityTable > div > table > tbody > tr > td {

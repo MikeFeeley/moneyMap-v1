@@ -2,6 +2,7 @@
 
 var express  = require ('express');
 var async    = require ('../lib/async.js');
+var app      = require ('./app.js');
 var router   = express.Router();
 
 function* updateOne (req, res, next) {
@@ -10,6 +11,7 @@ function* updateOne (req, res, next) {
       throw 'No update in body';
     var result = yield (yield req .dbPromise) .collection (req.body.collection) .update ({_id: req.body.id}, {$set: req.body.update});
     res.json (result && result .result .ok);
+    app .notifyOtherClients (req .body .sessionId, {database: req .body .database, collection: req .body .collection, id: req .body .id, update: req .body .update});
   } catch (e) {
     console .log ('updateOne: ', e, req.body);
     next (e);
@@ -28,6 +30,7 @@ function* updateList (req, res, next) {
       allOkay &= result && result .result .ok;
     }
     res.json (allOkay);
+    app .notifyOtherClients (req .body .sessionId, {database: req .body .database, collection: req .body .collection, updateList: req .body .list});
   } catch (e) {
     console .log ('updateList: ', e, req.body);
     next (e);

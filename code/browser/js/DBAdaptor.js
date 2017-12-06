@@ -4,13 +4,22 @@ class DBAdaptor extends Observable {
     super();
     this._state             = DBAdaptorState .UP;
     this._pendingOperations = 0;
+    this._sessionId         = Math.floor (Math.random() * 10000000000000000);
   }
 
-  async perform (operation, data) {}
+  async perform (operation, data) {
+    data .sessionId = this._sessionId;
+  }
 
   _setState (state) {
-    this._state = state;
-    this._notifyObservers (DBAdaptorEvent .STATE_CHANGE, this._state);
+    if (this._stated != DBAdaptorState .PERMANENTLY_DOWN) {
+      this._state = state;
+      this._notifyObservers (DBAdaptorEvent .STATE_CHANGE, this._state);
+    }
+  }
+
+  _getState() {
+    return this._state;
   }
 
   _updatePendingOperations (operation, count) {
@@ -23,6 +32,13 @@ class DBAdaptor extends Observable {
   _isUpdateOperation (operation) {
     return ! [DatabaseOperation .FIND, DatabaseOperation .HAS] .includes (operation);
   }
+
+  _processPayload (data) {
+    data .sessionId = this._sessionId;
+    return data;
+  }
+
+  connect() {}
 }
 
 var DatabaseOperation = {
@@ -41,8 +57,9 @@ var DatabaseOperation = {
 }
 
 DBAdaptorState = {
-  UP:   1,
-  DOWN: 2
+  UP:               1,
+  DOWN:             2,
+  PERMANENTLY_DOWN: 3
 }
 
 DBAdaptorEvent = {

@@ -1,7 +1,9 @@
-var fs    = require('fs');
-var http  = require('http');
-var https = require('https');
-var async = require ('../lib/async.js');  // XXX Remove once all files are converted to async/await
+var fs      = require('fs');
+var http    = require('http');
+var https   = require('https');
+var express = require ('express');
+var util    = require ('../lib/util.js');
+var router  = express .Router();
 
 var credentials = {
   key:  fs.readFileSync ('../ssl/key.pem', 'utf8'),
@@ -17,13 +19,38 @@ app .set ('view engine', 'pug');
 
 app .use (bodyParser.json());
 app .use (bodyParser.urlencoded ({extended: true}));
-app .use ((req, res, next) => {
-  // XXX Compensating for what might be a Safari Technology Preview bug
-  if (!req.url.startsWith ('/css/') && req.url.endsWith ('.css.map'))
-    req.url = '/css'.concat (req.url);
-  next();
-});
 app .use (express.static ('browser'));
+
+var upcalls = new Map();
+
+app .post ('/upcall', function (req, res) {
+  if (req .body .respondImmediately)
+    res .json ({ack: true});
+  else {
+    let timeoutId = setTimeout(() => {
+      let u = upcalls .get (req .body .sessionId);
+      if (u && u .response == res) {
+        res .json ({timeout: true});
+        upcalls .delete (req .body .sessionId);
+      }
+    }, util .SERVER_KEEP_ALIVE_INTERVAL);
+    upcalls .set (req .body .sessionId, {
+      response:  res,
+      timeoutId: timeoutId
+    })
+  }
+});
+
+module .exports = {
+  notifyOtherClients: (thisSessionId, event) => {
+    for (let [sessionId, upcall] of upcalls .entries())
+      if (true || sessionId != thisSessionId) {
+        clearTimeout (upcall .timeoutId);
+        upcall .response .json (event);
+        upcalls .delete (sessionId);
+      }
+  }
+}
 
 db      = require ('mongodb') .MongoClient;
 dbCache = new Map();
