@@ -69,7 +69,7 @@ var ui = {
     }
 
     static _handleClick (e) {
-      while (ui._ModalStack && ui._modalStack .length) {
+      while (ui._modalStack && ui._modalStack .length) {
         var m = ui._modalStack [ui._modalStack .length - 1];
         if (m .guard (e)) {
           m .action();
