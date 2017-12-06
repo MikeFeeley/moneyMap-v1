@@ -30,7 +30,8 @@ class RemoteDBAdaptor extends DBAdaptor {
     } catch (rejection) {
       response = null;
       this._updatePendingOperations (operation, -1);
-      this._setState                (DBAdaptorState .PERMANENTLY_DOWN);
+      if (this._isUpdateOperation (operation))
+        this._setState (DBAdaptorState .PERMANENTLY_DOWN);
     }
     return response;
   }
