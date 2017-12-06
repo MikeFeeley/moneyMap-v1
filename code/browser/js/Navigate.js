@@ -1702,14 +1702,16 @@ class Navigate {
       }
       if (history .length == 1)
         return history [0] .amount;
-      for (let [i, interval] of history .entries()) {
-        if (interval .date == date)
-          return interval .amount;
-        if (interval .date >= date)
-          return getAmountFromInterval (i > 0? history [i-1]: interval, i > 0? interval: i <history .length? history [i+1]: interval, date)
-      }
-      return getAmountFromInterval (history [history .length - 2], history [history .length - 1], date);
-    }
+      let upi = history .findIndex (h => {return date <= h .date });
+      if (upi == -1)
+        return getAmountFromInterval (history [history .length - 2], history [history .length - 1], date);
+      else if (history [upi] .date == date)
+        return history [upi] .amount;
+      else if (upi == 0)
+        return 0;
+      else
+        return getAmountFromInterval (history [upi - 1], history [upi], date);
+     }
 
     // get actual amount (up/down) for category
     // allocates up-stream amounts evenly to account children
