@@ -440,7 +440,7 @@ table._TransactionAndRulesTable {
         text-align: right;
       }
     }
-    > ._tuple:last-child > ._field_editable_balance {margin-bottom: 6px} // last child doesn't get focus outline without this in Safari (Dec 2017)
+    > ._tuple:last-child > ._field_editable_balance {margin-bottom: 8px} // last child doesn't get focus outline without this in Safari (Dec 2017)
   }
 }
 
