@@ -4,9 +4,9 @@ class TransactionTableView extends TableView {
     var cats      = variance && variance .getBudget() .getCategories();
     var accFormat = new ViewFormatOptions (
       value => {return (accounts .getAccounts() .find (a => {return a._id  == value}) || {}) .name},
-      view  => {return (accounts .getAccounts() .find (a => {return a.name == view})  || {}) ._id},
+      view  => {return (accounts .getAccounts() .find (a => {return a.name == view && a .type == AccountType .ACCOUNT && a .cashFlow}) || {}) ._id},
       value => {},
-      ()    => {return accounts .getAccounts() .map  (a => {return a.name})}
+      ()    => {return accounts .getAccounts() .filter (a => {return a .type == AccountType .ACCOUNT && a .cashFlow}) .map (a => {return a.name})}
     );
     var catFormat = new ViewFormatOptions (
       value => {var cat = cats .get (value); return cat? cat.name: value},
