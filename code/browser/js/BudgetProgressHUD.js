@@ -83,7 +83,7 @@ class BudgetProgressHUD {
   }
 
   update (id) {
-    if (id != this._id) {
+    if (id == null || id != this._id) {
       this._view .setVisible (id);
       this._id = id;
       this._getData();

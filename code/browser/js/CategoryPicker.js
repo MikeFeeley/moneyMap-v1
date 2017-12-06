@@ -85,7 +85,7 @@ class CategoryPicker {
   }
 
   show (id, date, debit, credit, toHtml, onSelect, includeZombies) {
-    if (id != this._id) {
+    if (id == null || id != this._id) {
       this._onSelect       = onSelect;
       this._includeZombies = includeZombies;
       this._show (id);
