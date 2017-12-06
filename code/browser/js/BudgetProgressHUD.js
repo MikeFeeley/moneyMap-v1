@@ -103,7 +103,7 @@ class BudgetProgressHUD {
   }
 
   _updateTitle() {
-    if (this._id)
+    if (this._id && this._title)
       this._title .setId (this._id);
   }
 
