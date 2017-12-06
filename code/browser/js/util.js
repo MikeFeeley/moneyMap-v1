@@ -437,8 +437,8 @@ var CLIENT_KEEP_ALIVE_INTERVAL = SERVER_KEEP_ALIVE_INTERVAL + 2000;
 var CLIENT_RETRY_INTERVAL      = 2000;
 var PENDING_INITIAL_PAUSE      = 2000;
 var PENDING_LOWER_BOUND        = 1;
-var DELAYED_LOWER_BOUND        = 6;
-var DOWN_LOWER_BOUND           = 12;
+var DELAYED_LOWER_BOUND        = 8;
+var DOWN_LOWER_BOUND           = 16;
 
 // For node.js include
 if (typeof exports !== 'undefined') {
