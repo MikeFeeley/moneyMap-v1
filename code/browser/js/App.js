@@ -89,10 +89,10 @@ class App {
     let block = $('body') .children ('._blockEverything');
     if (transition && block .length == 0) {
       block = $('<div>', {class: '_blockEverything'}) .appendTo ($('body'));
+      setTimeout (() => {$(document.activeElement) .blur()}, 0);
       let nop = e => {e.stopPropagation(); e.stopImmediatePropagation(); e.preventDefault(); return false}
       ui .ModalStack .setBlocked (true);
       block [0] .addEventListener ('click', nop, true);
-      $(document .activeElement) .blur();
       this._status .detach();
       this._status .appendTo (block);
       this._status .addClass ('_down');

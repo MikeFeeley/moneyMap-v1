@@ -18,42 +18,52 @@ class RemoteDBAdaptor extends DBAdaptor {
   }
 
   async perform (operation, data) {
+    this._updatePendingOperations (operation, 1);
     await super .perform (operation, data);
-    let response;
-    try {
-      this._updatePendingOperations (operation, 1);
-      response = await $.ajax ({
-        url:  this._urls [operation], type: 'POST', contentType: 'application/json', processData: false,
-        data: JSON .stringify (data)
-      });
-      this._updatePendingOperations (operation, -1);
-    } catch (rejection) {
-      response = null;
-      this._updatePendingOperations (operation, -1);
-      if (this._isUpdateOperation (operation))
-        this._setState (DBAdaptorState .PERMANENTLY_DOWN);
+    let response, firstTry = true;
+    while (response === undefined) {
+      try {
+        response = await $.ajax ({
+          url:  this._urls [operation], type: 'POST', contentType: 'application/json', processData: false,
+          data: JSON .stringify (data)
+        });
+        this._updatePendingOperations (operation, -1);
+      } catch (rejection) {
+        if (this._isUpdateOperation (operation)) {
+          if (rejection .status !== undefined && rejection .status == 0) {
+            this._setState (DBAdaptorState .DOWN);
+            if (!firstTry)
+              await (new Promise (resolve => setTimeout (resolve, CLIENT_RETRY_INTERVAL)));
+            firstTry = false;
+          } else {
+            this._setState (DBAdaptorState .PERMANENTLY_DOWN);
+            response = null;
+          }
+        } else
+          response = null;
+      }
     }
     return response;
   }
 
   connect() {
-    if (this._getState() != DBAdaptorState .PERMANENTLY_DOWN) {
-      let timeoutId = setTimeout (() => {
+    let timeoutId = setTimeout (() => {
+      if (! this._getState() == DBAdaptorState .PERMANENTLY_DOWN)
         this._setState (DBAdaptorState .DOWN);
-      }, CLIENT_KEEP_ALIVE_INTERVAL)
-      $.ajax ({url: '/upcall', type: 'POST', contentType: 'application/json', processData: false,
-        data: JSON .stringify (this._processPayload({respondImmediately: this._getState() == DBAdaptorState .DOWN})),
-        success: data => {
-          this._setState (DBAdaptorState .UP);
-          clearTimeout (timeoutId);
-          setTimeout (() => {this .connect()}, 0);
-        },
-        error: () => {
+    }, CLIENT_KEEP_ALIVE_INTERVAL)
+    $.ajax ({url: '/upcall', type: 'POST', contentType: 'application/json', processData: false,
+      data: JSON .stringify (this._processPayload({respondImmediately: this._getState() == DBAdaptorState .DOWN})),
+      success: data => {
+        this._setState (DBAdaptorState .UP);
+        clearTimeout (timeoutId);
+        setTimeout (() => {this .connect()}, 0);
+      },
+      error: () => {
+        if (! this._getState() == DBAdaptorState .PERMANENTLY_DOWN)
           this._setState (DBAdaptorState .DOWN);
-          clearTimeout (timeoutId);
-          setTimeout (() => {this .connect()}, CLIENT_RETRY_INTERVAL);
-        }
-      })
-    }
+        clearTimeout (timeoutId);
+        setTimeout (() => {this .connect()}, CLIENT_RETRY_INTERVAL);
+      }
+    })
   }
 }
