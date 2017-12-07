@@ -36,7 +36,7 @@ class App {
             'line-height': '30px',
             width:   '150px',
             color: 'rgb(102, 128, 102)',
-            'background-color': 'rgba(100, 255, 100, 0.3)'
+            'background-color': 'rgba(153, 255, 153, 0.7)'
           }, {
             complete: () => {addText()},
             duration: 400
@@ -63,7 +63,7 @@ class App {
             'line-height':   '40px',
             'font-size':     '18px',
             color:           'rgb(102, 95, 61)',
-            backgroundColor: 'rgba(255, 225, 0, 0.4)'
+            backgroundColor: 'rgba(255, 236, 128, 0.7)'
           }, {
             complete: () => {addText()},
             duration: 100
