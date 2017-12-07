@@ -36,7 +36,8 @@ class AccountsModel extends Observable {
     this._tranModel = new TransactionModel();
     this._tranModel .observe ();
     this._tranModel .addObserver (this, this._onTranModelChange);
-  }
+    this._domParser = new DOMParser();
+   }
 
   delete() {
     this._model     .delete();
@@ -85,22 +86,26 @@ class AccountsModel extends Observable {
 
 
   _smartLowerCase (s) {
-    var allCaps      = ['UBC', 'CA', 'BC', 'AB', 'WWW', 'DDA', 'IDP', 'IBC', 'DCGI', 'ICBC', 'IGA', 'SA', 'RBC', 'NY', 'EI', 'UNA', 'PAP', 'EB', 'US'];
+    var allCaps      = [
+      'UBC', 'CA', 'BC', 'AB', 'WWW', 'DDA', 'IDP', 'IBC', 'DCGI', 'ICBC', 'IGA', 'SA', 'RBC', 'NY',
+      'EI', 'UNA', 'PAP', 'EB', 'US', 'USA', 'WA', 'ICBC'
+    ];
     var allCapsAtEnd = ['ON','DE','IN','TO'];
-    var noCaps       = ['e', 'a', 'is', 'in', 'to', 'for', 'the', 'de', 'on', 'of', 'by']
+    var noCaps       = ['e', 'a', 'is', 'in', 'to', 'for', 'the', 'de', 'on', 'of', 'by'];
+    s = this._domParser .parseFromString ('<!doctype html><body>' + s, 'text/html') .body .textContent;
     var words = s .split (' ') .map (s => {return s .trim()});
     for (let i = 0; i < words .length; i++) {
-      if (words [i] == '&AMP;')
-        words [i] = '&';
       if (! allCaps .includes (words [i]) && (i != words .length -1 || ! allCapsAtEnd .includes (words [i])))
         words [i] = words [i] .toLowerCase();
       if (! noCaps .includes (words [i]) && words [i] .length)
         words [i] = words [i][0] .toUpperCase() + words [i] .slice (1);
-      var subwords = words [i] .split ('.');
-      for (let j = 0; j < subwords .length; j++)
-        if (subwords [j] .length)
-          subwords [j] = subwords [j][0] .toUpperCase() + subwords [j] .slice (1);
-      words [i] = subwords .join ('.');
+      for (let p of ['.','&','-']) {
+        let subwords = words [i] .split (p);
+        for (let j = 0; j < subwords .length; j++)
+          if (subwords [j] .length)
+            subwords [j] = subwords [j][0] .toUpperCase() + subwords [j] .slice (1);
+        words [i] = subwords .join (p);
+      }
     }
     return words .join (' ');
   }
