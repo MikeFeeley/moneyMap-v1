@@ -399,6 +399,24 @@ class Navigate {
   /*******************************************/
   /***** GET BUDGET / ACTUAL INFORMATION *****/
 
+  async _getPayees (cat, altDates) {
+    const payeeTruncate = /\d|#|\(/;
+    let   st = this._budget .getStartDate();
+    let   en = this._budget .getEndDate();
+    if (altDates) {
+      st = altDates .start;
+      en = altDates .end;
+    }
+    return (await this._actuals .getTransactions (cat, st, en))
+      .map (t => {
+          let stop = t .payee .match (payeeTruncate);
+          return (stop && stop .index? t .payee .slice (0, stop .index): t .payee) .split (' ') .slice (0,3) .join (' ');
+        })
+      .sort   ((a,b)   => {return a<b? -1: a==b? 0: 1})
+      .filter ((p,i,a) => {return i==0 || ! p .startsWith (a [i-1])})
+      .map    (p       => {return 'payee_' + p + '_' + cat._id})
+  }
+
   async _getChildren (type, id, altDates) {
     switch (type) {
       case NavigateValueType .BUDGET: case NavigateValueType .BUDGET_YR_AVE: case NavigateValueType .BUDGET_YR_AVE_ACT:
@@ -416,26 +434,8 @@ class Navigate {
         if (id .includes ('payee_'))
           return []
         else {
-          let cat           = this._categories .get (id .split ('_') .slice (-1) [0]);
-          let children      = (cat .children || []) .concat (cat .zombies || []);
-          let payeeTruncate = /\d|#|\(/;
-          if (children .length == 0 || id .includes ('other_')) {
-            let st     = this._budget .getStartDate();
-            let en     = this._budget .getEndDate();
-            if (altDates) {
-              st = altDates .start;
-              en = altDates .end;
-            }
-            var result = (await this._actuals .getTransactions (cat, st, en))
-              .map (t => {
-                let stop = t .payee .match (payeeTruncate);
-                return (stop && stop .index? t .payee .slice (0, stop .index): t .payee) .split (' ') .slice (0,3) .join (' ');
-              })
-              .sort   ((a,b)   => {return a<b? -1: a==b? 0: 1})
-              .filter ((p,i,a) => {return i==0 || ! p .startsWith (a [i-1])})
-              .map    (p       => {return 'payee_' + p + '_' + cat._id})
-          } else
-            var result = children .map (c => {return c._id});
+          let cat      = this._categories .get (id .split ('_') .slice (-1) [0]);
+          let result   = id .includes ('other_')? []: (cat .children || []) .concat (cat .zombies || []) .map (c => {return c._id});
           if (type == NavigateValueType .ACTUALS_BUD && ! altDates)
             result = ['budget_' + id] .concat (result);
           return result;
@@ -609,14 +609,21 @@ class Navigate {
       let isCredit    = this._budget .isCredit (thisCat);
       let isGoal      = this._budget .isGoal   (thisCat);
       let thisAmounts = await this._getAmounts (type, thisCat._id, isCredit, dates, includeMonths, includeYears, addCats, altDates);
-      let children    = (await Promise .all ((await this._getChildren (type, id, altDates))
-        .map    (async cat => {return {cat: cat, amounts: await getAmounts (cat)}})))
-        .filter (child     => {return child .amounts .find (a => {
-          return a .value != 0  || [] .concat (a .id) .find (i => {return i .startsWith ('budget_')})
-        })});
-      let realChildren = children .filter (child => {return ! child .cat .startsWith ('budget_')});
+      let children = [], realChildren;
+      let processChildren = async childrenIds => {
+        children = children .concat (
+          (await Promise .all (childrenIds .map (async cid => {return {cat: cid, amounts: await getAmounts (cid)}})))
+            .filter (child => {return child .amounts .find (a => {
+              return a .value != 0  || [] .concat (a .id) .find (i => {return i .startsWith ('budget_')})
+            })})
+          );
+        realChildren = children .filter (child => {return ! child .cat .startsWith ('budget_')});
+      }
+      await processChildren (await this._getChildren (type, id, altDates));
+      if (realChildren .length == 0 && ! id .includes ('payee_'))
+        await processChildren (await this._getPayees (thisCat, altDates));
       if (realChildren .length == 1 && ! realChildren [0] .cat .includes ('_')) {
-         let isLeaf = await (await this._getChildren (type, realChildren [0] .cat, altDates))
+         let isLeaf = (await this._getChildren (type, realChildren [0] .cat, altDates))
           .filter (cat       => {return ! cat .startsWith ('budget_')})
           .filter (async cat => {return (await getAmounts (cat)) .find (a => {return a .value != 0})})
           .length == 0;
