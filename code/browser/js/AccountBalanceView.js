@@ -42,6 +42,13 @@ class AccountBalanceView extends TupleView {
     return $('<div>', {class: name + ' _sidebar_group _group '})
       .appendTo (this._html)
       .append   ($('<div>', {class: '_heading', text: title}))
+      .keypress (e => {
+        if (e .keyCode == 13 && ! e .altKey) {
+          let target = this._getTuple ($(e .target) .closest ('._field') .data ('field')._id) [e .shiftKey? 'prev': 'next'] ('._tuple');
+          if (target .length)
+            this._selectTuple (target, {last: true});
+        }
+      })
   }
 
   removeGroup (name) {
