@@ -608,7 +608,7 @@ class Navigate {
       let thisCat     = this._categories .get (id .split ('_') .slice (-1) [0]);
       let isCredit    = this._budget .isCredit (thisCat);
       let isGoal      = this._budget .isGoal   (thisCat);
-      let thisAmounts = await this._getAmounts (type, thisCat._id, isCredit, dates, includeMonths, includeYears, addCats, altDates);
+      let thisAmounts = await this._getAmounts (type, id, isCredit, dates, includeMonths, includeYears, addCats, altDates);
       let children = [], realChildren;
       let processChildren = async childrenIds => {
         children = children .concat (
@@ -759,9 +759,9 @@ class Navigate {
               id == this._budget .getExpenseCategory()._id? [1,0]: [1,1]);
         return {
           id:            id,
-          name:          this._getName         (type, id),
+          name:          this._getName (type, id),
           stackPosition: stackPosition,
-          note:          this._getNote         (type, id, includeMonths, includeYears, altDates),
+          note:          this._getNote (type, id, includeMonths, includeYears, altDates),
           rows:          data .data,
           getUpdate:     data .getUpdate
         }
