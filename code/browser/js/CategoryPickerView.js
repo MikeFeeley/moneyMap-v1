@@ -42,12 +42,13 @@ class CategoryPickerView extends View {
   }
 
   show() {
-    this._html .slideDown();
+    this._html .css ({display: 'none'});
+    this._html .fadeIn(400);
   }
 
   hide() {
     this._placeHolder .remove();
-    this._html .slideUp('fast', () => {
+    this._html .fadeOut (100, () => {
       this._html        .remove();
     });
   }

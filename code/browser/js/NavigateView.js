@@ -273,9 +273,11 @@ class NavigateView extends Observable  {
         graph .css (position);
         ui .ModalStack .add (
           e  => {return e && $.contains (document .body, e .target) && ! $.contains (graph .get (0), e .target)},
-          () => {graph .remove(); onClose()},
+          () => {graph .fadeOut (100, () => {graph .remove(); onClose()})},
           true
         );
+        graph .css ({display: 'none'});
+        graph .fadeIn (300);
       }
       return graph;
     }
@@ -451,7 +453,7 @@ class NavigateView extends Observable  {
       var container = $('<div>', {class: name + 's'});
       container .appendTo (this._content);
     }
-    var graph  = $('<div>', {class: name + (popup? ' _popup': '')}) .appendTo (container) .append ($('<div>', {class: '_popupContent'}))
+    var graph  = $('<div>', {class: name + (popup? ' _popup': '')}) .appendTo (container) .append ($('<div>', {class: '_popupContent'}));
     processDataset();
     if (popup) {
       if (data .length >= 1) {
@@ -482,9 +484,11 @@ class NavigateView extends Observable  {
         graph .css (position)
         ui .ModalStack .add (
           e  => {return e && ! $.contains (graph .get (0), e .target) && graph .get (0) != e .target},
-          () => {graph .remove(); onClose()},
+          () => {graph .fadeOut (100, () => {graph .remove(); onClose()})},
           true
         );
+      graph .css ({display: 'none'});
+      graph .fadeIn (300);
     }
     var canvas = $('<canvas>') .appendTo (graph .children('._popupContent'));
     var chart;
@@ -748,9 +752,11 @@ class NavigateView extends Observable  {
         container .css (position);
       ui .ModalStack .add (
         e  => {return e && ! $.contains (container .get (0), e .target) && container .get (0) != e .target},
-        () => {container .remove(); onClose()},
+        () => {container .fadeOut (100, () => {container .remove(); onClose()})},
         true
       );
+      container .css ({display: 'none'});
+      container .fadeIn (300);
     }
     var labels;
     var datasets;
@@ -1035,9 +1041,11 @@ class NavigateView extends Observable  {
       container .css (position);
       ui .ModalStack .add (
         e  => {return e && !$.contains (container .get (0), e .target) && container .get (0) != e .target},
-        () => {container .remove(); onClose()},
+        () => {container .fadeOut (100, () => {container .remove(); onClose()})},
         true
       );
+      container .css ({display: 'none'});
+      container .fadeIn (300);
     }
     addTable ();
     return updates => {
@@ -1326,9 +1334,11 @@ class NavigateView extends Observable  {
         popup .css (position);
         ui .ModalStack .add (
           e  => {return e && !$.contains (popup .get (0), e .target) && popup .get (0) != e .target},
-          () => {popup .remove()},
+          () => {popup .fadeOut (100, () => {popup .remove()})},
           true
         );
+        popup .css ({display: 'none'});
+        popup .fadeIn (300);
       }
       e .stopPropagation();
     }
@@ -1341,9 +1351,11 @@ class NavigateView extends Observable  {
       container .css (position);
       ui .ModalStack .add (
         e  => {return e && !$.contains (container .get (0), e .target) && container .get (0) != e .target},
-        () => {container .remove(); onClose()},
+        () => {container .fadeOut (100, () => {container .remove(); onClose()})},
         true
       );
+      container .css ({display: 'none'});
+      container .fadeIn (300);
     } else
       table .appendTo ($('<div>', {class: '_netWorthTableContainer' + (popup? ' _popup': '')}) .appendTo (this._content));
     let showHeadFoot = dataset .cols .length > 1;

@@ -269,9 +269,11 @@ class TransactionHUD extends TransactionAndRulesTable {
     await super .addHtml (body);
     this._modalStackEntry = ui .ModalStack .add (
       (e) => {return ! $.contains (this._content .get (0), e .target) && this._content .get (0) != e .target},
-      ()  => {this .delete()}, true
+      ()  => {this._html .fadeOut (100, () => {this .delete()})}, true
     );
     ui .scrollIntoView (this._html);
+    this._html .css ({display: 'none'});
+    this._html .fadeIn (300);
   }
 
   _showRefineByDateRange (start, end) {
