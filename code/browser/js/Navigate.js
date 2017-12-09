@@ -418,6 +418,7 @@ class Navigate {
   }
 
   async _getChildren (type, id, altDates) {
+    let result;
     switch (type) {
       case NavigateValueType .BUDGET: case NavigateValueType .BUDGET_YR_AVE: case NavigateValueType .BUDGET_YR_AVE_ACT:
         if (id .includes ('other_'))
@@ -434,8 +435,8 @@ class Navigate {
         if (id .includes ('payee_'))
           return []
         else {
-          let cat      = this._categories .get (id .split ('_') .slice (-1) [0]);
-          let result   = id .includes ('other_')? []: (cat .children || []) .concat (cat .zombies || []) .map (c => {return c._id});
+          let cat    = this._categories .get (id .split ('_') .slice (-1) [0]);
+          let result = id .includes ('other_')? []: (cat .children || []) .concat (cat .zombies || []) .map (c => {return c._id});
           if (type == NavigateValueType .ACTUALS_BUD && ! altDates)
             result = ['budget_' + id] .concat (result);
           return result;

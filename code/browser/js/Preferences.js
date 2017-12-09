@@ -60,7 +60,7 @@ class Preferences extends Observable {
     let about = $('<div>', {class: '_about'})
       .appendTo ($('body'))
       .append ($('<div>', {text: 'moneyMap'}))
-      .append ($('<div>', {text: 'Version 2.0.dev.0 (Dec 7 70acb34)'}))
+      .append ($('<div>', {text: 'Version 2.0.dev.0 (Dec 7 5916f2f)'}))
       .append ($('<div>', {text: '(c) 2017 Mike Feeley (feeley@cs.ubc.ca)'}));
     about.css ({top: 100, left: 50});
     ui .ModalStack .add (
