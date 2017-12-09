@@ -208,6 +208,7 @@ class App {
     if (eventType == UserEvent .NEW_USER || eventType == UserEvent .NEW_CONFIGURATION) {
 
       /* models */
+      let prefsWasShowing = this._prefs && this._prefs .isShowing();
       Model .setDatabase (this._user .getDatabaseName());
       this._deleteModels();
       this._budModel = new BudgetModel   ();
@@ -222,7 +223,7 @@ class App {
       await this._budModel .find (this._user .getBudgetId(), this._actModel);
       await this._actModel .findCurrent();
       await this._accModel .find();
-      await this._prefs    .init();
+      await this._prefs    .init (prefsWasShowing);
 
       /* presenters */
       if (this._it) {

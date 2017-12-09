@@ -538,6 +538,18 @@ class User extends Observable {
     this._cid = (await this._configModel .insert ({user: this._uid, name: 'Untitled'}))._id;
     await Model .updateUser (this._uid, this._accessCap, {curConfiguration: this._cid});
     this._setModelsForConfig();
+
+    let pm = new Model ('parameters', this .getDatabaseName());
+    let am = new Model ('accounts',   this .getDatabaseName());
+    await pm .insert ({name: 'rates', apr: 575, inflation: 225, presentValue: true, futureYears: 40});
+    await am .insert ({type: AccountType .GROUP, name: 'Bank Accounts', cashFlow: true, sort: 1});
+    await am .insert ({type: AccountType .GROUP, name: 'Credit Cards', cashFlow: true, sort: 2});
+    await am .insert ({type: AccountType .GROUP, name: 'Cash', cashFlow: true, sort: 3});
+    await am .insert ({type: AccountType .GROUP, name: 'Investments', cashFlow: false, sort: 4});
+    await am .insert ({type: AccountType .GROUP, name: 'Savings', cashFlow: false, sort: 5});
+    pm .delete();
+    am .delete();
+
     this._budgets = [];
     await this._createEmptyBudget();
     await this._selectConfig (this._cid);

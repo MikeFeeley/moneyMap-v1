@@ -16,6 +16,10 @@ class Preferences extends Observable {
       this._paramModel .delete();
       this._paramModel = 0;
     }
+    if (this._view) {
+      this._view .delete();
+      this._view = null;
+    }
   }
 
   async _onParamModelChange (eventType, doc, arg) {
@@ -32,8 +36,14 @@ class Preferences extends Observable {
     }
   }
 
-  async init() {
+  async init (addPreferencesEdit) {
     this._data = (await this._paramModel .find ({name: 'rates'})) [0];
+    if (addPreferencesEdit)
+      await this._addPreferencesEdit();
+  }
+
+  isShowing() {
+    return this._view .isShowing();
   }
 
   /**

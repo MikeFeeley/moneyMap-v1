@@ -9,6 +9,13 @@ class PreferencesView extends View {
     return this._preferencesEdit .find ('._field_' + name);
   }
 
+  delete() {
+    if (this._preferencesEdit) {
+      this._preferencesEdit .remove();
+      this._preferencesEdit = null;
+    }
+  }
+
   addMenu (toHtml, position, menuButton, menuButtonPosition) {
     this._menuHead = $('<div>', {class: '_preferences_menu_head'})
       .append   ($('<span>', {text: 'money'}))
@@ -40,6 +47,10 @@ class PreferencesView extends View {
     .on ('mouseover', () => {item .addClass    ('_selected')})
     .on ('mouseout',  () => {item .removeClass ('_selected')})
 
+  }
+
+  isShowing() {
+    return this._preferencesEdit != null && this._preferencesEdit .closest ('.background') .length == 0;
   }
 
   addPreferencesEdit() {

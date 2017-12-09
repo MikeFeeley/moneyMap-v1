@@ -35,12 +35,13 @@ class AccountBalance extends TuplePresenter {
   }
 
   _onModelChange (eventType, doc, arg) {
-    for (let p of Object .keys (arg)) {
-      let newP = p .split('_');
-      newP .splice (-1, 0, 'editable');
-      arg [newP .join ('_')] = arg [p];
-      delete arg [p];
-    }
+    if (arg)
+      for (let p of Object .keys (arg)) {
+        let newP = p .split('_');
+        newP .splice (-1, 0, 'editable');
+        arg [newP .join ('_')] = arg [p];
+        delete arg [p];
+      }
     super._onModelChange (eventType, doc, arg);
   }
 
