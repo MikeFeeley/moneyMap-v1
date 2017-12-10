@@ -50,8 +50,10 @@ class BudgetProgressHUDView extends View {
         (e) => {return ! $.contains (this._html .get (0), e .target) && this._html .get (0) != e .target},
         ()  => {this .delete()}, true
       );
-    this._html .css({display: 'none'});
-    this._html .fadeIn (UI_FADE_IN_MS);
+    if (! this._html .hasClass ('hidden')) {
+      this._html .css({display: 'none'});
+      this._html .fadeIn (UI_FADE_IN_MS);
+    }
   }
 
   addGroup (name, toGroup) {
