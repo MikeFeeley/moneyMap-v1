@@ -70,7 +70,7 @@ class AccountBalanceView extends TupleView {
         id:       data._id,
         name:     data .name,
         toHtml:   html,
-        position: {top: ui .calcPosition (target, html, {top: 0, left: 0}) .top, right: 50},
+        position: {top: ui .calcPosition (target, html) .top, left: 50},
         isCat:    data .isCat
       });
     });

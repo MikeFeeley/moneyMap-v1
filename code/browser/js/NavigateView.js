@@ -226,7 +226,7 @@ class NavigateView extends Observable  {
                 document .documentElement .clientHeight - 546,
                 tp .top - scrollParent .scrollTop() + scrollParent.offset() .top - st - 200
               );
-              let pos = {top: st + top, right: 20};
+              let pos = {top: st + top, left: 50};
               this._notifyObservers (NavigateViewEvent .PROGRESS_SIDEBAR_CLICK, {
                 id:       item .id,
                 html:     html,

@@ -222,10 +222,10 @@ class TransactionHUD extends TransactionAndRulesTable {
             } else
               selectedText =  window .getSelection() .toString() .split ('\n') [0];
             window .getSelection() .empty();
-            let top = pageY + this._html .offsetParent() .scrollTop() - this._html .offsetParent() .offset() .top;
+            let position = this._html .position();
             TransactionHUD .showRefineByField (
               this._title, JSON .parse (JSON .stringify (this._query)), field, selectedText, this._accounts, this._variance, this._html .offsetParent(),
-              {top: top, left: this._html .position() .left + 50, right: 'auto'},
+              {top: position .top + 50, left: position .left + 50, right: 'auto'},
               () => {this._html .removeClass ('_occluded')},
               this._monthStart, this._monthEnd
             );
