@@ -167,10 +167,9 @@ class BudgetProgressGraph extends Observable {
           var isLabel      = false;
           var datasetIndex = element .length && element [0] ._datasetIndex;
         }
-        var html        = $(e .target) .offsetParent();
-        var position    = $(e .target) .position();
-        position .top  += e .offsetY;
-        position .left += e .offsetX;
+        let target   = $(e .target);
+        let html     = target .offsetParent();
+        let position = ui .calcPosition (target, html, {top: 20, left: 0});
         this._notifyObservers (BudgetProgressGraphEvent .GRAPH_CLICK, {
           name:            this._name,
           target:          $(e .target),

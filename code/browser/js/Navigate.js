@@ -233,10 +233,9 @@ class Navigate {
             arg .date .end   = Types .date .monthEnd (dates .start);
           }
           if (arg .name == '_budgetMonthsGraph') {
-            var position = {top: arg .position .top, left: Math .max (0, arg .position .left + 200)}
-            BudgetProgressHUD .show (id, arg .html, position, this._accounts, this._variance, arg .labelIndex < 12? arg .date .end: undefined);
+            BudgetProgressHUD .show (id, arg .html, arg .position, this._accounts, this._variance, arg .labelIndex < 12? arg .date .end: undefined);
           } else
-            TransactionHUD .showCategory (arg .id, arg .date, this._accounts, this._variance, arg .html, {top: arg .position .top, left: 0}, im, iy, sel && sel .addCats);
+            TransactionHUD .showCategory (arg .id, arg .date, this._accounts, this._variance, arg .html, arg .position, im, iy, sel && sel .addCats);
         } else {
           if (arg .id .includes ('budget_')) {
             let id   = arg .id .split ('_') .slice (-1) [0];
@@ -1188,8 +1187,8 @@ class Navigate {
         list .push ({
           name: 'Over Budget',
           nameTooltip:
-            'Over budget' +
-            (ovp < -50?              ' ' + Types .moneyDZ .toString (-ovp) + ' through last month': '') +
+            'Over ' +
+            (ovp < -50?              ' ' + Types .moneyDZ .toString (-ovp) + ' last month': '') +
             (ovp < -50 && ovc < -50? ' plus': '') +
             (ovc < -50?              ' ' + Types .moneyDZ .toString (-ovc) + ' this month': '') + '.',
           amount: ovr
@@ -1199,7 +1198,7 @@ class Navigate {
       let stc = this._actuals .getCashFlowBalance (this._budget .getStartDate());
       if (stc < -50 || stc > 50) {
         let tt =
-            'You will end the year with a ' +
+            'You will end year with ' +
             Types .moneyDZ .toString (Math .abs (stc + una + ovr)) +
             ' cash-flow ' +
             (stc + una + ovr < 0? ' deficit.': stc + una + ovr == 0? 'balance.': 'surplus.');

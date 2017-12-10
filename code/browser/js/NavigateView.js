@@ -174,14 +174,14 @@ class NavigateView extends Observable  {
     if (text) {
       element .hover (
         e => {
-          let toHtml = element .closest ('.contents');
+          let toHtml = element .closest ('._progressSidebar');
           tt = $('<div>', {
             class: '_toolTipNoPosition',
             text: text,
           }) .appendTo (toHtml);
           window .setTimeout (() => {
             if (tt) {
-              tt .css (ui .calcPosition (element, toHtml, {top: 30, left: -8}, tt .width())) .fadeIn (UI_TOOL_TIP_FADE_MS);
+              tt .css (ui .calcPosition (element, toHtml, {top: -18, left: -4}, tt .width(), 0)) .fadeIn (UI_TOOL_TIP_FADE_MS);
             }
           })
         },
@@ -217,11 +217,20 @@ class NavigateView extends Observable  {
           this._addTooltip (tr, item .tooltip);
           if (item .id)
             tr .on ('click webkitmouseforcedown', e => {
-              let html = this._progressGraphs;
+              let html = this._progressGraphs .find ('._progressGraph');
+              let st = $('body') .scrollTop();
+              let target = $(e .target);
+              let scrollParent = target .closest ('._progressSidebar');
+              let tp  = ui .calcPosition (target, scrollParent)
+              let top = Math .min (
+                document .documentElement .clientHeight - 546,
+                tp .top - scrollParent .scrollTop() + scrollParent.offset() .top - st - 200
+              );
+              let pos = {top: st + top, right: 20};
               this._notifyObservers (NavigateViewEvent .PROGRESS_SIDEBAR_CLICK, {
                 id:       item .id,
                 html:     html,
-                position: ui .calcPosition (tr, html, {top: 0, left: -900}),
+                position: pos,
                 view:     this,
                 altClick: e .originalEvent .webkitForce > 1 || e .originalEvent .altKey
               });

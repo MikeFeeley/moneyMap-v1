@@ -8,6 +8,11 @@ const UI_FIELD_TIP_FADE_OUT_MS = 1000;
 
 var ui = {
 
+  /**
+   * Scroll the minimum amount needed so that either
+   *     (a) if the entire element is shown, if it fits
+   *     (b) that as much of the element, including upper left corner is shown, if it does not fit
+   */
   scrollIntoView: (e, includeMargin = false, options = {}) => {
     var getScrollParent = node => {
       if (node === null || node == document)
@@ -17,43 +22,58 @@ var ui = {
       } else
         return getScrollParent (node.parentNode);
     }
-    window .setTimeout (() => {
+    setTimeout (() => {
       // use timeout to ensure that this code doesn't run until after html has reappeared and thus has computed height
-      let sp = getScrollParent (e [0], includeMargin);
+      e = e [0];
+      let sp = getScrollParent (e, includeMargin);
       if (sp) {
-        sp = $(sp);
-        let st = sp .scrollTop();
-        let sl = sp .scrollLeft();
-        let sh = Math .max (document .documentElement .clientHeight, e .outerHeight (includeMargin) + sp .offset() .top);
-        let sw = Math .max (sp .innerWidth(),                        e .outerWidth  (includeMargin) + sp .offset() .left);
-        let sy = Math .max (0, e .outerHeight (includeMargin) + e .offset() .top  - sh);
-        if (options .topBuffer) {
-          let topOver = sy - (e .offset() .top - sp .offset() .top);
-          if (topOver >= 0)
-            sy -= Math .max (0, options .topBuffer - topOver);
 
+        // get scroll area boundaries
+        let maxHeight    = document .documentElement .clientHeight - sp .offsetTop;
+        let maxWidth     = sp .clientWidth;
+        let scrollBottom = sp .scrollTop  + maxHeight;
+        let scrollRight  = sp .scrollLeft + maxWidth;
+
+        // get position of e relative to scrollParent
+        let calcPosition = e => {
+          let top  = e .offsetTop  + e .clientTop;
+          let left = e .offsetLeft + e .clientLeft;
+          if (e != sp && e .offsetParent) {
+            let [pt,pl] = calcPosition (e .offsetParent);
+            top  += pt;
+            left += pl;
+          }
+          return [top, left]
         }
-        let sx = Math .max (0, e .outerWidth  (includeMargin) + e .offset() .left - sw);
-        let tp = e .offset() .top;
-        let ot = sp .offset() .top;
-        if (tp < ot)
-          sy = tp - ot;
-        let lp = e .offset() .left;
-        let ol = sp .offset() .left
-        if (lp < ol)
-          sx = lp - ol;
-        if (sy != 0 || sx != 0)
-          sp .animate ({scrollTop: (st + sy), scrollLeft: (sl + sx)}, 200);
+        let [eTop, eLeft] = calcPosition (e);
+        let eBottom = eTop  + e .offsetHeight;
+        let eRight  = eLeft + e .offsetWidth;
+
+        // calculate scroll delta
+        let scrollY = Math .max (sp .offsetTop + sp .clientTop, eBottom - scrollBottom);
+        if (eTop < sp .scrollTop + scrollY)
+          scrollY = eTop - sp .scrollTop - $('.contents') .css('margin-top') .slice (0, -2);
+        scrollY -= sp .offsetTop + sp .clientTop;
+        let scrollX = Math .max (sp .offsetLeft + sp .clientLeft, eRight - scrollRight);
+        if (eLeft < sp .scrollLeft + scrollX)
+          scrollX = eLeft - sp .scrollLeft;
+        scrollX -= sp .offsetLeft + sp .clientLeft;
+
+        // scroll
+        if (scrollY != 0 || scrollX != 0)
+          $(sp) .animate ({scrollTop: (sp .scrollTop + scrollY), scrollLeft: (sp .scrollLeft + scrollX)}, 200);
       }
     }, 0);
   },
 
-  calcPosition (element, relativeToElement, position, width=0) {
+  calcPosition (element, relativeToElement, position = {top: 0, left: 0}, width = 0, minLeft) {
     let ep = element .offset();
     let rp = relativeToElement .offset();
     let cp = {top: position .top  + ep .top  - rp .top + relativeToElement .scrollTop()}
     if (position .left !== undefined)
       cp .left  = ep .left - rp .left + position .left - Math .max (0, ep .left + width - (document .body .clientWidth -8)) + relativeToElement .scrollLeft()
+    if (minLeft !== undefined)
+      cp .left = Math .max (cp .left, minLeft);
     if (position .right !== undefined)
       cp .right = (document .body .clientWidth - ep .left) - Math .max (0, (document .body .clientWidth - (rp .left + relativeToElement .width())))
     return cp

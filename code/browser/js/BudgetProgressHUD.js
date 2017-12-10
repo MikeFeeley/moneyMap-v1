@@ -39,7 +39,6 @@ class BudgetProgressHUD {
       end:   Types .dateMY .monthEnd   (this._date)
     }
     if (eventType == BudgetProgressHUDViewEvent .GRAPH_CLICK && (arg .name != 'monthly' || arg .month || arg .name == 'all')) {
-      arg .position .left = Math .min (0, ($(document) .width() - 1000) - arg .html .offset() .left);
       if (arg .altClick) {
         if (arg .name == 'all') {
           let budget = this._variance .getBudget();
