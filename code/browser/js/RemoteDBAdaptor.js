@@ -59,7 +59,7 @@ class RemoteDBAdaptor extends DBAdaptor {
         setTimeout (() => {this .connect()}, 0);
       },
       error: () => {
-        if (! this._getState() == DBAdaptorState .PERMANENTLY_DOWN)
+        if (this._getState() != DBAdaptorState .PERMANENTLY_DOWN)
           this._setState (DBAdaptorState .DOWN);
         clearTimeout (timeoutId);
         setTimeout (() => {this .connect()}, CLIENT_RETRY_INTERVAL);

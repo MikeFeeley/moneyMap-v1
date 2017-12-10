@@ -529,6 +529,7 @@ div._systemStatus {
   border-radius: 0px 0px 6px 6px;
   box-shadow: 0px 4px 4px rgba(0,0,0,.4);
   color: #555;
+  div._underline {border-bottom: 1px solid #ddd!important; margin-bottom: 6px; padding-bottom: 6px}
   > div:not(._subMenu) {
     padding-left: 10px;
     width: 200px;

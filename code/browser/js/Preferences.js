@@ -1,3 +1,5 @@
+var APP_VERSION = '2.0.dev.0 (Dec 9 dae1394)';
+
 var PreferencesInstance;
 
 class Preferences extends Observable {
@@ -52,14 +54,14 @@ class Preferences extends Observable {
   showMenu (toHtml) {
     let html = $('body');
     this._view .addMenu (html, {top: 48,left: 8}, toHtml .parent(), {top: 0, left: 0});
-    this._addMenuItem ('About moneyMap', () => {(async () => {await this._addAbout()}) ()});
-    this._addMenuItem ('Preferences',    () => {(async () => {await this._addPreferencesEdit()}) ()});
+    this._addMenuItem ('About moneyMap', () => {(async () => {await this._addAbout()}) ()}, true);
+    this._addMenuItem ('Preferences',    () => {(async () => {await this._addPreferencesEdit()}) ()}, true);
     this._addMenuItem ('Export to CSV',  () => {(async () => {await this._addExport()}) ()});
     this._addMenuItem ('Import from CSV',  () => {(async () => {await this._addImport()}) ()});
   }
 
-  _addMenuItem (name, action) {
-    this._view .addMenuItem (name, () => {this._view .removeMenu(); action()});
+  _addMenuItem (name, action, underline) {
+    this._view .addMenuItem (name, () => {this._view .removeMenu(); action()}, underline? '_underline': '');
   }
 
   get() {
@@ -70,7 +72,7 @@ class Preferences extends Observable {
     let about = $('<div>', {class: '_about'})
       .appendTo ($('body'))
       .append ($('<div>', {text: 'moneyMap'}))
-      .append ($('<div>', {text: 'Version 2.0.dev.0 (Dec 7 5916f2f)'}))
+      .append ($('<div>', {text: 'Version: ' + APP_VERSION}))
       .append ($('<div>', {text: '(c) 2017 Mike Feeley (feeley@cs.ubc.ca)'}));
     about.css ({top: 100, left: 50});
     ui .ModalStack .add (
