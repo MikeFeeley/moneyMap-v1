@@ -193,7 +193,7 @@ class App {
 
       this._tabs = new ui.Tabs ($('body'), handleNameClick);
       this._proT = this._tabs .addTab  ('Progress');
-      this._traT = this._tabs .addTab  ('Transactions');
+      this._traT = this._tabs .addTab  ('Inbox');
       this._actT = this._tabs .addTab  ('Activity');
       this._budT = this._tabs .addTab  ('Budget');
       this._plaT = this._tabs. addTab  ('Plan');
