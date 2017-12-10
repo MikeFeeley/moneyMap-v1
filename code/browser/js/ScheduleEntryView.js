@@ -60,23 +60,23 @@ class ScheduleEntryView extends ListView {
         pos = ui .calcPosition (target, html, {top: 32, left: 0})
       tip .css (pos);
       ui .scrollIntoView (tip);
-      tip .fadeIn (300, () => {
+      tip .fadeIn (UI_FADE_IN_MS, () => {
         let mo = ui .ModalStack .add (() => {return true}, () => {
           if (mo) {
             mo = null;
             clearTimeout (to);
-            tip .fadeOut (300, () => {
+            tip .fadeOut (UI_FADE_OUT_MS, () => {
               tip .remove();
             })
           }
         }, true);
         let to = setTimeout (() => {
-          tip .fadeOut (1000, () => {
+          tip .fadeOut (UI_FIELD_TIP_FADE_OUT_MS, () => {
             tip .remove();
             if (mo)
               ui .ModalStack .delete (mo);
           })
-        }, 5000);
+        }, UI_FIELD_TIP_DURATION_MS);
       });
     }, 0);
   }

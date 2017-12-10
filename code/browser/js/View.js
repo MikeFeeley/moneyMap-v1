@@ -177,7 +177,7 @@ class ViewField {
       if (!toolTip || typeof toolTip.stop != 'function') console.trace ('XXX PANIC XXX', toolTip, toolTip && toolTip.stop);
       toolTip
         .stop    (true)
-        .fadeOut (120);
+        .fadeOut (UI_TOOL_TIP_FADE_MS);
     }
     this._html .hover (
       e => {
@@ -189,11 +189,11 @@ class ViewField {
           var text = this ._toolTip;
           if (text) {
             toolTip .text (text);
-            toolTip .fadeIn  (120, () => {
-              setTimeout (() => {toolTip .fadeOut (120)}, 8000)
+            toolTip .fadeIn  (UI_TOOL_TIP_FADE_MS, () => {
+              setTimeout (() => {toolTip .fadeOut (UI_TOOL_TIP_FADE_MS)}, UI_TOOL_TIP_DURATION_MS)
             });
           }
-        }, 200);
+        }, UI_TOOL_TIP_WAIT_MS);
       },
       this.clearTooltip
     );

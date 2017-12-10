@@ -110,23 +110,23 @@ class TransactionTableView extends TableView {
     setTimeout (() => {
       tip .css (ui .calcPosition (field, html, {top: - tip .height() - 32, left: - tip .width() / 2 + field .width() / 2}));
       ui .scrollIntoView (tip);
-      tip .fadeIn (300, () => {
+      tip .fadeIn (UI_FADE_IN_MS, () => {
         let mo = ui .ModalStack .add (() => {return true}, () => {
           if (mo) {
             mo = null;
             clearTimeout (to);
-            tip .fadeOut (300, () => {
+            tip .fadeOut (UI_FADE_OUT_MS, () => {
               tip .remove();
             })
           }
         }, true);
         let to = setTimeout (() => {
-          tip .fadeOut (1000, () => {
+          tip .fadeOut (UI_FIELD_TIP_FADE_OUT_MS, () => {
             tip .remove();
             if (mo)
               ui .ModalStack .delete (mo);
           })
-        }, 5000);
+        }, UI_FIELD_TIP_DURATION_MS);
       });
     }, 0);
     this._fieldTip = tip;

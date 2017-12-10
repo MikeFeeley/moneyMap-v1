@@ -181,7 +181,7 @@ class NavigateView extends Observable  {
           }) .appendTo (toHtml);
           window .setTimeout (() => {
             if (tt) {
-              tt .css (ui .calcPosition (element, toHtml, {top: 30, left: -8}, tt .width())) .fadeIn (120);
+              tt .css (ui .calcPosition (element, toHtml, {top: 30, left: -8}, tt .width())) .fadeIn (UI_TOOL_TIP_FADE_MS);
             }
           })
         },
@@ -273,11 +273,11 @@ class NavigateView extends Observable  {
         graph .css (position);
         ui .ModalStack .add (
           e  => {return e && $.contains (document .body, e .target) && ! $.contains (graph .get (0), e .target)},
-          () => {graph .fadeOut (100, () => {graph .remove(); onClose()})},
+          () => {graph .fadeOut (UI_FADE_OUT_MS, () => {graph .remove(); onClose()})},
           true
         );
         graph .css ({display: 'none'});
-        graph .fadeIn (300);
+        graph .fadeIn (UI_FADE_IN_MS);
       }
       return graph;
     }
@@ -484,11 +484,11 @@ class NavigateView extends Observable  {
         graph .css (position)
         ui .ModalStack .add (
           e  => {return e && ! $.contains (graph .get (0), e .target) && graph .get (0) != e .target},
-          () => {graph .fadeOut (100, () => {graph .remove(); onClose()})},
+          () => {graph .fadeOut (UI_FADE_OUT_MS, () => {graph .remove(); onClose()})},
           true
         );
       graph .css ({display: 'none'});
-      graph .fadeIn (300);
+      graph .fadeIn (UI_FADE_IN_MS);
     }
     var canvas = $('<canvas>') .appendTo (graph .children('._popupContent'));
     var chart;
@@ -752,11 +752,11 @@ class NavigateView extends Observable  {
         container .css (position);
       ui .ModalStack .add (
         e  => {return e && ! $.contains (container .get (0), e .target) && container .get (0) != e .target},
-        () => {container .fadeOut (100, () => {container .remove(); onClose()})},
+        () => {container .fadeOut (UI_FADE_OUT_MS, () => {container .remove(); onClose()})},
         true
       );
       container .css ({display: 'none'});
-      container .fadeIn (300);
+      container .fadeIn (UI_FADE_IN_MS);
     }
     var labels;
     var datasets;
@@ -1041,11 +1041,11 @@ class NavigateView extends Observable  {
       container .css (position);
       ui .ModalStack .add (
         e  => {return e && !$.contains (container .get (0), e .target) && container .get (0) != e .target},
-        () => {container .fadeOut (100, () => {container .remove(); onClose()})},
+        () => {container .fadeOut (UI_FADE_OUT_MS, () => {container .remove(); onClose()})},
         true
       );
       container .css ({display: 'none'});
-      container .fadeIn (300);
+      container .fadeIn (UI_FADE_IN_MS);
     }
     addTable ();
     return updates => {
@@ -1334,11 +1334,11 @@ class NavigateView extends Observable  {
         popup .css (position);
         ui .ModalStack .add (
           e  => {return e && !$.contains (popup .get (0), e .target) && popup .get (0) != e .target},
-          () => {popup .fadeOut (100, () => {popup .remove()})},
+          () => {popup .fadeOut (UI_FADE_OUT_MS, () => {popup .remove()})},
           true
         );
         popup .css ({display: 'none'});
-        popup .fadeIn (300);
+        popup .fadeIn (UI_FADE_IN_MS);
       }
       e .stopPropagation();
     }
@@ -1351,11 +1351,11 @@ class NavigateView extends Observable  {
       container .css (position);
       ui .ModalStack .add (
         e  => {return e && !$.contains (container .get (0), e .target) && container .get (0) != e .target},
-        () => {container .fadeOut (100, () => {container .remove(); onClose()})},
+        () => {container .fadeOut (UI_FADE_OUT_MS, () => {container .remove(); onClose()})},
         true
       );
       container .css ({display: 'none'});
-      container .fadeIn (300);
+      container .fadeIn (UI_FADE_IN_MS);
     } else
       table .appendTo ($('<div>', {class: '_netWorthTableContainer' + (popup? ' _popup': '')}) .appendTo (this._content));
     let showHeadFoot = dataset .cols .length > 1;

@@ -51,7 +51,7 @@ class BudgetProgressHUDView extends View {
         ()  => {this .delete()}, true
       );
     this._html .css({display: 'none'});
-    this._html .fadeIn (300);
+    this._html .fadeIn (UI_FADE_IN_MS);
   }
 
   addGroup (name, toGroup) {
@@ -280,7 +280,7 @@ class BudgetProgressHUDView extends View {
 
   removeHtml() {
     this .resetHtml();
-    this._html .fadeOut (100, () => {
+    this._html .fadeOut (UI_FADE_OUT_MS, () => {
       this._html .remove();
     });
   }

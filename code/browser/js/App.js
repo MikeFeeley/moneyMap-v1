@@ -77,7 +77,7 @@ class App {
 
   _setClear (transition) {
     if (transition) {
-      this._status .clearQueue    ('_systemStatus') .fadeOut (100, () => {
+      this._status .clearQueue    ('_systemStatus') .fadeOut (UI_FADE_OUT_MS, () => {
         this._status .text        ('');
         this._status .removeClass ('_pending _delayed');
         this._status .css         ({display: 'block', opacity: 0, height: '0px', width: '0px'})
@@ -130,7 +130,7 @@ class App {
       if (immediately)
         makeUp();
       else
-        this._status .fadeOut (100, () => {makeUp()})
+        this._status .fadeOut (UI_FADE_OUT_MS, () => {makeUp()})
     }
   }
 
