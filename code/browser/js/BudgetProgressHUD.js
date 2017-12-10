@@ -34,6 +34,7 @@ class BudgetProgressHUD {
   }
 
   async _onViewChange (eventType, arg) {
+    arg .position = arg .altPosition;
     let dates = {
       start: Types .dateMY .monthStart (this._date),
       end:   Types .dateMY .monthEnd   (this._date)
