@@ -509,7 +509,7 @@ class NavigateView extends Observable  {
         onClick: (e, elements) => {
           let element = chart .getElementAtEvent (e);
           if (element .length) {
-            let html     = container .closest ('div:not(._popup)');
+            let html     = $(container .closest ('div:not(._popup)') [0]);
             let position = ui .calcPosition (graph, html, {top: 50, left: 50});
             this._notifyObservers (NavigateViewEvent .BUDGET_GRAPH_CLICK, {
               name:         name,
@@ -527,7 +527,7 @@ class NavigateView extends Observable  {
           } else {
             let pos = Chart .helpers .getRelativePosition (e, chart);
             if (pos .y > chart .chartArea .bottom) {
-              let html     = container .closest ('div:not(._popup)');
+              let html     = $(container .closest ('div:not(._popup)') [0]);
               let position = ui .calcPosition (graph, html, {top: 50, left: 50});
               let xax      = chart .scales ['x-axis-0'];
               this._notifyObservers (NavigateViewEvent .BUDGET_GRAPH_CLICK, {
