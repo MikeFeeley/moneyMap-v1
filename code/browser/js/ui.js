@@ -141,9 +141,9 @@ var ui = {
     }
 
     static init() {
-      $('body') [0] .addEventListener ('mousedown',            e => {ui .ModalStack._onMouseDown (e)},         true);
-      $('body') [0] .addEventListener ('webkitmouseforcedown', e => {ui .ModalStack._onForceClick (e)},        true);
-      $('body') [0] .addEventListener ('click',                e => {ui .ModalStack._onClick (e)},             true);
+      $('html') [0] .addEventListener ('mousedown',            e => {ui .ModalStack._onMouseDown (e)},         true);
+      $('html') [0] .addEventListener ('webkitmouseforcedown', e => {ui .ModalStack._onForceClick (e)},        true);
+      $('html') [0] .addEventListener ('click',                e => {ui .ModalStack._onClick (e)},             true);
     }
 
     static setBlocked (isBlocked) {

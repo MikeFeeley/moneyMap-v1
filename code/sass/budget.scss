@@ -337,7 +337,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
   }
 }
 
-._Navigate {  
+._Navigate {
   div._TransactionHUD, div._BudgetProgressHUD {
     margin-left: 20px;
     width: auto;
@@ -421,14 +421,8 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
         font-weight: 100;
       }
     }
-    > ._container {
-      > div {padding: 20px 20px 100px 20px}
-      > div > ._progressGraph > div {
-        > div:not(:first-child) {
-          margin-right: 40px;
-          margin-left: 40px;
-        }
-      }
+    > ._container > div {
+      padding: 20px 20px 100px 20px;
     }
   }
 
