@@ -33,7 +33,7 @@ var ui = {
         let maxWidth        = sp .clientWidth;
         let scrollBottom    = sp .scrollTop  + maxHeight;
         let scrollRight     = sp .scrollLeft + maxWidth;
-        let scrollTopMargin = $('.contents') .css('margin-top') .slice (0, -2);
+        let scrollTopMargin = Number ($('.contents') .css('margin-top') .slice (0, -2));
 
         // get position of e relative to scrollParent
         let calcPosition = e => {
