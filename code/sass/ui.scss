@@ -496,7 +496,7 @@ div._systemStatus {
 }
 
 ._user_menu_head {
-  position:   absolute;
+  position:   fixed;
   z-index:    9999;
   color:      white;
   background: #008ee6;
@@ -522,7 +522,7 @@ div._systemStatus {
 
 ._user_menu, ._preferences_menu {
   @include user-select (none);
-  position: absolute;
+  position: fixed;
   z-index: 9999;
   padding-top: 6px;
   padding-bottom: 6px;
@@ -583,7 +583,7 @@ div._systemStatus {
 body > ._preferences_menu_head {
   padding-left: 8px;
   margin-left: 6px;
-  position:   absolute;
+  position:   fixed;
   z-index:    9999;
   color:      white;
   background: #008ee6;
