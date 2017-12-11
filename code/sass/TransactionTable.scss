@@ -594,14 +594,11 @@ $import-sidebar-width: 220px;
   height:     100%;
   width:      100%;
   clear:      both;
-  overflow-y: scroll;
   > ._AccountBalanceView {
     &::-webkit-scrollbar { width: 0 !important };
     overflow-y: scroll;
   }
   > ._import {
-    height: 100%;
-    overflow-y: scroll;
     clear: both;
     margin-left: 10px;
     padding-left: 8px;
