@@ -29,10 +29,11 @@ var ui = {
       if (sp) {
 
         // get scroll area boundaries
-        let maxHeight    = document .documentElement .clientHeight - sp .offsetTop;
-        let maxWidth     = sp .clientWidth;
-        let scrollBottom = sp .scrollTop  + maxHeight;
-        let scrollRight  = sp .scrollLeft + maxWidth;
+        let maxHeight       = document .documentElement .clientHeight - sp .offsetTop;
+        let maxWidth        = sp .clientWidth;
+        let scrollBottom    = sp .scrollTop  + maxHeight;
+        let scrollRight     = sp .scrollLeft + maxWidth;
+        let scrollTopMargin = $('.contents') .css('margin-top') .slice (0, -2);
 
         // get position of e relative to scrollParent
         let calcPosition = e => {
@@ -51,8 +52,8 @@ var ui = {
 
         // calculate scroll delta
         let scrollY = Math .max (sp .offsetTop + sp .clientTop, eBottom - scrollBottom);
-        if (eTop < sp .scrollTop + scrollY)
-          scrollY = eTop - sp .scrollTop - $('.contents') .css('margin-top') .slice (0, -2);
+        if (eTop < sp .scrollTop + scrollY + scrollTopMargin)
+          scrollY = eTop - sp .scrollTop - scrollTopMargin;
         scrollY -= sp .offsetTop + sp .clientTop;
         let scrollX = Math .max (sp .offsetLeft + sp .clientLeft, eRight - scrollRight);
         if (eLeft < sp .scrollLeft + scrollX)
