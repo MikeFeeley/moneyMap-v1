@@ -201,7 +201,7 @@ body {
         margin-top: 16px;
       }
       &:not(:first-child) {
-        margin-top: 48px;
+        margin-top: $tab-bar-height;
       }
     }
   }
@@ -217,7 +217,7 @@ body {
         margin-top: 80px;
       }
       &:nth-child(1) {
-        margin-top: 20px + 48px;
+        margin-top: 20px + $tab-bar-height;
       }
     }
     ._text {
@@ -472,7 +472,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
         margin-top: 80px;
       }
       &#_Navigate_0 {
-        margin-top: 20px + 48px;
+        margin-top: 20px + $tab-bar-height;
       }
     }
     ._text {
@@ -487,7 +487,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
       margin-left: 8px;
     }
     > div:not(._popup):not(._budgetYearGraph) {
-      margin-top:    20px + 48px;
+      margin-top:    20px + $tab-bar-height;
       margin-bottom: 100px;
     }
     > ._budgetYearGraph {
@@ -506,7 +506,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
       > ._graph {
         width: 85%;
       }
-      margin-top: 4px + 48px;
+      margin-top: 4px + $tab-bar-height;
       margin-bottom: 32px;
     }
     ._budgetTable > div > table > tbody > tr > td, ._activityTable > div > table > tbody > tr > td {
@@ -721,7 +721,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
 
 ._IndexedListViewWithHead {
   position: absolute;
-  height:   calc(100vh - 48px);
+  height:   calc(100vh - #{$tab-bar-height});
   width: 100%;
   overflow: hidden;
   > ._index {

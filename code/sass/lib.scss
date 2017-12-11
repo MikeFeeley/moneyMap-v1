@@ -1,5 +1,7 @@
 $drop-shadow: 0px 0px 8px rgba(0,0,0,.4);
 
+$tab-bar-height: 48px;
+
 $left-background: #fafafa;
 $left-border: 1px solid #ddd;
 $left-color: #888;
@@ -153,7 +155,7 @@ table > tbody > tr > td > ._field > div > ._content {
   overflow-y: scroll;
   right: 0px;
   z-index: 1;
-  height: calc(100% - 48px);
+  height: calc(100% - #{$tab-bar-height});
   background-color: rgba(80,80,80,.4);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
