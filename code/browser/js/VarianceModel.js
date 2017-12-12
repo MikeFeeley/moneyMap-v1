@@ -236,6 +236,7 @@ class VarianceModel extends Observable {
    *    If skip != null then actuals are allocated proportionally else they go first to other children
    */
   _getAmountUp (cat, period, skip) {
+
     if (cat .parent) {
       // compute unallocated amount to distribute to children
       var amount = this._getAmount (cat .parent, period, skip);
@@ -267,6 +268,7 @@ class VarianceModel extends Observable {
         var children = (cat .parent .children || []) .map (child => {
           return {cat: child, amount: this._getAmountDown (child, period, skip)};
         });
+
         // compute total current budget, prorating year if not skip (i.e., proportional alloc)
         var monthsInPeriod = Types .date._difMonths (period .cur .end, period .prev .start);
         // compute children's budget, actual and available
