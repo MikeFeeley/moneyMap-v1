@@ -439,6 +439,8 @@ class NavigateView extends Observable  {
           for (let ds of datasets)
             if (ds .stack)
               height [ds .stack - 1] [i] = (height [ds .stack - 1] [i] || 0) + ds .data [i];
+            else
+              height [0] [0] = (height [0] [0] || 0) + ds .data [i];
         let max = height .reduce ((m,h) => {return Math .max (m, h .reduce ((m,v) => {return Math .max (m, v)}, 0))}, 0);
         let minResolution = max / 50;
         for (let ds of datasets)
