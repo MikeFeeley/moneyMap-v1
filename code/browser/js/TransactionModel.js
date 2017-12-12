@@ -107,7 +107,7 @@ class TransactionModel extends Model {
     if (dates && categories !== undefined) {
       cacheHit = queries .find (q => {
         return (dates .start >= q .start && dates .end <= q .end)  &&
-          (! q .categories || (categories && this._isSubset (categories, q .categories)))
+          (! q .category || (categories && this._isSubset (categories, q .category .$in)))
       }) != null;
       if (! cacheHit && loadOnMiss && ! Array .from (Object .keys (query)) .find (p => {return p != 'date' && p != 'category' && p != '$options'})) {
         let matched, infill;
@@ -115,18 +115,18 @@ class TransactionModel extends Model {
           // do real query only on part of range not already covered by previous query (if match)
           if (dates .start == q .start && dates .end == q .end) {
             // same date range, additional categories
-            infill  = {date: {$gte: dates .start, $lte: dates .end}, categories: categories && this._subtract (categories, q .categories)}
+            infill  = {date: {$gte: dates .start, $lte: dates .end}, category: {$in: categories && this._subtract (categories, q .categories)}}
             matched = true;
             break;
           } else if ((! categories && ! q .categories) || (categories && q .categories && this._isEqual (categories, q .categories))) {
             // same categories, extending date range
             if (dates .start < q .start && Types .date .subDays (q .start, dates .end) <= 1) {
-              infill   = {date: {$gte: dates .start, $lt: q.start}, categories: q .categories};
+              infill   = {date: {$gte: dates .start, $lt: q.start}, category: {$in: q .categories}};
               q .start = dates .start;
               queries .sort ((a,b) => {return a .start < b .start? -1: a .start == b .start? 0: 1})
               matched  = true;
             } if (Types .date .subDays (dates .start, q .end) <= 1 && dates .end > q .end) {
-              infill  = {date: {$gt: q .end, $lte: dates .end}, categories: q .categories};
+              infill  = {date: {$gt: q .end, $lte: dates .end}, category: {$in: q .categories}};
               q .end  = dates .end;
               matched = true;
             }
