@@ -358,7 +358,7 @@ class TransactionHUD extends TransactionAndRulesTable {
     var title      = [(isOther? 'Other ': '') + cat .name + qualifier, ''];
     if (selectPayee)
       title [1] = 'Where Payee starts with "' + selectPayee + '"';
-    let p = cat .parent || {};
+    let p = cat .parent || {children: [cat]};
     let cats = (p .children || []) .concat (p .zombies || [])
       .filter (s => {return s .name == cat .name})
       .map    (s => {return getFamily ([s])})
