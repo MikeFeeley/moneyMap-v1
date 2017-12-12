@@ -221,13 +221,6 @@ $indent:       24px;
       font-weight: 100;
     }
   }
-  > ul > li > ul li > ul > li._placeholder {
-    margin-top: -1px;
-  }
-  > ul > li > ul li > ul > li._placeholder:first-child:not(:last-child),
-  > ul > li > ul li > ul > li.ui-sortable-helper:first-child + li._placeholder:not(:last-child) {
-    margin-bottom: -1px;
-  }
   > ul > li > ul > li > ul li._list_line_categoryLine,
   > ul > li > ul > div > li > ul li._list_line_categoryLine,
   > ul > div > li > ul > li > ul li._list_line_categoryLine {
