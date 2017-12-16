@@ -180,7 +180,7 @@ class BudgetProgressGraph extends Observable {
           datasetIndex:    datasetIndex,
           html:            html,
           position:        position,
-          altPosition:     ui .calcPosition (target, html, {top: 20, left: 0}),
+          altPosition:     ui .calcPosition (target, html, {top: 50, left: 50}),
           altClick:        e .webkitForce > 1 || e .altKey
         })
         e .stopPropagation();
