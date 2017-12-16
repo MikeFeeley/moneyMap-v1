@@ -14,6 +14,7 @@ var ui = {
    *     (b) that as much of the element, including upper left corner is shown, if it does not fit
    */
   scrollIntoView: (e, includeMargin = false, options = {}) => {
+    options.topBuffer = 20;
     var getScrollParent = node => {
       if (node === null || node == document)
         return null;
@@ -49,6 +50,8 @@ var ui = {
         let [eTop, eLeft] = calcPosition (e);
         let eBottom = eTop  + e .offsetHeight;
         let eRight  = eLeft + e .offsetWidth;
+        if (options .topBuffer)
+          eTop -= options .topBuffer;
 
         // calculate scroll delta
         let scrollY = Math .max (sp .offsetTop + sp .clientTop, eBottom - scrollBottom);
@@ -62,7 +65,10 @@ var ui = {
 
         // scroll
         if (scrollY != 0 || scrollX != 0)
-          $(sp) .animate ({scrollTop: (sp .scrollTop + scrollY), scrollLeft: (sp .scrollLeft + scrollX)}, 200);
+          $(sp) .animate ({
+            scrollTop: (sp .scrollTop + scrollY),
+            scrollLeft: (sp .scrollLeft + scrollX)
+          }, 200);
       }
     }, 0);
   },
