@@ -107,10 +107,12 @@ class SchedulesModel extends Observable {
     data .sort   = pos .before
       ? this._categories .get (pos .before) .sort
       : (siblings || []) .reduce ((m,s) => {return Math.max (m, s.sort)}, 0) + 1;
-    for (let s of siblings || [])
-      if (s.sort >= data .sort)
-        changes .push (mis .model .update (this._splitMI (s._id) .id, {sort: s.sort + 1}, source));
-    if (pos .inside && (! target [mis .model .parent] || target [mis .model .parent] ._id != pos .inside))
+    let sortUpdateList = (siblings || [])
+      .filter (s => {return s .sort >= data .sort})
+      .map    (s => {return {id: this._splitMI (s._id) .id, update: {sort: s.sort + 1}}});
+    if (sortUpdateList .length)
+      await mis .model .updateList (sortUpdateList, source);
+     if (pos .inside && (! target [mis .model .parent] || target [mis .model .parent] ._id != pos .inside))
       data [mis .model .parent] = this._categories .get (pos .inside);
     else if (! pos .inside && target [mis .model .parent])
       data [mis .model .parent] = null;
