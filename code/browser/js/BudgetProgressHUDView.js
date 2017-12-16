@@ -133,15 +133,15 @@ class BudgetProgressHUDView extends View {
                   this._notifyObservers (BudgetProgressHUDViewEvent .GRAPH_CLICK, {
                     name:     'all',
                     lastYear: true,
-                    html:     canvas .parent(),
-                    position: {top: canvas .position() .top + 30, left: 0},
+                    html:     this._html,
+                    position: {top: canvas .position() .top + 50, left: 50},
                     altClick: e .webkitForce > 1 || e .altKey,
                   })
                 }
                 else if (element [0]._datasetIndex == 1)
                     this._notifyObservers (BudgetProgressHUDViewEvent .BODY_CLICK, {
-                    html:     canvas .parent(),
-                    position: {top: canvas .position() .top + 30, left: 0},
+                    html:     this._html,
+                    position: {top: canvas .position() .top + 50, left: 50},
                     altClick: e .webkitForce > 1 || e .altKey
                   });
                 e .stopPropagation();
@@ -207,8 +207,8 @@ class BudgetProgressHUDView extends View {
                     name:     'months',
                     month:    month,
                     lastYear: element[0]._datasetIndex == 0,
-                    html:     canvas .parent(),
-                    position: {top: canvas .position() .top + 100, left: 0},
+                    html:     this._html,
+                    position: {top: canvas .position() .top + 50, left: 50},
                     altClick:  e .webkitForce > 1 || e .altKey,
                   })
                   e.stopPropagation();
@@ -365,7 +365,7 @@ class BudgetProgressCategoryTitleView extends View {
       if (! $(e .target) .hasClass ('_content'))
         this._parentView._notifyObservers (BudgetProgressHUDViewEvent .BODY_CLICK, {
           html:     this._parentView .getHtml(),
-          position: {top: 40, left: 20},
+          position: {top: 50, left: 50},
           altClick: e .originalEvent .webkitForce > 1 || e .originalEvent .altKey
         });
       e .stopPropagation();

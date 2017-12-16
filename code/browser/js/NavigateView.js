@@ -513,6 +513,7 @@ class NavigateView extends Observable  {
           if (element .length) {
             let html     = $(container .closest ('div:not(._popup)') [0]);
             let position = ui .calcPosition (graph, html, {top: 50, left: 50});
+            console.log('aaa', html, position, html);
             this._notifyObservers (NavigateViewEvent .BUDGET_GRAPH_CLICK, {
               name:         name,
               id:           datasets [element [0] ._datasetIndex] .id,
