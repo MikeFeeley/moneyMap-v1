@@ -193,6 +193,7 @@ class ListView extends SortedTupleView {
         opacity:              0.75,
         protectRoot:          this._options .protectRoot,
         toleranceElement:     '> div',
+        typePrefix:           '_list_line',
         stop: (e,ui) => {
           if (Math .abs (ui .originalPosition .top - ui .position .top) >= 16 || Math .abs (ui .originalPosition .left - ui .position .left) >= 16) {
             var item = $(ui .item);
