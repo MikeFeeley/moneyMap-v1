@@ -136,7 +136,6 @@ class ImportedTransactionTableView extends TransactionTableView {
   }
 
   removeRuleBox (rulebox, field) {
-    console.log('remove', rulebox, field)
     let tr = rulebox .closest ('tr');
     if (tr .length) {
       if (! field)

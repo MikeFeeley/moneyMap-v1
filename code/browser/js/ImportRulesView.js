@@ -363,6 +363,7 @@ class ImportRulesView extends TupleView {
   }
 
   removeTuple (id) {
+    console.log('rrr');
     var table    = this._tuples .get (id) .closest ('table');
     var rule     = table .closest ('._rule');
     if ($(document.activeElement) .closest ('._rule') [0] == rule [0]) {
