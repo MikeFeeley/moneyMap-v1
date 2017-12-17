@@ -68,6 +68,8 @@ class ImportRulesView extends TupleView {
     super (name, fields);
     this._rules = new Map();
     this._categoryPicker = new CategoryPicker (accounts, variance);
+    this._TITLE = 'Import Rule for this Transaction';
+    this._NO_MATCH_TITLE = 'Import Rule Does not Match this Transaction'
   }
 
   delete() {
@@ -108,7 +110,7 @@ class ImportRulesView extends TupleView {
   addRule (id) {
     var rule   = $('<fieldset>', {class: '_rule'}) .appendTo (this._html);
     var legend = $('<legend>') .appendTo (rule);
-    $('<span>',   {html: 'Import Rules for this Transation '}) .appendTo (legend);
+    $('<span>',   {html: this._TITLE + ' '}) .appendTo (legend);
     $('<span>',   {html: '&mdash;'}) .appendTo (legend);
     this._addButton (id, '_updateButton', 'Modify', ImportRulesViewEvent .CREATE_UPDATE, legend);
     this._addButton (id, '_splitButton',  'Split',  ImportRulesViewEvent .CREATE_SPLIT,  legend);
@@ -127,7 +129,7 @@ class ImportRulesView extends TupleView {
   setPredicateIsMatch (id, isMatch) {
     var rule = this._rules .get (id);
     rule [isMatch? 'removeClass': 'addClass'] ('_nomatch');
-    rule .find ('> legend > span') .first() .html (isMatch? 'Rule ': 'Rule &mdash; Does Not Match this Transaction ')
+    rule .find ('> legend > span') .first() .html ((isMatch? this._TITLE: this._NO_MATCH_TITLE) + ' ')
   }
 
   show() {

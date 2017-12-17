@@ -227,9 +227,6 @@ table._TransactionAndRulesTable {
     table {
       border-collapse: collapse;
     }
-    ._rule > fieldset:nth-child(2) {
-    }
-
     fieldset {
       fieldset {
         background: #fcfcfc;
@@ -250,7 +247,7 @@ table._TransactionAndRulesTable {
           opacity: 0.5;
           border: 1px solid #e00;
           > legend > span {
-            color: #e00;
+            color: #e00000!important;
           }
         }
         border: 1px solid #bbb;
