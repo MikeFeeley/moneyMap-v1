@@ -246,7 +246,10 @@ div._systemStatus {
   width: 940px;
   margin-left: auto;
   margin-right: auto;
-  margin-top: 32px + $tab-bar-height;
+  margin-top: 32px + $tab-bar-height
+
+
+;
   > ._group {
     margin-top: 32px;
     margin-bottom: 32px;

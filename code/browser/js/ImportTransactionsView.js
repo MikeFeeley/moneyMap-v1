@@ -122,18 +122,25 @@ class ImportedTransactionTableView extends TransactionTableView {
   }
 
   getRuleBox (id) {
-    return this._getTuple (id) .next ('tr') .find ('._rulebox');
+    let rulebox = this._getTuple (id) .next ('tr') .find ('._rulebox');
+    let field   = rulebox .closest ('tr') .prev ('tr') .find ('._field') .data ('field');
+    return [rulebox, field];
   }
 
   addRuleBox (id) {
-    this._getTuple (id) .find ('._field') .data ('field') .setRuleShowing (true);
-    return $('<div>', {class: '_rulebox'}) .appendTo ($('<td>', {prop: {colspan: 8}}) .appendTo ($('<tr>') .insertAfter (this._getTuple (id))));
+    let tuple = this._getTuple (id);
+    let cols = tuple .closest('table') .find ('thead') .find ('th') .length;
+    let field = tuple .find ('._field') .data ('field');
+    field .setRuleShowing (true);
+    return $('<div>', {class: '_rulebox'}) .appendTo ($('<td>', {prop: {colspan: cols}}) .appendTo ($('<tr>') .insertAfter (tuple)));
   }
 
-  removeRuleBox (id) {
-    let tr = this .getRuleBox (id) .closest ('tr');
+  removeRuleBox (rulebox, field) {
+    console.log('remove', rulebox, field)
+    let tr = rulebox .closest ('tr');
     if (tr .length) {
-      let field = tr .prev ('tr') .find ('._field') .data ('field');
+      if (! field)
+        field = tr .prev ('tr') .find ('._field') .data ('field');
       if (field)
         field .setRuleShowing (false);
       tr .remove();

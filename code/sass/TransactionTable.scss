@@ -201,33 +201,35 @@ table._TransactionAndRulesTable {
       color: white;
     }
     &._showing {
-      background-color: #bbb;
+      background-color: #33b1ff;
       color: white;
     }
   }
   ._rulebox {
-    background-color:  #bbb;
-    padding: 3px;
-    margin-top: -3px;
-    margin-bottom: 3px;
-    border-top-right-radius: 6px;
-    border-bottom-left-radius: 6px;
-    border-bottom-right-radius: 6px;
+    > div:first-child {
+      box-shadow: 0px 1px 1px rgba(0,0,0,.3), 0px 4px 4px rgba(0,0,0,.15);
+      width: 100%;
+      height: 4px;
+    }
+    > div:last-child {
+      box-shadow: 0px -1px 1px rgba(0,0,0,.3), 0px -4px 4px rgba(0,0,0,.1);
+      width: 100%;
+      height: 8px;
+      padding: -4px;
+    }
   }
   ._ImportRulesView {
-    background-color: #f0f0f0;
-    border-radius: 6px;
-    padding: 2px 3px;
+    padding-top: 10px;
+    padding-bottom: 10px;
     table {
       border-collapse: collapse;
     }
     ._rule > fieldset:nth-child(2) {
-      margin-top: -6px;
     }
     fieldset {
       fieldset {
         background: #fcfcfc;
-        margin-top: -8px;
+        //margin-top: -8px;
         legend {
           background: #fcfcfc;
             span {
@@ -239,7 +241,6 @@ table._TransactionAndRulesTable {
         position: relative;
         padding-left: 3px;
         padding-right: 3px;
-        margin-top: 8px;
         margin-bottom: 8px;
         &._nomatch {
           opacity: 0.5;
@@ -248,16 +249,19 @@ table._TransactionAndRulesTable {
             color: #e00;
           }
         }
-        &:not(._nomatch) {
-          border: 1px solid #bbb;
-          > legend > span {
-            color: #666;
+        border: 1px solid #bbb;
+        > legend {
+          > span {
+            font-size: 24px;
+            vertical-align: 20%;
+            font-weight: 100;
+            color: #bbb;
+            &:first-child {
+              color: #33b1ff;
+              font-weight: 300
+            }
           }
-        }
-        legend {
-          span   {font-size: 24px; vertical-align: 20%}
-          *:not(button)      {color: #666}
-          button {vertical-align: 50%}
+          button {vertical-align: 70%}
         }
       }
       &._part {
@@ -269,15 +273,7 @@ table._TransactionAndRulesTable {
           vertical-align: 24%;
        }
       }
-      legend * {
-        font-weight: 100;
-        button {
-          margin-left: 2px;
-          color: #bbb;
-          vertical-align: 40%;
-        }
-      }
-      > form > table > tbody > tr {
+      table > tbody > tr {
         > td {
           padding: 0px 2px;
         }
@@ -289,7 +285,6 @@ table._TransactionAndRulesTable {
       }
     }
     table._predicate {
-      margin-top: -8px;
       margin-left: -28px;
       margin-right: -28px;
       tr:nth-child(2), tr:nth-child(3) {
@@ -312,7 +307,6 @@ table._TransactionAndRulesTable {
       }
     }
     table._update {
-      margin-top: -8px;
       margin-bottom: -4px;
       margin-left: -28px;
       margin-right: -28px;
@@ -337,7 +331,6 @@ table._TransactionAndRulesTable {
       }
     }
     table._split {
-      margin-top: -8px;
       margin-bottom: -4px;
       margin-left: -28px;
       margin-right: -28px;
@@ -362,7 +355,6 @@ table._TransactionAndRulesTable {
       }
     }
     table._add {
-      margin-top: -8px;
       margin-bottom: -4px;
       margin-left: -28px;
       margin-right: -28px;

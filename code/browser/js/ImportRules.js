@@ -277,6 +277,11 @@ class ImportRules extends TuplePresenter {
       this._addRule (rule);
     if (rules .length == 0)
       await this._createRule();
+    this._view .show();
+  }
+
+  delete (onDelete) {
+    this._view .remove (onDelete);
   }
 
   addHtml (tran, toHtml) {

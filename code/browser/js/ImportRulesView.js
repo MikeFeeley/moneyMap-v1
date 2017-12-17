@@ -108,7 +108,7 @@ class ImportRulesView extends TupleView {
   addRule (id) {
     var rule   = $('<fieldset>', {class: '_rule'}) .appendTo (this._html);
     var legend = $('<legend>') .appendTo (rule);
-    $('<span>',   {html: 'Rule '}) .appendTo (legend);
+    $('<span>',   {html: 'Import Rules for this Transation '}) .appendTo (legend);
     $('<span>',   {html: '&mdash;'}) .appendTo (legend);
     this._addButton (id, '_updateButton', 'Modify', ImportRulesViewEvent .CREATE_UPDATE, legend);
     this._addButton (id, '_splitButton',  'Split',  ImportRulesViewEvent .CREATE_SPLIT,  legend);
@@ -130,8 +130,27 @@ class ImportRulesView extends TupleView {
     rule .find ('> legend > span') .first() .html (isMatch? 'Rule ': 'Rule &mdash; Does Not Match this Transaction ')
   }
 
+  show() {
+    if (this._toHtml)
+      this._toHtml .slideDown (400);
+  }
+
+  remove (onDelete) {
+    if (this._toHtml)
+      this._html .slideUp (400, () => {
+        this._toHtml .empty();
+        this._toHtml = null;
+        if (onDelete)
+          onDelete();
+      })
+  }
+
   addHtml (toHtml) {
+    this._toHtml = toHtml;
+    toHtml .css ({display: 'none'})
+    $('<div>', {html: '&nbsp'}) .appendTo (toHtml);
     this._html = $('<div>', {class: this._name}) .appendTo (toHtml);
+    $('<div>', {html: '&nbsp'}) .appendTo (toHtml);
     this._html .click (e => {
       return false;
     });
@@ -201,7 +220,7 @@ class ImportRulesView extends TupleView {
   }
 
   close() {
-    this._html .remove();
+    this .remove();
   }
 
   setPredicateFieldsEnabled (data) {

@@ -130,7 +130,7 @@ class TransactionAndRulesTable extends TransactionTable {
     this._title            = title;
     this._hasTitle         = title != null;
     this._importRulesModel = parent ._importRulesModel;
-    this._importRules      = new Map();
+    this._openRule;
     this._importRulesModelObserver = this._importRulesModel .addObserver (this, this._onRulesModelChange);
     this._accounts = parent._accounts;
     this._variance = parent._variance;
@@ -178,13 +178,12 @@ class TransactionAndRulesTable extends TransactionTable {
       if (! doc .imported && this._parent._lastImport)
         this._parent._lastImport .newBatch (doc .importTime)
     }
-    var ir = this._importRules .get (doc._id);
-    if (ir) {
+    if (this._openRule && this._openRule .id == doc._id) {
       if (eventType == ModelEvent .UPDATE)
-        ir .updateTran (doc);
+        this._openRule .rule .updateTran (doc);
       else if (eventType == ModelEvent .REMOVE) {
-        ir .close();
-        this._importRules .delete (doc._id);
+        this._openRule .rule .close();
+        this._openRule = null;
       }
     }
     super._onModelChange (eventType, doc, arg, source);
@@ -204,25 +203,32 @@ class TransactionAndRulesTable extends TransactionTable {
   }
 
   _toggleRule (id) {
-    var tran = this._model .refine (t => {return t._id==id}) [0];
-    var ir   = this._importRules .get (id);
-    var closeRules = () => {
-      ir .delete();
-      this._importRules .delete (id);
-      this._view .removeRuleBox (id);
-      this._view .updateField (id, 'rules', this._importRulesModel .getMatchingRules (tran) .length > 0)
+    let close = (cid, onClose) => {
+      let finish = () => {
+        this._openRule = null;
+        this._view .removeRuleBox (rulebox, field);
+        this._view .updateField   (cid, 'rules', this._importRulesModel .getMatchingRules (tran) .length > 0)
+        if (onClose)
+          onClose();
+      }
+      let tran = this._model .refine (t => {return t._id == cid}) [0];
+      let [rulebox, field] = this._view .getRuleBox (cid);
+      this._openRule .rule .delete (finish);
     }
-    if (ir)
-      closeRules();
-    else {
-      for ([id, ir] of this._importRules)
-        closeRules()
-      this._importRules .clear();
-      ir = new ImportRules (this._importRulesModel, tran, this._accounts, this._variance, closeRules);
-      this._importRules .set (tran._id, ir);
-      this._view .updateField (tran._id, 'rules', true)
-      ir .addHtml (tran, this._view .addRuleBox (tran._id));
+    let open = () => {
+      let tran = this._model .refine (t => {return t._id == id}) [0];
+      this._view .updateField (tran._id, 'rules', true);
+      let rulebox = this._view .addRuleBox (tran._id);
+      this._openRule = {id: tran._id, rule: new ImportRules (this._importRulesModel, tran, this._accounts, this._variance, () => {close (id)})};
+      this._openRule .rule .addHtml (tran, rulebox);
     }
+    if (this._openRule && this._openRule .id == id)
+      close (id);
+    else if (this._openRule) {
+      let [rulebox, field] = this._view .getRuleBox (this._openRule .id);
+      close (this._openRule .id, open);
+    } else
+      open();
   }
 
   async addHtml (toHtml) {
