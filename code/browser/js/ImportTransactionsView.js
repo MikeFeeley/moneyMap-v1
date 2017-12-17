@@ -123,7 +123,7 @@ class ImportedTransactionTableView extends TransactionTableView {
 
   _getTuple (id) {
     let tuple = super._getTuple (id);
-    if (tuple .hasClass ('_group'))
+    if (tuple && tuple .hasClass ('_group'))
       tuple = $(tuple .nextAll ('._last') [0]);
     return tuple;
   }
