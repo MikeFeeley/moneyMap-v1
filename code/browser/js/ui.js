@@ -5,6 +5,7 @@ const UI_TOOL_TIP_FADE_MS      = 120;
 const UI_TOOL_TIP_DURATION_MS  = 8000;
 const UI_FIELD_TIP_DURATION_MS = 5000;
 const UI_FIELD_TIP_FADE_OUT_MS = 1000;
+const UI_RULE_SLIDE_MS         = 300;
 
 var ui = {
 

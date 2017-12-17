@@ -123,7 +123,7 @@ class ImportRules extends TuplePresenter {
     var trans = (await this._model .getTransactionModel() .find ({$or: [{category: null}, {category: ''}]}))
       .sort ((a,b) => {return a.date < b.date? -1: a.date == b.date? (a._seq < b.seq? -1: 1): 1});
     this._view .showApplyPopup (id, new ApplyToTable (this._model .getMatchingTransactions (rule, trans), this, (ids) => {
-      async (this, handleSelect) (ids);
+      (async () => {await handleSelect (ids)}) ();
     }));
   }
 
@@ -160,7 +160,6 @@ class ImportRules extends TuplePresenter {
   }
 
   close() {
-    this._view .close();
     this._onClose();
   }
 

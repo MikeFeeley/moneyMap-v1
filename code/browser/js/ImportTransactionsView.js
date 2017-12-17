@@ -121,8 +121,16 @@ class ImportedTransactionTableView extends TransactionTableView {
     this._html .find ('button.' + name) .prop ('disabled', ! isEnabled);
   }
 
+  _getTuple (id) {
+    let tuple = super._getTuple (id);
+    if (tuple .hasClass ('_group'))
+      tuple = $(tuple .nextAll ('._last') [0]);
+    return tuple;
+  }
+
   getRuleBox (id) {
-    let rulebox = this._getTuple (id) .next ('tr') .find ('._rulebox');
+    let tuple = this._getTuple (id);
+    let rulebox = tuple .next ('tr') .find ('._rulebox');
     let field   = rulebox .closest ('tr') .prev ('tr') .find ('._field') .data ('field');
     return [rulebox, field];
   }

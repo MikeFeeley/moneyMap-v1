@@ -205,15 +205,15 @@ class TransactionAndRulesTable extends TransactionTable {
   _toggleRule (id) {
     let close = (cid, onClose) => {
       let finish = () => {
-        this._openRule = null;
         this._view .removeRuleBox (rulebox, field);
         this._view .updateField   (cid, 'rules', this._importRulesModel .getMatchingRules (tran) .length > 0)
-        if (onClose)
-          onClose();
       }
       let tran = this._model .refine (t => {return t._id == cid}) [0];
       let [rulebox, field] = this._view .getRuleBox (cid);
       this._openRule .rule .delete (finish);
+      this._openRule = null;
+      if (onClose)
+        onClose();
     }
     let open = () => {
       let tran = this._model .refine (t => {return t._id == id}) [0];

@@ -20,9 +20,9 @@ class ImportRulesView extends TupleView {
     ];
     var accFormat = new ViewFormatOptions (
       value => {return (accounts .getAccounts() .find (a => {return a._id  == value}) || {}) .name},
-      view  => {return (accounts .getAccounts() .find (a => {return a.name == view})  || {}) ._id},
+      view  => {return (accounts .getAccounts() .find (a => {return a.name == view && a .type == AccountType .ACCOUNT && a .cashFlow}) || {}) ._id},
       value => {},
-      ()    => {return accounts .getAccounts() .map  (a => {return a.name})}
+      ()    => {return accounts .getAccounts() .filter (a => {return a .type == AccountType .ACCOUNT && a .cashFlow}) .map (a => {return a.name})}
     );
     var cats      = variance .getBudget() .getCategories();
     var catFormat = new ViewFormatOptions (
@@ -132,17 +132,19 @@ class ImportRulesView extends TupleView {
 
   show() {
     if (this._toHtml)
-      this._toHtml .slideDown (400);
+      this._toHtml .slideDown ({duration: UI_RULE_SLIDE_MS, queue: false});
   }
 
   remove (onDelete) {
-    if (this._toHtml)
-      this._html .slideUp (400, () => {
-        this._toHtml .empty();
-        this._toHtml = null;
+    if (this._toHtml) {
+      let toHtml   = this._toHtml;
+      this._toHtml = null;
+      toHtml .slideUp ({duration: UI_RULE_SLIDE_MS, queue: false, complete: () => {
+        toHtml .empty();
         if (onDelete)
           onDelete();
-      })
+      }});
+    }
   }
 
   addHtml (toHtml) {
@@ -217,10 +219,6 @@ class ImportRulesView extends TupleView {
       tr .removeClass ('hidden')
     else
       tr .addClass ('hidden');
-  }
-
-  close() {
-    this .remove();
   }
 
   setPredicateFieldsEnabled (data) {
@@ -363,7 +361,6 @@ class ImportRulesView extends TupleView {
   }
 
   removeTuple (id) {
-    console.log('rrr');
     var table    = this._tuples .get (id) .closest ('table');
     var rule     = table .closest ('._rule');
     if ($(document.activeElement) .closest ('._rule') [0] == rule [0]) {
