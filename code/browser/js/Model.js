@@ -325,13 +325,14 @@ class _Collection extends Observable {
       _tid     = 1;
       _undoLog = [];
       _redoLog = [];
-      $('body') .keydown (e => {
+      document .documentElement .addEventListener ('keydown', e => {
         if (e .keyCode == 90 && e .metaKey) {
           (async () => {await (e.shiftKey? _Collection._redo: _Collection._undo) ()})();
+          e .stopPropagation();
           e .preventDefault();
           return false;
         }
-      })
+      }, false);
     }
   }
 

@@ -198,6 +198,29 @@ class ViewField {
       this.clearTooltip
     );
     this._html .on ('blur', 'input', this.clearTooltip);
+    this._html [0] .addEventListener ('keydown', e => {
+      if (e .keyCode == 90 && e .metaKey && ! e .shiftKey) {
+        let stopPropagation = false;
+        if (this._value != this .get()) {
+          this .reset();
+          stopPropagation = true;
+        } else {
+          let errors = this._html .closest ('.contents') .find ('._field') .toArray()
+            .map    (f => {return $(f) .data ('field')})
+            .filter (f => {return f && f .hasError()});
+          if (errors .length) {
+            for (let f of errors)
+              f .reset();
+            stopPropagation = true;
+          }
+        }
+        if (stopPropagation) {
+          e .preventDefault();
+          e .stopPropagation();
+          return false;
+        }
+      }
+    }, true);
   }
   _handleChange (e) {
     var value = this .get();
@@ -226,7 +249,7 @@ class ViewField {
     this._html .find ('._toolTip') .removeClass ('_error');
   }
   hasError() {
-    return this._html .hasClass ('_error');
+    return this._html && this._html .hasClass ('_error');
   }
   _getTooltip() {
     return this._toolTip;
