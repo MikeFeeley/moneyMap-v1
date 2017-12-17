@@ -68,8 +68,8 @@ class ImportRulesView extends TupleView {
     super (name, fields);
     this._rules = new Map();
     this._categoryPicker = new CategoryPicker (accounts, variance);
-    this._TITLE = 'Import Rule for this Transaction';
-    this._NO_MATCH_TITLE = 'Import Rule Does not Match this Transaction'
+    this._TITLE = 'Import Rule';
+    this._NO_MATCH_TITLE = 'Import Rule &dash; Does Not Match this Transaction'
   }
 
   delete() {
