@@ -187,8 +187,11 @@ table._ImportTransactionsTable._TransactionAndRulesTable._needsAttention {
 }
 
 table._TransactionAndRulesTable {
-  > tbody > tr:not(._tuple) > td {
-    height: auto!important;
+  > tbody > tr:not(._tuple) {
+    background-color: #fdfdfd!important;
+    > td {
+      height: auto!important;
+    }
   }
   td ._field_rules {
     * {
