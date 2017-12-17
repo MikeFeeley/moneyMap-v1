@@ -36,7 +36,7 @@ class BudgetProgressGraph extends Observable {
     var green           = '#88ff88';
     var darkGreen       = '#66dd66';
     var grey            = '#dddddd';
-    var clear           = '#f8f8f8';
+    var clear           = '#fcfcfc';
     var greyGreen       = '#b9d0b9';
     var darkGreyGreen   = '#a3c2a3';
     var lightGreyGreen  = '#d1e0d1';
