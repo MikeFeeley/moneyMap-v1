@@ -229,13 +229,11 @@ table._TransactionAndRulesTable {
     padding-bottom: 10px;
     table {
       border-collapse: collapse;
+      position: relative;
     }
     fieldset {
       fieldset {
-        //background: #fcfcfc;
-        //margin-top: -8px;
         legend {
-          //background: #fcfcfc;
             span {
               padding-left: 4px; padding-right: 4px;
             }
@@ -311,7 +309,7 @@ table._TransactionAndRulesTable {
       }
     }
     table._update {
-      margin-bottom: -4px;
+      //margin-bottom: -4px;
       margin-left: -28px;
       margin-right: -28px;
       > tbody > tr:nth-child(2) {
@@ -335,7 +333,7 @@ table._TransactionAndRulesTable {
       }
     }
     table._split {
-      margin-bottom: -4px;
+      //margin-bottom: -4px;
       margin-left: -28px;
       margin-right: -28px;
       > tbody > tr {
@@ -359,7 +357,7 @@ table._TransactionAndRulesTable {
       }
     }
     table._add {
-      margin-bottom: -4px;
+      //margin-bottom: -4px;
       margin-left: -28px;
       margin-right: -28px;
       > tbody > tr {
