@@ -287,7 +287,7 @@ table._TransactionAndRulesTable {
       }
     }
     table._predicate {
-      margin-left: -28px;
+      margin-left: -22px;
       margin-right: -28px;
       tr:nth-child(2), tr:nth-child(3) {
         > td:nth-child(1) ._content
@@ -309,8 +309,8 @@ table._TransactionAndRulesTable {
       }
     }
     table._update {
-      //margin-bottom: -4px;
-      margin-left: -28px;
+      margin-bottom: -4px;
+      margin-left: -22px;
       margin-right: -28px;
       > tbody > tr:nth-child(2) {
         /* almost same as above ... consolidate later */
@@ -333,8 +333,8 @@ table._TransactionAndRulesTable {
       }
     }
     table._split {
-      //margin-bottom: -4px;
-      margin-left: -28px;
+      margin-bottom: -4px;
+      margin-left: -22px;
       margin-right: -28px;
       > tbody > tr {
         /* almost same as above ... consolidate later */
@@ -357,8 +357,8 @@ table._TransactionAndRulesTable {
       }
     }
     table._add {
-      //margin-bottom: -4px;
-      margin-left: -28px;
+      margin-bottom: -4px;
+      margin-left: -22px;
       margin-right: -28px;
       > tbody > tr {
         /* almost same as above ... consolidate later */
