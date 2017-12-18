@@ -73,7 +73,11 @@ class Preferences extends Observable {
       .appendTo ($('body'))
       .append ($('<div>', {text: 'moneyMap'}))
       .append ($('<div>', {text: 'Version: ' + APP_VERSION}))
-      .append ($('<div>', {text: '(c) 2017 Mike Feeley (feeley@cs.ubc.ca)'}));
+      .append ($('<div>', {html: '&nbsp;'}))
+      .append ($('<div>', {html: '&nbsp;&nbsp;&nbsp;&nbsp; Thanks to:', css: {color: '#ccc'}}))
+      .append ($('<div>', {html: '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Icons: https://linearicons.com', css: {color: '#ccc'}}))
+      .append ($('<div>', {html: '&nbsp;'}))
+      .append ($('<div>', {text: '(c) 2017 Mike Feeley (feeley@cs.ubc.ca)'}))
     about.css ({top: 100, left: 50});
     ui .ModalStack .add (
       () => {return true},

@@ -160,11 +160,18 @@ div._fieldTip {
     font-weight: 300;
   }
   > ._button {
+    font-family: 'Linearicons-Free';
     margin-top: 10px;
     font-weight: 100;
-    font-size: 16px;
+    font-size: 20px;
     float: right;
     padding-bottom: 6px;
+    padding-left: 16px;
+    color: #33b1ff;
+    &._disabled {
+      color: grey;
+      opacity: .3;
+    }
   }
   > form > table {
     clear: left;

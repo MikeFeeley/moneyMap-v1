@@ -68,7 +68,8 @@ router.get('/', function(req, res, next) {
     ],
     libcsss:    [
       'jquery-ui',
-      'nouislider'
+      'nouislider',
+      'lnr-icons'
     ],
     libjss:     [
       'jquery',

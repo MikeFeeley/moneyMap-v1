@@ -112,13 +112,15 @@ class ImportedTransactionTableView extends TransactionTableView {
     this._html .find ('.' + name) .text (text);
   }
 
-  addButton (name, text, isEnabled, action) {
-    var button = $('<button>', {type: 'button', class: '_button ' + name, text: text, prop: {disabled: ! isEnabled}}) .prependTo (this._html);
-    button .click (action);
+  addButton (name, icon, isEnabled, action) {
+    let button = $('<div>', {class: '_button ' + name + ' ' + icon + ' ' + (!isEnabled? '_disabled': ''),}) .prependTo (this._html) .click(() => {
+      if (! button .hasClass ('_disabled'))
+        action (button);
+    });
   }
 
   updateButton (name, isEnabled) {
-    this._html .find ('button.' + name) .prop ('disabled', ! isEnabled);
+    this._html .find ('._button.' + name) [(isEnabled? 'remove': 'add') + 'Class'] ('_disabled');
   }
 
   _getTuple (id) {

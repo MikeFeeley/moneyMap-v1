@@ -306,8 +306,8 @@ class ImportBatchTable extends TransactionAndRulesTable {
     await this._transactionModel .find ({date: this._query .date});
     this._setBatch();
     this._view .addHtml (toHtml);
-    this._view .addButton ('_older_button', '<', this._hasOlder, () => {this._setBatch (true);  (async () => {await this .refresh()}) ()});
-    this._view .addButton ('_newer_button', '>', this._hasNewer, () => {this._setBatch (false); (async () => {await this .refresh()}) ()});
+    this._view .addButton ('_older_button', 'lnr-chevron-left', this._hasOlder, () => {this._setBatch (true);  (async () => {await this .refresh()}) ()});
+    this._view .addButton ('_newer_button', 'lnr-chevron-right', this._hasNewer, () => {this._setBatch (false); (async () => {await this .refresh()}) ()});
     await super .addHtml (toHtml);
     this._setTitle();
   }
@@ -349,8 +349,8 @@ class NeedsAttentionTable extends TransactionAndRulesTable {
 
   async addHtml (toHtml) {
     this._view .addHtml   (toHtml);
-    this._view .addButton ('_insert_buttom',  '+',       true, () => {this._addButtonPressed()});
-    this._view .addButton ('_refresh_button', 'Refresh', true, () => {(async () => {await this .refreshHtml()}) ()});
+    this._view .addButton ('_insert_buttom',  'lnr-plus-circle', true, () => {this._addButtonPressed()});
+    this._view .addButton ('_refresh_button', 'lnr-sync',  true, () => {(async () => {await this .refreshHtml()}) ()});
     await super .addHtml (toHtml);
     this._setTitle();
   }
