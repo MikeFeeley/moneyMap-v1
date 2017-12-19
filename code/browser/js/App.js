@@ -21,31 +21,11 @@ class App {
   }
 
   _setPending (transition, delay) {
-    let addText = () => {this._status .text (this._pending + ' update' + (this._pending > 1? 's': '') + ' in progress')}
     if (transition) {
-      this._status .addClass ('_pending');
-      if (this._status .text() == '')
-        addText();
-      this._status
-        .delay (delay? PENDING_INITIAL_PAUSE: 0, '_systemStatus')
-        .queue ('_systemStatus', next => {
-          this._status .animate ({
-            opacity:         1,
-            'font-size': '12px',
-            height:  '30px',
-            'line-height': '30px',
-            width:   '150px',
-            color: 'rgb(102, 128, 102)',
-            'background-color': 'rgba(153, 255, 153, 0.7)'
-          }, {
-            complete: () => {addText()},
-            duration: 400
-          });
-          next();
-        })
-        .dequeue ('_systemStatus');
-    } else
-      addText();
+      if (this._pendingTimer)
+        clearTimeout (this._pendingTimer);
+      this._pendingTimer = setTimeout (() => {this._waitingOnNetwork .css ({display: 'block'})}, PENDING_INITIAL_PAUSE);
+    }
   }
 
   _setDelayed (transition) {
@@ -82,6 +62,11 @@ class App {
         this._status .removeClass ('_pending _delayed');
         this._status .css         ({display: 'block', opacity: 0, height: '0px', width: '0px'})
       });
+      if (this._pendingTimer) {
+        clearTimeout (this._pendingTimer);
+        this._pendingTimer = null;
+      }
+      this._waitingOnNetwork .css ({display: 'none'});
     }
   }
 
@@ -200,6 +185,10 @@ class App {
       this._perT = this._tabs .addTab  ('Perspective');
       this._weaT = this._tabs .addTab  ('Wealth');
       this._accT = this._tabs .addTab  ('Accounts');
+      this._sharing = this._tabs .addIconTool ('lnr-users _sharing');
+      this._waitingOnNetwork  = this._tabs .addIconTool ('lnr-cloud _status');
+      this._waitingOnNetwork  .css ({display: 'none'});
+      this._sharing .css ({display: 'none'});
       let tl = this._tabs .addTool (this._user .getLabel (l => {
         this._tabs .changeToolName (tl, l);
       }), e => {this._user .showMenu ($(e .target))})

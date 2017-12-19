@@ -179,6 +179,10 @@ var ui = {
           return $('<div>', {html: name}) .appendTo (rightMatter) .on ('click', onClick);
         },
 
+        addIconTool (icon) {
+          return $('<div>', {class: icon}) .appendTo (rightMatter);
+        },
+
         changeToolName (tool, name) {
           tool .html (name);
         },
