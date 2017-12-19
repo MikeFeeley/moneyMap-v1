@@ -18,6 +18,17 @@ $wide-lower:   1180px;
 $narrow-upper: $medium-lower - 1px;
 $medium-upper: $wide-lower   - 1px;
 
+@mixin icon-button {
+  font-family: 'Linearicons-Free';
+  font-weight: 100;
+  font-size:   20px;
+  color: #33b1ff;
+  &._disabled {
+    color: grey;
+    opacity: .3;
+  }
+}
+
 table > tbody > tr > td > ._field > div > ._content {
   color: #666;
 }

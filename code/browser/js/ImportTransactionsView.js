@@ -34,12 +34,28 @@ class ImportTransactionsView extends View {
     $('<div>', {class: name, text: text}) .appendTo (this._import);
   }
 
-  updateText (name, text) {
-    $('.' + name) .text (text);
+  updateImportStatus (message) {
+    let popup        = $('<div>', {class: '_import_status_popup'}) .appendTo ($('body'));
+    let popupContent = $('<div>', {class: '_popupContent'}) .appendTo (popup);
+    $('<div>', {text: 'Transaction File Imported'}) .appendTo (popupContent);
+    for (let m of [] .concat (message))
+      $('<div>', {text: m}) .appendTo (popupContent);
+    ui .ModalStack .add (
+      e  => {return e && ! $.contains (popup .get (0), e .target) && popup .get (0) != e .target},
+      () => {popup .fadeOut (UI_FADE_OUT_MS, () => {popup .remove()})},
+      true
+    );
   }
 
   async addTable (table) {
     await table .addHtml (this._import);
+  }
+
+  addButton (name, icon, isEnabled, action) {
+    let button = $('<div>', {class: '_button ' + name + ' ' + icon + ' ' + (!isEnabled? '_disabled': ''),}) .appendTo (this._import) .click(() => {
+      if (! button .hasClass ('_disabled'))
+        action (button);
+    });
   }
 }
 
@@ -158,8 +174,26 @@ class ImportedTransactionTableView extends TransactionTableView {
 }
 
 class NeedsAttentionTableView extends ImportedTransactionTableView {
+
+  constructor (name, columns, options, accounts, variance, toggleRule, selectBatch) {
+    super (name, columns, options, accounts, variance, toggleRule);
+    this._selectBatch = selectBatch;
+  }
+
+  addHtml (toHtml) {
+    super .addHtml (toHtml);
+    if (this._selectBatch)
+      this._html .find ('tbody') .on ('click', 'td:nth-child(9)', e => {
+        let field = $(e .currentTarget) .find ('._field') .data ('field');
+        if (field)
+          this._selectBatch (field._value);
+        e.stopImmediatePropagation();
+        return false;
+      })
+  }
+
   _getFields (fields) {
-    return super._getFields (fields) .concat (new ViewLabel ('importTime', ViewFormats ('timeShortHM')));
+    return super._getFields (fields) .concat (new ViewLabel ('importTime', ViewFormats ('timeShort')));
   }
 
   _getHeaders (headers) {

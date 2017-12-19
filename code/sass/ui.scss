@@ -67,7 +67,6 @@ div._systemStatus {
     ._title {
       font-size: 32px;
       color: #33b1ff;
-      font-width: 100;
       margin-bottom: 8px;
     }
     padding: 0px;
@@ -96,7 +95,6 @@ div._systemStatus {
           > ._field > div ._content {
             font-size: 24px;
             color: #33b1ff;
-            font-width: 100;
             border: 0px solid white;
           }
           margin-bottom: 2px;
@@ -210,7 +208,6 @@ div._systemStatus {
     ._title {
       font-size: 32px;
       color: #33b1ff;
-      font-width: 100;
       margin-bottom: 8px;
     }
     > ._content._dark {background: #fafafa}
@@ -256,7 +253,6 @@ div._systemStatus {
     ._title {
       font-size: 32px;
       color: #33b1ff;
-      font-width: 100;
       margin-bottom: 8px;
     }
     > ._content._dark {background: #fafafa}
@@ -349,7 +345,7 @@ div._systemStatus {
           padding-top: 6px;
           font-size: 28px;
           color: #33b1ff;
-          font-width: 100;
+          font-weight: 100;
           padding-bottom: 8px;
         }
         > ._contentGroup {
@@ -399,7 +395,7 @@ div._systemStatus {
       > div:first-child {
         font-size: 22px;
         color: #33b1ff;
-        font-width: 100;
+        font-weight: 100;
         margin-bottom: 16px;
       }
       > form {
@@ -469,7 +465,7 @@ div._systemStatus {
     }
     > div:first-child {
       font-size: 32px;
-      font-width: 200;
+      font-weight: 200;
       color: #33b1ff;
       padding-bottom: 40px;
     }

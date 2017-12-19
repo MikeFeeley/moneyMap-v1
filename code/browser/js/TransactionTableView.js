@@ -108,7 +108,10 @@ class TransactionTableView extends TableView {
     for (let tl of tipText)
       $('<div>', {text: tl}) .appendTo (tip .children());
     setTimeout (() => {
-      tip .css (ui .calcPosition (field, html, {top: - tip .height() - 32, left: - tip .width() / 2 + field .width() / 2}));
+      let top = - tip .height() - 32;
+      if (field .offset() .top + top < 32)
+        top = 32;
+      tip .css (ui .calcPosition (field, html, {top: top, left: - tip .width() / 2 + field .width() / 2}));
       ui .scrollIntoView (tip);
       tip .fadeIn (UI_FADE_IN_MS, () => {
         let mo = ui .ModalStack .add (() => {return true}, () => {

@@ -34,10 +34,9 @@ class ImportTransactions extends Observable {
 
   async addHtml (toHtml) {
     await this._view .addHtml (toHtml);
-    this._view .addText ('_import_status', 'Drag banking files here to import them ...');
     await this .getModelData();
     this._lastImport = new ImportBatchTable (this);
-    this._attention  = new NeedsAttentionTable (this);
+    this._attention  = new NeedsAttentionTable (this, async importTime => this._lastImport._setBatchByImportTime (importTime));
     if (!this._view || ! this._view .addTable) {console.log('DEBUG', this, this._view)}
     await this._view .addTable (this._attention);
     if (!this._view || ! this._view .addTable) {console.log('DEBUG', this, this._view)}
@@ -94,7 +93,7 @@ class ImportTransactions extends Observable {
     var is = ic? ic + ' transaction' + (ic>1? 's': '') + ' imported': '';
     var ds = dc? dc + ' duplicate'   + (dc>1? 's': '') + ' skipped' : '';
     var s  = is + (is .length && ds .length? '; ': '') + ds;
-    this._view .updateText ('_import_status', 'Last Import: ' + (s .length? s: 'empty file'));
+    this._view .updateImportStatus (s .length? s: 'empty file');
     if (trans .length)
       await this._lastImport .refreshToLatest();
     await this._attention .refreshHtml();
@@ -262,8 +261,25 @@ class ImportBatchTable extends TransactionAndRulesTable {
   }
 
   _setTitle() {
-    this._title = this._batch? 'Transactions Added on ' + Types .timeLongHM .toString (this._batch): 'Transactions Appear Here After They are Imported ...';
+    this._title = this._batch? 'Added on ' + Types .timeLongHM .toString (this._batch): 'Transactions Appear Here After They are Imported';
     super._setTitle();
+  }
+
+  async _setBatchByImportTime (batch) {
+    var trans = this._transactionModel .refine (t => {return t .importTime});
+    this._batch             = batch;
+    this._query .importTime = this._batch;
+    this._hasOlder          = false;
+    this._hasNewer          = false;
+    for (let t of trans) {
+      if (t .importTime < this._batch)
+        this._hasOlder = true;
+      if (t .importTime > this._batch)
+        this._hasNewer = true;
+      if (this._hasOlder && this._hasNewer)
+        break;
+    }
+    await this .refresh();
   }
 
   _setBatch (older) {
@@ -331,14 +347,14 @@ class ImportBatchTable extends TransactionAndRulesTable {
  */
 
 class NeedsAttentionTable extends TransactionAndRulesTable {
-  constructor (parent) {
+  constructor (parent, selectBatch) {
     var nameSuffix = '_needsAttention';
     var name    = '_ImportTransactionsTable _TransactionAndRulesTable' + (nameSuffix? ' ' + nameSuffix: '');
     var query = {$or: [{category: null}, {category: ''}, {description: {$regex: '[?]\s*$'}}], $options: {updateDoesNotRemove: true}};
-    var title = 'Transactions that Require Attention';
+    var title = 'Inbox - Attention Required';
     var columns = ['rules', 'date','payee','debit','credit','account','category','description','importTime'];
     var options = {};
-    var view  = new NeedsAttentionTableView (name, columns, options, parent ._accounts, parent ._variance, e => {this._toggleRule (e)});
+    var view  = new NeedsAttentionTableView (name, columns, options, parent ._accounts, parent ._variance, e => {this._toggleRule (e)}, selectBatch);
     super (query, title, parent, nameSuffix, columns, view);
   }
 
@@ -349,6 +365,7 @@ class NeedsAttentionTable extends TransactionAndRulesTable {
 
   async addHtml (toHtml) {
     this._view .addHtml   (toHtml);
+    this._view .addButton ('_down_load',      'lnr-download', false, () => {});
     this._view .addButton ('_insert_buttom',  'lnr-plus-circle', true, () => {this._addButtonPressed()});
     this._view .addButton ('_refresh_button', 'lnr-sync',  true, () => {(async () => {await this .refreshHtml()}) ()});
     await super .addHtml (toHtml);
