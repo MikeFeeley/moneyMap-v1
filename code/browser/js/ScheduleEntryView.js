@@ -55,8 +55,10 @@ class ScheduleEntryView extends ListView {
     for (let tl of tipText)
       $('<div>', {text: tl}) .appendTo (tip .children());
     setTimeout (() => {
-      let pos = ui .calcPosition (target, html, {top: - tip .height() -16, left: 0});
-      if (pos .top < 16)
+      let pos;
+      if (ui .calcPosition (target, $('body'), {top: - tip .height() -16, left: 0}) .top >= 16)
+        pos = ui .calcPosition (target, html, {top: - tip .height() -16, left: 0});
+      else
         pos = ui .calcPosition (target, html, {top: 32, left: 0})
       tip .css (pos);
       ui .scrollIntoView (tip);

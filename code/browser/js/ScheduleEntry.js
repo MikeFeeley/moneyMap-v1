@@ -163,7 +163,7 @@ class ScheduleEntry extends List {
             this._view .showNoAccountNameChange (arg .id);
             this._view .updateField (arg .id, 'name', cat .name)
             eventType = ListViewEvent .CANCELLED;
-          } else
+          } else if (cat .name)
             this._view .showTipNameChange (arg .id);
         }
         if (eventType != ListViewEvent .CANCELLED)
