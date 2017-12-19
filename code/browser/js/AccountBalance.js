@@ -7,9 +7,9 @@ class AccountBalance extends TuplePresenter {
     this._accounts         = this._actuals .getAccountsModel();
     this._categories       = this._budget .getCategories();
     this._netZeroTuples    = [];
-    this._budgetObserver   = this._budget  .addObserver (this, this._onBudgetChange);
-    this._actualsObserver  = this._actuals .addObserver (this, this._onActualsChange);
-    this._accountsObserver = this._accounts  .addObserver (this, this._onAccountsChange)
+    this._budgetObserver   = this._budget   .addObserver (this, this._onBudgetChange);
+    this._actualsObserver  = this._actuals  .addObserver (this, this._onActualsChange);
+    this._accountsObserver = this._accounts .addObserver (this, this._onAccountsChange)
   }
 
   delete() {
@@ -37,10 +37,12 @@ class AccountBalance extends TuplePresenter {
   _onModelChange (eventType, doc, arg) {
     if (arg)
       for (let p of Object .keys (arg)) {
-        let newP = p .split('_');
-        newP .splice (-1, 0, 'editable');
-        arg [newP .join ('_')] = arg [p];
-        delete arg [p];
+        if (['balance'] .includes (p)) {
+          let newP = p .split('_');
+          newP .splice (-1, 0, 'editable');
+          arg [newP .join ('_')] = arg [p];
+          delete arg [p];
+        }
       }
     super._onModelChange (eventType, doc, arg);
   }

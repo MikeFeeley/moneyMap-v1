@@ -309,6 +309,9 @@ div._budgetHistoryTables {
 }
 
 div._budgetMonthsGraphs, div._activityMonthsGraphs, div._budgetHistoryGraphs {
+  max-width: $content-max-width;
+  margin-left: auto;
+  margin-right: auto;
   position: relative;
 }
 
@@ -435,6 +438,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
     color: #33b1ff;
     * {font-weight: 300!important}
     > ._heading {
+      font-size: 48px;
       margin-bottom: 0px;
       white-space: nowrap;
     }
@@ -463,18 +467,12 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
     position: relative;
     padding: 0px 40px;
     width: auto;
-    ._heading {
-      font-size:     48px;
-      font-weight:   100;
-      margin-bottom: 24px;
-    }
     > ._heading {
-      &:not(#_Navigate_0) {
-        margin-top: 80px;
-      }
-      &#_Navigate_0 {
-        margin-top: 20px + $tab-bar-height;
-      }
+      font-size:     48px;
+      font-weight:   300;
+      color:         #33b1ff;
+      margin-top: 20px + $tab-bar-height;
+      margin-bottom: 24px;
     }
     ._text {
       font-size: 32px;
@@ -487,8 +485,16 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
       margin-bottom: 8px;
       margin-left: 8px;
     }
-    > div:not(._popup):not(._budgetYearGraph) {
-      margin-top:    20px + $tab-bar-height;
+    > div:not(._popup):not(._budgetYearGraph):not(._heading):not(._activityCharts):not(._sliderHeader) {
+      margin-top:    20px;
+      margin-bottom: 100px;
+    }
+    > div._activityCharts {
+      margin-top:    30px;
+      margin-bottom: 100px;
+    }
+    > div._sliderHeader {
+      margin-top: 20px + $tab-bar-height;
       margin-bottom: 100px;
     }
     > ._budgetYearGraph {
@@ -641,6 +647,9 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
     }
 
     > ._netWorthGraphContainer {
+      max-width: $content-max-width;
+      margin-left: auto;
+      margin-right: auto;
       position: relative;
       > ._curNetWorth {
         background-color: rgba(252,252,252,.5);
@@ -686,6 +695,9 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
       }
     }
     > ._budgetCharts, >._activityCharts {
+      margin-left:  auto;
+      margin-right: auto;
+      max-width: $content-max-width;
       position: relative;
       > div:not(._popup):not(._TransactionHUD) {
         display: inline-block;
