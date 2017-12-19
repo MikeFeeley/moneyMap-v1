@@ -17,6 +17,8 @@ class CategoryPickerView extends View {
     this._html .appendTo (toHtml);
     this._html .on ('click', e => {
       onSelect ($(e.target) .data('id'));
+      e .stopImmediatePropagation();
+      e .preventDefault();
       return false;
     });
   }

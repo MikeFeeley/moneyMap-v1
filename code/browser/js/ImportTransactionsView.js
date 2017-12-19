@@ -37,7 +37,6 @@ class ImportTransactionsView extends View {
   updateImportStatus (message) {
     let popup        = $('<div>', {class: '_import_status_popup'}) .appendTo ($('body'));
     let popupContent = $('<div>', {class: '_popupContent'}) .appendTo (popup);
-    $('<div>', {text: 'Transaction File Imported'}) .appendTo (popupContent);
     for (let m of [] .concat (message))
       $('<div>', {text: m}) .appendTo (popupContent);
     ui .ModalStack .add (

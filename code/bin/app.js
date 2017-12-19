@@ -34,6 +34,9 @@ app .post ('/upcall', function (req, res) {
         upcalls .delete (req .body .sessionId);
       }
     }, util .SERVER_KEEP_ALIVE_INTERVAL);
+    if (! upcalls .get (req .body .sessionId)) {
+      module .exports .notifyOtherClients (req .body .sessionId, {sharing: true}); // TODO: need better, more stable list of connected clients
+    }
     upcalls .set (req .body .sessionId, {
       response:  res,
       timeoutId: timeoutId
@@ -44,7 +47,7 @@ app .post ('/upcall', function (req, res) {
 module .exports = {
   notifyOtherClients: (thisSessionId, event) => {
     for (let [sessionId, upcall] of upcalls .entries())
-      if (true || sessionId != thisSessionId) {
+      if (sessionId != thisSessionId) {
         clearTimeout (upcall .timeoutId);
         upcall .response .json (event);
         upcalls .delete (sessionId);

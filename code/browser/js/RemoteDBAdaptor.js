@@ -54,11 +54,13 @@ class RemoteDBAdaptor extends DBAdaptor {
     $.ajax ({url: '/upcall', type: 'POST', contentType: 'application/json', processData: false,
       data: JSON .stringify (this._processPayload({respondImmediately: this._getState() == DBAdaptorState .DOWN})),
       success: data => {
+      console.log(data);
         this._setState (DBAdaptorState .UP);
         clearTimeout (timeoutId);
         setTimeout (() => {this .connect()}, 0);
       },
-      error: () => {
+      error: data => {
+      console.log('eee',data )
         if (this._getState() != DBAdaptorState .PERMANENTLY_DOWN)
           this._setState (DBAdaptorState .DOWN);
         clearTimeout (timeoutId);

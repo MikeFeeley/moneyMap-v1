@@ -90,10 +90,12 @@ class ImportTransactions extends Observable {
     }
     for (let a of async)
       await a;
-    var is = ic? ic + ' transaction' + (ic>1? 's': '') + ' imported': '';
-    var ds = dc? dc + ' duplicate'   + (dc>1? 's': '') + ' skipped' : '';
-    var s  = is + (is .length && ds .length? '; ': '') + ds;
-    this._view .updateImportStatus (s .length? s: 'empty file');
+    let s = ['Transaction File Imported'];
+    if (ic)
+      s .push (ic + ' transaction' + (ic>1? 's': '') + ' imported');
+    if (dc)
+      s .push (dc + ' duplicate'   + (dc>1? 's': '') + ' skipped');
+    this._view .updateImportStatus (s .length > 1? s: 'empty file');
     if (trans .length)
       await this._lastImport .refreshToLatest();
     await this._attention .refreshHtml();
