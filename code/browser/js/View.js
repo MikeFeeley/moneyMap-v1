@@ -181,7 +181,9 @@ class ViewField {
     }
     this._html .hover (
       e => {
-        if (Math .abs (this._html .offset() .top - e .originalEvent .pageY) < 24) {
+        let skip = e .originalEvent && e .originalEvent .pageY &&
+          Math .abs (this._html .offset() .top - e .originalEvent .pageY) < 24;
+        if (skip) {
           if (tid)
             clearTimeout (tid);
           toolTip .stop(true);
