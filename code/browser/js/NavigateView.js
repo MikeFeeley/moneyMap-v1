@@ -277,16 +277,15 @@ class NavigateView extends Observable  {
     }
     var container = to || this._container;
     if (container .length) {
-      var graph = $('<div>', {class: '_progressGraph' + (popup? ' _popup': '')}) .appendTo (container) .append ($('<div>', {class: '_popupContent'}));
+      var graph = $('<div>', {class: '_progressGraph' + (popup? ' _popup fader': '')}) .appendTo (container) .append ($('<div>', {class: '_popupContent'}));
       if (popup) {
         graph .css (position);
         ui .ModalStack .add (
           e  => {return e && $.contains (document .body, e .target) && ! $.contains (graph .get (0), e .target)},
-          () => {graph .fadeOut (UI_FADE_OUT_MS, () => {graph .remove(); onClose()})},
+          () => {graph .removeClass ('fader_visible') .one ('transitionend', () => {graph .remove(); onClose()})},
           true
         );
-        graph .css ({display: 'none'});
-        graph .fadeIn (UI_FADE_IN_MS);
+        setTimeout (() => {graph .addClass ('fader_visible')}, 0);
       }
       return graph;
     }
@@ -464,7 +463,7 @@ class NavigateView extends Observable  {
       var container = $('<div>', {class: name + 's'});
       container .appendTo (this._content);
     }
-    var graph  = $('<div>', {class: name + (popup? ' _popup': '')}) .appendTo (container) .append ($('<div>', {class: '_popupContent'}));
+    var graph  = $('<div>', {class: name + (popup? ' _popup fader': '')}) .appendTo (container) .append ($('<div>', {class: '_popupContent'}));
     processDataset();
     if (popup) {
       if (data .length >= 1) {
@@ -495,11 +494,10 @@ class NavigateView extends Observable  {
         graph .css (position)
         ui .ModalStack .add (
           e  => {return e && ! $.contains (graph .get (0), e .target) && graph .get (0) != e .target},
-          () => {graph .fadeOut (UI_FADE_OUT_MS, () => {graph .remove(); onClose()})},
+          () => {graph .removeClass ('fader_visible') .one ('transitionend', () => {graph .remove(); onClose()})},
           true
         );
-      graph .css ({display: 'none'});
-      graph .fadeIn (UI_FADE_IN_MS);
+      setTimeout (() => {graph .addClass ('fader_visible')}, 0);
     }
     var canvas = $('<canvas>') .appendTo (graph .children('._popupContent'));
     var chart;
@@ -758,17 +756,16 @@ class NavigateView extends Observable  {
         c = 'rgba(128,128,128,0.1)';
       return c;
     });
-    var container = $('<div>', {class: '_' + data .name + (popup? ' _popup _popupNoContainer': '')}) .appendTo (this._html .find ('.' + name + 's'));
+    var container = $('<div>', {class: '_' + data .name + (popup? ' _popup _popupNoContainer fader': '') }) .appendTo (this._html .find ('.' + name + 's'));
     if (popup) {
       if (position)
         container .css (position);
       ui .ModalStack .add (
         e  => {return e && ! $.contains (container .get (0), e .target) && container .get (0) != e .target},
-        () => {container .fadeOut (UI_FADE_OUT_MS, () => {container .remove(); onClose()})},
+        () => {container .removeClass ('fader_visible') .one ('transitionend', () => {container .remove(); onClose()})},
         true
       );
-      container .css ({display: 'none'});
-      container .fadeIn (UI_FADE_IN_MS);
+      setTimeout (() => {container .addClass ('fader_visible')}, 0);
     }
     var labels;
     var datasets;
@@ -1048,16 +1045,15 @@ class NavigateView extends Observable  {
       if (toHtml .length == 0)
         toHtml = $('<div>', {class: name + 's'}) .appendTo ($('<div>', {class: '_budgetTableContainer'}) .appendTo (this._content));
     }
-    var container = $('<div>', {class: name + (popup? ' _popup': '')}) .appendTo (toHtml) .append ('<div>');
+    var container = $('<div>', {class: name + (popup? ' _popup fader': '')}) .appendTo (toHtml) .append ('<div>');
     if (popup && position) {
       container .css (position);
       ui .ModalStack .add (
         e  => {return e && !$.contains (container .get (0), e .target) && container .get (0) != e .target},
-        () => {container .fadeOut (UI_FADE_OUT_MS, () => {container .remove(); onClose()})},
+        () => {container .removeClass ('fader_visible') .one ('transitionend', () => {container .remove(); onClose()})},
         true
       );
-      container .css ({display: 'none'});
-      container .fadeIn (UI_FADE_IN_MS);
+      setTimeout (() => {container .addClass ('fader_visible')}, 0);
     }
     addTable ();
     return updates => {
@@ -1296,7 +1292,7 @@ class NavigateView extends Observable  {
       let padding  = target.css ('padding-left');
       let position = ui .calcPosition (target, html, {top: 12, left: -2 + Number (padding .slice (0, padding .indexOf ('px')))})
       if (detail .int || detail .addAmt || detail .subAmt) {
-        let popup = $('<div>', {class: '_popup _netWorthTable'})
+        let popup = $('<div>', {class: '_popup _netWorthTable fader'})
           .appendTo (html)
           .append   ($('<div>', {class: '_popupContent'}))
           .click    (e => {
@@ -1346,11 +1342,10 @@ class NavigateView extends Observable  {
         popup .css (position);
         ui .ModalStack .add (
           e  => {return e && !$.contains (popup .get (0), e .target) && popup .get (0) != e .target},
-          () => {popup .fadeOut (UI_FADE_OUT_MS, () => {popup .remove()})},
+          () => {popup .removeClass ('fader_visible') .one ('transitionend', () => {popup .remove()})},
           true
         );
-        popup .css ({display: 'none'});
-        popup .fadeIn (UI_FADE_IN_MS);
+        setTimeout (() => {popup .addClass ('fader_visible')}, 0);
       }
       e .stopPropagation();
     }
@@ -1359,15 +1354,14 @@ class NavigateView extends Observable  {
 
     let table = $('<table>', {class: '_netWorthTable'});
     if (popup) {
-      let container = $('<div>', {class: '_netWorthTable _popup'}) .appendTo (html) .append ($('<div>', {class: '_popupContent'}) .append (table))
+      let container = $('<div>', {class: '_netWorthTable _popup fader'}) .appendTo (html) .append ($('<div>', {class: '_popupContent'}) .append (table))
       container .css (position);
       ui .ModalStack .add (
         e  => {return e && !$.contains (container .get (0), e .target) && container .get (0) != e .target},
-        () => {container .fadeOut (UI_FADE_OUT_MS, () => {container .remove(); onClose()})},
+        () => {container .removeClass ('fader_visible') .one ('transitionend', () => {container .remove(); onClose()})},
         true
       );
-      container .css ({display: 'none'});
-      container .fadeIn (UI_FADE_IN_MS);
+      setTimeout (() => {container .addClass ('fader_visible')});
     } else
       table .appendTo ($('<div>', {class: '_netWorthTableContainer' + (popup? ' _popup': '')}) .appendTo (this._content));
     let showHeadFoot = dataset .cols .length > 1;

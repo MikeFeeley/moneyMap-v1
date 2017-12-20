@@ -103,7 +103,7 @@ class TransactionTableView extends TableView {
         this._fieldTip .remove();
     let field    = this._getFieldHtml (id, fieldName) .closest ('td');
     let html     = field .offsetParent();
-    let tip      = $('<div>', {class: '_fieldTip hidden'}) .appendTo (html) .append ($('<div>'));
+    let tip      = $('<div>', {class: '_fieldTip fader'}) .appendTo (html) .append ($('<div>'));
     $('<div>', {text: 'TIP'}) .appendTo (tip .children());
     for (let tl of tipText)
       $('<div>', {text: tl}) .appendTo (tip .children());
@@ -113,26 +113,25 @@ class TransactionTableView extends TableView {
         top = 32;
       tip .css (ui .calcPosition (field, html, {top: top, left: - tip .width() / 2 + field .width() / 2}));
       ui .scrollIntoView (tip);
-      tip .fadeIn (UI_FADE_IN_MS, () => {
-        let mo = ui .ModalStack .add (() => {return true}, () => {
+      tip .addClass ('fader_visible') .one ('transitionend', () => {
+        let to, mo = ui .ModalStack .add (() => {return true}, () => {
           if (mo) {
             mo = null;
-            clearTimeout (to);
-            tip .fadeOut (UI_FADE_OUT_MS, () => {
-              tip .remove();
-            })
+            if (to)
+              clearTimeout (to);
+            tip .removeClass ('fader_visible') .one ('transitionend', () => {tip .remove()});
           }
         }, true);
-        let to = setTimeout (() => {
-          tip .fadeOut (UI_FIELD_TIP_FADE_OUT_MS, () => {
+        to = setTimeout (() => {
+          tip .removeClass ('fader_visible') .one ('transitionend', () => {
             tip .remove();
             if (mo)
               ui .ModalStack .delete (mo);
-          })
+          });
         }, UI_FIELD_TIP_DURATION_MS);
       });
-    }, 0);
-    this._fieldTip = tip;
+     this._fieldTip = tip;
+    });
   }
 }
 

@@ -1,7 +1,7 @@
 class BudgetProgressHUDView extends View {
   constructor (isModal, onDelete, topBuffer=0) {
     super();
-    this._html          = $('<div>', {class: '_BudgetProgressHUD'});
+    this._html          = $('<div>', {class: '_BudgetProgressHUD fader'});
     this._content       = $('<div>', {class: '_hudContent'}) .appendTo (this._html);
     this._monthsDatasets = [
       ['Last Year', 'priorYear', '#f4f4f4', '#d8d8d8'],
@@ -40,7 +40,7 @@ class BudgetProgressHUDView extends View {
   }
 
   addHtml (toHtml, position, titlePresenter) {
-    this. resetHtml();
+    this._resetHtml();
     this._html .appendTo (toHtml);
     this._position = position;
     if (position)
@@ -50,10 +50,6 @@ class BudgetProgressHUDView extends View {
         (e) => {return ! $.contains (this._html .get (0), e .target) && this._html .get (0) != e .target},
         ()  => {this .delete()}, true
       );
-    if (! this._html .hasClass ('hidden')) {
-      this._html .css({display: 'none'});
-      this._html .fadeIn (UI_FADE_IN_MS);
-    }
   }
 
   addGroup (name, toGroup) {
@@ -263,15 +259,18 @@ class BudgetProgressHUDView extends View {
   }
 
   setVisible (isVisible) {
-    if (isVisible) {
-      this._html .removeClass ('hidden');
-      ui .scrollIntoView (this._html, false, {topBuffer: this._topBuffer});
-    } else
-      this._html .addClass ('hidden'); 
+    setTimeout (() => {
+      if (isVisible) {
+        this._html .addClass ('fader_visible');
+        ui .scrollIntoView (this._html, false, {topBuffer: this._topBuffer});
+      } else
+        this._html .removeClass ('fader_visible');
+    }, 0);
   }
 
-  resetHtml() {
+  _resetHtml() {
     this._content .empty();
+    this._html .removeClass ('fader_visible');
     this._graphs           = undefined;
     this._progressGraphs   = new Map();
     this._monthsGraph      = null;
@@ -281,10 +280,9 @@ class BudgetProgressHUDView extends View {
   }
 
   removeHtml() {
-    this .resetHtml();
-    this._html .fadeOut (UI_FADE_OUT_MS, () => {
-      this._html .remove();
-    });
+    this._html
+      .removeClass ('fader_visible')
+      .one ('transitionend', () => {this._resetHtml()})
   }
 
   addTitle (titlePresenter) {

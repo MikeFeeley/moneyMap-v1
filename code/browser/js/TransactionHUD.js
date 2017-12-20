@@ -197,7 +197,7 @@ class TransactionHUD extends TransactionAndRulesTable {
     let po = toHtml .offset() .left;
     if (po + position .left > ml)
       position .left = ml - po;
-    this._html = $('<div>', {class: '_TransactionHUD'}) .appendTo (toHtml);
+    this._html = $('<div>', {class: '_TransactionHUD fader'}) .appendTo (toHtml);
     this._html [0] .addEventListener ('webkitmouseforcewillbegin', e => {e .preventDefault()}, true)
     this._content = $('<div>', {class: '_hudcontent _TransactionReadOnly'}) .appendTo (this._html);
     let mousedownFired, mousedownTarget, mousedownPageY;
@@ -269,11 +269,10 @@ class TransactionHUD extends TransactionAndRulesTable {
     await super .addHtml (body);
     this._modalStackEntry = ui .ModalStack .add (
       (e) => {return ! $.contains (this._content .get (0), e .target) && this._content .get (0) != e .target},
-      ()  => {this._html .fadeOut (UI_FADE_OUT_MS, () => {this .delete()})}, true
+      ()  => {this._html .removeClass ('fader_visible') .one ('transitionend', () => {this .delete()})}, true
     );
     ui .scrollIntoView (this._html);
-    this._html .css ({display: 'none'});
-    this._html .fadeIn (UI_FADE_IN_MS);
+    setTimeout (() => {this._html .addClass ('fader_visible')}, 0);
   }
 
   _showRefineByDateRange (start, end) {

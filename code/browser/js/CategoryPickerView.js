@@ -1,7 +1,7 @@
 class CategoryPickerView extends View {
   constructor() {
     super();
-    this._html  = $('<div>', {class: '_PathPicker'});
+    this._html  = $('<div>', {class: '_PathPicker fader'});
     var content = $('<div>', {class: '_pickerContent'}) .appendTo (this._html);
     this._table = $('<tbody>') .appendTo ($('<table>')  .appendTo (content)) ;
   }
@@ -44,16 +44,15 @@ class CategoryPickerView extends View {
   }
 
   show() {
-    this._html .css ({display: 'none'});
-    this._html .fadeIn (UI_FADE_IN_MS);
+    setTimeout(() => {
+      this._html .addClass ('fader_visible')
+    }, 0);
   }
 
   hide() {
     this._placeHolder .remove();
-    this._html .fadeOut (UI_FADE_OUT_MS, () => {
-      this._html        .remove();
-    });
-  }
+    this._html .removeClass ('fader_visible') .one ('transitionend', () => {this._html .remove()})
+   }
 
   updateHeight() {
     window .setTimeout(() => {

@@ -1,5 +1,3 @@
-const UI_FADE_IN_MS            = 300;
-const UI_FADE_OUT_MS           = 100;
 const UI_TOOL_TIP_WAIT_MS      = 200;
 const UI_TOOL_TIP_FADE_MS      = 120;
 const UI_TOOL_TIP_DURATION_MS  = 8000;

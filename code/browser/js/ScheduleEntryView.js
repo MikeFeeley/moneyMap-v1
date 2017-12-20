@@ -50,7 +50,7 @@ class ScheduleEntryView extends ListView {
 
   _showFieldTip (field, html, tipText) {
     let target = field._html;
-    let tip    = $('<div>', {class: '_fieldTip hidden'}) .appendTo (html) .append ($('<div>'));
+    let tip    = $('<div>', {class: '_fieldTip fader'}) .appendTo (html) .append ($('<div>'));
     $('<div>', {text: 'TIP'}) .appendTo (tip .children());
     for (let tl of tipText)
       $('<div>', {text: tl}) .appendTo (tip .children());
@@ -62,25 +62,24 @@ class ScheduleEntryView extends ListView {
         pos = ui .calcPosition (target, html, {top: 32, left: 0})
       tip .css (pos);
       ui .scrollIntoView (tip);
-      tip .fadeIn (UI_FADE_IN_MS, () => {
-        let mo = ui .ModalStack .add (() => {return true}, () => {
+      tip .addClass ('fader_visible') .one ('transitionend', () => {
+        let to, mo = ui .ModalStack .add (() => {return true}, () => {
           if (mo) {
             mo = null;
-            clearTimeout (to);
-            tip .fadeOut (UI_FADE_OUT_MS, () => {
-              tip .remove();
-            })
+            if (to)
+              clearTimeout (to);
+            tip .removeClass ('fader_visible') .one ('transitionend', () => {tip .remove()});
           }
         }, true);
-        let to = setTimeout (() => {
-          tip .fadeOut (UI_FIELD_TIP_FADE_OUT_MS, () => {
+        to = setTimeout (() => {
+          tip .removeClass ('fader_visible') .one ('transitionend', () => {
             tip .remove();
             if (mo)
               ui .ModalStack .delete (mo);
-          })
+          });
         }, UI_FIELD_TIP_DURATION_MS);
-      });
-    }, 0);
+      })
+    }, 0)
   }
 
   showTipNameChange (id) {
