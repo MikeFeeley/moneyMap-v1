@@ -53,11 +53,11 @@ body {
   position: absolute;
   z-index: 1001;
   > ._pickerContent {
-    margin-bottom: 16px;
     background: rgba(245,246,246,.94);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
-    border: 8px solid transparent;
+    margin-bottom: 16px;
+    padding: 8px;
     border-radius: 6px;
     vertical-align: middle;
     box-shadow: $drop-shadow;
@@ -89,9 +89,8 @@ body {
   z-index: 4002;
   padding: 8px;
   margin-top: -8px;
-  font-size: 13px;
   > ._hudContent {
-    width: 550px;
+    width: 514px;
     background: rgba(245,246,246,.94);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
@@ -103,6 +102,7 @@ body {
       margin-bottom: -8px;
       ._content {
         font-size: 28px;
+        color: black;
         font-weight: 200;
         border: 0px;
         background-color: transparent;
@@ -111,9 +111,10 @@ body {
       }
     }
     ._graph_title {
-      margin-top: 28px;
+      margin-top: 16px;
       margin-bottom: 4px;
-      font-size: 18px;
+      font-size: 16px;
+      color: black;
       font-weight: 100;
     }
     ._monthlyGraph {
@@ -121,6 +122,34 @@ body {
     }
     ._presenter {
       margin-top: -8px;
+    }
+
+    > ._group > ._presenter > ._MiniScheduleEntry {
+      > ul > li {
+        > ._field > div {
+          > ._content, ._suffix {
+            font-size: 11px;
+          }
+          > label {
+            margin-top: 0px;
+            margin-bottom: 0px;
+            border-top: 0px;
+            border-bottom: 0px;
+            > input {
+              margin-top: 0px;
+              margin-bottom: 4px;
+            }
+            > ._suffix {
+              margin-top: 0px;
+              margin-bottom: 2px;
+            }
+          }
+        }
+        > ._field:not(._field_notes) > div > ._content {
+          color: #666;
+        }
+      }
+      padding-bottom: 2px;
     }
   }
 }

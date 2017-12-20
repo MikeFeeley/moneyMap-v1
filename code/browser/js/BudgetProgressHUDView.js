@@ -295,7 +295,7 @@ class BudgetProgressHUDView extends View {
   }
 
   addProgressGraph (group, name) {
-    var pg = new BudgetProgressGraph (name, $('<div>') .appendTo (this._content .find ('._group.'+name)), true, true, {barThickness: 32});
+    var pg = new BudgetProgressGraph (name, $('<div>') .appendTo (this._content .find ('._group.'+name)), true, true, {barThickness: 26});
     pg .addObserver (this, this._onProgressGraphChange);
     this._progressGraphs .set (name, pg);
   }
