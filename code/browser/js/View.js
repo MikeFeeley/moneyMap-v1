@@ -181,19 +181,21 @@ class ViewField {
     }
     this._html .hover (
       e => {
-        if (tid)
-          clearTimeout (tid);
-        toolTip .stop(true);
-        tid = setTimeout(() => {
-          tid = undefined;
-          var text = this ._toolTip;
-          if (text) {
-            toolTip .text (text);
-            toolTip .fadeIn  (UI_TOOL_TIP_FADE_MS, () => {
-              setTimeout (() => {toolTip .fadeOut (UI_TOOL_TIP_FADE_MS)}, UI_TOOL_TIP_DURATION_MS)
-            });
-          }
-        }, UI_TOOL_TIP_WAIT_MS);
+        if (Math .abs (this._html .offset() .top - e .originalEvent .pageY) < 24) {
+          if (tid)
+            clearTimeout (tid);
+          toolTip .stop(true);
+          tid = setTimeout(() => {
+            tid = undefined;
+            var text = this ._toolTip;
+            if (text) {
+              toolTip .text (text);
+              toolTip .fadeIn  (UI_TOOL_TIP_FADE_MS, () => {
+                setTimeout (() => {toolTip .fadeOut (UI_TOOL_TIP_FADE_MS)}, UI_TOOL_TIP_DURATION_MS)
+              });
+            }
+          }, UI_TOOL_TIP_WAIT_MS);
+        }
       },
       this.clearTooltip
     );

@@ -20,12 +20,12 @@ body > div._blockEverything {
 
 .fader {
   opacity: 0;
-  transition: 1000ms opacity;
+  transition: 100ms opacity;
 }
 
 .fader.fader_visible {
   opacity: 1;
-  transition: 4000ms opacity;
+  transition: 400ms opacity;
 }
 
 div._systemStatus {
