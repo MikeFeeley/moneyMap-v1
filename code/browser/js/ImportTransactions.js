@@ -350,13 +350,18 @@ class ImportBatchTable extends TransactionAndRulesTable {
 
 class NeedsAttentionTable extends TransactionAndRulesTable {
   constructor (parent, selectBatch) {
-    var nameSuffix = '_needsAttention';
-    var name    = '_ImportTransactionsTable _TransactionAndRulesTable' + (nameSuffix? ' ' + nameSuffix: '');
-    var query = {$or: [{category: null}, {category: ''}, {description: {$regex: '[?]\s*$'}}], $options: {updateDoesNotRemove: true}};
-    var title = 'Inbox - Attention Required';
-    var columns = ['rules', 'date','payee','debit','credit','account','category','description','importTime'];
-    var options = {};
-    var view  = new NeedsAttentionTableView (name, columns, options, parent ._accounts, parent ._variance, e => {this._toggleRule (e)}, selectBatch);
+    let nameSuffix = '_needsAttention';
+    let name    = '_ImportTransactionsTable _TransactionAndRulesTable' + (nameSuffix? ' ' + nameSuffix: '');
+    let budget  = parent._variance .getBudget();
+    let query = {
+      date: {$gte: budget .getStartDate(), $lte: budget .getEndDate()},
+      $or: [{category: null}, {category: ''}, {description: {$regex: '[?]\s*$'}}],
+      $options: {updateDoesNotRemove: true}
+    };
+    let title = 'Inbox - Attention Required';
+    let columns = ['rules', 'date','payee','debit','credit','account','category','description','importTime'];
+    let options = {};
+    let view  = new NeedsAttentionTableView (name, columns, options, parent ._accounts, parent ._variance, e => {this._toggleRule (e)}, selectBatch);
     super (query, title, parent, nameSuffix, columns, view);
   }
 
