@@ -173,6 +173,7 @@ app.use(function(req, res, next) {
 
 if (app.get('env') === 'development') {
   app.use(function(err, req, res, next) {
+    console.log ('xxx a', err, err .message, req .body)
     res.status(err.status || 500);
     res.render('error 500a', {
       message: err.message,
@@ -182,7 +183,7 @@ if (app.get('env') === 'development') {
 }
 
 app.use(function(err, req, res, next) {
-  console.log('xxx', err, err.message);
+  console.log('xxx b', err, err.message, req .body);
   res.status(err.status || 500);
   res.render('error 500b', {
     message: err.message,

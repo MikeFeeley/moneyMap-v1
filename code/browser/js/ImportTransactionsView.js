@@ -139,7 +139,7 @@ class ImportedTransactionTableView extends TransactionTableView {
     this._html .find ('._button.' + name) [(isEnabled? 'remove': 'add') + 'Class'] ('_disabled');
   }
 
-  _getTuple (id) {
+  _getLastTupleinGroup (id) {
     let tuple = super._getTuple (id);
     if (tuple && tuple .hasClass ('_group'))
       tuple = $(tuple .nextAll ('._last') [0]);
@@ -147,14 +147,14 @@ class ImportedTransactionTableView extends TransactionTableView {
   }
 
   getRuleBox (id) {
-    let tuple = this._getTuple (id);
+    let tuple = this._getLastTupleinGroup (id);
     let rulebox = tuple .next ('tr') .find ('._rulebox');
     let field   = rulebox .closest ('tr') .prev ('tr') .find ('._field') .data ('field');
     return [rulebox, field];
   }
 
   addRuleBox (id) {
-    let tuple = this._getTuple (id);
+    let tuple = this._getLastTupleinGroup (id);
     let cols = tuple .closest('table') .find ('thead') .find ('th') .length;
     let field = tuple .find ('._field') .data ('field');
     field .setRuleShowing (true);
