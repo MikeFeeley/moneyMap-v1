@@ -152,10 +152,10 @@ class Model extends Observable {
     this._options = query && query .$options;
     if (query && query .$options)
       query = Object .keys (query) .reduce ((o,k) => {if (k != '$options') o [k] = query [k]; return o}, {});
-    var docs = cacheOnly? this._collection .findFromCache (query): await this._collection .find (query);
+    let docs = cacheOnly? this._collection .findFromCache (query): await this._collection .find (query);
     this._query = (this._query && append)? {$or: [this._query, query]}: query;
     if (this._options && this._options .groupBy) {
-      var groups =
+      let groups =
         docs
           .filter (d => {return d [this._options .groupBy]})
           .map    (d => {return d [this._options .groupBy]})
@@ -165,7 +165,7 @@ class Model extends Observable {
         .filter (d => {return ! d [this._options .groupBy]})
       query = {};
       query [this._options .groupBy] = {$in: groups};
-      var groupDocs = (await this._collection .find (query));
+      let groupDocs = cacheOnly? this._collection .findFromCache (query): (await this._collection .find (query));
       docs = docs .concat (groupDocs);
       this._groups = groups .reduce ((map,group) => {
         map .set (group, groupDocs .filter (d => {return d [this._options .groupBy] == group}));
