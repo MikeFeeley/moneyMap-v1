@@ -10,8 +10,7 @@ class App {
 
   async start() {
     ui .ModalStack .init();
-    Model_addDatabaseObserver (this, this._onDatabaseChange);
-    Model_databaseConnect();
+    Model .addDatabaseObserver (this, this._onDatabaseChange);
     this._status = $('<div>', {class: '_systemStatus'}) .appendTo ('body');
     this._pending = 0;
     this._isDown = false;
@@ -24,7 +23,10 @@ class App {
     if (transition) {
       if (this._pendingTimer)
         clearTimeout (this._pendingTimer);
-      this._pendingTimer = setTimeout (() => {this._waitingOnNetwork .css ({display: 'block'})}, PENDING_INITIAL_PAUSE);
+      this._pendingTimer = setTimeout (() => {
+        if (this._waitingOnNetwork)
+          this._waitingOnNetwork .css ({display: 'block'})
+      }, PENDING_INITIAL_PAUSE);
     }
   }
 
@@ -66,8 +68,13 @@ class App {
         clearTimeout (this._pendingTimer);
         this._pendingTimer = null;
       }
-      this._waitingOnNetwork .css ({display: 'none'});
+      if (this._waitingOnNetwork)
+        this._waitingOnNetwork .css ({display: 'none'});
     }
+  }
+
+  _setSharing (isSharing) {
+    this._sharing .css ({display: isSharing? 'block': 'none'});
   }
 
   _setDown (transition) {
@@ -159,6 +166,10 @@ class App {
           this._setStatus ({isDown: arg == DBAdaptorState .DOWN || arg == DBAdaptorState .PERMANENTLY_DOWN})
           this._isPermanentlyDown = arg == DBAdaptorState .PERMANENTLY_DOWN;
           break;
+
+        case DBAdaptorEvent .SHARING_CHANGE:
+          this._setSharing (arg);
+          break;
       }
   }
 
@@ -185,9 +196,9 @@ class App {
       this._perT = this._tabs .addTab  ('Perspective');
       this._weaT = this._tabs .addTab  ('Wealth');
       this._accT = this._tabs .addTab  ('Accounts');
-      this._sharing = this._tabs .addIconTool ('lnr-users _sharing');
       this._waitingOnNetwork  = this._tabs .addIconTool ('lnr-cloud _status');
       this._waitingOnNetwork  .css ({display: 'none'});
+      this._sharing = this._tabs .addIconTool ('lnr-users _sharing');
       this._sharing .css ({display: 'none'});
       let tl = this._tabs .addTool (this._user .getLabel (l => {
         this._tabs .changeToolName (tl, l);
@@ -198,7 +209,9 @@ class App {
 
       /* models */
       let prefsWasShowing = this._prefs && this._prefs .isShowing();
+      Model .databaseDisconnect();
       Model .setDatabase (this._user .getDatabaseName());
+      Model .databaseConnect();
       this._deleteModels();
       this._budModel = new BudgetModel   ();
       this._accModel = new AccountsModel ();

@@ -35,15 +35,16 @@ class ImportTransactionsView extends View {
   }
 
   updateImportStatus (message) {
-    let popup        = $('<div>', {class: '_import_status_popup'}) .appendTo ($('body'));
+    let popup        = $('<div>', {class: '_import_status_popup fader'}) .appendTo ($('body'));
     let popupContent = $('<div>', {class: '_popupContent'}) .appendTo (popup);
     for (let m of [] .concat (message))
       $('<div>', {text: m}) .appendTo (popupContent);
     ui .ModalStack .add (
       e  => {return e && ! $.contains (popup .get (0), e .target) && popup .get (0) != e .target},
-      () => {popup .fadeOut (UI_FADE_OUT_MS, () => {popup .remove()})},
+      () => {popup .removeClass ('fader_visible') .one ('transitionend', () => {popup .remove()})},
       true
     );
+    setTimeout (() => {popup .addClass ('fader_visible')}, 0);
   }
 
   async addTable (table) {

@@ -21,38 +21,99 @@ app .use (bodyParser.json());
 app .use (bodyParser.urlencoded ({extended: true}));
 app .use (express.static ('browser'));
 
-var upcalls = new Map();
+var connections = new Map();
+var count = 0;
 
 app .post ('/upcall', function (req, res) {
-  if (req .body .respondImmediately)
-    res .json ({ack: true});
-  else {
-    let timeoutId = setTimeout(() => {
-      let u = upcalls .get (req .body .sessionId);
-      if (u && u .response == res) {
-        res .json ({timeout: true});
-        upcalls .delete (req .body .sessionId);
+  try {
+    if (req .body .respondImmediately)
+      res .json ({ack: true});
+
+   else if (req .body .database && req .body .sessionId) {
+
+      let dbConnections = connections   .get (req .body .database) || connections .set (req .body .database, new Map()) .get(req .body .database);
+      let connection    = dbConnections .get (req .body .sessionId);
+
+      if (connection) {
+
+        // clear existing timeouts; this call resets them
+        if (connection .response)
+          clearTimeout (connection .timeoutId);
+        clearTimeout (connection .disconnectTimeoutId);
+
+        if (req .body .disconnect) {
+          dbConnections .delete (req .body .sessionId);
+          if (dbConnections .size == 1)
+            module .exports .notifyOtherClients (req .body .database, req .body .sessionId, {sharing: false});
+          return;
+        }
+
+        // use this connection for any queued events
+        if (connection .queue .length) {
+          res .json ({database: req .body .database, upcalls: connection .queue});
+          connection .queue = [];
+          return;
+        }
+
+      } else {
+
+        // do notifications for new connection
+        module .exports .notifyOtherClients (req .body .database, req .body .sessionId, {sharing: true});
+        if (dbConnections .size > 0) {
+          dbConnections .set (req .body .sessionId, {queue: []});
+          res .json ({database: req .body .database, upcalls: [{sharing: true}]});
+          return;
+        }
       }
-    }, util .SERVER_KEEP_ALIVE_INTERVAL);
-    if (! upcalls .get (req .body .sessionId)) {
-      module .exports .notifyOtherClients (req .body .sessionId, {sharing: true}); // TODO: need better, more stable list of connected clients
+
+      // set sessions disconnect timer
+      let disconnectTimeoutId = setTimeout (() => {
+        let connection = dbConnections .get (req .body .sessionId);
+        if (connection && connection .timeoutId)
+          clearTimeout (connection .timeoutId);
+        dbConnections .delete (req .body .sessionId);
+        if (dbConnections .size == 1) {
+          module .exports .notifyOtherClients (req .body .database, req .body .sessionId, {sharing: false});
+        }
+      }, util .SERVER_DISCONNECT_THRESHOLD);
+
+      // set client keep-alive timer
+      let timeoutId = setTimeout(() => {
+        let connection = dbConnections .get (req .body .sessionId);
+        if (connection && connection .response) {
+          connection .response .json ({timeout: true});
+          connection .response = null;
+        }
+      }, util .SERVER_HEART_BEAT_INTERVAL);
+
+      // save connection
+      dbConnections .set (req .body .sessionId, {
+        response:            res,
+        timeoutId:           timeoutId,
+        disconnectTimeoutId: disconnectTimeoutId,
+        queue:               []
+      });
+
     }
-    upcalls .set (req .body .sessionId, {
-      response:  res,
-      timeoutId: timeoutId
-    })
+  } catch (e) {
+    console .trace (e);
   }
 });
 
 module .exports = {
-  notifyOtherClients: (thisSessionId, event) => {
-    for (let [sessionId, upcall] of upcalls .entries())
-      if (sessionId != thisSessionId) {
-        clearTimeout (upcall .timeoutId);
-        upcall .response .json (event);
-        upcalls .delete (sessionId);
-      }
-  }
+  notifyOtherClients: (database, thisSessionId, event) => {
+    let dbConnections = connections .get (database);
+    if (dbConnections)
+      for (let [sessionId, connection] of dbConnections .entries())
+        if (sessionId != thisSessionId) {
+          if (connection .response) {
+            clearTimeout (connection .timeoutId);
+            connection .response .json ({database: database, upcalls: [event]});
+            connection .response = null;
+          } else
+            connection .queue .push (event);
+        }
+   }
 }
 
 db      = require ('mongodb') .MongoClient;
@@ -74,7 +135,7 @@ app.use(function (req, res, next) {
   try {
     var database = req .body .database;
     if (database == 'admin') {
-      var err     = new Error ('Direct access to Admin database not permitted');
+      let err     = new Error ('Direct access to Admin database not permitted');
       err .status = 403;
       next (err);
     } else {
@@ -121,6 +182,7 @@ if (app.get('env') === 'development') {
 }
 
 app.use(function(err, req, res, next) {
+  console.log('xxx', err, err.message);
   res.status(err.status || 500);
   res.render('error 500b', {
     message: err.message,

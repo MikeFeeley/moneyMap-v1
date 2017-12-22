@@ -518,7 +518,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
       margin-bottom: 100px;
     }
     > div._activityCharts {
-      margin-top:    30px;
+      margin-top:    30px + $tab-bar-height;
       margin-bottom: 100px;
     }
     > div._sliderHeader {

@@ -22,7 +22,7 @@ function* insertOne (req, res, next) {
     yield* handleSeq (yield req .dbPromise, req .body .collection, req .body .insert);
     var doc = yield (yield req .dbPromise) .collection (req .body .collection) .insert (req .body .insert);
     res.json ({_id: doc .ops [0] ._id, _seq: doc .ops [0] ._seq});
-    app .notifyOtherClients (req .body .sessionId, {database: req .body .database, collection: req .body .collection, insert: doc .ops [0]});
+    app .notifyOtherClients (req .body .database, req .body .sessionId, {collection: req .body .collection, insert: doc .ops [0]});
   } catch (e) {
     console .log ('insertOne: ', e, req.body);
     next (e);
@@ -44,7 +44,7 @@ function* insertList (req, res, next) {
       docs .push (doc .ops [0]);
     }
     res .json (ids);
-    app .notifyOtherClients (req .body .sessionId, {database: req .body .database, collection: req .body .collection, insertList: docs});
+    app .notifyOtherClients (req .body .database, req .body .sessionId, {collection: req .body .collection, insertList: docs});
   } catch (e) {
     console .log ('insert: ', e, req.body);
     next (e);

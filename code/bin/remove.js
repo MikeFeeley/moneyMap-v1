@@ -15,7 +15,7 @@ function* remove (req, collection, id) {
 function* removeOne (req, res, next) {
   try {
     res.json (yield* remove (req, req .body .collection, req .body .id));
-    app .notifyOtherClients (req .body .sessionId, {database: req .body .database, collection: req .body .collection, remove: req .body .id});
+    app .notifyOtherClients (req .body .database, req .body .sessionId, {collection: req .body .collection, remove: req .body .id});
   } catch (e) {
     console .log ('removeOne: ', e, req.body);
     next (e);
@@ -30,7 +30,7 @@ function* removeList (req, res, next) {
     for (let id of req .body .list)
       results .push (yield* remove (req, req .body .collection, id))
     res.json (results);
-    app .notifyOtherClients (req .body .sessionId, {database: req .body .database, collection: req .body .collection, removeList: req .body .list});
+    app .notifyOtherClients (req .body .database, req .body .sessionId, {collection: req .body .collection, removeList: req .body .list});
   } catch (e) {
     console .log ('removeList: ', e, req.body);
     next (e);

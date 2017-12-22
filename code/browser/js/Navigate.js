@@ -67,7 +67,7 @@ class Navigate {
     this._realityView .addObserver       (this, this._onViewChange);
     this._realityView .addHtml           (toHtml, async () => {
       this._clearUpdatersForView          (this._realityView);
-      this._realityView .addHeading       ('Actual Activity this Budget Year');
+      // this._realityView .addHeading       ('Activity this Budget Year');
       await this._addYearCategoriesGraphs ('_activityChart', this._realityView);
       await this._addMonthsGraph          ('_activityMonthsGraph', this._realityView);
       await this._addMonthsTable          ('_activityTable', this._realityView);

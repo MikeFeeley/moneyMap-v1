@@ -5,6 +5,10 @@ class DBAdaptor extends Observable {
     this._state             = DBAdaptorState .UP;
     this._pendingOperations = 0;
     this._sessionId         = Math.floor (Math.random() * 10000000000000000);
+    // Eager disconnect for more rapid change from sharing to non-sharing state at remote browser
+    // The state would change with the disconnect, but only after the timeout
+    // XXX This event does not fire consistently on Safari, particularly on page reload; no idea why
+    window .addEventListener ('beforeunload', e => {this .disconnect()});
   }
 
   async perform (operation, data) {
@@ -12,7 +16,7 @@ class DBAdaptor extends Observable {
   }
 
   _setState (state) {
-    if (this._stated != DBAdaptorState .PERMANENTLY_DOWN) {
+    if (this._state != DBAdaptorState .PERMANENTLY_DOWN) {
       this._state = state;
       this._notifyObservers (DBAdaptorEvent .STATE_CHANGE, this._state);
     }
@@ -23,14 +27,8 @@ class DBAdaptor extends Observable {
   }
 
   _updatePendingOperations (operation, count) {
-    if (this._isUpdateOperation (operation)) {
-      this._pendingOperations += count;
-      this._notifyObservers (DBAdaptorEvent .PENDING_UPDATES_CHANGE, this._pendingOperations);
-    }
-  }
-
-  _isUpdateOperation (operation) {
-    return ! [DatabaseOperation .FIND, DatabaseOperation .HAS] .includes (operation);
+    this._pendingOperations += count;
+    this._notifyObservers (DBAdaptorEvent .PENDING_UPDATES_CHANGE, this._pendingOperations);
   }
 
   _processPayload (data) {
@@ -38,7 +36,23 @@ class DBAdaptor extends Observable {
     return data;
   }
 
+  _processUpcall (data) {
+    let sharing, upcalls = [];
+    for (let u of data .upcalls)
+      if (u .sharing !== undefined)
+        sharing = u .sharing;
+      else
+        upcalls .push (u);
+    data .upcalls = upcalls;
+    if (sharing !== undefined)
+      this._notifyObservers (DBAdaptorEvent .SHARING_CHANGE, sharing);
+    if (data .upcalls .length)
+      this._notifyObservers (DBAdaptorEvent .UPCALL, data);
+  }
+
   connect() {}
+
+  disconnect() {}
 }
 
 var DatabaseOperation = {
@@ -64,5 +78,7 @@ DBAdaptorState = {
 
 DBAdaptorEvent = {
   STATE_CHANGE: 1,
-  PENDING_UPDATES_CHANGE: 2
+  PENDING_UPDATES_CHANGE: 2,
+  SHARING_CHANGE: 3,
+  UPCALL: 4
 }

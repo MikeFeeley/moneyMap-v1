@@ -21,6 +21,19 @@ class Model extends Observable {
     _Collection._resetUndo();
   }
 
+  static addDatabaseObserver (thisArg, observer) {
+    _Collection .addDatabaseObserver (thisArg, observer);
+  }
+
+  static databaseConnect() {
+    _db .connect();
+  }
+
+  static databaseDisconnect() {
+    if (_db)
+      _db .disconnect();
+  }
+
   getDatabase() {
     return this._database;
   }
@@ -295,20 +308,13 @@ var ModelEvent = {
  ******************/
 
 
-var _db          = new RemoteDBAdaptor();
+var _db;
 var _collections = new Map();
+var _collections_database;
 var _default_database_id;
 var _tid;
 var _undoLog;
 var _redoLog;
-
-function Model_addDatabaseObserver (thisArg, observer) {
-  _db .addObserver (thisArg, observer);
-}
-
-function Model_databaseConnect() {
-  _db .connect();
-}
 
 /**
  * Database collection
@@ -334,11 +340,67 @@ class _Collection extends Observable {
         }
       }, false);
     }
+    _Collection .getDatabaseInstance() .addObserver (this, this .onDbChange);
   }
 
   static getInstanceForModel (name, database) {
-    let cd = _collections .get (name)     || _collections .set (name,     new Map())                        .get (name);
-    return   cd           .get (database) || cd           .set (database, new _Collection (name, database)) .get (database);
+    if (database != _collections_database) {
+      _collections_database = database;
+      _collections          = new Map();
+    }
+    return _collections .get (name) || _collections .set (name, new _Collection (name, database)) .get (name);
+  }
+
+  static getDatabaseInstance() {
+    if (! _db)
+      _db = new RemoteDBAdaptor();
+    return _db;
+  }
+
+  static addDatabaseObserver (thisArg, observer) {
+    _Collection .getDatabaseInstance() .addObserver (thisArg, observer);
+  }
+
+  async onDbChange (eventType, arg) {
+
+    let processUpdate = async item => {
+      let doc  = this._docs .get (item .id);
+      if (doc) {
+        let orig = Object .keys (item .update) .reduce ((o,f) => {o[f] = doc[f]; return o}, {});
+        this._processUpdate (doc, orig, item .update);
+      }
+    }
+
+    let processRemove = async id => {
+      await this._processRemove (this._docs .get (id));
+    }
+
+    if (eventType == DBAdaptorEvent .UPCALL && arg .database == this._database) {
+      for (let upcall of arg .upcalls)
+        if (upcall .collection == this._name) {
+
+          if (upcall .update)
+            await processUpdate (upcall);
+
+          if (upcall .updateList)
+            for (let item of upcall .updateList)
+              await processUpdate (item);
+
+          if (upcall .insert)
+            await this._processInsert (upcall .insert);
+
+          if (upcall .inserList)
+            for (let item of upcall .insertList)
+              await this._processInsert (item);
+
+          if (upcall .remove)
+            await processRemove (upcall .remove);
+
+          if (upcall .removeList)
+            for (let id of upcall .removeList)
+              await processRemove (id);
+        }
+    }
   }
 
   async has (query) {
@@ -375,6 +437,14 @@ class _Collection extends Observable {
     return this._docs .get (id);
   }
 
+  async _processUpdate (doc, orig, update, source) {
+    for (let f in update) {
+      doc [f]                   = update [f];
+      update ['_original_' + f] = orig   [f];
+    }
+    await this._notifyObservers (ModelEvent.UPDATE, doc, update, this, source);
+  }
+
   async update (id, update, source, isUndo, tid) {
     var doc  = this._docs .get (id);
     if (doc) {
@@ -383,13 +453,9 @@ class _Collection extends Observable {
         orig [f] = doc [f];
       var ok  = await _db .perform (DatabaseOperation .UPDATE_ONE, {database: this._database, collection: this._name, id: id, update: update})
       if (ok) {
-        var undo = Object .keys (update) .reduce ((o,f) => {o [f] = doc [f] || ''; return o}, {})
+        let undo = Object .keys (update) .reduce ((o,f) => {o [f] = orig [f] || ''; return o}, {})
         _Collection._logUndo (this, this .update, [id, undo], isUndo, tid);
-        for (let f in update) {
-          doc [f]                   = update [f];
-          update ['_original_' + f] = orig   [f];
-        }
-        await this._notifyObservers (ModelEvent.UPDATE, doc, update, this, source);
+        await this._processUpdate (doc, orig, update, source);
       }
       return ok;
     }
@@ -415,15 +481,16 @@ class _Collection extends Observable {
         var doc  = docs  .shift();
         var orig = origs .shift();
         undo .push ({id: item .id, update: Object .keys (item .update) .reduce ((o,f) => {o [f] = doc [f] || ''; return o}, {})});
-        for (let f in item .update) {
-          doc [f]                         = item .update [f];
-          item .update ['_original_' + f] = orig         [f];
-        }
-        await this._notifyObservers (ModelEvent.UPDATE, doc, item .update, this, source);
+        await this._processUpdate (doc, orig, item .update, source);
       }
       _Collection._logUndo (this, this .updateList, [undo], isUndo, tid);
     }
     return ok;
+  }
+
+  async _processInsert (insert, source) {
+    this._docs .set (insert._id, insert);
+    await this._notifyObservers (ModelEvent.INSERT, insert, undefined, this, source);
   }
 
   async insert (insert, source, isUndo, tid) {
@@ -432,8 +499,7 @@ class _Collection extends Observable {
       _Collection._logUndo (this, this .remove, [result._id], isUndo, tid);
       for (let f of Object .keys (result) .filter (f => {return f .startsWith ('_')}))
         insert [f] = result [f];
-      this._docs .set (insert._id, insert);
-      await this._notifyObservers (ModelEvent.INSERT, insert, undefined, this, source);
+      await this._processInsert (insert, source);
       return insert;
     }
   }
@@ -446,8 +512,7 @@ class _Collection extends Observable {
         undo .push (results [i]._id);
         for (let f of Object .keys (results [i]) .filter (f => {return f .startsWith ('_')}))
           list [i] [f] = results [i] [f];
-        this._docs .set (list [i]._id, list [i]);
-        await this._notifyObservers (ModelEvent.INSERT, list [i], undefined, this, source);
+        await this._processInsert (list [i], source);
         results [i] = list [i];
       }
       if (undo .length)
@@ -455,13 +520,17 @@ class _Collection extends Observable {
     return results;
   }
 
+  async _processRemove (doc, source) {
+    this._docs .delete (doc._id);
+    await this._notifyObservers (ModelEvent.REMOVE, doc, undefined, this, source);
+  }
+
   async remove (id, source, isUndo, tid) {
     var ok  = await _db .perform (DatabaseOperation .REMOVE_ONE, {database: this._database, collection: this._name, id: id});
     if (ok) {
       var doc = this._docs .get (id);
       _Collection._logUndo (this, this .insert, [doc], isUndo, tid);
-      this._docs .delete (id);
-      await this._notifyObservers (ModelEvent.REMOVE, doc, undefined, this, source);
+      await this._processRemove (doc, source);
     }
     return ok;
   }
@@ -473,8 +542,7 @@ class _Collection extends Observable {
       if (results [i]) {
         var doc = this._docs .get (list [i]);
         undo .push (doc);
-        this._docs .delete (list [i]);
-        await this._notifyObservers (ModelEvent .REMOVE, doc, undefined, this, source);
+        await this._processRemove (doc, source);
       }
       if (undo .length)
         _Collection._logUndo (this, this .insertList, [undo], isUndo, tid);

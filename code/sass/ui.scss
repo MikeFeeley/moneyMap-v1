@@ -543,7 +543,7 @@ div._systemStatus {
 ._user_menu, ._preferences_menu {
   @include user-select (none);
   position: fixed;
-  z-index: 9999;
+  z-index: 20000;
   padding-top: 6px;
   padding-bottom: 6px;
   background: rgba(255,255,255,.80);
