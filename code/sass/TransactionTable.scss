@@ -209,7 +209,7 @@ table._TransactionAndRulesTable {
     }
     &._not_empty:not(._showing) {
       background-color: #eee;
-      color: white;
+      color: #aaa;
     }
     &._showing {
       background-color: #33b1ff;
@@ -291,98 +291,110 @@ table._TransactionAndRulesTable {
         > td:first-child {border-left:  2px solid transparent; border-right: 1px solid transparent}
       }
     }
-    table._predicate {
+    > fieldset > fieldset > table > tbody > tr > td > ._field > ._content {
+      color: #666;
+    }
+    > fieldset > fieldset > table {
       margin-left: -22px;
       margin-right: -28px;
-      tr:nth-child(2), tr:nth-child(3) {
-        > td:nth-child(1) ._content
-          {width: 11px}
-        > td:nth-child(2) ._content
-          {width: 48px;}
-        > td:nth-child(3) ._content
-          {width: 240px;}
-        > td:nth-child(8) ._content
-          {width: 220px;}
-        > td:nth-child(4) ._content, > td:nth-child(5) ._content
-          {width: 73px;}
-        > td:nth-child(6) ._content
-          {width: 96px}
-        > td:nth-child(7) > ._content
-          {width: 120px;}
-        > td:nth-child(2) ._content, > td:nth-child(4) ._content, > td td:nth-child(5) ._content
-          {text-align: right;}
+    }
+    > fieldset > fieldset > table._predicate > tbody > tr:not(:first-child),
+    > fieldset > fieldset > table._update > tbody > tr:not(:first-child),
+    > fieldset > fieldset > table._add > tbody > tr,
+    > fieldset > fieldset > table._split > tbody > tr {
+      > td:nth-child(1) {
+        > ._content, > div > ._content, > div > div > ._content {
+          width: 11px;
+        }
+      }
+      > td:nth-child(2) {
+        > ._content, > div > ._content, > div > div > ._content {
+          width: 48px;
+          text-align: right;
+        }
+      }
+      > td:nth-child(3) {
+        > ._content, > div > ._content, > div > div > ._content {
+          width: 240px;
+        }
+      }
+      > td:nth-child(4),> td:nth-child(5)  {
+        > ._content, > div > ._content, > div > div > ._content {
+          width: 72px;
+          text-align: right;
+        }
+      }
+      > td:nth-child(6) {
+        > ._content, > div > ._content, > div > div > ._content {
+          width: 96px;
+        }
+      }
+      > td:nth-child(7) {
+        > ._content, > div > ._content, > div > div > ._content {
+          width: 120px;
+        }
+      }
+      > td:nth-child(8) {
+        > ._content, > div > ._content, > div > div > ._content {
+          width: 228px;
+        }
       }
     }
-    table._update {
-      margin-bottom: -4px;
-      margin-left: -22px;
-      margin-right: -28px;
-      > tbody > tr:nth-child(2) {
-        /* almost same as above ... consolidate later */
-        > td:nth-child(1) ._content
-          {width: 11px}
-        > td:nth-child(2) ._content
-          {width: 48px;}
-        > td:nth-child(3) ._content
-          {width: 240px;}
-        > td:nth-child(8) ._content
-          {width: 220px;}
-        > td:nth-child(4) ._content, > td:nth-child(5) ._content
-          {width: 72px;}
-        > td:nth-child(6) ._content
-          {width: 100px}
-        > td:nth-child(7) > div > div > ._content
-          {width: 120px;}
-        > td:nth-child(2) ._content, > td:nth-child(4) ._content, > td td:nth-child(5) ._content
-          {text-align: right;}
+    > fieldset > fieldset > table._update > tbody > tr:not(:first-child),
+    > fieldset > fieldset > table._add > tbody > tr {
+      > td:nth-child(6) {
+        > ._content, > div > ._content, > div > div > ._content {
+          width: 100px;
+        }
       }
     }
-    table._split {
-      margin-bottom: -4px;
-      margin-left: -22px;
-      margin-right: -28px;
-      > tbody > tr {
-        /* almost same as above ... consolidate later */
-        > td:nth-child(1) ._content
-          {width: 11px}
-        > td:nth-child(2) ._content
-          {width: 48px;}
-        > td:nth-child(3) ._content
-          {width: 240px;}
-        > td:nth-child(8) ._content
-          {width: 220px;}
-        > td:nth-child(4) ._content, > td:nth-child(5) ._content
-          {width: 72px;}
-        > td:nth-child(6) ._content
-          {width: 96px;}
-        > td:nth-child(7) > div > div > ._content
-          {width: 120px;}
-        > td:nth-child(2) ._content, > td:nth-child(4) ._content, > td td:nth-child(5) ._content
-          {text-align: right;}
+    > fieldset > fieldset > table._split > tbody > tr {
+      > td:nth-child(6) {
+        > ._content, > div > ._content, > div > div > ._content {
+          text-align: right;
+          font-style: italic;
+          color: #aaa;
+        }
       }
     }
-    table._add {
-      margin-bottom: -4px;
-      margin-left: -22px;
-      margin-right: -28px;
-      > tbody > tr {
-        /* almost same as above ... consolidate later */
-        > td:nth-child(1) ._content
-          {width: 11px}
-        > td:nth-child(2) ._content
-          {width: 48px;}
-        > td:nth-child(3) ._content
-          {width: 240px;}
-        > td:nth-child(8) ._content
-          {width: 220px;}
-        > td:nth-child(4) ._content, > td:nth-child(5) ._content
-          {width: 72px;}
-        > td:nth-child(6) ._content
-          {width: 100px;}
-        > td:nth-child(7) > div > div > ._content
-          {width: 120px;}
-        > td:nth-child(2) ._content, > td:nth-child(4) ._content, > td td:nth-child(5) ._content
-          {text-align: right;}
+    > fieldset > fieldset > table._add > tbody {
+      > tr._group {
+        $group-border-color: #ddd;
+        $group-border: 2px solid $group-border-color;
+        & > td:last-child {
+          border-right: $group-border;
+        }
+        &._leader {
+          > td:nth-child(3) {border-left: 2px solid $group-border-color};
+          > td {
+            &:nth-child(3), &:nth-child(6) {
+              border-bottom: $group-border;
+            }
+            &:nth-child(3), &:nth-child(3), &:nth-child(4), &:nth-child(5), &:nth-child(6), &:nth-child(7),  &:nth-child(8) {
+              border-top:  $group-border
+            }
+          }
+        }
+        &:not(._leader) {
+          > td {
+            &:nth-child(3), &:nth-child(6) {
+              background: #f0f0f0;
+              ._content {
+                display: none;
+              }
+            }
+            &:nth-child(4), &:nth-child(7) {
+              border-left: $group-border;
+            }
+          }
+        }
+        &._last {
+          > td {
+            &:nth-child(4), &:nth-child(5), &:nth-child(7), &:nth-child(8) {
+              border-bottom: $group-border;
+            }
+          }
+        }
       }
     }
   }

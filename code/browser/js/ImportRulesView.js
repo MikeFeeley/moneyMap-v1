@@ -31,8 +31,14 @@ class ImportRulesView extends TupleView {
       value => {return cats .getPathname (cats .get (value)) .join (': ')},
       ()    => {return cats}
     );
+    let ruleDateFormat = new ViewFormat (
+      /* toView   */ value => {return value >= 1 && value <= 31?                value: Types .dateDM .toString   (value)},
+      /* fromView */ view  => {return ! isNaN (view) && view >= 1 && view < 31? view:  Types .dateDM .fromString (view, m => {return Types .date .today()})},
+      /* toolTip  */ value => {return ''}
+    )
     var getValue = (field, html) => {
-      return html .closest ('tr') .find ('.' + this._getFieldHtmlClass (field)) .data ('field') .get();
+      let f = html .closest ('tr') .find ('.' + this._getFieldHtmlClass (field)) .data ('field');
+      return f && f .get();
     }
     var getDate        = html => {return date};
     var getDebit       = html => {return getValue ('debit',  html)};
@@ -40,8 +46,8 @@ class ImportRulesView extends TupleView {
     var getIsPriorYear = html => {return date < variance .getBudget() .getStartDate()};
     var fields = [
       new ViewSelect       ('date_fn',           new ViewFormatOptionList (amountFunctions)),
-      new IRVDateTextbox   ('date_op0',          ViewFormats ('number')),
-      new IRVDateTextbox   ('date_op1',          ViewFormats ('number')),
+      new ViewTextbox      ('date_op0',          ruleDateFormat),
+      new ViewTextbox      ('date_op1',          ruleDateFormat),
       new ViewSelect       ('payee_fn',          new ViewFormatOptionList (stringFunctions)),
       new ViewTextbox      ('payee_op0',         ViewFormats              ('string')),
       new ViewSelect       ('debit_fn',          new ViewFormatOptionList (amountFunctions)),
@@ -63,7 +69,10 @@ class ImportRulesView extends TupleView {
       new ViewCheckbox     ('creditUpdate'),
       new ViewCheckbox     ('accountUpdate'),
       new ViewCheckbox     ('categoryUpdate'),
-      new ViewCheckbox     ('descriptionUpdate')
+      new ViewCheckbox     ('descriptionUpdate'),
+      new ViewLabel        ('debit_split_remaining', ViewFormats ('string')),
+      new ViewLabel        ('credit_split_remaining', ViewFormats ('string')),
+      new ViewLabel        ('account_split_remaining', ViewFormats ('string'))
     ];
     super (name, fields);
     this._rules = new Map();
@@ -173,7 +182,7 @@ class ImportRulesView extends TupleView {
           if (e .metaKey) {
             this._notifyObservers (ImportRulesViewEvent .INSERT_KEY, {
               insert: {},
-              pos:    {before: e .shiftKey, id: getId (e)}
+              pos:    {before: e .shiftKey, id: getId (e), inside: e .altKey}
             }, true);
             return false;
           }
@@ -306,7 +315,7 @@ class ImportRulesView extends TupleView {
     this .setUpdateFieldsEnabled (data);
   }
 
-  addSplit (data, before) {
+  addSplit (data, before, isRemainingRow) {
     var rule  = this._rules .get (data .predicate);
     var split = rule .find ('._split');
     if (split .length == 0)
@@ -319,12 +328,13 @@ class ImportRulesView extends TupleView {
       tr .appendTo (split);
     this .createFields ({
       _id:         data ._id,
-      debit:       data .debit       || '',
-      credit:      data .credit      || '',
+      [isRemainingRow? 'debit_split_remaining':   'debit']: isRemainingRow? '': data .debit  || '',
+      [isRemainingRow? 'credit_split_remaining': 'credit']: isRemainingRow? '': data .credit || '',
+      account_split_remaining: isRemainingRow? 'Any Remaining': '',
       category:    data .category    || '',
       description: data .description || ''
     }, () => {return $('<td>') .appendTo (tr)})
-    this._normalizeColumns (tr, [0,1,2,5]);
+    this._normalizeColumns (tr, [0,1,2]);
     this._tuples .set (data._id, tr);
     if ($(document.activeElement) .closest ('._rule') [0] == rule [0]) {
       var focus = $(tr .find ('._field') .toArray() .find (h => {var f = $(h) .data ('field'); return f && f .isEnabled()})) .data ('field');
@@ -333,7 +343,7 @@ class ImportRulesView extends TupleView {
     }
   }
 
-  addAdd (data, before) {
+  addAdd (data, before, options) {
     var rule = this._rules .get (data .predicate);
     var add  = rule .find ('._add');
     if (add .length == 0)
@@ -360,6 +370,8 @@ class ImportRulesView extends TupleView {
       if (focus)
         focus .click();
     }
+    if (options)
+      this .updateTuple (data._id, options);
   }
 
   removeTuple (id) {
@@ -406,6 +418,15 @@ class ImportRulesView extends TupleView {
       true
     );
   }
+
+  updateTuple (id, options) {
+    var html = this._getTuple (id);
+    if (html) {
+      for (let op of [['isGroup', '_group'], ['isLeader', '_leader'], ['isLast', '_last']])
+        html [options [op [0]]? 'addClass': 'removeClass'] (op [1]);
+      return html
+    }
+  }
 }
 
 var ImportRulesViewEvent = Object.create (TupleViewEvent, {
@@ -427,7 +448,7 @@ class AmountFormulaType extends NumberType {
     super ({style:'currency', currency:'USD', minimumFractionDigits:2}, 2);
   }
   toString (v) {
-    if (typeof v == 'string' && (v .slice (-1) == '%' || v == 'Remaining'))
+    if (typeof v == 'string' && (v .slice (-1) == '%'))
       return v;
     else
       return super .toString (v);
@@ -437,8 +458,6 @@ class AmountFormulaType extends NumberType {
       s = s.trim();
       if (s .slice (-1) == '%' && ! isNaN (s .slice (0, -1)) && Number (s .slice (0, -1)) >= 0)
         return s
-      else if (s .length > 0 && 'remaining' .startsWith (s .toLowerCase()))
-        return 'Remaining';
       else
         return super .fromString (s);
     } else
@@ -507,23 +526,3 @@ class ApplyToTableView extends TransactionTableView {
 var ApplyToTableViewEvent = Object .create (TableViewEvent, {
   APPLY: {value: 400}
 })
-
-class IRVDateTextbox extends ViewTextbox {
-  get() {
-    return this._format .fromView (this._get(), (m) => {
-      var value = this._value;
-      if (!value) {
-        var tr = this._html .closest ('._ImportRulesView') .closest ('tr');
-        var fl = '.' + this._view._getFieldHtmlClass (this._name);
-        value = tr .prev() .find (fl) .data('field') ._value || tr .next() .find (fl) .data('field') ._value;
-      }
-      if (!value)
-        return undefined;
-      var df = m - Types.dateDM._month (value);
-      return Types.dateDM._year (value) + (Math.abs (df) < 6? 0: (df < 0? 1: -1));
-    });
-  }
-}
-
-
-

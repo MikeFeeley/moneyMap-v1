@@ -10,6 +10,8 @@ class ImportRules extends TuplePresenter {
 
   _onModelChange (eventType, entry, arg, source) {
     if (this._rules .has (entry .predicate || entry._id)) {
+      if (entry .type == ImportRulesModelType .ADD)
+        this._updateAddTuple (entry);
       super ._onModelChange (eventType, entry, arg, source);
       if (eventType == ModelEvent .UPDATE) {
         if (entry .type == ImportRulesModelType .PREDICATE) {
@@ -20,17 +22,102 @@ class ImportRules extends TuplePresenter {
         }
       } else if (eventType == ModelEvent .REMOVE && entry .type == ImportRulesModelType .PREDICATE)
         this._rules .delete (entry._id);
-      if (entry .type == ImportRulesModelType .SPLIT) {
-        for (let s of this._model .get (entry .predicate || entry._id) .children || [])
-          if (s .type == ImportRulesModelType .SPLIT)
-            for (let a of ['debit', 'credit'])
-              if (!arg || arg [a]) {
-                var f = this._view._getField (s._id, a);
-                if (f && f .hasError())
-                  f .update();
-              }
+    }
+  }
+
+  async _processAddInsert (entry, insert, pos) {
+    insert ._seq = null;
+    if (pos && pos .inside) {
+      if (! entry .group) {
+        await this._model .update (entry._id, {group: entry._id, sort: 0});
+        entry .group = entry._id;
+        entry .sort  = 0;
+      }
+      var group = this._getGroup (entry);
+      for (let f of ['group', 'date', 'payee', 'account'])
+        insert [f] = entry [f];
+      insert .sort   = entry .sort + (pos .before && entry .sort > 0? 0: 1);
+      insert .leader = group [0]._seq;
+      var sortAdjust = group
+      .filter (t => {return t .sort >= insert .sort})
+      .map    (t => {return {id: t._id, update: {sort: t .sort + 1}}})
+      await this._model .updateList (sortAdjust);
+    } else if (entry && entry .group) {
+      var group = this._getGroup (entry);
+      pos .id = (pos .before? group [0]: group [group .length - 1]) ._id;
+    }
+  }
+
+  async _processAddRemove (id) {
+    var entry = this._model .get (id);
+    if (entry .group) {
+      if (entry .group == entry._id) {
+        let removeList = this._getGroup (entry) .filter (s => {return s._id != id}) .map (s => {return s._id});
+        if (removeList .length)
+          await super._removeList (removeList);
+        return;
+      }
+      await this._redistributeGroupAmount (entry, (entry .debit - entry .credit) || 0);
+      var group = this._getGroup (entry);
+      if (group .length == 2)
+        await this._model .update (group [0]._id, {group: null});
+    }
+  }
+
+  async _processAddUpdate (entry, fieldName, value) {
+    if (['debit', 'credit'] .includes (fieldName)) {
+      if (entry .group && entry [fieldName] != value)
+        await this._redistributeGroupAmount (entry, ((entry .debit || 0) - (entry .credit || 0)) - value * (fieldName == 'credit'? -1: 1));
+    }
+    if (['date', 'payee', 'account'] .includes (fieldName)) {
+      if (entry .group && entry .group == entry ._id) {
+        var updateList = this._getGroup (entry)
+        .map    (t => {var o = {id: t._id, update: {}}; o .update [fieldName] = value; return o})
+        await this._model .updateList (updateList);
       }
     }
+  }
+
+  _getTupleOptions (doc, group) {
+    return {
+      isGroup:  doc .group,
+      isLeader: doc .group && doc .group == doc._id,
+      isLast:   group .reduce ((m,t) => {return Math .max (m, t .sort)}, 0) == doc .sort
+    }
+  }
+
+  _updateAddTuple (doc) {
+    let group = this._getGroup (doc);
+    for (let d of group .concat (group .find (g => {return g._id == doc._id})? []: doc))
+      this._view .updateTuple (d._id, this._getTupleOptions (d, group));
+  }
+
+  _getGroup (entry) {
+    return entry .group? this._model .refine (e => {return e .group == entry .group}) .sort ((a,b) => {return a .sort < b .sort? -1: 1}): [];
+  }
+
+  async _redistributeGroupAmount (entry, delta) {
+    var siblings   = this._getGroup (entry) .filter (t => {return t._id != entry ._id});
+    var newAmounts = [];
+    for (let s of siblings) {
+      var ca = (s .debit || 0) - (s .credit || 0);
+      var na = Math [ca > 0? 'max': 'min'] (0, ca + delta);
+      delta -= (na - ca);
+      newAmounts .push (na);
+    }
+    if (delta)
+      newAmounts [0] = delta;
+    var updates = [];
+    for (let i = 0; i < siblings .length; i ++) {
+      var s  = siblings   [i];
+      var a  = newAmounts [i];
+      var c = - Math.min (0, a);
+      var d = Math .max  (0, a);
+      if (c != (s .credit || 0) || d != (s .debit || 0))
+        updates .push (this._model .update (s._id, {credit: c, debit: d}))
+    }
+    for (let u of updates)
+      await u;
   }
 
   async _onViewChange (eventType, arg) {
@@ -39,12 +126,20 @@ class ImportRules extends TuplePresenter {
       if ([ImportRulesModelType .PREDICATE, ImportRulesModelType .UPDATE] .includes (entry .type))
         return;
       else
-        if (eventType == ImportRulesViewEvent .INSERT_KEY)
-          eventType = ImportRulesViewEvent .INSERT
-        else
-          eventType = ImportRulesViewEvent .REMOVE
+        if (eventType == ImportRulesViewEvent .INSERT_KEY) {
+          eventType = ImportRulesViewEvent .INSERT;
+          if (entry .type == ImportRulesModelType .ADD)
+            await this._processAddInsert (entry, arg .insert, arg .pos);
+        } else {
+          eventType = ImportRulesViewEvent .REMOVE;
+          if (entry .type == ImportRulesModelType .ADD)
+            await this._processAddRemove (arg);
+        }
     }
     if (eventType == TupleViewEvent .UPDATE) {
+      var entry = this._model .get (arg .id);
+      if (entry .type == ImportRulesModelType .ADD)
+        await this._processAddUpdate (entry, arg .fieldName, arg .value);
       if (['debit', 'credit'] .includes (arg .fieldName)) {
         if (isNaN (arg.value) || arg.value > 0)
           this .updateField (arg.id, arg.fieldName == 'debit'? 'credit': 'debit', 0);
@@ -55,27 +150,14 @@ class ImportRules extends TuplePresenter {
         }
       }
     }
-    var mayNeedToValidate = eventType == ImportRulesViewEvent .REMOVE ||
-      (eventType == ImportRulesViewEvent .UPDATE && ['debit', 'credit'] .includes (arg .fieldName))
-    if (mayNeedToValidate) {
-      var entry  = this._model .get ((arg .pos && arg .pos .id) || arg .id || arg);
-      if (entry && entry .type == ImportRulesModelType .SPLIT) {
-        var splits = (entry .parent .children || []) .filter (c => {
+    if (eventType == ImportRulesViewEvent .REMOVE) {
+      let entry = this._model .get ((arg .pos && arg .pos .id) || arg .id || arg);
+      if (entry && entry .type == ImportRulesModelType .SPLIT && this._isSplitRemainingEntry (entry)) {
+        let hasOtherSplits = (entry .parent .children || []) .find (c => {
           return c .type == ImportRulesModelType .SPLIT && (eventType != ImportRulesViewEvent .REMOVE || c._id != arg)
-        })
-        var amounts = splits .map (s => {
-          return ['debit', 'credit'] .reduce ((r,a) => {
-            var f = this._view._getField (s._id, a);
-            var v = eventType == ImportRulesViewEvent .UPDATE && s._id == arg .id? arg .value: f .hasError()? f .get(): s [a]
-            return r? r: v;
-          }, '')
-        })
-        var [isOkay, errMessage] = this._isSplitValid (amounts);
-        if (!isOkay) {
-          if (eventType == ImportRulesViewEvent .UPDATE)
-            this._view .setFieldError (arg .id, arg .fieldName, errMessage);
-          else
-            this._view .flagTupleError (arg);
+        });
+        if (hasOtherSplits) {
+          this._view .flagTupleError (arg);
           eventType = TupleViewEvent .CANCELLED;
         }
       }
@@ -127,34 +209,6 @@ class ImportRules extends TuplePresenter {
     }));
   }
 
-  _isSplitValid (amounts) {
-    if (amounts .length == 0)
-      return [true];
-    var hasRemaining;
-    var hasDuplicateRemaining
-    var hasPercent;
-    var hasFixed;
-    var totalPercent = 0;
-    for (let a of amounts)
-      if (a == 'Remaining') {
-        hasDuplicateRemaining = hasRemaining;
-        hasRemaining          = true;
-      } else if (typeof a == 'string' && a .endsWith ('%')) {
-        hasPercent    = true;
-        totalPercent += Number (a .slice (0, -1))
-      } else
-        hasFixed = true;
-    if (hasDuplicateRemaining)
-      return [false, 'Only one "Remaining" line allowed.']
-    else if (!hasRemaining && hasFixed && hasPercent)
-      return [false, 'Percent and fixed amount combined without a "Remaining" line.']
-    else if (hasPercent && !hasRemaining && totalPercent != 100)
-      return [false, 'Precentages do not total 100% and no "Remaining" line.']
-    else if (!hasRemaining && !hasPercent)
-      return [false, 'Use percentages or include one "Remaining" line.']
-      return [true];
- }
-
   updateTran (tran) {
     this._tran = tran;
   }
@@ -169,6 +223,11 @@ class ImportRules extends TuplePresenter {
     this._addTuple (rule);
     for (let a of rule .children || [])
       this._addTuple (a);
+    this._view .setPredicateIsMatch (rule._id, this._model .isMatch (rule, this._tran));
+  }
+
+  _isSplitRemainingEntry (data) {
+    return [data .debit, data .credit] .includes ('Remaining');
   }
 
   _addTuple (data) {
@@ -184,12 +243,13 @@ class ImportRules extends TuplePresenter {
         this._view .addUpdate (data);
         break;
       case ImportRulesModelType .SPLIT:
-        this._view .addSplit (data, before && before._id);
+        this._view .addSplit (data, before && before._id, this._isSplitRemainingEntry (data));
         break;
       case ImportRulesModelType .ADD:
-        this._view .addAdd (data, before && before._id);
+        this._view .addAdd (data, before && before._id, this._getTupleOptions (data, this._getGroup (data)));
         break;
     }
+
   }
 
   async _createRule() {
@@ -262,8 +322,8 @@ class ImportRules extends TuplePresenter {
         type:        ImportRulesModelType .SPLIT,
         predicate:   id,
         sort:        1,
-        debit:       this._tran .debit?  'Remaining': '',
-        credit:      this._tran .credit? 'Remaining': ''
+        debit:      'Remaining',
+        credit:     'Remaining'
       }
     ]
     await this._model .insertList (insertList);

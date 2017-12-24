@@ -82,12 +82,12 @@ class TransactionTable extends Table {
 
   _updateTuple (doc) {
     let group = this._getGroup (doc);
-    for (let d of group || [doc])
+    for (let d of group .concat (group .find (g => {return g._id == doc._id})? []: doc))
       this._view .updateTuple (d._id, this._getTupleOptions (d, group));
   }
 
   _onModelChange (eventType, doc, arg, source) {
-    this._updateTuple    (doc);
+    this._updateTuple (doc);
     super._onModelChange (eventType, doc, arg, source);
   }
 

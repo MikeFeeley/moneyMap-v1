@@ -211,7 +211,8 @@ class TransactionAndRulesTable extends TransactionTable {
       }
       let tran = this._model .refine (t => {return t._id == cid}) [0];
       let [rulebox, field] = this._view .getRuleBox (cid);
-      this._openRule .rule .delete (finish);
+      if (this._openRule)
+        this._openRule .rule .delete (finish);
       this._openRule = null;
       if (onClose)
         onClose();
