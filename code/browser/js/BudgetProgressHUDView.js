@@ -27,6 +27,7 @@ class BudgetProgressHUDView extends View {
 
   _onProgressGraphChange (eventType, arg) {
     if (eventType == BudgetProgressGraphEvent .GRAPH_CLICK) {
+      arg .altPosition = {top: 50, left: 50};
       this._notifyObservers (BudgetProgressHUDViewEvent .GRAPH_CLICK, arg);
     }
   }
@@ -130,14 +131,14 @@ class BudgetProgressHUDView extends View {
                     name:     'all',
                     lastYear: true,
                     html:     this._html,
-                    position: {top: canvas .position() .top + 50, left: 50},
+                    position: {top: 50, left: 50},
                     altClick: e .webkitForce > 1 || e .altKey,
                   })
                 }
                 else if (element [0]._datasetIndex == 1)
                     this._notifyObservers (BudgetProgressHUDViewEvent .BODY_CLICK, {
                     html:     this._html,
-                    position: {top: canvas .position() .top + 50, left: 50},
+                    position: {top: 50, left: 50},
                     altClick: e .webkitForce > 1 || e .altKey
                   });
                 e .stopPropagation();
@@ -204,7 +205,7 @@ class BudgetProgressHUDView extends View {
                     month:    month,
                     lastYear: element[0]._datasetIndex == 0,
                     html:     this._html,
-                    position: {top: canvas .position() .top + 50, left: 50},
+                    position: {top: 50, left: 50},
                     altClick:  e .webkitForce > 1 || e .altKey,
                   })
                   e.stopPropagation();

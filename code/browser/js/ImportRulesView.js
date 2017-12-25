@@ -187,16 +187,6 @@ class ImportRulesView extends TupleView {
             return false;
           }
           break;
-        case 37: /* arrow left */
-        case 39: /* arrow right */
-          var all  = $(e .target) .closest ('td') [e.keyCode == 37? 'prevAll': 'nextAll']() .toArray();
-          var next = all .find (td => {var f = $(td) .find ('._field') .data ('field'); return f && f .isEnabled()})
-          if (next) {
-            next = $(next) .find ('._field') .data ('field')
-            if (next)
-              next .click();
-          }
-          return false;
         case 38: /* arrow up */
         case 40: /* arrow down */
           var name = $(e .target) .closest ('._field') .data ('field') ._name;

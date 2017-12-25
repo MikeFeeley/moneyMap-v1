@@ -140,7 +140,7 @@ body {
 
     > ._group > ._presenter > ._MiniScheduleEntry {
       > ul > li {
-        > ._field > div {
+        > ._field > div, > ._field {
           > ._content, ._suffix {
             font-size: 11px;
           }
@@ -371,8 +371,8 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
         flex-direction: row;
         > ._icons {
           flex-grow: 0;
-          @include icon-button();
           > div {
+            @include icon-button();
             display: inline-block;
             margin-top: 10px;
             margin-left: $icon-spacing;

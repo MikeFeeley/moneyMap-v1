@@ -182,7 +182,7 @@ class BudgetProgressHUD {
           onFieldClick:                         (id, name, html, pos) => {
             if (name != 'name' && id) {
               this .blur();
-              BudgetProgressHUD .show (id, html, pos, this._accounts, this._variance)
+              BudgetProgressHUD .show (id, html .closest ('._BudgetProgressHUD'), {top: 50, left: 50}, this._accounts, this._variance)
             }
           },
           setFocus:                             setFocus

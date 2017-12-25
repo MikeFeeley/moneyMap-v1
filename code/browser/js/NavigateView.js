@@ -485,8 +485,12 @@ class NavigateView extends Observable  {
           });
           return false;
         }
-        $('<div>', {class: 'lnr-cog'}) .appendTo (icons) .click (() => {iconClick (false)});
-        $('<div>', {class: 'lnr-exit-up'}) .appendTo (icons) .click (() => {iconClick (true)});
+        let getHUD = $('<div>', {class: 'lnr-map'}) .appendTo (icons) .click (() => {iconClick (false)});
+        let goUp   = $('<div>', {class: 'lnr-exit-up'}) .appendTo (icons) .click (() => {iconClick (true)});
+        if (data [0] .id .includes ('_')) {
+          getHUD .addClass ('_disabled');
+          goUp   .addClass ('_disabled');
+        }
         head [0] .addEventListener ('webkitmouseforcewillbegin', e => {e .preventDefault()}, true);
         $('<span>', {class: '_heading', text: [] .concat (dataset .note? dataset .note: data [0] .name)}) .appendTo (head);
         if (!dataset .note && data [0] .note)
@@ -513,7 +517,6 @@ class NavigateView extends Observable  {
           if (element .length) {
             let html     = $(container .closest ('div:not(._popup)') [0]);
             let position = ui .calcPosition (graph, html, {top: 50, left: 50});
-            console.log('aaa', html, position, html);
             this._notifyObservers (NavigateViewEvent .BUDGET_GRAPH_CLICK, {
               name:         name,
               id:           datasets [element [0] ._datasetIndex] .id,
