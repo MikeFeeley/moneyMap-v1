@@ -41,14 +41,14 @@ class TransactionHUD extends TransactionAndRulesTable {
 
   async _toggleEdit() {
     var button = this._content .find ('._editButton');
-    if (button .text() == 'Edit') {
-      button .text ('View');
+    if (button .hasClass ('lnr-pencil')) {
+      button .removeClass ('lnr-pencil') .addClass ('lnr-eye');
       this._content .removeClass ('_TransactionReadOnly');
       this._view._options .readOnly = false;
       (this._query .$options = this._query .$options || {}) .groupBy = 'group';
       this .refreshHtml();
     } else {
-      button .text ('Edit');
+      button .removeClass ('lnr-eye') .addClass ('lnr-pencil');
       this._view._clearSelectedTuple();
       this._content .addClass ('_TransactionReadOnly');
       this._view._options .readOnly = true;
@@ -78,7 +78,7 @@ class TransactionHUD extends TransactionAndRulesTable {
     let field = edit .addHtml ('', this._view, dialogue .children());
     field .on ('mouseup webkitmouseforceup', e => {return false});
     field .find (':input') .focus();
-    let confirm = $('<button>', {text: 'Change All', prop: {disabled: true}, click: e => {
+    let confirm = $('<button>', {text: 'Change All', class: '_changeAllButton _disabled', prop: {disabled: true}, click: e => {
       let cat = field .data ('field') .get();
       let ul = Array .from (this._view._tuples .keys())
         .filter (id => {return id})
@@ -89,7 +89,11 @@ class TransactionHUD extends TransactionAndRulesTable {
       e .stopPropagation();
       return false;
     }}) .appendTo (dialogue .children());
-    this._recategorizeUpdate = () => {confirm .prop ({disabled: field .data ('field') .get() == ''})};
+    this._recategorizeUpdate = () => {
+      let isDisabled = field .data ('field') .get() == '';
+      confirm [(isDisabled? 'add': 'remove') + 'Class'] ('_disabled');
+      confirm .prop ({disabled: isDisabled})
+    };
     let modalEntry = ui .ModalStack .add (
       e => {
         return e && ! $.contains (dialogue [0], e .target) && dialogue [0] != e .target
@@ -238,25 +242,26 @@ class TransactionHUD extends TransactionAndRulesTable {
     if (position)
       this._html .css ({top: position .top, right: position .right, left: position .left});
     $('<div>', {class: '_title', text: this._title [0]}) .appendTo (this._content)
-      .on ('click',                     e => {this._toggleMonthYear(); e .stopPropagation(); return false})
-      .on ('webkitmouseforcedown',      e => {this._calendarYear(); e .stopPropagation(); return false})
     var buttons = $('<div>', {class: '_buttons'}) .appendTo (this._content);
     $('<button>', {text: 'Recategorize', class: '_recategorizeButton'}) .appendTo (buttons) .click (e => {
       this._showRecatorize();
       e .stopPropagation();
       return false;
     })
-    $('<button>', {text: 'Edit', class: '_editButton'}) .appendTo (buttons) .click (e => {
+    $('<div>', {class:'_editButton lnr-pencil'}) .appendTo (buttons) .click (e => {
       this._toggleEdit();
       e .stopPropagation();
       return false;
-      })
-    $('<button>', {html: '&lang;', class: '_prevButton'}) .appendTo (buttons) .click (e => {
+    })
+    $('<div>', {class: '_calendarButton lnr-calendar-full'}) .appendTo (buttons)
+      .on ('click',                e => {this._toggleMonthYear()})
+      .on ('webkitmouseforcedown', e => {this._calendarYear()})
+    $('<div>', {class:'_prevButton lnr-chevron-left'}) .appendTo (buttons) .click (e => {
       this._changeMonth (-1);
       e .stopPropagation();
       return false;
     });
-    $('<button>', {html: '&rang;', class: '_nextButton'}) .appendTo (buttons) .click (e => {
+    $('<div>', {class:'_nextButton lnr-chevron-right'}) .appendTo (buttons) .click (e => {
       this._changeMonth (1);
       e .stopPropagation();
       return false;

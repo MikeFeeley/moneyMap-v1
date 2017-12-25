@@ -286,7 +286,23 @@ class BudgetProgressHUDView extends View {
   }
 
   addTitle (titlePresenter) {
-    titlePresenter .addHtml (this._content);
+    let top = $('<div>', {class: '_topRow'}) .appendTo (this._content);
+    titlePresenter .addHtml (top);
+    let icons = $('<div>', {class: '_icons'}) .appendTo (top)
+    $('<div>', {class: 'lnr-chart-bars'}) .appendTo (icons) .click (() => {
+      this._notifyObservers (BudgetProgressHUDViewEvent .BODY_CLICK, {
+        html:     this .getHtml(),
+        position: {top: 50, left: 50},
+        altClick: false
+      });
+    });
+    $('<div>', {class: 'lnr-exit-up'}) .appendTo (icons) .click (() => {
+      this._notifyObservers (BudgetProgressHUDViewEvent .BODY_CLICK, {
+        html:     this .getHtml(),
+        position: {top: 50, left: 50},
+        altClick: true
+      });
+    });
   }
 
   addPresenter (group, presenter) {
@@ -358,16 +374,6 @@ class BudgetProgressCategoryTitleView extends View {
       }
       if (e .keyCode == 8 && e .metaKey)
         return false;
-    })
-    this .getHtml() .on ('click webkitmouseforcedown', e => {
-      if (! $(e .target) .hasClass ('_content'))
-        this._parentView._notifyObservers (BudgetProgressHUDViewEvent .BODY_CLICK, {
-          html:     this._parentView .getHtml(),
-          position: {top: 50, left: 50},
-          altClick: e .originalEvent .webkitForce > 1 || e .originalEvent .altKey
-        });
-      e .stopPropagation();
-      return false;
     })
   }
 }

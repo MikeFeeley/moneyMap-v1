@@ -20,6 +20,8 @@ $wide-lower:   1180px;
 $narrow-upper: $medium-lower - 1px;
 $medium-upper: $wide-lower   - 1px;
 
+$icon-spacing: 16px;
+
 @mixin icon-button {
   font-family: 'Linearicons-Free';
   font-weight: 100;

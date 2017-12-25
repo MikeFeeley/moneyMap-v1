@@ -164,7 +164,7 @@ div._fieldTip {
     margin-top: 10px;
     float: right;
     padding-bottom: 6px;
-    padding-left: 16px;
+    padding-left: $icon-spacing;
   }
   > form > table {
     clear: left;
@@ -505,13 +505,23 @@ div._TransactionHUD {
       > button {
         vertical-align: middle;
       }
-      > ._prevButton, > ._nextButton {
-        font-weight: 800;
-        margin-left: 0;
-        margin-right: 0;
+      > ._prevButton, > ._nextButton, ._editButton, ._calendarButton {
+        padding-top: 4px;
+        display: inline-block;
+        @include icon-button();
+        margin-left: $icon-spacing;
       }
-      > ._editButton, ._recategorizeButton {
-        margin-right: 12px;
+      > ._recategorizeButton {
+        margin-bottom: 8px;
+        margin-right:  10px;
+        color: #33b1ff;
+      }
+     }
+    > ._recategorizeDialogue > div > div, ._recategorizeDialogue > div > ._changeAllButton {
+      color: #33b1ff;
+      &._disabled {
+        color: grey;
+        opacity: .3;
       }
     }
     > ._body {

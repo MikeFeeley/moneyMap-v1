@@ -467,24 +467,26 @@ class NavigateView extends Observable  {
     processDataset();
     if (popup) {
       if (data .length >= 1) {
-        let head = $('<div>', {class: '_heading'})
-          .appendTo (graph .children('._popupContent'))
-          .on ('click webkitmouseforcedown', e => {
-            let html        = container .closest ('div:not(._popup)');
-            let position    = ui .calcPosition (graph, html, {top: 50, left: 50});
-            this._notifyObservers (NavigateViewEvent .BUDGET_GRAPH_TITLE_CLICK, {
-              name:     name,
-              id:       Array .from (data .reduce ((s,d) => {return [] .concat (d .id) .reduce((s,i) => {return s .add (i)},s)}, new Set())),
-              data:     data,
-              position: position,
-              html:     html,
-              view:     this,
-              altClick: e .originalEvent .webkitForce > 1 || e . originalEvent .altKey,
-              date:     dataset .dates && dataset .dates [0],
-            });
-            e .stopPropagation();
-            return false;
-          })
+        let top  = $('<div>', {class: '_topRow'})  .appendTo (graph .children('._popupContent'));
+        let head = $('<div>', {class: '_heading'}) .appendTo (top);
+        let icons = $('<div>', {class: '_icons'})  .appendTo (top);
+        let iconClick = force => {
+          let html     = container .closest ('div:not(._popup)');
+          let position = ui .calcPosition (graph, html, {top: 50, left: 50});
+          this._notifyObservers (NavigateViewEvent .BUDGET_GRAPH_TITLE_CLICK, {
+            name:     name,
+            id:       Array .from (data .reduce ((s,d) => {return [] .concat (d .id) .reduce((s,i) => {return s .add (i)},s)}, new Set())),
+            data:     data,
+            position: position,
+            html:     html,
+            view:     this,
+            altClick: force,
+            date:     dataset .dates && dataset .dates [0],
+          });
+          return false;
+        }
+        $('<div>', {class: 'lnr-cog'}) .appendTo (icons) .click (() => {iconClick (false)});
+        $('<div>', {class: 'lnr-exit-up'}) .appendTo (icons) .click (() => {iconClick (true)});
         head [0] .addEventListener ('webkitmouseforcewillbegin', e => {e .preventDefault()}, true);
         $('<span>', {class: '_heading', text: [] .concat (dataset .note? dataset .note: data [0] .name)}) .appendTo (head);
         if (!dataset .note && data [0] .note)
