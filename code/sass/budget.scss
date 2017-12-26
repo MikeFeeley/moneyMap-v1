@@ -812,7 +812,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
     left: $left-width;
     width: calc(100% - 210px);
     height: 72px;
-    z-index: 10000;
+    z-index: 1000;
     > ._budgetYearGraph {
       > div {
         display: inline-block;

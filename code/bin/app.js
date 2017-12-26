@@ -138,7 +138,7 @@ app.use(function (req, res, next) {
       let err     = new Error ('Direct access to Admin database not permitted');
       err .status = 403;
       next (err);
-    } else {
+    } else if (req .body) {
       if (req .url .startsWith ('/admin/'))
         database = 'admin';
       req .dbPromise = getDB (database);
@@ -152,6 +152,9 @@ app.use(function (req, res, next) {
           req .url = '/transaction/findAccountBalance';
       }
       next();
+    } else {
+      console.log ('XXX Empty body');
+      throw 'XXX Empty body';
     }
   } catch (e) {
     console .log (e);
@@ -173,7 +176,6 @@ app.use(function(req, res, next) {
 
 if (app.get('env') === 'development') {
   app.use(function(err, req, res, next) {
-    console.log ('xxx a', err, err .message, req .body)
     res.status(err.status || 500);
     res.render('error 500a', {
       message: err.message,
@@ -183,7 +185,6 @@ if (app.get('env') === 'development') {
 }
 
 app.use(function(err, req, res, next) {
-  console.log('xxx b', err, err.message, req .body);
   res.status(err.status || 500);
   res.render('error 500b', {
     message: err.message,

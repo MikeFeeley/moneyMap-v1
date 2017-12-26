@@ -334,12 +334,12 @@ class _Collection extends Observable {
       document .documentElement .addEventListener ('keydown', e => {
         if (e .keyCode == 90 && e .metaKey) {
           (async () => {await (e.shiftKey? _Collection._redo: _Collection._undo) ()})();
-          e .stopPropagation();
           e .preventDefault();
+          e .stopPropagation();
           return false;
         }
       }, false);
-    }
+     }
     _Collection .getDatabaseInstance() .addObserver (this, this .onDbChange);
   }
 

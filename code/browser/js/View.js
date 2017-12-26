@@ -203,7 +203,7 @@ class ViewField {
     );
     this._html .on ('blur', 'input', this.clearTooltip);
     this._html [0] .addEventListener ('keydown', e => {
-      if (e .keyCode == 90 && e .metaKey && ! e .shiftKey) {
+      if (e .keyCode == 90 && e .metaKey && ! e .shiftKey && this._value !== undefined) {
         let stopPropagation = false;
         if (this._value != this .get()) {
           this .reset();
@@ -224,7 +224,7 @@ class ViewField {
           return false;
         }
       }
-    }, true);
+    }, false);
   }
   _handleChange (e) {
     var value = this .get();

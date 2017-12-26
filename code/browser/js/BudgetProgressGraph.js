@@ -107,6 +107,7 @@ class BudgetProgressGraph extends Observable {
           values:          this._data .map (d => {return Types .moneyDC .toString ([d .amounts [schema [1]] || 0])}),
           backgroundColor: schema [2], hoverBackgroundColor: schema [2],
           borderColor:     schema [3], hoverBorderColor: schema [3],
+          borderWidth:     1,
           data:            this._data .map (d => {
             return this._graphAsPercentage? (d .amounts [schema [1]] || 0) * 98.0 / d .total : d .amounts [schema [1]] || 0;
           })
