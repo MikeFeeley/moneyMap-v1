@@ -217,7 +217,7 @@ class NavigateView extends Observable  {
           this._addTooltip (tr, item .tooltip);
           if (item .id)
             tr .on ('click webkitmouseforcedown', e => {
-              let html = this._progressGraphs .find ('._progressGraph') [0];
+              let html = $(this._progressGraphs .find ('._progressGraph') [0]);
               let st = $('body') .scrollTop();
               let target = $(e .target);
               let scrollParent = target .closest ('._progressSidebar');
