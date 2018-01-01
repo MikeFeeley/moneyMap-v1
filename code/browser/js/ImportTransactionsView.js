@@ -142,7 +142,7 @@ class ImportedTransactionTableView extends TransactionTableView {
   _getLastTupleinGroup (id) {
     let tuple = super._getTuple (id);
     let lastInGroup;
-    if (tuple && tuple .hasClass ('_group'))
+    if (tuple && tuple .hasClass ('_group') && ! tuple .hasClass ('_last'))
       lastInGroup = $(tuple .nextAll ('._last') [0]);
     return lastInGroup && lastInGroup .length? lastInGroup: tuple;
   }

@@ -208,6 +208,7 @@ class ImportRulesModel extends Observable {
 
       // add new splits, except for remaining
       let remaining = tran .debit - tran .credit;
+      console.log('www', remaining);
       for (let [i, action] of splitRules .entries()) {
         if (action .debit != 'Remaining') {
           let split = {
@@ -228,10 +229,12 @@ class ImportRulesModel extends Observable {
             async .push (this._tranModel .insert (split));
           }
           remaining -= (split .debit - split .credit);
+          console.log('xxx', split);
         }
       }
 
       // handle remaining
+      console.log('yyy', remaining);
       if (remaining != 0) {
         let action = splitRules .find (a => {return a .debit == 'Remaining'});
         async.push (this._tranModel .insert ({
@@ -289,6 +292,7 @@ class ImportRulesModel extends Observable {
             async .push (this._tranModel .update (insert._id, {category: action .category}));
           break;
       }
+    console.log('zzz', tran);
     if (! (tran .rulesApplied && tran .rulesApplied .include (rule._id)))
       async.push (this._tranModel .update (tran._id, {rulesApplied: (tran .rulesApplied || []) .concat (rule._id)}));
     for (let a of async)
