@@ -75,9 +75,14 @@ class Preferences extends Observable {
       .append ($('<div>', {text: 'Version: ' + APP_VERSION}))
       .append ($('<div>', {html: '&nbsp;'}))
       .append ($('<div>', {html: '&nbsp;&nbsp;&nbsp;&nbsp; Thanks to:', css: {color: '#ccc'}}))
-      .append ($('<div>', {html: '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Icons: https://linearicons.com', css: {color: '#ccc'}}))
+      .append ($('<div>', {html: '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; nodejs.org', css: {color: '#ccc'}}))
+      .append ($('<div>', {html: '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mongodb.com', css: {color: '#ccc'}}))
+      .append ($('<div>', {html: '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; chartjs.org', css: {color: '#ccc'}}))
+      .append ($('<div>', {html: '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; refreshless.com (noUiSlider)', css: {color: '#ccc'}}))
+      .append ($('<div>', {html: '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; github.com/ilikenwf (nestedSortable)', css: {color: '#ccc'}}))
+      .append ($('<div>', {html: '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; linearicons.com', css: {color: '#ccc'}}))
       .append ($('<div>', {html: '&nbsp;'}))
-      .append ($('<div>', {text: '(c) 2017 Mike Feeley (feeley@cs.ubc.ca)'}))
+      .append ($('<div>', {text: '(c) 2018 Mike Feeley (feeley@cs.ubc.ca)'}))
     about.css ({top: 100, left: 50});
     ui .ModalStack .add (
       () => {return true},
