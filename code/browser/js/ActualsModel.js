@@ -7,6 +7,7 @@ class ActualsModel extends Observable {
     this._transactionModel .addObserver (this, this._onModelChange);
     this._transactionModel .observe ();
     this._actualsModel = new Model ('actuals');
+    this._accounts .setActualsModel (this);
   }
   
   delete() {

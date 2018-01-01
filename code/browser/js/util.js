@@ -310,6 +310,11 @@ class DateType extends FieldType {
     var bd = new Date (this._year (b), this._month (b) - 1, this._day (b)) .valueOf();
     return Math .floor ((ad - bd) / (1000 * 60 * 60 * 24));
   }
+  addDay (date, days) {
+    return (d => {return this._date (d .getFullYear(), d .getMonth() + 1, d .getDate())})
+      (new Date (this._year (date), this._month (date) - 1, this._day (date)) .valueOf() + days * 1000 * 60 * 60 * 24);
+
+  }
 }
 
 class TimeType extends DateType {
