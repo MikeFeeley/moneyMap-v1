@@ -187,10 +187,6 @@ table._ImportTransactionsTable._TransactionAndRulesTable._needsAttention {
     }
 }
 
-._import > div._TransactionAndRulesTable:last-child {
-  padding-bottom: 700px;
-}
-
 table._TransactionAndRulesTable {
   > tbody > tr:not(._tuple) {
     background-color: #fdfdfd!important;
