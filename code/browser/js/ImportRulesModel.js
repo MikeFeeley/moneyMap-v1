@@ -178,7 +178,7 @@ class ImportRulesModel extends Observable {
 
   async applyRule (rule, tran) {
     let amount = (action, f) => {
-      return action [f] && typeof action [f] == 'string' && action [f] .endsWith ('%')?  Math .round (tran [f] * Number (action [f] .slice (0, -1)) / 100.0): tran [f];
+      return action [f] && typeof action [f] == 'string' && action [f] .endsWith ('%')?  Math .round (tran [f] * Number (action [f] .slice (0, -1)) / 100.0): action [f];
     }
     let async     = [];
     let sort      = this._tranModel
@@ -208,33 +208,28 @@ class ImportRulesModel extends Observable {
 
       // add new splits, except for remaining
       let remaining = tran .debit - tran .credit;
-      console.log('www', remaining);
-      for (let [i, action] of splitRules .entries()) {
-        if (action .debit != 'Remaining') {
-          let split = {
-            group:       tran._id,
-            sort:        ++sort,
-            debit:       amount (action, 'debit'),
-            credit:      amount (action, 'credit'),
-            category:    action .category || null,
-            description: action .description || ''
-          }
-          if (i == 0)
-            async .push (this._tranModel .update (tran._id, split));
-          else {
-            split._seq    = null;
-            split .leader = tran._seq;
-            for (let f of ['importTime', 'date', 'payee', 'account'])
-              split [f] = tran [f];
-            async .push (this._tranModel .insert (split));
-          }
-          remaining -= (split .debit - split .credit);
-          console.log('xxx', split);
+      for (let [i, action] of splitRules .filter (r => {return r .debit != 'Remaining'}) .entries()) {
+        let split = {
+          group:       tran._id,
+          sort:        ++sort,
+          debit:       amount (action, 'debit'),
+          credit:      amount (action, 'credit'),
+          category:    action .category || null,
+          description: action .description || ''
         }
+        if (i == 0)
+          async .push (this._tranModel .update (tran._id, split));
+        else {
+          split._seq    = null;
+          split .leader = tran._seq;
+          for (let f of ['importTime', 'date', 'payee', 'account'])
+            split [f] = tran [f];
+          async .push (this._tranModel .insert (split));
+        }
+        remaining -= (split .debit - split .credit);
       }
 
       // handle remaining
-      console.log('yyy', remaining);
       if (remaining != 0) {
         let action = splitRules .find (a => {return a .debit == 'Remaining'});
         async.push (this._tranModel .insert ({
@@ -292,8 +287,7 @@ class ImportRulesModel extends Observable {
             async .push (this._tranModel .update (insert._id, {category: action .category}));
           break;
       }
-    console.log('zzz', tran);
-    if (! (tran .rulesApplied && tran .rulesApplied .include (rule._id)))
+    if (! (tran .rulesApplied && tran .rulesApplied .includes (rule._id)))
       async.push (this._tranModel .update (tran._id, {rulesApplied: (tran .rulesApplied || []) .concat (rule._id)}));
     for (let a of async)
       await a;

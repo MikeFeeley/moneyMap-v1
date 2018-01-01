@@ -132,7 +132,6 @@ class ImportRulesView extends TupleView {
     this._addButton (id, '',              'New',    ImportRulesViewEvent .NEW,   legend);
     this._addButton (id, '',              'Clone',  ImportRulesViewEvent .CLONE, legend);
     this._rules .set (id, rule);
-    console.log('var', this._html, rule);
     return rule;
   }
 
