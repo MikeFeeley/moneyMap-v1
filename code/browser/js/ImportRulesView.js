@@ -491,7 +491,7 @@ class ApplyToTableView extends TransactionTableView {
       super .addHtml (this._html);
       var apply = $('<button>', {class: '_apply_button', text: 'Apply'}) .prependTo (toHtml);
       apply .click (e => {this._notifyClick()});
-      $('<div>', {class: '_title', text: 'Select Matching to Which to Apply Rule'}) .prependTo (toHtml);
+      $('<div>', {class: '_title', text: 'Apply Rule to These Matching, Unallocated Transactions'}) .prependTo (toHtml);
       this._html .find ('thead') .find ('._field_apply') .click (e => {
         var fields   = this._getApplyFields();
         var selected = fields .find (f => {return f.get()})
