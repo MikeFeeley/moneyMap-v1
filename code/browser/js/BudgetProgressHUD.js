@@ -160,7 +160,7 @@ class BudgetProgressHUD {
     this._view .addGroup ('_subcategories');
   }
 
-   _updateSubCategories (setFocus) {
+  _updateSubCategories (setFocus) {
     if (this._id) {
       if (this._options .noScheduleEntry)
         return;

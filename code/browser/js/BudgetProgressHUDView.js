@@ -1,8 +1,6 @@
 class BudgetProgressHUDView extends View {
   constructor (isModal, onDelete, topBuffer=0) {
     super();
-    this._html          = $('<div>', {class: '_BudgetProgressHUD fader'});
-    this._content       = $('<div>', {class: '_hudContent'}) .appendTo (this._html);
     this._monthsDatasets = [
       ['Last Year', 'priorYear', '#f4f4f4', '#d8d8d8'],
       ['Budget',    'budget',    '#eef6ee', '#acd2ac'],
@@ -41,7 +39,7 @@ class BudgetProgressHUDView extends View {
   }
 
   addHtml (toHtml, position, titlePresenter) {
-    this._resetHtml();
+    this._resetHtml (toHtml);
     this._html .appendTo (toHtml);
     this._position = position;
     if (position)
@@ -269,9 +267,11 @@ class BudgetProgressHUDView extends View {
     }, 0);
   }
 
-  _resetHtml() {
-    this._content .empty();
-    this._html .removeClass ('fader_visible');
+  _resetHtml (toHtml) {
+    if (this._html)
+      this._html .remove();
+    this._html          = $('<div>', {class: '_BudgetProgressHUD fader'}) .appendTo (toHtml);
+    this._content       = $('<div>', {class: '_hudContent'})              .appendTo (this._html);
     this._graphs           = undefined;
     this._progressGraphs   = new Map();
     this._monthsGraph      = null;
@@ -308,7 +308,8 @@ class BudgetProgressHUDView extends View {
 
   addPresenter (group, presenter) {
     var toHtml = group!=''? this._content .find ('._group.' + group): this._content;
-    presenter .addHtml ($('<div>', {class: '_presenter'}) .appendTo (toHtml));
+    if (toHtml .length)
+      presenter .addHtml ($('<div>', {class: '_presenter'}) .appendTo (toHtml));
   }
 
   addProgressGraph (group, name) {

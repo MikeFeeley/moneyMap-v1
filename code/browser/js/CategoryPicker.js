@@ -101,10 +101,10 @@ class CategoryPicker {
       var id = (this._categories .findBestMatch (value .split(':') .map (s => {return s.trim()}), this._includeZombies) || {}) ._id;
     this._show (id);
     if (this._filterTimeout) {
-      window .clearTimeout (this._filterTimeout);
+      clearTimeout (this._filterTimeout);
       this._filterTimeout = null;
     }
-    this._filterTimeout = window .setTimeout (() => {
+    this._filterTimeout = setTimeout (() => {
       this._budgetProgressHUD .update (id);
       this._filterTimeout = null;
     }, 200);
@@ -118,6 +118,10 @@ class CategoryPicker {
     this._onSelect (selected.length && selected .slice (-1) [0] .id || '');
     this._view .hide();
     this._budgetProgressHUD .hide();
+    if (this._filterTimeout) {
+      clearTimeout (this._filterTimeout);
+      this._filterTimeout = null;
+    }
   }
 
   moveUp() {
