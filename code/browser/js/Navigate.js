@@ -620,7 +620,7 @@ class Navigate {
         realChildren = children .filter (child => {return ! child .cat .startsWith ('budget_')});
       }
       await processChildren (await this._getChildren (type, id, altDates));
-      if (realChildren .length == 0 && ! id .includes ('payee_'))
+      if ([NavigateValueType .ACTUALS, NavigateValueType .ACTUALS_BUD] .includes (type) && realChildren .length == 0 && ! id .includes ('payee_'))
         await processChildren (await this._getPayees (thisCat, altDates));
       if (realChildren .length == 1 && ! realChildren [0] .cat .includes ('_')) {
          let isLeaf = (await this._getChildren (type, realChildren [0] .cat, altDates))
