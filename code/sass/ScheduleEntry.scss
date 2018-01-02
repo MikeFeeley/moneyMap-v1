@@ -90,7 +90,7 @@ $indent:       24px;
   @include schedule-entry-base();
   z-index: 1000;
   @include adaptive-width($width-narrow, $width-wide);
-  * {
+  > ul * {
     font-size: $bFont;
     ._content {
       white-space: nowrap;
