@@ -107,7 +107,7 @@ class TransactionModel extends Model {
     if (dates && categories !== undefined) {
       cacheHit = queries .find (q => {
         return (dates .start >= q .start && dates .end <= q .end)  &&
-          (! q .category || (categories && this._isSubset (categories, q .category .$in)))
+          (! q .categories || (categories && this._isSubset (categories, q .categories)))
       }) != null;
       if (! cacheHit && loadOnMiss && ! Array .from (Object .keys (query)) .find (p => {return p != 'date' && p != 'category' && p != '$options'})) {
         let matched, infill;
