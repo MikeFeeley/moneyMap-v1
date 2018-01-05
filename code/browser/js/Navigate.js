@@ -1294,6 +1294,7 @@ class Navigate {
    *     groups: [{
    *       name: name for this group
    *       stackPosition: [i,j] i is stack # and j is position in stack
+   *       hasNoParent: true iff category rooting this group has no parent
    *       rows: [{
    *         name:    name for this row
    *         id:      category id(s) for this row
@@ -1434,43 +1435,44 @@ class Navigate {
           pid == this._budget .getWithdrawalsCategory()._id? [0,1]:
             pid == this._budget .getExpenseCategory()._id? [1,0]: [1,1]);
       return {
-        name: Array .from (parent .values()) [0],
+        name:          Array .from (parent .values()) [0],
         stackPosition: stackPosition,
-        id:   Array .from (parent .keys()) [0] .split('$'),
-        rows: Array .from (cats [i] .values())
-        .sort ((a,b) => {return a.sort==null? 1: b.sort==null? -1: a.sort<b.sort? -1: 1})
-        .map (cat => {
-          var ids = Array .from (budgetAmounts .reduce ((s,ba) => {
-            return ba [i] .amounts .reduce ((s,a) => {
-              if (a .name == cat .name)
-                s .add (a .id);
-              return s;
-            }, s)
-          }, new Set()));
-          return {
-            name:     cat .name,
-            id:       ids,
-            isCredit: cat .isCredit,
-            isGoal:   cat .isGoal,
-            amounts:  budgetAmounts .map (ba => {
-              var group = ba .find (as => {return as .id .sort () .join ('$') == pids});
-              if (group) {
-                let a = group .amounts
-                  .filter (a => {return a .name == cat .name})
-                  .reduce ((o,e) => {
-                    o .id .push (e .id);
-                    o .amount += e .amount;
-                    return o;
-                  }, {id: [], amount: 0});
-                return {
-                  id:    a .id,
-                  value: a .amount
-                }
-              } else
-                return {value: 0}
-            })
-          }
-        })
+        id:            Array .from (parent .keys()) [0] .split('$'),
+        hasNoParent:   this._budget .getCategories() .get (pid [0]) .parent == null,
+        rows:          Array .from (cats [i] .values())
+          .sort ((a,b) => {return a.sort==null? 1: b.sort==null? -1: a.sort<b.sort? -1: 1})
+          .map (cat => {
+            var ids = Array .from (budgetAmounts .reduce ((s,ba) => {
+              return ba [i] .amounts .reduce ((s,a) => {
+                if (a .name == cat .name)
+                  s .add (a .id);
+                return s;
+              }, s)
+            }, new Set()));
+            return {
+              name:        cat .name,
+              id:          ids,
+              isCredit:    cat .isCredit,
+              isGoal:      cat .isGoal,
+              amounts:  budgetAmounts .map (ba => {
+                var group = ba .find (as => {return as .id .sort () .join ('$') == pids});
+                if (group) {
+                  let a = group .amounts
+                    .filter (a => {return a .name == cat .name})
+                    .reduce ((o,e) => {
+                      o .id .push (e .id);
+                      o .amount += e .amount;
+                      return o;
+                    }, {id: [], amount: 0});
+                  return {
+                    id:    a .id,
+                    value: a .amount
+                  }
+                } else
+                  return {value: 0}
+              })
+            }
+          })
       }
     });
     let result = {
