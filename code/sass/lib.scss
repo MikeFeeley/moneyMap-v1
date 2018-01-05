@@ -27,7 +27,7 @@ $icon-spacing: 16px;
   font-weight: 100;
   font-size:   20px;
   color: #33b1ff;
-  &._disabled {
+  &._disabled, > ._disabled {
     color: grey;
     opacity: .3;
   }

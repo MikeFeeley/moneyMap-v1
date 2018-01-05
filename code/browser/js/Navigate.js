@@ -717,6 +717,7 @@ class Navigate {
    *     income: total income (for budget comparison)
    *     groups: [{
    *       name:          name for this group
+   *       hasNoParent:   true iff category that roots this group has no parent
    *       stackPosition: [i,j] where i is stack number and j is position in stack (ordered left to right, bottom to top)
    *       rows: [{
    *         name:     name for this row
@@ -763,7 +764,8 @@ class Navigate {
           stackPosition: stackPosition,
           note:          this._getNote (type, id, includeMonths, includeYears, altDates),
           rows:          data .data,
-          getUpdate:     data .getUpdate
+          getUpdate:     data .getUpdate,
+          hasNoParent:   this._categories .get (id) .parent == null
         }
       })))
       .filter (g => {return g .rows .find (r => {return r .amounts .find (a => {return a .value != 0})})})

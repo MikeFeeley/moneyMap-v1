@@ -491,6 +491,8 @@ class NavigateView extends Observable  {
           getHUD .addClass ('_disabled');
           goUp   .addClass ('_disabled');
         }
+        else if (dataset .groups [0] .hasNoParent)
+          goUp .addClass ('_disabled');
         head [0] .addEventListener ('webkitmouseforcewillbegin', e => {e .preventDefault()}, true);
         $('<span>', {class: '_heading', text: [] .concat (dataset .note? dataset .note: data [0] .name)}) .appendTo (head);
         if (!dataset .note && data [0] .note)

@@ -104,8 +104,10 @@ class BudgetProgressHUD {
   }
 
   _updateTitle() {
-    if (this._id && this._title)
+    if (this._id && this._title) {
       this._title .setId (this._id);
+      this._view .setTitleHasNoParent (this._variance .getBudget() .getCategories() .get (this._id) .parent == null)
+    }
   }
 
   _addMonth() {

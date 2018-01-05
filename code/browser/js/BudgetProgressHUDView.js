@@ -311,6 +311,10 @@ class BudgetProgressHUDView extends View {
     });
   }
 
+  setTitleHasNoParent (noParent) {
+    this._content .find ('.lnr-exit-up') [(noParent? 'add': 'remove') + 'Class'] ('_disabled');
+  }
+
   addPresenter (group, presenter) {
     var toHtml = group!=''? this._content .find ('._group.' + group): this._content;
     if (toHtml .length)
