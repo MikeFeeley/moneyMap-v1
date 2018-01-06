@@ -667,34 +667,36 @@ class Navigate {
           if (this._getModels (type) .includes (model)) {
             if (eventType == ModelEvent .UPDATE && ids .length == 0)
               return
-            else if (eventType == ModelEvent .UPDATE && ids .length == 1) {
-              let eid = ids [0], aff;
-              if (data && data .length && data [0] .id .startsWith ('payee_'))
-                aff = [{id: eid}];
-              else
-                aff = data .filter (e => {
-                  let i =  e. id .split ('_') .slice (-1) [0];
-                  return i == eid || (! e .id .includes ('other_') && this._categories .getDescendants (this._categories .get (i)) .find (d => {return d._id == eid}))
-                });
-              if (aff .length) {
-                let up = (await Promise .all (aff .map (async af => {
-                  let aid     = af .id .split ('_') .slice (-1) [0];
-                  let newData = await this._getChildrenData (type, id, dates, includeMonths, includeYears, addCats, altDates);
-                  if (hasOther == (newData .data .length && newData .data [newData .data .length - 1] .id .includes ('other_'))) {
-                    let newAff = newData .data .filter (d => {return d .id .split ('_') .slice (-1) [0] == aid});
-                    if (newAff .length == 0)
-                      return {needUpdate: true, affected: aid}
-                    else
-                      return newAff .map (a => {return {update: {id: a .id, name: a .name, amounts: a .amounts}}})
-                  } else
-                    return needReplace
-                })))
-                  .reduce ((c,e) => {c = c .concat (e); return c}, [])
-                if (up .find (u => {return u .needReplace}))
-                  return [needReplace]
+            else if (eventType == ModelEvent .UPDATE) {
+              return (await Promise .all (ids .map (async eid => {
+                let aff;
+                if (data && data .length && data [0] .id .startsWith ('payee_'))
+                  aff = [{id: eid}];
                 else
-                  return up;
-              }
+                  aff = data .filter (e => {
+                    let i =  e. id .split ('_') .slice (-1) [0];
+                    return i == eid || (! e .id .includes ('other_') && this._categories .getDescendants (this._categories .get (i)) .find (d => {return d._id == eid}))
+                  });
+                if (aff .length) {
+                  let up = (await Promise .all (aff .map (async af => {
+                    let aid     = af .id .split ('_') .slice (-1) [0];
+                    let newData = await this._getChildrenData (type, id, dates, includeMonths, includeYears, addCats, altDates);
+                    if (hasOther == (newData .data .length && newData .data [newData .data .length - 1] .id .includes ('other_'))) {
+                      let newAff = newData .data .filter (d => {return d .id .split ('_') .slice (-1) [0] == aid});
+                      if (newAff .length == 0)
+                        return {needUpdate: true, affected: aid}
+                      else
+                        return newAff .map (a => {return {update: {id: a .id, name: a .name, amounts: a .amounts}}})
+                    } else
+                      return needReplace
+                  })))
+                    .reduce ((c,e) => {c = c .concat (e); return c}, [])
+                  if (up .find (u => {return u .needReplace}))
+                    return [needReplace]
+                  else
+                    return up;
+                }
+              }))) .reduce ((l,e) => {return l .concat (e)}, [])
             } else
               return [needReplace]
           }
@@ -765,7 +767,7 @@ class Navigate {
           note:          this._getNote (type, id, includeMonths, includeYears, altDates),
           rows:          data .data,
           getUpdate:     data .getUpdate,
-          hasNoParent:   this._categories .get (id) .parent == null
+          hasNoParent:   this._categories .get (id .split ('_') .slice (-1) [0]) .parent == null
         }
       })))
       .filter (g => {return g .rows .find (r => {return r .amounts .find (a => {return a .value != 0})})})
