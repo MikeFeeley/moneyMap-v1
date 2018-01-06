@@ -3,7 +3,8 @@ class TransactionHUD extends TransactionAndRulesTable {
     let columns      = ['date','payee','debit','credit','account','category','description'];
     let options      = {readOnly: false, noGrouping: true};
     super (query, null, undefined, '', undefined, undefined, options);
-    this._title      = [] .concat (title);
+    this._title       = [] .concat (title);
+    this._titleLength = this._title .length;
     this._onClose    = onClose;
     this._monthStart = monthStart || query .date .$gte;
     this._monthEnd   = monthEnd   || query .date .$lte;
@@ -105,7 +106,7 @@ class TransactionHUD extends TransactionAndRulesTable {
   _setTitleDate() {
     let budget = this._variance .getBudget();
     let [title, subtitle]  = this._title .map (t => {return t .split (' ')})
-    title.length = 1;
+    title .length = this._titleLength;
     if (subtitle) {
       let pos = subtitle .findIndex (w => {return w == 'Date'});
       if (pos != -1)
@@ -230,7 +231,7 @@ class TransactionHUD extends TransactionAndRulesTable {
             TransactionHUD .showRefineByField (
               this._title, JSON .parse (JSON .stringify (this._query)), field, selectedText, this._accounts, this._variance, this._html .offsetParent(),
               {top: position .top + 50, left: position .left + 50, right: 'auto'},
-              () => {this._html .removeClass ('_occluded')},
+              () => {if (this._html) this._html .removeClass ('_occluded')},
               this._monthStart, this._monthEnd
             );
             this._html .addClass ('_occluded');
