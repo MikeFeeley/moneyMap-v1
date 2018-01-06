@@ -1668,6 +1668,9 @@ class Navigate {
   /**** NET WORTH ****/
 
   /**
+   * Parameters
+   *   accountIds    list of accountIds or null to list all non-cashflow groups
+   *   columnLabel   name of column or null to get data for all columns (from oldest history to furthest in future)
    * returns {
    *   cols:    array of column names (budgets)
    *   highlight:  hisDesc .length,
@@ -1715,157 +1718,12 @@ class Navigate {
     for (let d = startDate; d <= endDate; d = Types .date .addYear (d, 1))
       colDates .push(d);
 
-    // get balance for specified date from list of balances
-    let getHistoryBalance = (history, date) => {
-      let getAmountFromInterval = (st, en, date) => {
-        if (en .date == st .date)
-          return en .amount;
-        let slope = (en .amount - st .amount) / Types .date .subDays (en .date, st .date);
-        return Math .round (st .amount + slope * Types .date .subDays (date, st .date));
-      }
-      if (history .length == 1)
-        return history [0] .amount;
-      let upi = history .findIndex (h => {return date <= h .date });
-      if (upi == -1)
-        return getAmountFromInterval (history [history .length - 2], history [history .length - 1], date);
-      else if (history [upi] .date == date)
-        return history [upi] .amount;
-      else if (upi == 0)
-        return 0;
-      else
-        return getAmountFromInterval (history [upi - 1], history [upi], date);
-     }
-
-    // get actual amount (up/down) for category
-    // allocates up-stream amounts evenly to account children
-    let getAmount = (cat, start, end, get, getRecursively) => {
-      let getAmountUp = (cat, child) => {
-        if (cat) {
-          let amt = get (cat, start, end) + getAmountUp (cat .parent, cat);
-          let nas = (cat .children || []) .concat (cat .zombies || []) .filter (c => {return c .account || c._id == child._id}) .length;
-          return Math .round (amt / nas);
-        } else
-          return 0;
-      }
-      return getRecursively (cat, start, end) + getAmountUp (cat .parent, cat);
-    }
-    let getActual = (cat, start, end) => {return getAmount (cat, start, end,
-      (c,s,e) => {return this._actuals .getAmount (c,s,e)},
-      (c,s,e) => {return this._actuals .getAmountRecursively (c,s,e)}
-    )}
-    let getBudgetMonth = (cat, start, end) => {return getAmount (cat, start, end,
-      (c,s,e) => {return (this._budget .getIndividualAmount(c,s,e) .month || {}) .amount || 0},
-      (c,s,e) => {return (this._budget .getAmount (c,s,e) .month || {}) .amount || 0}
-    )}
-    let getBudgetYear = (cat, start, end) => {return getAmount (cat, start, end,
-      (c,s,e) => {return (this._budget .getIndividualAmount(c,s,e) .year || {}) .amount || 0},
-      (c,s,e) => {return (this._budget .getAmount (c,s,e) .year || {}) .amount || 0}
-    )}
-
-    // compute balances
+     // compute balances
     let rowsData = rows .map (row => {
       let rowAccounts = row .type == AccountType .GROUP
         ? accounts .filter (a => {return a .group == row._id})
         : [row];
-      let rowData = rowAccounts
-        .map (account => {
-          let sign = account .creditBalance? 1: -1;
-          let historyBalances = balances
-            .filter (bal => {return bal .account == account._id})
-            .map    (bal => {bal .amount = bal .amount * sign; return bal});
-          let rate = (
-            (account .apr != null? account .apr: PreferencesInstance .get() .apr) -
-            (PreferencesInstance .get() .presentValue? PreferencesInstance .get() .inflation: 0)
-          ) / 3650000;
-          let bal;
-
-          let accountData = colDates .map (endDate => {
-            let pyEndDate = Types .date .addYear (endDate, -1);
-            let startDate = Types .date .addMonthStart (pyEndDate, 1);
-
-            // history
-            if (endDate < budgetStart) {
-              let bal       = getHistoryBalance (historyBalances, endDate);
-              let pyBal     = getHistoryBalance (historyBalances, pyEndDate);
-              let addCat    = this._categories .get (account .category);
-              let subCat    = this._categories .get (account .disCategory)
-              let add       = account .category?    getActual (addCat,    startDate, endDate): 0;
-              let sub       = account .disCategory? getActual (subCat, startDate, endDate): 0
-              return {
-                amount: bal,
-                detail: {
-                  id:     account._id,
-                  int:    (bal - add - sub) - pyBal,
-                  addAmt: add,
-                  subAmt: sub,
-                  addCat: addCat,
-                  subCat: subCat
-                }
-              }
-            }
-
-            // current and future years
-            else {
-
-              // init
-              let int = 0, addAmt = 0, subAmt = 0;
-
-              // adjust for current year transactions
-              if (endDate <= budgetEnd) {
-                bal = getHistoryBalance (historyBalances, startDate);
-                let actBal = (account .balance || 0) * sign;
-                for (let month = today; month >= budgetStart; month = Types .date .addMonthStart (month, -1)) {
-                  let st  = Types .date .monthStart (month);
-                  let en  = Types .date .monthEnd   (month);
-                  let addCat = this._categories .get (account .category);
-                  let subCat = this._categories .get (account .disCategory);
-                  let add = addCat? getActual (addCat, st, en): 0;
-                  let sub = subCat? getActual (subCat, st, en): 0;
-                  actBal = (actBal - (add + sub)) / (1 + rate * Types .date .daysInMonth (month));
-                }
-                int = (actBal - bal);
-              }
-
-              // go through budget for each month
-              let addCat = account .category    && this._categories .get (account .category);
-              let subCat = account .disCategory && this._categories .get (account .disCategory);
-              for (let month = startDate; month < endDate; month = Types .date .addMonthStart (month, 1)) {
-                let st  = Types .date .monthStart (month);
-                let en  = Types .date .monthEnd   (month);
-                let add = addCat? getBudgetMonth (addCat, st, en): 0;
-                let sub = subCat? getBudgetMonth (subCat, st, en): 0;
-                int += bal * rate * Types .date .daysInMonth (month);
-                bal += (add + sub);
-                addAmt += add;
-                subAmt += sub;
-              }
-              let add = addCat? getBudgetYear (addCat, startDate, endDate): 0
-              let sub = subCat? getBudgetYear (subCat, startDate, endDate): 0;
-              int = Math .round (int);
-              bal += int + add + sub;
-              addAmt += add;
-              subAmt += sub;
-
-              return {
-                amount: bal,
-                detail: {
-                  id:     account._id,
-                  int:    int,
-                  addAmt: addAmt,
-                  subAmt: subAmt,
-                  addCat: addCat,
-                  subCat: subCat
-                }
-              }
-            }
-          });
-          return {
-            curBal:  account .balance * sign,
-            liquid:  account .liquid,
-            amounts: accountData .map (d => {return d && d .amount}),
-            detail:  accountData .map (d => {return d && d .detail})
-          }
-        });
+      let rowData = rowAccounts .map (account => {return account .getBalances (colDates)});
       return {
         id:     row._id,
         name:   row .name,
