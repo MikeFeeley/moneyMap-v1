@@ -1049,6 +1049,16 @@ class Navigate {
         }
         return o;
       }, {})
+      for (let per of ['month', 'year']) {
+        if (otherAmount [per] && otherAmount [per] .preOverActual < 0) {
+          otherAmount [per] .preBudgetedActual += otherAmount [per] .preOverActual;
+          otherAmount [per] .preOverActual     = 0;
+        }
+        if (otherAmount [per] && otherAmount [per] .curOverActual < 0) {
+          otherAmount [per] .curBudgetedActual += otherAmount [per] .curOverActual;
+          otherAmount [per] .curOverActual     = 0;
+        }
+      }
       let oaTotal = ['month', 'year'] .reduce ((o,per) => {
         o [per] = (otherAmount [per]? Array .from (Object .keys (otherAmount [per])): []) .reduce ((t,p) => {
           return t + (otherAmount [per] [p] || 0);
