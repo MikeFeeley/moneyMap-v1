@@ -180,7 +180,6 @@ class ImportRulesModel extends Observable {
     let amount = (action, f) => {
       return action [f] && typeof action [f] == 'string' && action [f] .endsWith ('%')?  Math .round (tran [f] * Number (action [f] .slice (0, -1)) / 100.0): action [f];
     }
-    let async     = [];
     let sort      = this._tranModel
       .refine (t     => {return (t .leader || t._seq) == tran._seq})
       .reduce ((m,t) => {return Math .max (m, t .sort || 0)}, 0);
@@ -195,15 +194,15 @@ class ImportRulesModel extends Observable {
         for (let t of await this._tranModel .find ({group: tran .group})) {
           if (t._id != tran._id) {
             total += t .debit - t .credit;
-            async .push (this._tranModel .remove (t._id));
+            await this._tranModel .remove (t._id);
           }
         }
         tran .debit  = total > 0? total: 0;
         tran .credit = total < 0? -total: 0;
-        async .push (this._tranModel .update (tran._id, {
+        await this._tranModel .update (tran._id, {
           debit:  tran .debit,
           credit: tran .creditl
-        }))
+        });
       }
 
       // add new splits, except for remaining
@@ -218,13 +217,13 @@ class ImportRulesModel extends Observable {
           description: action .description || ''
         }
         if (i == 0)
-          async .push (this._tranModel .update (tran._id, split));
+          await this._tranModel .update (tran._id, split);
         else {
           split._seq    = null;
           split .leader = tran._seq;
           for (let f of ['importTime', 'date', 'payee', 'account'])
             split [f] = tran [f];
-          async .push (this._tranModel .insert (split));
+          await this._tranModel .insert (split);
         }
         remaining -= (split .debit - split .credit);
       }
@@ -232,7 +231,7 @@ class ImportRulesModel extends Observable {
       // handle remaining
       if (remaining != 0) {
         let action = splitRules .find (a => {return a .debit == 'Remaining'});
-        async.push (this._tranModel .insert ({
+        await this._tranModel .insert ({
           group:       tran._id,
           sort:        ++sort,
           debit:       remaining > 0?  remaining: 0,
@@ -245,7 +244,7 @@ class ImportRulesModel extends Observable {
           date:        tran .date,
           payee:       tran .payee,
           account:     tran .account
-        }))
+        })
       }
     }
 
@@ -259,7 +258,7 @@ class ImportRulesModel extends Observable {
             if (action [f + 'Update'])
               update [f] = ['credit', 'debit'] .includes (f)? amount (action, f): action [f] || null;
           if (Object .keys (update) .length)
-            async .push (this._tranModel .update (tran._id, update));
+            await this._tranModel .update (tran._id, update);
           break;
         case ImportRulesModelType .ADD:
           let insert = await this._tranModel .insert ({
@@ -284,14 +283,12 @@ class ImportRulesModel extends Observable {
             }
           }
           if (action .category)
-            async .push (this._tranModel .update (insert._id, {category: action .category}));
+            await this._tranModel .update (insert._id, {category: action .category});
           break;
       }
     if (! (tran .rulesApplied && tran .rulesApplied .includes (rule._id)))
-      async.push (this._tranModel .update (tran._id, {rulesApplied: (tran .rulesApplied || []) .concat (rule._id)}));
-    for (let a of async)
-      await a;
-  }
+      await this._tranModel .update (tran._id, {rulesApplied: (tran .rulesApplied || []) .concat (rule._id)});
+ }
 }
 
 var ImportRulesModelType = {

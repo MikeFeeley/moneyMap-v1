@@ -24,10 +24,10 @@ class ImportTransactions extends Observable {
       this._attention .delete();
   }
 
-  _onViewChange (EventType, arg) {
+  async _onViewChange (EventType, arg) {
     switch (EventType) {
       case ImportTransactionsViewEvent .DROPPED:
-        this._processDroppedFile (arg);
+        await this._processDroppedFile (arg);
         break;
     }
   }
@@ -82,14 +82,11 @@ class ImportTransactions extends Observable {
       t ._seq       = null;
       return t;
     }));
-    var async = [];
     for (let t of trans) {
       var rules = this._importRulesModel .getMatchingRules (t);
       if (rules .length)
-       async .push (this._importRulesModel .applyRule (rules [0], t));
+       await this._importRulesModel .applyRule (rules [0], t);
     }
-    for (let a of async)
-      await a;
     let s = ['Transaction File Imported'];
     if (ic)
       s .push (ic + ' transaction' + (ic>1? 's': '') + ' imported');
@@ -102,7 +99,7 @@ class ImportTransactions extends Observable {
   }
 
   async _processDroppedFile (file) {
-    this._importFile (file);
+    await this._importFile (file);
   }
 }
 
