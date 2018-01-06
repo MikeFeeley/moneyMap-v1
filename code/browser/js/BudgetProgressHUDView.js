@@ -314,7 +314,6 @@ class BudgetProgressHUDView extends View {
   }
 
   setTitleHasNoParent (noParent) {
-    console.log('sthno', noParent, this._content .find ('.lnr-exit-up'));
     this._content .find ('.lnr-exit-up') [(noParent? 'add': 'remove') + 'Class'] ('_disabled');
   }
 
