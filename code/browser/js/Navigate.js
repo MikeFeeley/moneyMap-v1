@@ -696,7 +696,7 @@ class Navigate {
                   else
                     return up;
                 }
-              }))) .reduce ((l,e) => {return l .concat (e)}, [])
+              }))) .reduce ((l,e) => {return e? l .concat (e): l}, [])
             } else
               return [needReplace]
           }
