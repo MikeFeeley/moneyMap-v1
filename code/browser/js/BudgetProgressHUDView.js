@@ -259,11 +259,13 @@ class BudgetProgressHUDView extends View {
 
   setVisible (isVisible) {
     setTimeout (() => {
-      if (isVisible) {
-        this._html .addClass ('fader_visible');
-        ui .scrollIntoView (this._html, false, {topBuffer: this._topBuffer});
-      } else
+      if (this._html) {
+        if (isVisible) {
+          this._html .addClass ('fader_visible');
+          ui .scrollIntoView (this._html, false, {topBuffer: this._topBuffer});
+        } else
         this._html .removeClass ('fader_visible');
+      }
     }, 0);
   }
 
@@ -312,6 +314,7 @@ class BudgetProgressHUDView extends View {
   }
 
   setTitleHasNoParent (noParent) {
+    console.log('sthno', noParent, this._content .find ('.lnr-exit-up'));
     this._content .find ('.lnr-exit-up') [(noParent? 'add': 'remove') + 'Class'] ('_disabled');
   }
 
