@@ -640,8 +640,8 @@ class Navigate {
           id:       child .cat,
           isCredit: isCredit,
           isGoal:   isGoal,
-          hasMonth: includeMonths && this._categories .hasType (cat, ScheduleType .MONTH),
-          hasYear:  includeYears  && this._categories .hasType (cat, ScheduleType .YEAR),
+          hasMonth: includeMonths,
+          hasYear:  includeYears,
           amounts:  child .amounts,
           type:     child .cat .includes ('budget_') && 'line'
         }
