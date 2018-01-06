@@ -52,7 +52,8 @@ class BudgetProgressGraph extends Observable {
       ['This Transaction',          'thisBudgeted',        lightGreen, green],
       ['This Transaction',          'thisOver',            lightRed,   red],
       ['This Transaction (Credit)', 'thisCreditAvailable', clear,      grey],
-      ['Available',                 'available',           clear,      grey],
+      ['Unused Last Month',         'prevAvailable',       '#f3fff2',  grey],
+      ['Available',                 'curAvailable',        clear,      grey, 'Additional Available this Month', 'Unused Last Month'],
       ['Actual this Month',         'budgetlessActual',    blue,       blue]
     ];
     this._budgetlessDatasets  = [
@@ -104,6 +105,8 @@ class BudgetProgressGraph extends Observable {
       .map (schema => {
         return this._data .find (d => {return schema [1] in d .amounts}) && {
           label:           schema [0],
+          altLabel:        schema [4],
+          altRef:          schema [5],
           values:          this._data .map (d => {return Types .moneyDC .toString ([d .amounts [schema [1]] || 0])}),
           backgroundColor: schema [2], hoverBackgroundColor: schema [2],
           borderColor:     schema [3], hoverBorderColor: schema [3],
@@ -191,8 +194,15 @@ class BudgetProgressGraph extends Observable {
         titleSpacing: 0, xPadding: 8, yPadding: 4, backgroundColor: 'rgba(0,0,0,0.6)',
         callbacks: {
           label: (t, d) => {
-            var val = d .datasets [t .datasetIndex] .values [t .index];
-            return val? d .datasets [t .datasetIndex] .label + ': ' + val: '';
+            let ds    = d .datasets [t .datasetIndex];
+            let val   = ds .values [t .index];
+            let label = ds .label
+            if (ds .altLabel) {
+              let refIndex = d. datasets .findIndex (e => {return e .label == ds .altRef});
+              if (refIndex != -1 && d .datasets [refIndex] .data [t .index])
+                label = ds .altLabel;
+            }
+            return val? label + ': ' + val: '';
           },
           title:  () => {return ''},
           footer: () => {return ''}
