@@ -1,0 +1,362 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1561\cocoasubrtf200
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\margl1440\margr1440\vieww27660\viewh19260\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs36 \cf0 Handling Model Connectivity / Errors\
+\
+	- add idle mode in which upcallls are suspended?\
+\
+Accounts\
+	- mortgage interest?\
+		- mortgages have: savings category and expense category\
+		- generally true of liabilities?\
+			- assets have:    SAVINGS and WITHDRAWAL (also INCOME?  this is off the books at the moment)\
+			- liabilities have: SAVINGS and EXPENSE \'85 also WITHDRAWAL ?  (e.g., line of credit advance)\
+		- auto calculated amount in interest category based on account\
+		- this auto calc is also available in transaction rules (or even transaction edit?)\
+\
+	- combination of specific budgets and general budgets; how do you do this in accounts? (e.g., TFSA)\
+		- problem\
+			- want to allocate transactions to the group\
+			- want to budget monthly for individual accounts, but also  yearly for group\
+			- can't make monthlies children of yearly because then they are not additive\
+			- can't allocate transactions to umbrella group because monthly contrib are not spread across month and yearly\
+\
+\
+	NOTES - FOR LATER\
+		- removeDB access is entirely synchronous right now\
+			- necessary for a variety of reasons\
+				- model caches find results\
+					- could return a promise for updating those results\
+\
+Salary\
+	- new account type: "Income Sources"\
+		- indicates that its taxable and some details about that\
+		- option to add income category\
+			- this would be gross income\
+		- option to add tax expense category\
+			- amount for this category would be automatically calculated from associated income category\
+			- this auto calc is also available in transaction rules (or even transaction edit?)\
+
+\fs24 \
+\
+
+\fs36 ====\
+CURRENT\
+\
+	Bugs\
+		- month/year schedule stuff\
+			- look at skiing\
+				- want to have some stuff there be monthly and other stuff just be part of the annual amount\
+				- works if you give "At the Hill" an annual budget amount\
+			- RELATED PROBLEM\
+				- strange stuff if "At the Hill" goes over budget (some negative amounts)\
+\
+	Liabilities\
+		- interest calculation type\
+		- budget: disbursement, payment, interest and principle separately (drop down: 'None', 'Payment', 'Principle and Interest'\
+		- plan and budget\
+			- amount for principle / interest comes from account somehow\
+			- if account knew payment frequency, date, and amount, then you might just say: 'payment'\
+				- but, what if you want to make additional payments / skip a payment etc?\
+			- idea is that account provides a set of amount calculations that you can choose from in plan and rules instead of an amount\
+				- how do you choose them in plan?\
+					- maybe enter '=' and then you get a more complex input\
+						- drop down for list of functions and (then one parameter field \'85 skip this for now)\
+					- 'due" is a legal amount for account types that support it\
+						- when entering, how do you know if its legal?\
+				- how to they display?\
+						- as string as determined by account\
+							"Payment", "Principle", "Interest" \'85 "due"\
+				- is it only for account category or also its descendents?\
+		- rules\
+			- split amounts come from account somehow\
+		- payment changes balance\'85\
+			- there are two ways to change an account balance:\
+				(1) account field of transaction, which must be a cash-flow account; e.g., debit from A; credit to category C\
+					in this case; the transaction actuals store the balance of C\
+				(2) a category associated with an account: e.g., debit from A;  credit to C associated with account B\
+					in this case, B has a balance and so transaction should update balances of both A and B, but the actuals will also store the net change of B in C\
+						- so you could have transaction NOT update B's balance\
+						- then to get B's balance you'd take starting balance in B and then apply actuals posted to C\
+							- its necessary to do this for every transaction to loan in order to compute interest\
+						- this is currently done in networth calculation which starts from current balance, assuming that is accurate as of today\
+							- for investments, the balance fluctuates; actuals alone are not enough, but for loans balance can be determine from actuals\
+\
+	PLAN\
+		- add balanceDate to accounts for non-cash-flow accounts only\
+			- set to today whenever balance is updated\
+			- then compute balance from balance and actuals since balanceDate\
+			- update navigate / networth to use this date\
+		- transactions to non-cash flow accounts\
+			- update BOTH balance and balanceDate\
+			- compute balance from these plus actuals (\
+\
+ISSUE\
+	- when computing account balance for X\
+		- you can take the budget amount, ignoring (or backing out) actuals\
+		- or you can take actuals to current month and start with budget the following month\
+			- but problem with this is that it understates future month balance, but not accounting for current month stuff that hasn't happened yet\
+			- benefit is that its the actual, accurate balance for current month\
+\
+	Balance as of date X:\
+		(1) start with current balance and roll forward using actuals to get to end of today month\
+		(2) for months after current month, ignore actuals from previous month\
+\
+	Do we even need current balance?  Maybe its just the last entry in balance history?\
+\
+	Also need schedule for:\
+		interest rate and payment amount\
+\
+\
+	getBalances used for 2 things\
+		(1) get balance on date and the interest added or charged between that date and previous date in list\
+				- history of investment: int is difference between balance difference and actual contribution\
+				- history of mortgage w/ int sep: is total of int\
+				- history of mortgage w/ int in pmt: its like an investment\
+		(2) to get current balance of loan for interest calculation\
+\
+\
+\
+\
+						\
+			\
+	- INTERMITTENT BUGS\
+		- category is "Reimbursed"  cursor to end an type :Liam and it return: it goes blank.  Re-entering reimb:liam works fine.\
+		- occasionally and update/one returns an error causing a server-disconnect message (nothing in server log), recovers correctly\
+		- after changing transactions, refresh button breaks (shows nothing); next refresh works			- unable to repeat this since Dec 7 2017\
+		- recategorize in prior years does not adjust actuals cache correctly\
+			- change Income:Mike to Income:Mike:UBC and amount disappears from perspective until reload\
+			- unable to replicate\
+		- after changing schedule from parent to children, variance was off among children until refresh\
+			- at least I think that's what it was; changes to Income > Mike > UBC > *\
+		- changing transaction amount while monthly actual graph showing does not update graph incrementally; does refresh\
+			- saw it, but now can't replicate it; probably special case of the popup\
+\
+\
+\
+****\
+\
+\
+\
+THINGS TO LOOK AT NEXT (LATER)\
+\
+	- no delete / insert of root categories\
+	- maybe slider should only affect graph since table does locked-first-column scrolling ?\
+		- right now small tables look strange and the slider is not visible when table is\
+		- alternatively have two, locked sliders one for graph one for table\
+\
+	- prev /next year arrows for monthly graphs\
+	- transaction "until" does not update if editing and change the start date\
+	- mongo authentication\
+\
+	- editing transactions\
+		- copy/paste from Category column in transaction list should copy the category ID or full path name, not the display text of field, to correctly handle cases where two sub categories have same name.\
+		- copy/paste from Account column\
+		- maybe make it easier to replicate a field to several transactions (like the drag in Numbers)\
+	- budget rollover didn't copy the suspense categories\
+\
+	- how do you get a list of reimbursement transactions\
+		- generally searching for transactions maybe needs more work / different starting points?\
+\
+	- budget rollover issues\
+		- what about reimbursement balances; should they be automatically rolled over (by inserting transactions that span two budgets)?\
+	- export/import to/from CSV\
+\
+\
+====\
+\
+LONG TERM TODO\
+	- transaction import changes\
+		- allow import to specify category name that guides selection of category (not sure whether it or rule should take precedence; must deal with name ambiguity)\
+		- allow import to not specify an account (if its for a prior period); just leave it blank\
+		- imports for prior period do not change account balances\
+	- auto add categories to budget when added or when start/end date changes to ensure that cats for all included transactions are in budget\
+\
+\
+\
+ \
+\
+\
+THOUGHTS\
+	- maybe have a version of BudgetProgressHUD that just shows subcats and allocations\
+		- for future years and maybe other things\
+	- in progress drill, maybe show monthly and yearly together\
+		- can be confusing when there's a category that has both when looking at actuals\
+			- the real actuals includes both and you might not know for a particular expense whether it was monthly or yearly\
+		- argument for current approach is that it is helpful for tracking down budget issues flagged in progress graphs, since they do separate expenses\
+	- flag upcoming cashflow shortage?\
+	- debounce\
+\
+\
+============\
+\
+\
+NEXT STEPS\
+	- edit category structure including zombies\
+	- consider a "estimate" schedule entry that project the future but doesn't worry about past imbalances (e.g., salary)?\
+	- budget in the cloud\
+		- stop current practice of updating current (causing) view from the model (or do it BEFORE the update completes at server)\
+		- list updates that have not completed (or flag if there are some) / stop allowing edits if loose server connection \
+		- encryption\
+	- sharing\
+		- update from model changes from another instance of client\
+		- show that you're sharing (maybe have user ids and so you can show who)\
+\
+
+\fs24 \
+
+\fs36 BUGS (middle burner)\
+	- %Z undo when editing a field must just to standard undo / undo typing.  Only do db undo if not editing a field\
+	- add increase-by % to schedule \
+	- change model so that \
+		- change events are sent as part of request and not when DB updates finish\
+		- there's a way to track pending updates\
+\
+\
+\
+USABILITY\
+	- searching for transactions (maybe that were mis-allocated) - maybe new "Explore" view or something like that\
+	- salary is a pain in the ass\
+		- maybe allow the definition of functions that can be used in the schedule-entry amount field\
+	- maybe want to have a graph that shows clearly your goals for the year (or next few)\
+		- savings for X (e.g., retirement, a trip, a purchase)\
+		- so that you get gratification from increasing savings\
+		- maybe sort of a before / after thing with some cutbacks (like the graph we did a while ago)\
+	- undo is dangerous\
+		- doesn't undo typing in cell (and view stuff)\
+		- undoes models stuff behind the scenes if you don't have the modified stuff in view.\
+	- rule date match \
+		- match just month and day OR match just day\
+		- for example \
+			- something that happens on a specify day each year\
+			- something that happens on a certain day of the month (TFSA cont)\
+	- command-A in field should select the text in the field\
+	- when switching away and back to window, the input field gets selected again\
+		- better behaviour is to leave cursor where it is and don't select it again\
+		- field should only select when it gains focus from another field not when its container gains focus\
+	- When listing year in abbreviated form show YY/YY not YY/Y?  Eg.g., 15/16 not 15/6\
+	- Need some transaction error checking / reconciliation\
+		- e.g., transfers that don't match up\
+		- reconciling reimbursements\
+	- Need a flexible transaction search option\
+		- for things like\
+			- added a new sub category and now want to re-organize old transactions\
+			- looking for actual behaviour that isn't captured by category\
+	- Something around setting short-term goals \
+		- when for example you're going over budget or a new expense pops up \
+			- e.g., want to do something fun and want to tradeoff a little hardship somewhere else\
+			- e.g., over in food, so want to spend $20/day for the rest of the month\
+				- track it carefully / daily\
+				- see reward\
+	- Split transaction tooltip - should should total amount in tool tip\
+	- Support concurrent updates; events triggered by remote database\
+	- What happens when two rules (e.g., a general one and a more specific one) match the same transaction and the general one is chosen\
+		- can edit the general to exclude this transaction, but then how to do you tell the system to look for other matches?\
+		- if you edit a rule to exclude the current transaction, the [R] goes away and so how you close the rule looks a bit weird \
+		- maybe, as partial solution, rules should be sorted by the specificity (like CSS)\
+		- maybe, need to search for more rules when you close a rule on a transaction and it no longer matches\
+		- maybe there should be a rule editing view that shows you all the rules that might match something \
+	- Budget Progress HUD budget drill\
+		- doesn't show future month allocations\
+		- so if you have a transaction for something budgeted in the future and you'd like to change budget date to current month, you can't do it here\
+	- Filter "Plan" by date so that, for example, you can see just the current and future entries?\
+	- carry over reimbursement from prior year\
+\
+\
+TODO\
+	- 
+\b maybe
+\b0  show schedule amounts as a formula string\
+		- two fields: amount and amountFormula\
+		- display amount until clicked and then show amountFormula.  \
+		- updates to amountFormula propagate to amount\
+	- transaction date restrictions\
+		- should you be able to change which year a transaction applies to?\
+		- even accidentally changing the month might be very confusing\
+		- changes should probably be prohibited for imported transactions and/or trackBalance accounts entirely\
+	- when entering a yearly budget line, default should be current year\
+	- budget restrictions\
+		- should you be able to enter new sched for different year; esp in past?\
+		- it would be / should be ignored\
+			- because when looking at history, you look at actuals, not budget\
+	- fields that can reference other fields\
+		- credit balance in Organize so that you can enter non-signed balances and have the sign set by creditBalance\
+		- schedule amount combo of amount and amountFormula\
+	- amountFormula needs a way to reference values in other schedule lines?\
+	- editing in a textbox \'85 would be nice\
+		- if there was a difference between selecting the box and selecting text in the box\
+		- arrows when text is selected move around in box\
+\
+IDEAS\
+	consider leaving formula in amount cells. \
+	sched entry: an amounts modifier that you get with control-command enter that lets you base amount on\
+		a formula applied to another category\
+		where the formula can include a tax or mortgage calculation\
+		* what's missing is the idea of a memo field \'97 a way to give a category an amount for the formula, but no affecting budget otherwise\
+	* think about actual vs budget for some things that are just estimates\
+		- for example, salary\
+			- the budget is an estimate\
+			- once you get paid, that's just the amount, the variance is only interested if the budget is based on the BUDGET amount\
+			- maybe for past months the BUDGET should be fluid and just reflect the ACTUAL amount\
+				- this might make sense for lots of things\
+				- the only place it doesn't make sense if for carry-over amounts or times when you want to re-coop an overage\
+				- you can do this by updating the schedule \'85 but maybe there should be \'85\
+					- an automatic way to update budget based on actuals\
+					- or a way to view the budget in two ways \'85 might be helpful to see the old plan vs what actually happened\
+					- the key idea, however, is to evolve the plan based on the actuals as they make things more realistic\
+\
+TODO\
+	- salary / mortgage\
+\
+	\
+QUESTIONS\
+	- should transfers be better controlled so that you can't have different amounts for each side\
+		- one issue visa payment in which the two sides come in at different times\
+		\
+\
+NEXT STEPS\
+- bulk delete (as an option / confirm or something)\
+- defaults / validation for schedule year\
+- RBC / Sun Life scraping\
+	- authorized (but not yet posted) transactions\
+- test with slow internet connection\
+- mortgage interest, net salary, pension savings\
+- put it in the cloud\
+- encryption?\
+\
+iApp\
+- list recent transactions and authorized transactions\
+	- so you can set category, split and add description\
+- receipt scan (sounds hard)\
+- enter cash transactions\
+- location awareness (for new transactions?)\
+	- but, don't have time of import transactions \'85 needs to be tied to looking at authorized transaction list?\
+\
+=== Notes\
+- Once you've split a transaction, you can't change the actual amount of the transaction\
+	- similarly, you can't make amount read-only and also allow a transaction to be split\
+	- maybe there should be an option that says: you can/can't change the actual amount of a transaction\
+	- this is an issue for transaction import where you don't want to allow the user to change amounts\
+		- although you do want them to be able to split transactions and also to add completely new transactions\
+			- and to be able to change the amount of these\
+\
+==== ???\
+\
+DEPLOYMENT\
+- idea is \
+	- that you start out with entirely local database\
+	- then you can choose to "share" it with other devices for a fee this also gives access to iOS app\
+	- iOS \
+- fix up various things (1 month)\
+	- maybe: rbc / sunlife scraping\
+- local database\
+- encrypted in EC2\
+- iOS app\
+	- enter cash transactions\
+	- categories other transactions on the fly?\
+	- scan a receipt?\
+	- quick look at budget progress and balances?}
