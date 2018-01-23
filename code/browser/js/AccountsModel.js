@@ -8,25 +8,28 @@
  *     group                account id of group
  *     number               bank number used to match transactions when importing
  *     balance              $
+ *     balanceDate          effective date of account balance (today if null or undefined)
  *     creditBalance        true if credit increases balance (chequing); false if decreases (visa)
  *     apr                  annual interest rate or null to use default rate
  *  Liability only:
  *     rateType             type of rate calculation (e.g., simple interest or canadian mortgage)
- *     paymentAmount
- *     paymentFrequency
  *  Cash-Flow only:
  *     pendingTransactions  []
- *     balanceDate          effective date of account balance (today if null or undefined)
  *  Non Cash-Flow only:
  *     liquid               true iff liquid asset / liability
- *     category             savings category; asset: purchase; liability: principal payment
- *     disCategory          income category; asset: sell; liability: add-on
- *     intCategory          interest category; asset: income; liability: expense, interest payment
+ *     category             savings: asset contribution or liability principal
+ *     disCategory          withdrawal if asset or liability (disbursement or loan add-on)
+ *     intCategory          expense; only for liabilities (entire payment or just interest part, depending)
  *
  *  BalanceHistory Model
- *     date
  *     account
+ *     date
  *     amount
+ *
+ * RateFuture Model
+ *     account
+ *     date
+ *     rate
  */
 
 class AccountsModel extends Observable {
@@ -40,28 +43,65 @@ class AccountsModel extends Observable {
     this._tranModel .addObserver (this, this._onTranModelChange);
     this._balanceHistoryModel  = new Model ('balanceHistory');
     this._balanceHistoryModel .addObserver (this, this._onBalanceHistoryModelChange);
+    this._rateFutureModel = new Model ('rateFuture');
+    this._rateFutureModel .addObserver (this, this._onRateFutureModelChange);
     this._domParser = new DOMParser();
+    // TODO: Listen for changes: paramModel, actualsModel, budgetModel (varianceModel is both, I think)
    }
 
   delete() {
     this._model               .delete();
     this._tranModel           .delete();
     this._balanceHistoryModel .delete();
+    tihs._rateFutureModel     .delete();
   }
 
   async _onModelChange (eventType, doc, arg) {
-    if (this._updateModel)
-      await this._updateModel();
+    await this._updateModel();
     this._notifyObservers (eventType, doc, arg);
   }
 
   async _onBalanceHistoryModelChange (eventType, doc, arg) {
-    this._historicBalances = await this._balanceHistoryModel .find ({})
+    await this._updateBalanceHistoryModel();
+    this._notifyObservers (eventType, doc, arg);
+  }
+
+  async _onRateFutureModelChange (eventType, doc, arg) {
+    await this._updateRateFutureModel();
+    this._notifyObservers (eventType, doc, arg);
+  }
+
+  _balanceHistoryForAccount (a) {
+    return this._balanceHistory && this._balanceHistory
+      .filter (b => {return b .account == a._id})
+      .map    (b => {return {date: b .date, amount: b .amount * (a .creditBalance? 1: -1)}})
+  }
+
+  _rateFutureForAccount (a) {
+    return this._rateFuture && this._rateFuture
+      .filter (r => {return r .account == a._id});
   }
 
   async _updateModel() {
-    this._historicBalances = (await this._balanceHistoryModel .find ({})) .sort ((a,b) => {return a .date < b .date? -1: a .date == b .date? 0: 1});
-    this._accounts         = (await this._model .find()) .map (a => {return new Account (a, this._budgetModel, this._actualsModel, this._historicBalances)});
+    this._accounts = (await this._model .find()) .map (a => {
+      return new Account (a, this._budgetModel, this._actualsModel, this._balanceHistoryForAccount (a), this._rateFutureForAccount (a));
+    });
+  }
+
+  async _updateBalanceHistoryModel() {
+    this._balanceHistory = (await this._balanceHistoryModel .find ())
+      .sort ((a,b) => {return a .date < b .date? -1: a .date == b .date? 0: 1});
+    if (this._accounts)
+      for (let account of this._accounts)
+        account .setBalanceHistory (this._balanceHistoryForAccount (account));
+  }
+
+  async _updateRateFutureModel() {
+    this._rateFuture = (await this._rateFutureModel .find())
+      .sort ((a,b) => {return a .date < b .date? 1: a .date == b .date? 0: -1})
+    if (this._accounts)
+      for (let account of this._accounts)
+        account .setRateFuture (this._rateFutureForAccount (account));
   }
 
   _onTranModelChange (eventType, doc, arg, source) {
@@ -93,7 +133,6 @@ class AccountsModel extends Observable {
       this._notifyObservers (ModelEvent .UPDATE, acc, {balance: acc .balance});
     }
   }
-
 
   _smartLowerCase (s) {
     var allCaps      = [
@@ -157,10 +196,23 @@ class AccountsModel extends Observable {
 
   async find() {
     await this._updateModel();
+    await this._updateBalanceHistoryModel();
+    await this._updateRateFutureModel();
   }
 
   getModel() {
     return this._model;
+  }
+
+  getToolTip (aid, cat) {
+    let account = this .getAccount (aid);
+    if (account)
+      return account .getToolTip (cat);
+    return '';
+  }
+
+  getAccount (aid) {
+    return this._accounts && this._accounts .find (a => {return a._id == aid});
   }
 }
 
@@ -170,47 +222,108 @@ class AccountsModel extends Observable {
  * Account
  */
 
+// TODO: invalidate balance cache when model changes require
 class Account {
-  constructor (modelData, budgetModel, actualsModel, historicBalances) {
+  constructor (modelData, budgetModel, actualsModel, balanceHistory, rateFuture) {
     this._categories       = budgetModel .getCategories();
     this._budget           = budgetModel;
     this._actuals          = actualsModel;
-    this._historicBalances = historicBalances;
+    this._balanceHistory   = balanceHistory;
+    this._rateFuture       = rateFuture;
+    this._balances         = [];
     for (let p of Object .keys (modelData))
       this [p] = modelData [p];
-    // TODO listen to model changes?
+  }
+
+  setBalanceHistory (balanceHistory) {
+    this._balanceHistory = balanceHistory;
+  }
+
+  setRateFuture (rateFuture) {
+    this._rateFuture = rateFuture;
   }
 
   /**
    *
-   * Parameters
-   *     dates   a date or a sorted list of dates (in ascending date order)
-   *  Returns
-   *     balance or list of balances for each specified date
+   * date or balance?
    */
-  getBalances (dates) {
+  _getInterest (balance, rateDate, compoundDays, days) {
+    let getRate = (date, compoundDays) => {
+      let rate = this._rateFuture && this._rateFuture .find (r => {return date >= r .date});
+      if (rate != null)
+        rate = rate .rate;
+      else if (this .apr != null)
+        rate = this .apr;
+      else
+        rate = PreferencesInstance .get() .apr;
+      switch (this .rateType || 0) {
+        case RateType .SIMPLE:
+          rate =  rate / 3650000;
+          break;
+        case RateType .CANADIAN_MORTGAGE:
+          rate = Math .pow (1 + rate / 2.0 / 10000.0, 2) - 1;  // effective semi-annual rate
+          rate = (Math .pow (1 + rate, compoundDays / 365) - 1) / compoundDays;
+          break;
+      }
+      return rate;
+    }
+    return balance * getRate (rateDate, compoundDays) * days;
+  }
+
+  /**
+   * Return budget amount for cat between start and end where amount is the normal scheduled amount for this period
+   *    - liability: amount is payment
+   *        - cat == account .category: return principal portion of amount
+   *        - cat == intCategory and account .category != null: return interest portion of amount
+   */
+  getAmount (cat, start, end, amount) {
+    if (this .creditBalance)
+      return amount;
+    else {
+      if (cat._id == this .disCategory || ! this .category || ! this .intCategory)
+        return amount;
+      else {
+        let st  = Types .date .monthStart (Types .date .addMonthStart (end, -1));
+        let en  = Types .date .monthEnd   (st);
+        let bal = this .getBalance  (st, en);
+        let int = this._getInterest (bal .amount, start, 365.0 / 12, Types .date .subDays (end, start) + 1) * (this .creditBalance? 1: -1);
+        if (cat._id == this .intCategory)
+          return Math .round (int);
+        else {
+          let pri = this._budget .getAmount (this._categories .get (this .intCategory), start, end, true);
+          amount +=  (pri .month? pri .month .amount: 0) + (pri .year? pri .year .amount / 12 * (Types .date .subMonths (end, start) + 1): 0);
+          return Math .round (Math .max (0, amount - int));
+        }
+      }
+    }
+  }
+
+  /**
+   * Returns account balance on last day of specified month
+   */
+  getBalance (startDate, endDate) {
 
     /*** helper functions ***/
 
     // get balance for specified date from list of balances
-    let getHistoryBalance = (history, date) => {
+    let getHistoryBalance = date => {
       let getAmountFromInterval = (st, en, date) => {
         if (en .date == st .date)
           return en .amount;
         let slope = (en .amount - st .amount) / Types .date .subDays (en .date, st .date);
         return Math .round (st .amount + slope * Types .date .subDays (date, st .date));
       }
-      if (history .length == 1)
-        return history [0] .amount;
-      let upi = history .findIndex (h => {return date <= h .date });
+      if (this._balanceHistory .length == 1)
+        return this._balanceHistory [0] .amount;
+      let upi = this._balanceHistory .findIndex (h => {return date <= h .date });
       if (upi == -1)
-        return getAmountFromInterval (history [history .length - 2], history [history .length - 1], date);
-      else if (history [upi] .date == date)
-        return history [upi] .amount;
+        return getAmountFromInterval (this._balanceHistory [this._balanceHistory .length - 2], this._balanceHistory [this._balanceHistory .length - 1], date);
+      else if (this._balanceHistory [upi] .date == date)
+        return this._balanceHistory [upi] .amount;
       else if (upi == 0)
         return 0;
       else
-        return getAmountFromInterval (history [upi - 1], history [upi], date);
+        return getAmountFromInterval (this._balanceHistory [upi - 1], this._balanceHistory [upi], date);
     }
 
     // get actual amount (up/down) for category
@@ -226,9 +339,9 @@ class Account {
       }
       return getRecursively (cat, start, end) + getAmountUp (cat .parent, cat);
     }
-    let getActual = (cat, start, end) => {return getAmount (cat, start, end,
+    let getActual = (cat, start, end, recursive = true) => {return getAmount (cat, start, end,
       (c,s,e) => {return this._actuals .getAmount (c,s,e)},
-      (c,s,e) => {return this._actuals .getAmountRecursively (c,s,e)}
+      (c,s,e) => {return recursive? this._actuals .getAmountRecursively (c,s,e): 0}
     )}
     let getBalanceFromActual = date => {
       if (date == this .balanceDate)
@@ -255,159 +368,145 @@ class Account {
       (c,s,e) => {return (this._budget .getIndividualAmount(c,s,e) .year || {}) .amount || 0},
       (c,s,e) => {return (this._budget .getAmount (c,s,e) .year || {}) .amount || 0}
     )}
+    let getBudget = (cat, start, end) => {
+      let yr = getBudgetYear (cat, start, end);
+      if (yr && end <= this._budget .getEndDate()) {
+        // reduce yearly budget by any yearly actuals before start
+        let ds = this._budget .getStartDate();
+        let de = Types .date .monthEnd (Types .date .addMonthStart (end, -1));
+        if (this._categories .getType (cat) == ScheduleType .YEAR)
+          yr -= getActual (cat, ds, de, false);
+        yr -= this._actuals .getAmountRecursively (cat, ds, de, false, true);
+        yr = Math .max (0, yr);
+      }
+      return getBudgetMonth (cat, start, end) + Math .round (yr / 12);
+    }
 
     /*** getBalance body ***/
 
-    // init
-    let sign = this .creditBalance? 1: -1;
-    let historyBalances = this._historicBalances
-      .filter (bal => {return bal .account == this._id})
-      .map    (bal => {bal .amount = bal .amount * sign; return bal});
-    let rate = ((this .apr != null? this .apr: PreferencesInstance .get() .apr) - (PreferencesInstance .get() .presentValue? PreferencesInstance .get() .inflation: 0));
-    switch (this._rateType || 0) {
-      case RateType .SIMPLE:
-        rate =  rate / 3650000;
-        break;
-      case RateType .CANADIAN_MORTGAGE:
-        rate = Math .pow (1 + rate / 1000.0, 2) - 1; // effective semi-annual rate
-        let paymentsPerYear;
-        switch (this._paymentFrequency) {
-          case PaymentFrequency .WEEKLY:
-            paymentsPerYear = 52;
-            break;
-          case PaymentFrequency .BI_WEEKLY:
-            paymentsPerYear = 26;
-            break;
-          case PaymentFrequency .SEMI_MONTHLY:
-            paymentsPerYear = 24;
-            break;
-          case PaymentFrequency .MONTHLY:
-            paymentsPerYear = 12;
-            break;
-        }
-        rate = Math .pow (1 + rate, 1.0 / paymentsPerYear) - 1 / 365;
-        break;
-    }
-    let bal;
     let addCat = this .category    && this._categories .get (this .category);
     let subCat = this .disCategory && this._categories .get (this .disCategory);
     let intCat = this .intCategory && this._categories .get (this .intCategory);
-    this .balanceDate = this .balanceDate || Types .date .today();
+    let baseDate = Types .date .monthEnd (endDate);
+    if (baseDate != endDate)
+      baseDate = Types .date .monthEnd (Types .date .addMonthStart(endDate, -1));
 
-    // go through dates in order
-    let accountData = dates .map (endDate => {
-      let pyEndDate = Types .date .addYear (endDate, -1);
-      let startDate = Types .date .addMonthStart (pyEndDate, 1);
+    let balanceEntry = this._balances .find (b => {return b .date == baseDate});
 
-      // history
-      if (historyBalances .length && endDate <= historyBalances [historyBalances .length - 1] .date) {
-        bal       = getHistoryBalance (historyBalances, endDate);
-        let pyBal = getHistoryBalance (historyBalances, pyEndDate);
-        let add   = this .category?    getActual (addCat, startDate, endDate): 0;
-        let sub   = this .disCategory? getActual (subCat, startDate, endDate): 0;
-        return {
-          amount: bal,
-          detail: {
-            id:     this._id,
-            int:    (bal - add - sub) - pyBal,
-            addAmt: add,
-            subAmt: sub,
-            addCat: addCat,
-            subCat: subCat,
-            intCat: intCat
-          }
-        }
+    if (balanceEntry == null) {
+
+      // determine where we need to start
+      let mStart, balance;
+      if (this._balances .length) {
+        let b = this._balances .slice (-1) [0];
+        mStart  = Types .date .addMonthStart (b .date, 1);
+        balance = b .balance;
+      } else if (this._balanceHistory .length) {
+        mStart  = Types .date .monthStart (this._balanceHistory [0] .date);
+        balance = 0;
+      } else {
+        mStart  = Types .date .monthStart (this._balanceDate || Types .date .today());
+        balance = 0;
       }
 
-      // dates that are after last balance-history entry
-      else {
+      // compute balance for every missing month up to current date
+      while (mStart <= baseDate) {
+        let mEnd = Types .date .monthEnd (mStart);
+        let add, sub, int, inf=0;
+        if (mEnd <= Types .date .monthEnd (Types .date .today())) {
+          // use actuals before prior periods
+          int = intCat? getActual (intCat, mStart, mEnd): 0;
+          add = (addCat? getActual (addCat, mStart, mEnd): 0) + int;
+          sub = subCat? getActual (subCat, mStart, mEnd): 0;
+          if (this._balanceHistory .length && mEnd <= this._balanceHistory .slice (-1) [0] .date)
+            int = getHistoryBalance (mEnd) - balance - add - sub;
+          else if (this .balance && mEnd == Types .date .monthEnd (this .balanceDate || Types .date .today()))
+            int = (this .balance * (this .creditBalance? 1: -1)) - balance - add - sub;
 
-        // init
-        let addAmt, subAmt, intAmt = 0;
-        if (! bal)
-          bal = getHistoryBalance (historyBalances, pyEndDate);
-        if (historyBalances .length == 0 || pyEndDate <= historyBalances [historyBalances .length - 1] .date) {
-          let aBal = getBalanceFromActual (pyEndDate);
-          intAmt = aBal - bal;
-          bal = aBal;
+        } else {
+          add = (addCat? getBudget (addCat, mStart, mEnd): 0) + (intCat? getBudget (intCat, mStart, mEnd): 0);
+          sub = subCat? getBudget (subCat, mStart, mEnd): 0;
+          let days = Types .date .subDays (mEnd, mStart) + 1;
+          int = this._getInterest (balance, mStart, 365.0 / 12, days);
+          if (PreferencesInstance .get() .presentValue)
+            inf = - balance * PreferencesInstance .get() .inflation / 3650000  * days;
         }
-
-        // before balance date, back off using actuals
-        if (endDate <= this .balanceDate) {
-          addAmt  = addCat? getActual (addCat, startDate, endDate): 0;
-          subAmt  = subCat? getActual (subCat, startDate, endDate): 0;
-          intAmt += intCat? getActual (intCat, startDate, endDate): 0;
-        }
-
-        // on or after balance date, but in or before current month, roll forward using actuals
-        else if (endDate > this._balanceDate && endDate <= Types .date .monthEnd (Types .date .today())) {
-
-        }
-
-        // after current month, roll forward using budget
-        else {
-          addAmt  = addCat? getBudget (addCat, startDate, endDate): 0;
-          subAmt  = subCat? getBudget (subCat, startDate, endDate): 0;
-          intAmt += intCat? getBudget (intCat, startDate, endDate): 0;
-        }
-
-        // adjust for current year transactions
-        if (endDate <= this._budget .getEndDate()) {
-          bal = getHistoryBalance (historyBalances, startDate);
-          let actBal = (this .balance || 0) * sign;
-          for (let month = Types .date .today(); month >= this._budget .getStartDate(); month = Types .date .addMonthStart (month, -1)) {
-            let st  = Types .date .monthStart (month);
-            let en  = Types .date .monthEnd   (month);
-            let addCat = this._categories .get (this .category);
-            let subCat = this._categories .get (this .disCategory);
-            let add = addCat? getActual (addCat, st, en): 0;
-            let sub = subCat? getActual (subCat, st, en): 0;
-            actBal = (actBal - (add + sub)) / (1 + rate * Types .date .daysInMonth (month));
-          }
-          int = (actBal - bal);
-        }
-
-        // go through budget for each month
-        let addCat = this .category    && this._categories .get (this .category);
-        let subCat = this .disCategory && this._categories .get (this .disCategory);
-        for (let month = startDate; month < endDate; month = Types .date .addMonthStart (month, 1)) {
-          let st  = Types .date .monthStart (month);
-          let en  = Types .date .monthEnd   (month);
-          let add = addCat? getBudgetMonth (addCat, st, en): 0;
-          let sub = subCat? getBudgetMonth (subCat, st, en): 0;
-          int += bal * rate * Types .date .daysInMonth (month);
-          bal += (add + sub);
-          addAmt += add;
-          subAmt += sub;
-        }
-        let add = addCat? getBudgetYear (addCat, startDate, endDate): 0
-        let sub = subCat? getBudgetYear (subCat, startDate, endDate): 0;
-        int = Math .round (int);
-        bal += int + add + sub;
-        addAmt += add;
-        subAmt += sub;
-
-        return {
-          amount: bal,
-          detail: {
-            id:     this._id,
-            int:    int,
-            addAmt: addAmt,
-            subAmt: subAmt,
-            addCat: addCat,
-            subCat: subCat
-          }
-        }
+        balance += add + sub + int + inf;
+        this._balances .push ({
+          date:    mEnd,
+          balance: balance,
+          add:     add,
+          sub:     sub,
+          int:     int,
+          inf:     inf
+        })
+        mStart = Types .date .addMonthStart (mStart, 1);
       }
-    });
+
+      balanceEntry = this._balances .slice (-1) [0] || {balance: 0};
+    }
+
+    let int = 0, add = 0, sub = 0, inf = 0;
+    for (let bal of this._balances)
+      if (bal .date >= startDate && bal .date <= endDate) {
+        int += bal .int;
+        add += bal .add;
+        sub += bal .sub;
+        inf += bal .inf;
+      }
+
+    if (endDate != baseDate) {
+      let st = Types .date .monthStart (startDate);
+      int += intCat? getActual (intCat, st, endDate): 0;
+      add += addCat? getActual (addCat, st, endDate): 0;
+      sub += subCat? getActual (subCat, st, endDate): 0;
+    }
+
     return {
-      curBal:  this .balance * sign,
+      amount: balanceEntry .balance,
+      detail: {
+        intAmt: int,
+        infAmt: inf,
+        addAmt: add,
+        subAmt: sub,
+        id:     this._id,
+        addCat: addCat,
+        subCat: subCat,
+        intCat: intCat
+      }
+    };
+  }
+
+  getBalances (dates) {
+    let bs       = this._budget .getStartDate();
+    let be       = this._budget .getEndDate();
+    let balances = dates .map (d => {return this .getBalance (Types .dateFY .getFYStart (d, bs, be), Types .dateFY .getFYEnd (d, bs , be))});
+    return {
+      curBal:  this .balance * (this .creditBalance? 1: -1),
       liquid:  this .liquid,
-      amounts: accountData .map (d => {return d && d .amount}),
-      detail:  accountData .map (d => {return d && d .detail})
+      amounts: balances .map (d => {return d && d .amount}),
+      detail:  balances .map (d => {return d && d .detail})
     }
   }
 
+  getToolTip (cat) {
+    let tip = 'ACCOUNT: ' + this .name + ' ';
+    if (this .creditBalance) {
+      if (cat._id == this .category)
+        tip += 'Contributions';
+      else
+        tip += 'Withdrawals';
+    } else {
+      let intCat = this .intCategory && this._categories .get (this .intCategory);
+      if (cat._id == this .category)
+        tip += ' Principal &mdash; Calculated from payments' + (intCat? ' entered for ' + intCat .name : ' entered elsewhere');
+      else if (cat._id == this .intCategory)
+        tip += this .category? ' Interest &mdash; Calculated from <b><em>total</em></b> payments you enter here': ' Payments'
+      else
+        tip += ' Advances';
+    }
+    return tip;
+  }
 }
 
 var AccountType = {
@@ -418,11 +517,4 @@ var AccountType = {
 var RateType = {
   SIMPLE: 0,
   CANADIAN_MORTGAGE: 1
-}
-
-var PaymentFrequency = {
-  WEEKLY: 0,
-  BI_WEEKLY: 1,
-  SEMI_MONTHLY: 2,
-  MONTHLY: 3
 }

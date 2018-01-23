@@ -13,8 +13,9 @@ class ScheduleEntryView extends ListView {
       view  => {return Types .dateEndMY .fromString (view, variance .getBudget() .getStartDate())},
       value => {return ''}
     );
+    let categories = variance .getBudget() .getCategories();
     var fields = [
-      new ViewScalableTextbox          ('name',            ViewFormats ('string'),       '', '', 'Name'),
+      new ScheduleEntryName            ('name',            new ScheduleNameFormat (accounts, categories), '', '', 'Name', categories),
       new ScheduleEntryAccount         ('account',         ViewFormats ('string')),
       new ViewEmpty                    ('scheduleLine',    ViewFormats ('string')),
       new ScheduleEntryTotal           ('total',           ViewFormats ('moneyDC'), hud),
@@ -100,13 +101,6 @@ class ScheduleEntryView extends ListView {
     ]);
   }
 
-  showNoAccountNameChange (id) {
-    this._showFieldTip (this._getField (id, 'name'), this._html, [
-      'This category is associated with and Asset or Liability account.',
-      'To change its name, change the name of the account.'
-    ]);
-  }
-
 }
 
 class ScheduleEntryTotal extends ViewLabel {
@@ -149,6 +143,48 @@ class ScheduleEntryAccount extends ViewEmpty {
     this._html .prev ('._field_name') [value? 'addClass': 'removeClass'] ('_account');
   }
 }
+
+class ScheduleName extends ViewTextbox {
+  _addHtml() {
+    if (this .cat && this .cat .account) {
+      this._inputContainer = $('<div>', {data: {field: this}})         .appendTo (this._html);
+      this._input = $('<div>', {class: '_content', text: this .get()}) .appendTo (this._inputContainer);
+      $('<div>', {class: '_prefix', text: this._prefix})               .appendTo (this._inputContainer);
+      $('<div>', {class: '_suffix', text: this._suffix})               .appendTo (this._inputContainer);
+    } else
+      super._addHtml();
+  }
+}
+
+class ScheduleEntryName extends ViewScalable (ScheduleName) {
+  constructor (name, format, prefix='', suffix='', placeholder='', catagories) {
+    super (name, format, prefix, suffix, placeholder);
+    this._categories = catagories;
+  }
+  newInstance (id) {
+    return Object.create (this, {
+      _id: {value: id},
+      cat: {value: this._categories .get (id)}
+    });
+  }
+}
+
+class ScheduleNameFormat extends ViewFormat {
+  constructor (accountsModel, categories) {
+    super (
+      value      => {return Types .string .toString   (value)},
+      view       => {return Types .string .fromString (view)},
+      (value,id) => {
+        let cat = categories .get (id);
+        if (cat && cat .account)
+          return accountsModel .getToolTip (cat .account, cat);
+        else
+          return '';
+      }
+    )
+  }
+}
+
 
 class RepeatField extends ViewScalableCheckbox {
   constructor (field, budget) {

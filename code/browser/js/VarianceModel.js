@@ -168,7 +168,6 @@ class VarianceModel extends Observable {
 
     if (isCredit)
       this._toggleSignForAmount (amount);
-
     return amount;
   }
 

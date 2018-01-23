@@ -111,6 +111,11 @@ class DateType extends FieldType {
   _yearMonth (d) {
     return Math.floor (d / 100);
   }
+  _addMonthToYearMonth (month, addMonths) {
+    let y = Math .floor (month / 100);
+    let m = (month % 100) - 1 + addMonths;
+    return (y + Math .floor (m / 12)) * 100 + (m % 12) + 1;
+  }
   _fromYearMonth (ym) {
     return ym * 100 + 1;
   }
@@ -310,6 +315,9 @@ class DateType extends FieldType {
     var bd = new Date (this._year (b), this._month (b) - 1, this._day (b)) .valueOf();
     return Math .floor ((ad - bd) / (1000 * 60 * 60 * 24));
   }
+  subMonths (a,b) {
+    return this._diffMonths (this._yearMonth (a), this._yearMonth (b));
+  }
   addDay (date, days) {
     return (d => {return this._date (d .getFullYear(), d .getMonth() + 1, d .getDate())})
       (new Date (this._year (date), this._month (date) - 1, this._day (date)) .valueOf() + days * 1000 * 60 * 60 * 24);
@@ -405,6 +413,15 @@ class StringType extends FieldType {
   }
   fromString (s) {
     return s;
+  }
+}
+
+if (typeof assert === 'undefined') {
+  var assert = (condition, message) => {
+    if (! condition) {
+      message = message || "Assertion failed";
+      throw Error? new Error (message): message;
+    }
   }
 }
 

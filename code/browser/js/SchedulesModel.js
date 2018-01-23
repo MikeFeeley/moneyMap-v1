@@ -1,3 +1,16 @@
+/**
+ * Schedules Model
+ *    budget      id of budget associated with this schedule
+ *    category    id of category
+ *    start       starting date or blank if empty schedule
+ *    end         ending date, blank for one-time, or '...' for no end
+ *    amount      dollar amount
+ *    repeat      true/false indicates whether schedule repeats annually (N/A if end is '...')
+ *    limit       number of years schedule repeats or 0 if there is no limit
+ *    notes       descriptive notes
+ *    sort        automatically maintained sort order
+ */
+
 class SchedulesModel extends Observable {
   constructor (budget, actModel) {
     super();
@@ -68,7 +81,7 @@ class SchedulesModel extends Observable {
         sch._id      = this._joinMI (this._schModel, sch._id);
         sch.category = this._joinMI (this._catModel, sch.category);
       }
-      this._categories = new Schedules (cats, schs, this._budget);
+      this._categories = new Schedules (cats, schs, this);
       return this._categories;
     }
   }
@@ -226,7 +239,7 @@ class SchedulesModel extends Observable {
           if (c .account) {
             let account = accounts .find (a => {return a._id == c .account});
             if (account) {
-              for (let field of ['category', 'disCategory'])
+              for (let field of ['category', 'disCategory', 'intCategory'])
                 if (account [field] == c._id)
                   return {id: account._id, update: {[field]: null}}
             }
@@ -257,15 +270,14 @@ class SchedulesModel extends Observable {
     return cat .parent? this .isGoal (cat .parent): cat .goal;
   }
 
-  _getAmount (cat, start, end, includeDescendants) {
-    var isCredit = this .isCredit (cat);
+  _getAmount (cat, start, end, includeDescendants, skipAccountCalculation) {
+    let isCredit = this .isCredit (cat);
     var ga = (cats, start, end, getOtherMonths) => {
-      var rs = {amount: 0};
+      let rs = {amount: 0};
       for (let cat of cats || []) {
-        var am = 0;
-        var om = 0;
-        var sp = [];
-        var yr = false;
+        let am = 0;
+        let om = 0;
+        let yr = false;
         for (let sch of cat .schedule || []) {
           yr |= Types .dateMYorYear .isYear (sch .start);
           let inRange = Types .dateMYorYear .inRange (
@@ -286,9 +298,14 @@ class SchedulesModel extends Observable {
               om += (isCredit? -1: 1) * inRange * (sch .amount || 0);
           }
         }
-        var ds = includeDescendants? ga (cat .children, start, end, yr || getOtherMonths): {amount: 0};
+        if (! skipAccountCalculation && cat .account) {
+          let account = this._actModel .getAccountsModel() .getAccount (cat .account);
+          if (account)
+            am = account .getAmount (cat, start, end, am);
+        }
+        let ds = includeDescendants? ga (cat .children, start, end, yr || getOtherMonths): {amount: 0};
         if (yr) {
-          var amt                = Math [isCredit? 'min': 'max'] (am, ds .amount);
+          let amt                = Math [isCredit? 'min': 'max'] (am, ds .amount);
           rs .amount            += amt;
           rs .year               = (rs .year || {amount: 0, allocated: 0, unallocated: 0});
           rs .year .amount      += Math [isCredit? 'min': 'max'] (am, ds .amount + ((ds .otherMonths && ds .otherMonths) || 0))
@@ -323,14 +340,15 @@ class SchedulesModel extends Observable {
    * Get budget amount directly allocated to this individual category (non-recursively)
    */
   getIndividualAmount (cat, start = this._budget .getStartDate(), end = this._budget .getEndDate()) {
-    return this._getAmount (cat, start, end, false);
+    let debug = this._getAmount (cat, start, end, false);
+    return debug;
   }
 
   /**
    * Get budget amount for category in period (recursively)
    */
-  getAmount (cat, start = this._budget .getStartDate(), end = this._budget .getEndDate()) {
-    return this._getAmount (cat, start, end, true);
+  getAmount (cat, start = this._budget .getStartDate(), end = this._budget .getEndDate(), skipAccountCalculation) {
+    return this._getAmount (cat, start, end, true, skipAccountCalculation);
   }
 }
 
@@ -342,8 +360,9 @@ var ScheduleType = {
 }
 
 class Schedules extends Categories {
-  constructor (cats, schs, budget) {
-    super (cats, budget);
+  constructor (cats, schs, model) {
+    super (cats, model._budget);
+    this._model = model;
     for (let s of schs) {
       if (this._index .get (s .category)) {
         this._index .set (s._id, s);
@@ -353,6 +372,11 @@ class Schedules extends Categories {
   }
 
   getType (cat) {
+    if (cat .account) {
+      let account = this._model._actModel .getAccountsModel() .getAccount (cat .account);
+      if (cat._id == account .category && account .intCategory)
+        cat = this .get (account .intCategory);
+    }
     for (let s of cat .schedule || []) {
       if (Types .date .isYear (s .start))
         return ScheduleType .YEAR;

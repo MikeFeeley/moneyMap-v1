@@ -157,15 +157,8 @@ class ScheduleEntry extends List {
             }
           }
         }
-        if (arg .fieldName == 'name') {
-          let cat = this._categories .get (arg .id);
-          if (cat .account) {
-            this._view .showNoAccountNameChange (arg .id);
-            this._view .updateField (arg .id, 'name', cat .name)
-            eventType = ListViewEvent .CANCELLED;
-          } else if (cat .name)
-            this._view .showTipNameChange (arg .id);
-        }
+        if (arg .fieldName == 'name')
+          this._view .showTipNameChange (arg .id);
         if (eventType != ListViewEvent .CANCELLED)
           this ._setVisibility (arg.id, arg);
         break;

@@ -157,8 +157,8 @@ class ViewFormatOptionList extends ViewFormat {
  */
 class ViewField {
   constructor (name, format) {
-    this._name   = name;
-    this._format = format;
+    this._name    = name;
+    this._format  = format;
   }
   _addCoreHtml (toHtml) {
     this._html = $('<div>', {
@@ -181,23 +181,19 @@ class ViewField {
     }
     this._html .hover (
       e => {
-        let skip = e .originalEvent && e .originalEvent .pageY &&
-          Math .abs (this._html .offset() .top - e .originalEvent .pageY) < 24;
-        if (skip) {
-          if (tid)
-            clearTimeout (tid);
-          toolTip .stop(true);
-          tid = setTimeout(() => {
-            tid = undefined;
-            var text = this ._toolTip;
-            if (text) {
-              toolTip .text (text);
-              toolTip .fadeIn  (UI_TOOL_TIP_FADE_MS, () => {
-                setTimeout (() => {toolTip .fadeOut (UI_TOOL_TIP_FADE_MS)}, UI_TOOL_TIP_DURATION_MS)
-              });
-            }
-          }, UI_TOOL_TIP_WAIT_MS);
-        }
+        if (tid)
+          clearTimeout (tid);
+        toolTip .stop(true);
+        tid = setTimeout(() => {
+          tid = undefined;
+          var text = this._getTooltip();
+          if (text) {
+            toolTip .html (text);
+            toolTip .fadeIn  (UI_TOOL_TIP_FADE_MS, () => {
+              setTimeout (() => {toolTip .fadeOut (UI_TOOL_TIP_FADE_MS)}, UI_TOOL_TIP_DURATION_MS)
+            });
+          }
+        }, UI_TOOL_TIP_WAIT_MS);
       },
       this.clearTooltip
     );
@@ -244,11 +240,12 @@ class ViewField {
     this._html .effect   ('shake');
     this._html .change   (e => {this ._handleChange (e); return false});
     if (message) {
-      this._toolTip = message;
+      this._errorMessage = message;
       this._html .find ('._toolTip') .addClass ('_error');
     }
   }
   _clearError() {
+    this._errorMessage = '';
     this._html .removeClass ('_error');
     this._html .find ('._toolTip') .removeClass ('_error');
   }
@@ -256,7 +253,10 @@ class ViewField {
     return this._html && this._html .hasClass ('_error');
   }
   _getTooltip() {
-    return this._toolTip;
+    if (this._errorMessage)
+      return this._errorMessage;
+    else
+      return this._format .toTooltip? this._format .toTooltip (this._value, this._id): '';
   }
   newInstance (id) {
     return Object.create (this, {
@@ -281,7 +281,6 @@ class ViewField {
   }
   set (val) {
     this._value   = val;
-    this._toolTip = this._format .toTooltip? this._format.toTooltip (this._value): undefined;
     this._set (this._format.toView (val));
     this._clearError();
   }

@@ -1298,7 +1298,7 @@ class NavigateView extends Observable  {
       let html     = target .offsetParent();
       let padding  = target.css ('padding-left');
       let position = ui .calcPosition (target, html, {top: 12, left: -2 + Number (padding .slice (0, padding .indexOf ('px')))})
-      if (detail .int || detail .addAmt || detail .subAmt) {
+      if (detail .intAmt || detail .addAmt || detail .subAmt || detail .infAmt) {
         let popup = $('<div>', {class: '_popup _netWorthTable fader'})
           .appendTo (html)
           .append   ($('<div>', {class: '_popupContent'}))
@@ -1306,8 +1306,8 @@ class NavigateView extends Observable  {
             e .stopPropagation();
           })
         let table = $('<table>') .appendTo (popup.children('._popupContent'));
-        if ([detail .int, detail .addAmt, detail .subAmt] .filter (v => {return v}) .length > 1) {
-          let net = detail .int + detail .addAmt + detail .subAmt;
+        if ([detail .intAmt, detail .infAmt, detail .addAmt, detail .subAmt] .filter (v => {return v}) .length > 1) {
+          let net = detail .intAmt + detail .infAmt + detail .addAmt + detail .subAmt;
           let row = $('<tr>') .appendTo ($('<tfoot>') .appendTo (table))
            .append ($('<td>', {text: 'Net ' + (net>=0 && !isCredit? 'Increase': 'Decrease')}))
            .append ($('<td>', {text: Types .moneyD .toString (net)}))
@@ -1315,10 +1315,14 @@ class NavigateView extends Observable  {
            row .children ('td:nth-child(2)') .addClass ('negative');
         }
         let tbody = $('<tbody>') .appendTo (table);
-        if (detail .int)
+        if (detail .intAmt)
           tbody .append ($('<tr>')
-            .append ($('<td>', {text: isCredit? 'Inflation': 'Earnings'}))
-            .append ($('<td>', {text: Types .moneyD .toString (detail .int)})));
+          .append ($('<td>', {text: isCredit? 'Interest': 'Earnings'}))
+          .append ($('<td>', {text: Types .moneyD .toString (detail .intAmt)})));
+        if (detail .infAmt)
+          tbody .append ($('<tr>')
+          .append ($('<td>', {text: 'Inflation'}))
+          .append ($('<td>', {text: Types .moneyD .toString (detail .infAmt)})));
         let handleCellClick = (e, ids, cats) => {
           let target = $(e .target);
           let html   = target .offsetParent();
@@ -1336,7 +1340,7 @@ class NavigateView extends Observable  {
         if (detail .addAmt)
           $('<tr>')
             .appendTo (tbody)
-            .append ($('<td>', {text: isCredit? 'Principal': 'Contributions'}))
+            .append ($('<td>', {text: isCredit? 'Payments': 'Contributions'}))
             .append ($('<td>', {text: Types .moneyD .toString (detail .addAmt)}))
             .click  (ce => {handleCellClick (ce, detail .ids, detail .addCat)})
         if (detail .subAmt)

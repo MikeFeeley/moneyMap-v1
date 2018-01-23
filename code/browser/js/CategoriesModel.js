@@ -1,3 +1,12 @@
+/**
+ * Categories Model
+ *    name      name
+ *    parent    id of parent category
+ *    budgets   array of budget ids that name category
+ *    account   account id associated with category or null if none (typical)
+ *    sort      automatically maintained sort order
+ */
+
 class CategoriesModel extends Observable {
   constructor () {
     super();

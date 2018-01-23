@@ -67,6 +67,7 @@ class TuplePresenter extends Presenter {
   async _insert (insert, pos) {
     await this._model .insert (insert, this._view);
     this._addTuple (insert, pos);
+    return insert;
   }
 
   async _remove (id) {

@@ -1678,7 +1678,8 @@ class Navigate {
    *      name:    account name
    *      amounts: array of amounts, one for each column
    *      detail: [{
-   *       int:    a .int,
+   *       intAmt: a .intAmt,
+   *       infAmt: a .infAmt,
    *       addAmt: a .add,
    *       subAmt: a .sub,
    *       addCat: a .addCat,
@@ -1737,7 +1738,8 @@ class Navigate {
           .reduce ((s, acc) => {return acc .detail  .map ((d, i) => {
             return {
               ids:    ((s[i] && s[i] .ids)    || []) .concat ((d && d .id) || []),
-              int:    ((s[i] && s[i] .int)    || 0) + ((d && d .int) || 0),
+              intAmt: ((s[i] && s[i] .intAmt) || 0) + ((d && d .intAmt) || 0),
+              infAmt: ((s[i] && s[i] .infAmt) || 0) + ((d && d .infAmt) || 0),
               addAmt: ((s[i] && s[i] .addAmt) || 0) + ((d && d .addAmt) || 0),
               subAmt: ((s[i] && s[i] .subAmt) || 0) + ((d && d .subAmt) || 0),
               addCat: ((s[i] && s[i] .addCat) || []) .concat ((d && d. addCat) || []),

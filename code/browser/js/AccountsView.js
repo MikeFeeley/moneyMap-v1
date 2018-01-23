@@ -137,7 +137,7 @@ class AccountsView extends View {
   }
 
   addEntry (id, subgroupId, sort) {
-    let subgroup = $(this._html.find ('._subgroup') .toArray() .find (sg => {return $(sg) .data ('id') == subgroupId}));
+    let subgroup = $(this._html .find ('._subgroup') .toArray() .find (sg => {return $(sg) .data ('id') == subgroupId}));
     let before = subgroup .find ('> ul > li') .toArray() .find (li => {return $(li) .data ('sort') >= sort});
     let op     = before? 'insertBefore': 'appendTo';
     let el     = before? before:          subgroup .find ('> ul');
@@ -147,12 +147,24 @@ class AccountsView extends View {
           .appendTo ($('<li>', {data: {id: id, subgroupId: subgroupId, sort: sort}}) [op] (el))));
   }
 
+  getEntry (id) {
+    return $(this._html .find ('._subgroup > ul > li') .toArray() .find (e => {return $(e) .data ('id') == id}))
+      .find ('> ._entry > ._left > form');
+  }
+
+  getLine (entry, number) {
+    return $(entry .find ('._line') .toArray() [number]);
+  }
+
   addRight (text, entry) {
-    let right = $('<div>', {class: '_right'})
-      .appendTo (entry .closest ('._entry'))
+    let toHtml = entry .closest ('._entry');
+    let right = toHtml .find ('._right');
+    if (right .length == 0)
+      right = $('<div>', {class: '_right'}) .appendTo (toHtml);
+    let box = $('<div>') .appendTo (right)
       .append   ($('<div>', {class: '_label', text: text}))
       .append   ($('<div>', {class: '_content'}))
-    return right .find ('._content');
+    return box .find ('._content');
   }
 
   scrollRightToBottom (entry) {
@@ -175,6 +187,19 @@ class AccountsView extends View {
       $('<div>', {class: '_label', text: label}) .appendTo (toLine);
     }
     f .addHtml (value, this, toLine);
+  }
+
+  removeField (fieldName, line) {
+    let f = line .find ('._labeledField') .toArray() .find (e => {
+      let field = $(e) .find ('._field') .data ('field');
+      return field && field._name == fieldName
+    });
+    if (f)
+      f .remove();
+  }
+
+  removeRight (entry) {
+    entry .closest ('._entry') .find ('._right') .remove();
   }
 
   _getField (id, name) {

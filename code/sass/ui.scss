@@ -93,8 +93,8 @@ div._systemStatus {
         background: white;
       }
       ._placeholder {
-        border: 1px dashed #73bbe6;
-        background: #f2fbff;
+        border:     1px dashed rgba(0, 129, 204, .6);
+        background: rgba(0, 129, 204, .04);
       }
       padding: 0px;
       > ul {
@@ -162,7 +162,7 @@ div._systemStatus {
             > ._field_type {
               padding-top: 2px;
             }
-            > ._field_category, ._field_disCategory, ._field_liquid {
+            > ._field_category, ._field_disCategory, ._field_intCategory, ._field_liquid {
               padding-top: 6px;
               > div > ._content ._suffix {
                 padding-left: 6px;
@@ -177,15 +177,18 @@ div._systemStatus {
           margin-bottom: 16px;
         }
         ._right {
-          > ._label {
+          > div:not(:last-child) {
+            margin-bottom: 16px;
+          }
+          > div > ._label {
             font-size: 14px;
             color: #aaa;
           }
-          > ._content {
+          > div > ._content {
             border: solid 1px #ccc;
             max-height: 150px;
             overflow-y: scroll;
-            ._balanceHistoryTable {
+            ._balanceHistoryTable, ._rateFutureTable {
               td ._content {
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -200,7 +203,7 @@ div._systemStatus {
                 > ._field_date ._content {
                   width: 100px
                 }
-                > ._field_amount ._content {
+                > ._field_amount ._content, ._field_rate ._content {
                   width: 110px;
                   text-align: right
                 }

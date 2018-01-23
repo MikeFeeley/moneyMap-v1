@@ -20,10 +20,11 @@ $indent:       24px;
       border:  2px solid transparent;
     }
     div._field_name {
-      overflow: hidden;
-      text-overflow: ellipsis;
       vertical-align: top;
-      ._content {
+      & > div > ._content {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
         @include adaptive-width($name-narrow,$name-wide);
       }
     }

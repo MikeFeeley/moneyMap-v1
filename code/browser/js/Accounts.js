@@ -40,6 +40,10 @@ class Accounts extends Observable {
                     await schModel .update (cid, {name: arg [fieldName]})
               }
             }
+            if (acc .type == AccountType .ACCOUNT && ! acc .cashFlow && arg .creditBalance !== undefined) {
+              this._removeAssetLiabilityPartOfAccount (acc);
+              this._addAssetLiabilityPartOfAccount (acc);
+            }
             break;
           case ModelEvent .INSERT:
             if (acc .type == AccountType .GROUP)
@@ -62,21 +66,24 @@ class Accounts extends Observable {
       this._view .resetHtml();
   }
 
-  async _onViewChange (eventType, arg) {
+  async _onViewChange (eventType, arg, skipNewUndoGroup) {
     switch (eventType) {
 
-      case ViewEvent .UPDATE: {
-        if (['category', 'disCategory'] .includes (arg .fieldName)) {
-          Model .newUndoGroup();
-          let categories = this._budget .getCategories();
-          let schModel   = this._budget .getSchedulesModel();
-          let account  = this._accounts .get (arg .id);
+     case ViewEvent .UPDATE: {
+        if (['category', 'disCategory', 'intCategory'] .includes (arg .fieldName)) {
+          if (!skipNewUndoGroup)
+            Model .newUndoGroup();
+          let categories = this._budget   .getCategories();
+          let schModel   = this._budget   .getSchedulesModel();
+          let account    = this._accounts .get (arg .id);
           if (arg .value) {
             // add category
-            let root = arg .fieldName == 'category'? this._budget .getSavingsCategory(): this._budget .getWithdrawalsCategory();
-            let cat  = (root .children || []) .find (c => {return c .name == account .name});
+            let name = account .name + (! account .creditBalance && arg .fieldName == 'category'? ' Principal': '');
+            let type = [['category', 'disCategory', 'intCategory'] .indexOf (arg .fieldName)];
+            let root = this ._budget ['get' + ['Savings', 'Withdrawals', 'Expense'] [type] + 'Category'] ();
+            let cat  = (root .children || []) .find (c => {return c .name == name});
             if (! cat)
-              cat = categories .get ((await schModel .insert ({name: account .name, account: account._id}, {inside: true, id: root._id})) [0]);
+              cat = categories .get ((await schModel .insert ({name: name, account: account._id}, {inside: true, id: root._id})) [0]);
             else if (! cat .account)
               await schModel .update (cat._id, {account: account._id});
             await this._model .update (account._id, {[arg .fieldName]: cat._id});
@@ -103,6 +110,13 @@ class Accounts extends Observable {
                 await schModel .update (cat._id, {account: null});
               await this._model .update (account._id, {[arg .fieldName]: null});
             }
+          }
+          if (arg .fieldName == 'intCategory' && ! arg .value && account .category) {
+            this._view .updateField (account._id, 'category', false);
+            await this._onViewChange (ViewEvent .UPDATE, {id: account._id, fieldName: 'category', value: false}, true)
+          } else if (arg .fieldName == 'category' && arg .value && ! account .intCategory) {
+            this._view .updateField (account._id, 'intCategory', true);
+            await this._onViewChange (ViewEvent .UPDATE, {id: account._id, fieldName: 'intCategory', value: true}, true)
           }
         } else
           await this._model .update (arg .id, {[arg .fieldName]: arg .value}, this);
@@ -229,7 +243,23 @@ class Accounts extends Observable {
     let query   = {account: account._id};
     let sort    = (a,b) => {return a .date < b .date? -1: a .date == b .date? 0: 1};
     let columns = ['date', 'amount'];
-    let table = new AccountsBalanceHistoryTable (account._id, new Model ('balanceHistory'), view, query, sort, options, columns);
+    let table = new AccountsAuxTable (account._id, new Model ('balanceHistory'), view, query, sort, options, columns);
+    await table .addHtml ($('<div>') .appendTo (entry));
+    this._view .scrollRightToBottom (entry);
+  }
+
+  async _addRateFuture (account, entry) {
+    let fields  = [
+      new ViewTextbox ('date', ViewFormats ('dateDMY'),   '', '', 'Date'),
+      new ViewTextbox ('rate', ViewFormats ('percent2Z'), '', '', 'Rate')
+    ];
+    let headers = [];
+    let options = {keepOneEntry: true};
+    let view    = new TableView ('_rateFutureTable', fields, headers, options);
+    let query   = {account: account._id};
+    let sort    = (a,b) => {return a .date < b .date? -1: a .date == b .date? 0: 1};
+    let columns = ['date', 'rate'];
+    let table = new AccountsAuxTable (account._id, new Model ('rateFuture'), view, query, sort, options, columns);
     await table .addHtml ($('<div>') .appendTo (entry));
     this._view .scrollRightToBottom (entry);
   }
@@ -258,27 +288,69 @@ class Accounts extends Observable {
       account._id, account .balance, line, 'Current Balance'
     )
     if (! account .cashFlow) {
-      line = this._view .addLine (entry);
       this._view .addField (
         new ViewTextbox ('apr', ViewFormats ('percent2Z'), '', '', Types .percent2Z .toString (this._defaultRate)),
         account._id, account .apr, line, 'Rate'
       )
-      this._view .addField (
-        new ViewCheckbox ('liquid', ['Not Liquid', 'Liquid']),
-        account._id, account .liquid, line, 'Liquidity'
-      )
-      this._view .addField (
-        new ViewCheckbox ('category', ['Not Budgeted', 'Budgeted']),
-        account._id, account .category != null, line, 'Contributions'
-      )
-      this._view .addField (
-        new ViewCheckbox ('disCategory', ['Not Budgeted', 'Budgeted']),
-        account._id, account .disCategory != null, line, 'Disbursals'
-      )
-      await this._addBalanceHistory (account, this._view .addRight ('Balance History', entry));
+      line = this._view .addLine (entry);
+      await this._addAssetLiabilityPartOfAccount (account, entry);
     }
     if (setFocus)
       this._view .setFocus (entry);
+  }
+
+  _removeAssetLiabilityPartOfAccount (account) {
+    let entry = this._view .getEntry (account._id);
+    let line1  = this._view .getLine (entry, 1);
+    let line2  = this._view .getLine (entry, 2);
+    this._view .removeField ('liquid',      line1);
+    this._view .removeField ('rateType',    line1);
+    this._view .removeField ('category',    line2);
+    this._view .removeField ('disCategory', line2);
+    this._view .removeField ('intCategory', line2);
+    this._view .removeRight (entry);
+  }
+
+  async _addAssetLiabilityPartOfAccount (account, entry = this._view .getEntry (account._id)) {
+    let line1 = this._view .getLine (entry, 1);
+    let line2 = this._view .getLine (entry, 2);
+    if (account .creditBalance) {
+      this._view .addField (
+        new ViewCheckbox ('liquid', ['Not Liquid', 'Liquid']),
+        account._id, account .liquid, line1, 'Liquid Asset'
+      )
+      this._view .addField (
+        new ViewCheckbox ('category', ['Not Budgeted', 'Budgeted']),
+        account._id, account .category != null, line2, 'Contributions'
+      )
+      this._view .addField (
+        new ViewCheckbox ('disCategory', ['Not Budgeted', 'Budgeted']),
+        account._id, account .disCategory != null, line2, 'Disbursals'
+      )
+      await this._addBalanceHistory (account, this._view .addRight ('Balance History', entry));
+    } else {
+      this._view .addField (
+        new ViewSelect ('rateType',
+          new ViewFormatOptionList (
+            [['Simple Interest', RateType .SIMPLE], ['Canadian Mortgage', RateType .CANADIAN_MORTGAGE]]
+          ), '', '', 'Rate Type'),
+        account._id, account .rateType, line1, 'Rate Type'
+      )
+      this._view .addField (
+        new ViewCheckbox ('intCategory', ['Not Budgeted', 'Budgeted']),
+        account._id, account .intCategory != null, line2, 'Payments'
+      )
+      this._view .addField (
+        new ViewCheckbox ('category', ['Not Budgeted', 'Budgeted']),
+        account._id, account .category != null, line2, 'Principal Payments'
+      )
+      this._view .addField (
+        new ViewCheckbox ('disCategory', ['Not Budgeted', 'Budgeted']),
+        account._id, account .disCategory != null, line2, 'Advances'
+      )
+      await this._addBalanceHistory (account, this._view .addRight ('Balance History', entry));
+      await this._addRateFuture     (account, this._view .addRight ('Rate Future', entry));
+    }
   }
 
   _addSubgroup (account, setFocus) {
@@ -313,7 +385,7 @@ class Accounts extends Observable {
   }
 }
 
-class AccountsBalanceHistoryTable extends Table {
+class AccountsAuxTable extends Table {
   constructor (accountId, model, view, query, sort, options, columns) {
     super (model, view, query, sort, options, columns);
     this._accountId = accountId;
@@ -321,6 +393,6 @@ class AccountsBalanceHistoryTable extends Table {
 
   async _insert (insert, pos) {
     insert .account = this._accountId;
-    await super._insert (insert, pos);
+    return await super._insert (insert, pos);
   }
 }

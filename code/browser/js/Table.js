@@ -26,7 +26,10 @@ class Table extends TuplePresenter {
   }
 
   async _getModelData() {
-    return await this._model .find (this._query);
+    let data = await this._model .find (this._query);
+    if (data .length == 0 && this._options .keepOneEntry)
+      data = [await this._insert ({})];
+    return data;
   }
 
   async _addModelData() {
