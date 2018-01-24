@@ -46,29 +46,57 @@ class AccountsModel extends Observable {
     this._rateFutureModel = new Model ('rateFuture');
     this._rateFutureModel .addObserver (this, this._onRateFutureModelChange);
     this._domParser = new DOMParser();
-    // TODO: Listen for changes: paramModel, actualsModel, budgetModel (varianceModel is both, I think)
-   }
+    this._budgetObserver = this._budgetModel .addObserver (this, this._onBudgetModelChange);
+    this._preferencesObserver = PreferencesInstance .addObserver (this, this._onPreferencesModelChange);
+
+  }
 
   delete() {
     this._model               .delete();
     this._tranModel           .delete();
     this._balanceHistoryModel .delete();
-    tihs._rateFutureModel     .delete();
+    this._rateFutureModel     .delete();
+    this._budgetModel .removeObserver (this._budgetObserver);
+    PreferencesInstance .removeObserver (this._preferencesObserver);
+    if (this._actualsObserver)
+      this._actualsModel .removeObserver (this._actualsObserver);
   }
 
   async _onModelChange (eventType, doc, arg) {
     await this._updateModel();
-    this._notifyObservers (eventType, doc, arg);
+    this._balanceCacheConsistencyCheck ('accounts', eventType, doc, arg);
   }
 
   async _onBalanceHistoryModelChange (eventType, doc, arg) {
     await this._updateBalanceHistoryModel();
     this._notifyObservers (eventType, doc, arg);
+    this._balanceCacheConsistencyCheck ('accounts', eventType, doc, arg);
   }
 
   async _onRateFutureModelChange (eventType, doc, arg) {
     await this._updateRateFutureModel();
     this._notifyObservers (eventType, doc, arg);
+    this._balanceCacheConsistencyCheck ('accounts', eventType, doc, arg);
+  }
+
+  _onActualsModelChange (eventType, doc, arg, source) {
+    this._balanceCacheConsistencyCheck ('actuals', eventType, doc, arg);
+  }
+
+  _onBudgetModelChange (eventType, doc, arg, source) {
+    this._balanceCacheConsistencyCheck ('budget', eventType, doc, arg);
+  }
+
+  _onPreferencesModelChange (eventType, doc, arg, source) {
+    this._balanceCacheConsistencyCheck ('preferences', eventType, doc, arg);
+  }
+
+  _balanceCacheConsistencyCheck (modelName, eventType, doc, arg) {
+    for (let account of this._accounts) {
+      let cc = account._balanceCacheConsistencyCheck (modelName, eventType, doc, arg);
+      if (cc)
+        this._notifyObservers (cc .eventType, cc .doc, cc .arg);
+    }
   }
 
   _balanceHistoryForAccount (a) {
@@ -84,7 +112,7 @@ class AccountsModel extends Observable {
 
   async _updateModel() {
     this._accounts = (await this._model .find()) .map (a => {
-      return new Account (a, this._budgetModel, this._actualsModel, this._balanceHistoryForAccount (a), this._rateFutureForAccount (a));
+      return new Account (this, a, this._budgetModel, this._actualsModel, this._balanceHistoryForAccount (a), this._rateFutureForAccount (a));
     });
   }
 
@@ -160,7 +188,10 @@ class AccountsModel extends Observable {
   }
 
   setActualsModel (actualsModel) {
+    if (this._actualsObserver && this._actualsModel)
+      this._actualsModel .removeObserver (this._actualsObserver);
     this._actualsModel = actualsModel;
+    this._actualsObserver = this._actualsModel .addObserver (this, this._onActualsModelChange);
   }
 
   parseTransactions (data) {
@@ -224,7 +255,8 @@ class AccountsModel extends Observable {
 
 // TODO: invalidate balance cache when model changes require
 class Account {
-  constructor (modelData, budgetModel, actualsModel, balanceHistory, rateFuture) {
+  constructor (model, modelData, budgetModel, actualsModel, balanceHistory, rateFuture) {
+    this._model            = model;
     this._categories       = budgetModel .getCategories();
     this._budget           = budgetModel;
     this._actuals          = actualsModel;
@@ -233,6 +265,55 @@ class Account {
     this._balances         = [];
     for (let p of Object .keys (modelData))
       this [p] = modelData [p];
+  }
+
+  _balanceCacheConsistencyCheck (modelName, eventType, doc, arg) {
+    let getDescendants = cl => {
+      let children = cl .reduce ((l,c) => {return l .concat (c .children || [])}, []);
+      return children .length? children .concat (getDescendants (children)): [];
+    }
+    let getAncestors = cl => {
+      let parents = cl .reduce ((l,c) => {return l .concat (c .parent || [])}, []);
+      return parents .length? parents .concat (getAncestors (parents)): [];
+    }
+    let getFamily = cl => {
+      return getAncestors (cl) .concat (cl) .concat (getDescendants (cl))
+    }
+    switch (modelName) {
+      case 'accounts':
+        if (doc._id == this._id)
+          this._invalidateBalanceCache();
+        break;
+      case 'preferences':
+        if (arg .apr !== undefined || arg .inflation !== undefined || arg .presentValue !== undefined)
+          this._invalidateBalanceCache();
+        break;
+      case 'budget':
+      case 'actuals':
+        let possibleAffectedCats = getFamily (
+          [this .category, this .intCategory, this .disCategory]
+            .filter (cid => {return cid})
+            .map    (cid => {return this._categories .get (cid)})
+        );
+        let isAffected = possibleAffectedCats .find (c => {
+          return [doc .category, arg && arg .category, arg && arg._original_category] .includes (c._id);
+        })
+        if (isAffected)
+          this._invalidateBalanceCache();
+        break;
+    }
+  }
+
+  _invalidateBalanceCache() {
+    this._balances = [];
+    for (let cid of [this .category, this .intCategory, this .disCategory])
+      if (cid)
+        this._model._notifyObservers (AccountsModelEvent .CATEGORY_CHANGE, {
+          id: cid
+        });
+    this._model._notifyObservers (AccountsModelEvent .BALANCE_CHANGE, {
+      id: this._id
+    });
   }
 
   setBalanceHistory (balanceHistory) {
@@ -517,4 +598,9 @@ var AccountType = {
 var RateType = {
   SIMPLE: 0,
   CANADIAN_MORTGAGE: 1
+}
+
+var AccountsModelEvent = {
+  BALANCE_CHANGE: 500,
+  CATEGORY_CHANGE: 501
 }

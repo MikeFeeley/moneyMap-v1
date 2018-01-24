@@ -24,13 +24,14 @@ class SchedulesModel extends Observable {
     this._catModel .children = 'children';
     this._schModel .parent   = 'category';
     this._schModel .children = 'schedule';
+    this._accModel = this._actModel .getAccountsModel();
+    this._accObserver = this._accModel .addObserver (this, this._onAccModelChange);
   }
 
   delete() {
     this._catModel .delete();
     this._schModel .delete();
-    if (this._accModel)
-      this._accModel .delete();
+    this._accModel .removeObserver (this._accObserver);
   }
 
   _onCatModelChange (eventType, doc, arg, source) {
@@ -39,6 +40,11 @@ class SchedulesModel extends Observable {
 
   _onSchModelChange (eventType, doc, arg, source) {
     this._onModelChange (eventType, doc, arg, this._schModel, source);
+  }
+
+  _onAccModelChange (eventType, arg) {
+    if (eventType == AccountsModelEvent .CATEGORY_CHANGE)
+      this._notifyObservers (Model .UPDATE, {_id: arg .id});
   }
 
   _onModelChange (eventType, doc, arg, model, source) {
@@ -232,8 +238,7 @@ class SchedulesModel extends Observable {
       let sl = cl .reduce ((l,c) => {
         return l .concat ((c .schedule || []) .map (s => {return this._splitMI (s._id) .id}));
       }, []);
-      let accModel = this._actModel .getAccountsModel();
-      let accounts = accModel .getAccounts();
+      let accounts = this._accModel .getAccounts();
       let al = cl
         .map (c => {
           if (c .account) {
@@ -246,7 +251,7 @@ class SchedulesModel extends Observable {
           }
         })
         .filter (u => {return u});
-      let accUpd = al .length == 0 || accModel .getModel() .updateList (al);
+      let accUpd = al .length == 0 || this._accModel .getModel() .updateList (al);
       let schUpd = sl .length == 0 || this._schModel .removeList (sl);
       let catUpd = ul .length == 0 || this._catModel .updateList (ul);
       result = (await sl) && (await cl);

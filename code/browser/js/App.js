@@ -213,11 +213,11 @@ class App {
       Model .setDatabase (this._user .getDatabaseName());
       Model .databaseConnect();
       this._deleteModels();
+      this._prefs    = new Preferences();
       this._budModel = new BudgetModel   ();
       this._accModel = new AccountsModel (this._budModel);
       this._actModel = new ActualsModel  (this._budModel, this._accModel);
       this._varModel = new VarianceModel (this._budModel, this._actModel);
-      this._prefs    = new Preferences();
       this._models   = [this._budModel, this._actModel, this._varModel, this._accModel, this._prefs];
 
       /* queries */

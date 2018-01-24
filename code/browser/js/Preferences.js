@@ -30,6 +30,7 @@ class Preferences extends Observable {
       this._view .updateField (doc._id, fieldName, arg [fieldName]);
       await this .init();
     }
+    this._notifyObservers (eventType, doc, arg);
   }
 
   async _onViewChange (eventType, arg) {

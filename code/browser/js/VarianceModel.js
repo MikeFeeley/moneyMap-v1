@@ -1,10 +1,11 @@
 class VarianceModel extends Observable {
   constructor (budget, actuals) {
     super();
-    this._budget          = budget;
-    this._actuals         = actuals;
-    this._budgetObserver  = this._budget  .addObserver (this, this._onModelChange);
-    this._actualsObserver = this._actuals .addObserver (this, this._onActualsModelChange);
+    this._budget           = budget;
+    this._actuals          = actuals;
+    this._budgetObserver   = this._budget  .addObserver (this, this._onModelChange);
+    this._actualsObserver  = this._actuals .addObserver (this, this._onActualsModelChange);
+    this._accountsModel    = this._actuals .getAccountsModel();
   }
 
   delete() {
