@@ -183,7 +183,7 @@ class TransactionModel extends Model {
   // TODO: Figure out how to do interestDue properly and then delete this method
   getMostRecentCachedBefore (cid, date) {
     let matches = Array .from (this._collection._docs .values())
-      .filter (d => {console.log(d .category, cid); return d .category == cid && d .date < date})
+      .filter (d => {return d .category == cid && d .date < date})
       .sort   ((a,b) => {return a .date < b .date? 1: a .date == b .date? 0: -1});
     return matches .length && matches [0];
   }

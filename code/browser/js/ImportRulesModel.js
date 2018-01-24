@@ -182,7 +182,6 @@ class ImportRulesModel extends Observable {
   async applyRule (rule, tran) {
     let amount = (action, f) => {
       let field = action [f];
-      console.log(tran, field);
       if (typeof field == 'string') {
         if (field .endsWith ('%')) {
           return Math .round (tran [f] * Number (field .slice (0, -1)) / 100.0);

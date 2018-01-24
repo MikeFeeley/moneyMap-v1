@@ -24,12 +24,10 @@ class BudgetModel extends Observable {
 
 
   _onBudgetModelChange (eventType, doc, arg, source) {
-    console.log('c');
     this._onModelChange (eventType, doc, arg, source, this._budModel)
   }
 
   _onSchedulesModelChange (eventType, doc, arg, source) {
-    console.log('s');
     this._onModelChange (eventType, doc, arg, source, this._schModel)
   }
 
