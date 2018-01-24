@@ -39,7 +39,6 @@ class Categories {
   }
 
   _onModelChange (eventType, doc, arg, parent='parent', children='children') {
-    console.log ('cm omc', eventType, doc, arg, parent, children);
     switch (eventType) {
       case ModelEvent.UPDATE:
         let cat = this._index .get (doc._id);
