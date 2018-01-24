@@ -220,8 +220,12 @@ class SchedulesModel extends Observable {
     if (mis .model == this._schModel) {
       let sch = this._categories .get (mi);
       if (sch .category && (sch .category .schedule || []) .length == 1 && (sch .category .schedule || []) .includes (sch)) {
-        mi  = sch .category._id;
-        mis = this._splitMI (mi);
+        if (await this .hasTransactions (sch .category)) {
+          await mis .model .update (mis .id, {start: ''});
+        } else {
+          mi  = sch .category._id;
+          mis = this._splitMI (mi);
+        }
       } else
         result = await mis .model .remove (mis .id);
     }
