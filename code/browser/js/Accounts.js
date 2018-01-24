@@ -341,7 +341,7 @@ class Accounts extends Observable {
         account._id, account .intCategory != null, line2, 'Payments'
       )
       this._view .addField (
-        new ViewCheckbox ('category', ['Not Budgeted', 'Budgeted']),
+        new ViewCheckbox ('category', ['Expense', 'Savings']),
         account._id, account .category != null, line2, 'Principal Payments'
       )
       this._view .addField (

@@ -48,7 +48,7 @@ class ScheduleEntry extends List {
           updateTotals (cat .parent);
         }
       };
-      updateTotals (this._categories .get (doc .category || doc .parent));
+      updateTotals (this._categories .get (doc .category || doc._id));
       if (arg && arg ._original_parent)
         updateTotals (this._categories .get (arg ._original_parent));
       if (eventType == ModelEvent .UPDATE && arg .budgets) {
