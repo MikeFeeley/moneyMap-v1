@@ -7,27 +7,7 @@
  *    sort      automatically maintained sort order
  */
 
-class CategoriesModel extends Observable {
-  constructor () {
-    super();
-    this._model = new Model ('categories');
-    this._model .addObserver (this, this._onModelChange);
-  }
-
-  delete() {
-    this._model .delete();
-  }
-
-  _onModelChange (eventType, doc, arg, source) {
-    if (this._categories)
-      this._categories .onModelChange (eventType, doc, arg, source);
-    this._notifyObservers (eventType, doc, arg, source);
-  }
-
-  getCategories() {
-    return this._categories;
-  }
-}
+class CategoriesModel extends Observable {}
 
 class Categories {
   constructor (docs, budget) {
@@ -59,16 +39,19 @@ class Categories {
   }
 
   _onModelChange (eventType, doc, arg, parent='parent', children='children') {
+    console.log ('cm omc', eventType, doc, arg, parent, children);
     switch (eventType) {
       case ModelEvent.UPDATE:
         let cat = this._index .get (doc._id);
-        if (arg [parent])
+        if (arg [parent] || arg .budgets)
           this._removeParentLink (cat, parent, children);
         for (let f in arg) {
           cat [f] = arg [f];
         }
-        if (arg [parent])
+        if (arg [parent] || arg .budgets) {
+          cat .parent = doc .parent;
           this._addParentLink (cat, parent, children);
+        }
         if (arg .budgets && parent == 'parent') {
           if (! cat .budgets .includes (this._budget .getId())) {
             this._removeParentLink (cat);
