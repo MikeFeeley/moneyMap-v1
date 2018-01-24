@@ -438,14 +438,16 @@ class AmountFormulaType extends NumberType {
     super ({style:'currency', currency:'USD', minimumFractionDigits:2}, 2);
   }
   toString (v) {
-    if (typeof v == 'string' && (v .slice (-1) == '%'))
+    if (typeof v == 'string' && (v == 'due' || v .slice (-1) == '%'))
       return v;
     else
       return super .toString (v);
   }
   fromString (s) {
     if (typeof s == 'string') {
-      s = s.trim();
+      s = s .trim() .toLowerCase();
+      if (s == 'due')
+        return s;
       if (s .slice (-1) == '%' && ! isNaN (s .slice (0, -1)) && Number (s .slice (0, -1)) >= 0)
         return s
       else

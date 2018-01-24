@@ -1,8 +1,10 @@
 class ImportRulesModel extends Observable {
-  constructor() {
+  constructor (categories, accounts) {
     super();
-    this._model     = new Model ('importRules');
-    this._tranModel = new TransactionModel();
+    this._categories = categories;
+    this._accounts   = accounts;
+    this._model      = new Model ('importRules');
+    this._tranModel  = new TransactionModel();
     this._model .addObserver (this, this._onModelChange);
   }
 
@@ -165,10 +167,11 @@ class ImportRulesModel extends Observable {
   }
 
   getMatchingRules (tran) {
-    var matches = [];
-    for (let rule of this._rules .values())
-      if (tran .rulesApplied && tran .rulesApplied .includes (rule._id) || this .isMatch (rule, tran))
-        matches .push (rule);
+    let matches = [];
+    if (tran)
+      for (let rule of this._rules .values())
+        if (tran .rulesApplied && tran .rulesApplied .includes (rule._id) || this .isMatch (rule, tran))
+          matches .push (rule);
     return matches;
   }
 
@@ -178,7 +181,24 @@ class ImportRulesModel extends Observable {
 
   async applyRule (rule, tran) {
     let amount = (action, f) => {
-      return action [f] && typeof action [f] == 'string' && action [f] .endsWith ('%')?  Math .round (tran [f] * Number (action [f] .slice (0, -1)) / 100.0): action [f];
+      let field = action [f];
+      console.log(tran, field);
+      if (typeof field == 'string') {
+        if (field .endsWith ('%')) {
+          return Math .round (tran [f] * Number (field .slice (0, -1)) / 100.0);
+        } else if (field == 'due') {
+          let cat = this._categories .get (action .category);
+          if (cat .account) {
+            let acc = this._accounts .getAccount (cat .account);
+            if (cat._id == acc .intCategory && acc .category) {
+              let due = acc .getInterestDue (tran .date)
+              return Math .min (due, tran [f]);
+            }
+          }
+          return 0;
+        }
+      } else
+        return field;
     }
     let sort      = this._tranModel
       .refine (t     => {return (t .leader || t._seq) == tran._seq})

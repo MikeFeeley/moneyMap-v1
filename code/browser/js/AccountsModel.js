@@ -253,7 +253,6 @@ class AccountsModel extends Observable {
  * Account
  */
 
-// TODO: invalidate balance cache when model changes require
 class Account {
   constructor (model, modelData, budgetModel, actualsModel, balanceHistory, rateFuture) {
     this._model            = model;
@@ -349,6 +348,14 @@ class Account {
       return rate;
     }
     return balance * getRate (rateDate, compoundDays) * days;
+  }
+
+  getInterestDue (date) {
+    // TODO: Figure out how to do this properly ... total hack at the moment XXX
+    let balance     = this .getBalance (date, date) .amount;
+    let lastPayment = this._model._tranModel .getMostRecentCachedBefore (this .intCategory, date);
+    let days        = lastPayment? Types .date .subDays (date, lastPayment .date): 365 / 12;
+    return Math .abs (this._getInterest (balance, date, days, days));
   }
 
   /**
