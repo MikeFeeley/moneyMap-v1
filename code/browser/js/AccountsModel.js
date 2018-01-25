@@ -508,7 +508,7 @@ class Account {
           sub = subCat? getActual (subCat, mStart, mEnd): 0;
           if (this._balanceHistory .length && mEnd <= this._balanceHistory .slice (-1) [0] .date)
             int = getHistoryBalance (mEnd) - balance - add - sub;
-          else if (this .balance && mEnd == Types .date .monthEnd (this .balanceDate || Types .date .today()))
+          else if (this .balance != null && mEnd == Types .date .monthEnd (this .balanceDate || Types .date .today()))
             int = (this .balance * (this .creditBalance? 1: -1)) - balance - add - sub;
 
         } else {

@@ -6,9 +6,44 @@
 \pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
 
 \f0\fs36 \cf0 TO DO\
-	- selecting/deselecting budget categories does not send model update notifications for those categories\
-	- balanceDate entry\
-	- mortgage balance?   Inbox sidebar?\
+	- getBalance for mortgage is ignoring curBalance; is this correct (e.g., set to zero)\
+	- should transactions update liability balance / balance date / accrued interest?\
+\
+		- no for assets where interest rate is an estimate and actual value is computed by stock fluctuations etc.\
+		- why not for loans where interest rate is authoritative\
+		- would be like a cashFlow account except that account is not listed in transaction (essentially these are in fact transfers)\
+		- server\
+			- if use the roll-forward transaction stuff, it may be difficult be one transaction would be updating two accounts\
+			- don't use roll-forward\
+				- account balance / date might not get updated\
+				- at the moment this is fine, because balances is calculated correctly from b/bd and actuals, is its probably fine to just do this\
+					- only issue is if you have two transactions in same day (which is why this wouldn't work for cash-flow transaction\
+					- not true unless there's still the hack to find the date of the previous transaction\
+						- could end up double paying interest\
+						- and if you still need this hack, what's the point of update the balance \
+							- other than to show right think in Inbox and "Today" WealthBox (which shows curbalance)\
+		- interest\
+			- if a transaction does not fully pay entire interest due, then need an accrued interest field in addition to the balance\
+		- how it works\
+			- account listening to transaction model changes\
+				- check categories to see if they are associated with an account\
+				- if so, make necessary changes to accounts model\
+			- if intCategory && category\
+				- use only category and the amount here updates the balance; ignore intCategory unless we are keeping track of accrued interest\
+			- if only intCategory\
+				- use intCategory and compute principal part \
+			- in all cases update balanceDate to max (current value and transaction date)\
+			- what about changes to old trans\
+				- these will not update balanceDate so its okay\
+			- what about undo\
+				- this is a problem \'85 without an accrued interest, you would need to move balanceDate back to "previous value"\
+					- if there is accrued interest field, then would add interest paid to that field so that balanceDate rollback isn't necessary\
+			- what about date errors?\
+				- another problem unless there's accrued interest field\
+				\
+	\
+\
+\
 	- rules calc of lastPayment date is a hack\
 	- assets need a taxCategory that\
 		- reduces amount of income, but does not affect how balance is calculated\
@@ -176,6 +211,8 @@ Salary\
 CURRENT\
 \
 	Bugs\
+		- networth page (today box at least) does not respond to model updates while its showing\
+			- mostly okay except for hitting undo key with networth showing and, for example, changing an account balance\
 		- budget; switch from smaller to larger font for table occurs at wrong window width\
 		- Budget HUD; change allocation did not update year comparison graph at top of hud\
 		- why does starting cash flow balance keep changing (by small amounts)?\

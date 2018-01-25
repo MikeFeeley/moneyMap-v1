@@ -193,10 +193,9 @@ body {
 
 
 ._error {
-  border: 1px solid red;
+  border: 1px solid red!important;
   background: #fff0f0;
   ._content {
-    margin: 1px !important;
     background: #fff0f0;
   }
 }

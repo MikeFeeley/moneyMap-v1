@@ -85,8 +85,9 @@ class FiscalYearDateType extends FieldType {
 }
 
 class DateType extends FieldType {
-  constructor (format) {
+  constructor (format, nullOkay) {
     super (format);
+    this._nullOkay  = nullOkay;
     this._months    = ['January', 'February', 'March', 'April', 'May', 'June',
                        'July', 'August', 'September', 'October', 'November', 'December']
     this._monthsLC  = ['january', 'february', 'march', 'april', 'may', 'june',
@@ -162,6 +163,8 @@ class DateType extends FieldType {
   }
   fromString (s, context) {
     s = s .trim() .toLowerCase();
+    if (s == '' && this._nullOkay)
+      return null;
     if (s == '')
       return this._format == 'MYorYear'? '': undefined;
     if (s == 't' || s == 'today' || s == '.')

@@ -11,6 +11,12 @@ class Accounts extends Observable {
     this._view                = new AccountsView();
     this._view .addObserver (this, this._onViewChange);
     this._accounts            = null;
+    this._dateType            = new DateType ('DMY', true);
+    this._dateViewFormat      =  new ViewFormat (
+      (value => {return this._dateType .toString   (value)}),
+      (view  => {return this._dateType .fromString (view)})
+    )
+
   }
 
   delete() {
@@ -20,6 +26,8 @@ class Accounts extends Observable {
   }
 
   async _onModelChange (eventType, acc, arg, source) {
+    if (eventType == ModelEvent .UPDATE && arg .balance)
+      await this._model .update (acc._id, {balanceDate: Types .date .today()});
     if (this._accounts) {
       if (! this._view .isVisible())
         this._view .resetHtml();
@@ -314,6 +322,10 @@ class Accounts extends Observable {
   async _addAssetLiabilityPartOfAccount (account, entry = this._view .getEntry (account._id)) {
     let line1 = this._view .getLine (entry, 1);
     let line2 = this._view .getLine (entry, 2);
+    this._view .addField (
+      new ViewTextbox ('balanceDate', this._dateViewFormat, '', '', 'Date'),
+      account._id, account .balanceDate, line1, 'Balance Date', 'balance'
+    )
     if (account .creditBalance) {
       this._view .addField (
         new ViewCheckbox ('liquid', ['Not Liquid', 'Liquid']),

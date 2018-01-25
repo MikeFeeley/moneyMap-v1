@@ -150,6 +150,9 @@ div._systemStatus {
               font-size: 14px;
               color: #aaa;
             }
+            > ._field {
+              border: 1px solid transparent;
+            }
             > ._field_apr ._content, ._field_balance ._content {
               text-align: right
             }
@@ -158,6 +161,9 @@ div._systemStatus {
             }
             > ._field_balance ._content {
               width: 110px
+            }
+            > ._field_balanceDate ._content {
+              width: 110px;
             }
             > ._field_type {
               padding-top: 2px;
