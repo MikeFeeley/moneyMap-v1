@@ -361,7 +361,6 @@ class Account {
         if (tran .date > this .balanceDate || delta || origDelta) {
           let balanceDelta  = (tran .category == this .category? delta: 0)    + (update && update._original_category == this .category? origDelta: 0);
           let interestDelta = (tran .category == this .intCategory? delta: 0) + (update && update._original_category == this .intCategory? origDelta: 0);
-          console.log(this .balance, balanceDelta, interestDelta);
           if (tran .date > this .balanceDate)
             interestDelta += this._getInterest (this .balance || 0, tran .date, Types .date .subDays (tran .date, this .balanceDate));
           await this._model._model .update (this._id, {
