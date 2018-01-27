@@ -5,142 +5,29 @@
 \margl1440\margr1440\vieww26440\viewh19580\viewkind0
 \pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
 
-\f0\fs36 \cf0 TO DO\
-	- balanceDate\
-		- updated when\
-			- accruedInterest is calculated\
-			- when transaction changes principal? \'85 but when if there is a later change to date of this tran?\
-	- tran amount is FULL payment \
-		- need to calc pri / int when its posted\
-		- if tran is removed need these things\
-\
-	- getBalance for mortgage is ignoring curBalance; is this correct (e.g., set to zero)\
-	- should transactions update liability balance / balance date / accrued interest?\
-\
-		- no for assets where interest rate is an estimate and actual value is computed by stock fluctuations etc.\
-		- why not for loans where interest rate is authoritative\
-		- would be like a cashFlow account except that account is not listed in transaction (essentially these are in fact transfers)\
-		- server\
-			- if use the roll-forward transaction stuff, it may be difficult be one transaction would be updating two accounts\
-			- don't use roll-forward\
-				- account balance / date might not get updated\
-				- at the moment this is fine, because balances is calculated correctly from b/bd and actuals, is its probably fine to just do this\
-					- only issue is if you have two transactions in same day (which is why this wouldn't work for cash-flow transaction\
-					- not true unless there's still the hack to find the date of the previous transaction\
-						- could end up double paying interest\
-						- and if you still need this hack, what's the point of update the balance \
-							- other than to show right think in Inbox and "Today" WealthBox (which shows curbalance)\
-		- interest\
-			- if a transaction does not fully pay entire interest due, then need an accrued interest field in addition to the balance\
-		- how it works\
-			- account listening to transaction model changes\
-				- check categories to see if they are associated with an account\
-				- if so, make necessary changes to accounts model\
-			- if intCategory && category\
-				- use only category and the amount here updates the balance; ignore intCategory unless we are keeping track of accrued interest\
-			- if only intCategory\
-				- use intCategory and compute principal part \
-			- in all cases update balanceDate to max (current value and transaction date)\
-			- what about changes to old trans\
-				- these will not update balanceDate so its okay\
-			- what about undo\
-				- this is a problem \'85 without an accrued interest, you would need to move balanceDate back to "previous value"\
-					- if there is accrued interest field, then would add interest paid to that field so that balanceDate rollback isn't necessary\
-			- what about date errors?\
-				- another problem unless there's accrued interest field\
-				\
-	\
-\
-\
-	- rules calc of lastPayment date is a hack\
+\f0\fs36 \cf0 ==============\
+TO DO\
+	- change name of interest category to end with " Interest"\
+	- allow "due" for amount for interest categories \
+	- balance calculation for end of current month is understated because it does not include planned, but not actualized transactions\
+		- perhaps go back to earlier plan for current where you take the plan and subtract out the actuals\
 	- assets need a taxCategory that\
 		- reduces amount of income, but does not affect how balance is calculated\
 		- what about actuals? \
 			- we'd have the tax net amount in actual \'85\
 			- don't really have to worry about actuals for a while\
-\
-Tue Jan 16\
-	- How do you specify the interest amount in budget schedule?\
-		- if its something like: "principal", "interest" or "due", then the payment amount and frequency need to be in the account\
-			- benefit is that its more accurate because you get weekly periodcity, for example\
-		- if its something like "interest due" and then the principal is something relative to that, then payment amount etc can just be in schedule\
-			- benefit is that its more consistent with other types of planning \'85 you enter expected expense amounts in Plan, not Accounts\
-				- that's what you'd do if you made additional payments or skipped payments etc.\
-			- interest part is easy \'85 by what about principal \'85 would work if you could reference one schedule from another\
-				- actual you reference category amount from schedule, this could work I think\
-					- Mortgage Interest      interest\
-					- Mortgage Principal    $xxx.xx - interest\
-\
 		- what about income and taxes?\
 			- Salary    after-tax of $5,000.00\
 						$5,000.00 - tax\
-\
 			or separate category for tax (could be either income with credit amount or expense)\
 			- Income Tax Withheld    tax   \
-		- it's kind of weird to specify BOTH an category in Account for a particular purpose AND an amount in Plan that comes from an Account\
-			- you could maybe get rid of Account Categories by adding a sort of tag on the schedule that says that it updates a certain account\
-				- this would be similar to some of the calculated amount things shown above\
-			- its weird for example\
-				- or income.  Would you list both an income and an expense account (for taxes)\
-				- also mortgage\
-					- some people will want to expense entire payment\
-					- others expense interest / savings principal\
 \
-			Loan: budget payments as expense / budget principal and \
-\
-===== Plan\
-(1) Account stores a current rate and list of future rates, payment amount, so it can compute rate on day X\
-(2) Account selects either (or none)\
-	(a) an expense category for full payment \'85 account balance calc will break this down to update balance properly, or\
-	(b) an expense category for interest and a savings category for principal \'85 in this case balance calc just takes the amounts; they are broken down already\
-(3) Account exports an interest due calculation\
-		- computed by starting from balance / balanceDate and applying actuals to end of current month and plan after that\
-(4) In Plan\
-	(a) enter amount of payment in the expense category\
-		(i) Mortgage (expense) - enter an amount; its just the normal thing\
-		category is null; intCategory name is just name of account\
-	(b) account categories\
-		Mortgage Payment 	\'97 enter amount like above, but this actually has no budget itself?\
-			- this then isn't either an expense or savings; though it leans toward expense\
-		Mortgage Principal 	\'97 no schedule; amount calculated from pmt\
-		Mortgage Interest		\'97 no schedule; amount calculated from pmt\
-\
-		category name is account name + 'Principal; intCategory is account name + 'Interest'\
-		\
-		the other possibility is that there are two and there's an automatic credit added to first \'85\
-\
-	(b) another try\
-		Mortgage \'96 expense account; enter total amount of payment\
-			- has an immutable, undeleteable schedule with no dates and no amount, but with the comment "Credit for Mortgage Principal"\
-			- net value of category is thus just the interest\
-		Mortgage Principal \'96 savings; no schedule; computed automatically\
-		? what if you want to make additional payments?  strange to enter as expenses, but maybe okay\
-\
-\
-For case (b):\
-	- what is savings category called?  \
-		- Mortgage Principal, but you actually would be entering the total amount of the payment\
-		- Mortgage Payment, but the calculated amount is just the principal\
+==============\
+RAMBLINGS\
 \
 Taxable Income\
 	- enter gross amount\
 	- automatic expense category for tax (withheld)\
-\
-===== Changes\
-\
-PLAN / BUDGET / SCHEDULE\
-	- new type of schedule whose amount is computed by account and is immutable\
-		- some categories have one of these\
-	- budget.getAmount: amount calculation for this new type of schedule, based on account\
-\
-ACCOUNT\
-	- fields and inputs\
-	- getBalance\
-\
-ACTUALS\
-	- is payment charged to the Mortgage Payment category, allowing the split to happen in the actual calculation\
-	- or split into principal and interest when posted (simpler)\
-		- so, this means that need cats for int and pri and that if cat for pmt, it wouldn't ever get any transactions\
 \
 \
 LATER \'85 TAXABLE INCOME\
@@ -151,43 +38,7 @@ LATER \'85 TAXABLE INCOME\
 (5) So, all that's actually needed is a category with no / immutable amount, to hold the taxes\
 \
 \
-=====
-\fs24 \
-\
-
-\fs36 Interest etc\
-	(1) assets; interest is added silently \'85 balance difference less new contributions\
-			* goal to know current balance and how much is from interest / principal  \
-	(2) liabilities; interest is calculated and then transactions create interest expense\
-			* goals are to know current balance, breakdown of payments: principal / interest,  and in aggregate for year, how much is interest / principal\
-			- accrued interest - there normally wouldn't be any \'85 ?\
-\
-NOTE: to get interest due on date X, you need to know balance on X, which means knowing the payment amounts on dates < X\
-	- budget getAmount needs to get these numbers \'97 account getBalance BOTH needs these and generates them XXX\
-	- account getBalance can avoid calling budget getAmount for schedules that are calculated by account\
-		- but what about a category with a combined schedule (i.e., fixed amounts and calculated amounts)?\
-\
-Payment amount / payment frequency\
-	- this should be done by schedule, i think, but problem is that there is not weekly schedule so you're not going to get an accurate budget; actual is fine\
-	- monthly payment is maybe okay estimate \'85\
-	- this would mean that only account thing in schedule in interest amount due \'85 balance * rate * days? since last payment\
-	- could you even have rate as part of schedule?\
-\
-Example\
-	setup mortgage \
-\
-\
-Handling Model Connectivity / Errors\
-	- add idle mode in which upcallls are suspended?\
-\
-Accounts\
-	- mortgage interest?\
-		- mortgages have: savings category and expense category\
-		- generally true of liabilities?\
-			- assets have:    SAVINGS and WITHDRAWAL (also INCOME?  this is off the books at the moment)\
-			- liabilities have: SAVINGS and EXPENSE \'85 also WITHDRAWAL ?  (e.g., line of credit advance)\
-		- auto calculated amount in interest category based on account\
-		- this auto calc is also available in transaction rules (or even transaction edit?)\
+	- Handling Model Connectivity / Errors:  add idle mode in which upcallls are suspended?\
 \
 	- combination of specific budgets and general budgets; how do you do this in accounts? (e.g., TFSA)\
 		- problem\
@@ -215,115 +66,44 @@ Salary\
 \fs24 \
 \
 
-\fs36 ====\
-CURRENT\
-\
-	Bugs\
-		- networth page (today box at least) does not respond to model updates while its showing\
-			- mostly okay except for hitting undo key with networth showing and, for example, changing an account balance\
-		- budget; switch from smaller to larger font for table occurs at wrong window width\
-		- Budget HUD; change allocation did not update year comparison graph at top of hud\
-		- why does starting cash flow balance keep changing (by small amounts)?\
-		- looks like another negative in BudgetProgress \'85 look at Smaller Trips \'97 look at Alcohol\
-		- unused last month and current transaction don't work right together (get doubled)\
-		- progress sidebar - budget issues does not take into account credits received in current period; should it?\
-		- switching between budgets; server connection loss without any other error\
-		- actual, prior-year budget period, cash flow balance doesn't look right\
-		- budgetProgressHUD in perspective for future years does not show amount for THAT year in subcategories; shows amount for current year\
-		- updating budget from budgetProgressHUD from perspective table adds some empty rows to bottom of table (for cats w/ all zero amounts in view window)\
-		- edit config 'Budgets' title has wrong style\
-		- possibly add drill into payee for perspective\
-		- click on year doughnut graph sometimes closes all popups (tournament, winfield)\
-			- maybe using wrong bounding box for recognizing self click and when you go deep enough into drill, a self click is not recoginized\
-		- occasional connection loss on server queries that shouldn't happen			- seems to be related to the heartbeat thread somehow interfering with normal access\
-		- apply rule - add transaction 100% added $0.\
-\
-	Liabilities\
-		- interest calculation type\
-		- budget: disbursement, payment, interest and principle separately (drop down: 'None', 'Payment', 'Principle and Interest'\
-		- plan and budget\
-			- amount for principle / interest comes from account somehow\
-			- if account knew payment frequency, date, and amount, then you might just say: 'payment'\
-				- but, what if you want to make additional payments / skip a payment etc?\
-			- idea is that account provides a set of amount calculations that you can choose from in plan and rules instead of an amount\
-				- how do you choose them in plan?\
-					- maybe enter '=' and then you get a more complex input\
-						- drop down for list of functions and (then one parameter field \'85 skip this for now)\
-					- 'due" is a legal amount for account types that support it\
-						- when entering, how do you know if its legal?\
-				- how to they display?\
-						- as string as determined by account\
-							"Payment", "Principle", "Interest" \'85 "due"\
-				- is it only for account category or also its descendents?\
-		- rules\
-			- split amounts come from account somehow\
-		- payment changes balance\'85\
-			- there are two ways to change an account balance:\
-				(1) account field of transaction, which must be a cash-flow account; e.g., debit from A; credit to category C\
-					in this case; the transaction actuals store the balance of C\
-				(2) a category associated with an account: e.g., debit from A;  credit to C associated with account B\
-					in this case, B has a balance and so transaction should update balances of both A and B, but the actuals will also store the net change of B in C\
-						- so you could have transaction NOT update B's balance\
-						- then to get B's balance you'd take starting balance in B and then apply actuals posted to C\
-							- its necessary to do this for every transaction to loan in order to compute interest\
-						- this is currently done in networth calculation which starts from current balance, assuming that is accurate as of today\
-							- for investments, the balance fluctuates; actuals alone are not enough, but for loans balance can be determine from actuals\
-\
-	PLAN\
-		- add balanceDate to accounts for non-cash-flow accounts only\
-			- set to today whenever balance is updated\
-			- then compute balance from balance and actuals since balanceDate\
-			- update navigate / networth to use this date\
-		- transactions to non-cash flow accounts\
-			- update BOTH balance and balanceDate\
-			- compute balance from these plus actuals (\
-\
-ISSUE\
-	- when computing account balance for X\
-		- you can take the budget amount, ignoring (or backing out) actuals\
-		- or you can take actuals to current month and start with budget the following month\
-			- but problem with this is that it understates future month balance, but not accounting for current month stuff that hasn't happened yet\
-			- benefit is that its the actual, accurate balance for current month\
-\
-	Balance as of date X:\
-		(1) start with current balance and roll forward using actuals to get to end of today month\
-		(2) for months after current month, ignore actuals from previous month\
-\
-	Do we even need current balance?  Maybe its just the last entry in balance history?\
-\
-	Also need schedule for:\
-		interest rate and payment amount\
-\
-\
-	getBalances used for 2 things\
-		(1) get balance on date and the interest added or charged between that date and previous date in list\
-				- history of investment: int is difference between balance difference and actual contribution\
-				- history of mortgage w/ int sep: is total of int\
-				- history of mortgage w/ int in pmt: its like an investment\
-		(2) to get current balance of loan for interest calculation\
-\
-\
-\
-\
+\fs36 ==============\
+BUGS\
+	- networth page (today box at least) does not respond to model updates while its showing\
+		- mostly okay except for hitting undo key with networth showing and, for example, changing an account balance\
+	- budget; switch from smaller to larger font for table occurs at wrong window width\
+	- Budget HUD; change allocation did not update year comparison graph at top of hud\
+	- why does starting cash flow balance keep changing (by small amounts)?\
+	- looks like another negative in BudgetProgress \'85 look at Smaller Trips \'97 look at Alcohol\
+	- unused last month and current transaction don't work right together (get doubled)\
+	- progress sidebar - budget issues does not take into account credits received in current period; should it?\
+	- switching between budgets; server connection loss without any other error\
+	- actual, prior-year budget period, cash flow balance doesn't look right\
+	- budgetProgressHUD in perspective for future years does not show amount for THAT year in subcategories; shows amount for current year\
+	- updating budget from budgetProgressHUD from perspective table adds some empty rows to bottom of table (for cats w/ all zero amounts in view window)\
+	- edit config 'Budgets' title has wrong style\
+	- possibly add drill into payee for perspective\
+	- click on year doughnut graph sometimes closes all popups (tournament, winfield)\
+		- maybe using wrong bounding box for recognizing self click and when you go deep enough into drill, a self click is not recoginized\
+	- occasional connection loss on server queries that shouldn't happen		- seems to be related to the heartbeat thread somehow interfering with normal access\
+	- apply rule - add transaction 100% added $0.\
 						\
-			\
-	- INTERMITTENT BUGS\
-		- double scroll bars in Plan\
-		- category is "Reimbursed"  cursor to end an type :Liam and it return: it goes blank.  Re-entering reimb:liam works fine.\
-		- occasionally and update/one returns an error causing a server-disconnect message (nothing in server log), recovers correctly\
-		- after changing transactions, refresh button breaks (shows nothing); next refresh works			- unable to repeat this since Dec 7 2017\
-		- recategorize in prior years does not adjust actuals cache correctly\
-			- change Income:Mike to Income:Mike:UBC and amount disappears from perspective until reload\
-			- unable to replicate\
-		- after changing schedule from parent to children, variance was off among children until refresh\
-			- at least I think that's what it was; changes to Income > Mike > UBC > *\
-		- changing transaction amount while monthly actual graph showing does not update graph incrementally; does refresh\
-			- saw it, but now can't replicate it; probably special case of the popup\
+==============\
+INTERMITTENT BUGS\
+	- double scroll bars in Plan\
+	- category is "Reimbursed"  cursor to end an type :Liam and it return: it goes blank.  Re-entering reimb:liam works fine.\
+	- occasionally and update/one returns an error causing a server-disconnect message (nothing in server log), recovers correctly\
+	- after changing transactions, refresh button breaks (shows nothing); next refresh works		- unable to repeat this since Dec 7 2017	- recategorize in prior years does not adjust actuals cache correctly\
+		- change Income:Mike to Income:Mike:UBC and amount disappears from perspective until reload\
+		- unable to replicate\
+	- after changing schedule from parent to children, variance was off among children until refresh\
+		- at least I think that's what it was; changes to Income > Mike > UBC > *\
+	- changing transaction amount while monthly actual graph showing does not update graph incrementally; does refresh\
+		- saw it, but now can't replicate it; probably special case of the popup\
 \
 \
 \
-****\
-\
+==============\
+OTHER THINGS\
 \
 SEARCH\
 	- Transaction search \'85 free form .. searches payee and description\
@@ -358,8 +138,7 @@ THINGS TO LOOK AT NEXT (LATER)\
 	- export/import to/from CSV\
 \
 \
-====\
-\
+==============\
 LONG TERM TODO\
 	- transaction import changes\
 		- allow import to specify category name that guides selection of category (not sure whether it or rule should take precedence; must deal with name ambiguity)\
@@ -383,9 +162,7 @@ THOUGHTS\
 	- debounce\
 \
 \
-============\
-\
-\
+==============\
 NEXT STEPS\
 	- edit category structure including zombies\
 	- consider a "estimate" schedule entry that project the future but doesn't worry about past imbalances (e.g., salary)?\

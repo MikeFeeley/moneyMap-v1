@@ -86,10 +86,18 @@ class Accounts extends Observable {
           let account    = this._accounts .get (arg .id);
           if (arg .value) {
             // add category
-            let name = account .name + (! account .creditBalance && arg .fieldName == 'category'? ' Principal': '');
+            let name = account .name, update;
+            if (! account .cashFlow && ! account .creditBalance) {
+              if (arg .fieldName == 'category')
+                name += ' Principal';
+              else if (arg .fieldName == 'intCategory' && account .category)
+                name += ' Interest';
+            }
+            console.log ('xxx', eventType, arg, account, name);
             let type = [['category', 'disCategory', 'intCategory'] .indexOf (arg .fieldName)];
             let root = this ._budget ['get' + ['Savings', 'Withdrawals', 'Expense'] [type] + 'Category'] ();
             let cat  = (root .children || []) .find (c => {return c .name == name});
+            // TODO: Need to change category name when category changes between null and not null or when creditBalance changes
             if (! cat)
               cat = categories .get ((await schModel .insert ({name: name, account: account._id}, {inside: true, id: root._id})) [0]);
             else if (! cat .account)
