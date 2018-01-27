@@ -12,7 +12,7 @@ class ScheduleEntry extends List {
     this._view .delete();
   }
 
-  _onModelChange (eventType, doc, arg, source) {
+  async _onModelChange (eventType, doc, arg, source) {
     if (this._categories) {
       var calcDepth = cat => {return cat? calcDepth (cat .parent) + 1: 0}
       var parentChange = arg && (typeof arg .parent != 'undefined' || typeof arg .category != 'undefined');
@@ -34,7 +34,7 @@ class ScheduleEntry extends List {
         (!doc .category || ! this._options .scheduleOnly .includes (doc .category ._id));
       if (skip)
         return;
-      super._onModelChange (eventType, doc, arg, source);
+      await super._onModelChange (eventType, doc, arg, source);
       var updateTotals = cat => {
         if (cat) {
           var amt  = this._model .getAmount (cat, this._options .startDate, this._options .endDate);

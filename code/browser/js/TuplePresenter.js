@@ -5,8 +5,8 @@ class TuplePresenter extends Presenter {
     this._options = options || {};
   }
 
-  _onModelChange (eventType, doc, arg, source) {
-    super._onModelChange (eventType, doc, arg, source);
+  async _onModelChange (eventType, doc, arg, source) {
+    await super._onModelChange (eventType, doc, arg, source);
     if (source != this._view) {
       switch (eventType) {
         case ModelEvent .INSERT:

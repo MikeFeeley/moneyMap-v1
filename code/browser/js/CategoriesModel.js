@@ -38,7 +38,7 @@ class Categories {
     }
   }
 
-  _onModelChange (eventType, doc, arg, parent='parent', children='children') {
+  async _onModelChange (eventType, doc, arg, parent='parent', children='children') {
     switch (eventType) {
       case ModelEvent.UPDATE:
         let cat = this._index .get (doc._id);

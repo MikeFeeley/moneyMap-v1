@@ -14,7 +14,7 @@ class Presenter {
     this._view  .deleteObserver (this._viewObserver);
   }
 
-  _onModelChange (eventType, doc, arg, source) {
+  async _onModelChange (eventType, doc, arg, source) {
     switch (eventType) {
       case ModelEvent.UPDATE:
         for (let field in arg)
