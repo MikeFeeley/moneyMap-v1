@@ -60,7 +60,7 @@ class Model extends Observable {
   /**
    * Send COPY of document to each observer.
    */
-  async _notifyObservers (eventType, doc, arg, source) {
+  async _notifyObserversAsync (eventType, doc, arg, source) {
     await super._notifyObserversAsync (eventType, Object .keys (doc) .reduce ((o,k) => {o [k] = doc [k]; return o}, {}), arg, source);
   }
 
@@ -246,7 +246,7 @@ class Model extends Observable {
    }
 
   /**
-   * Remove docuement with specified id
+   * Remove document with specified id
    *    returns true iff successful
    */
   async remove (id, source) {
