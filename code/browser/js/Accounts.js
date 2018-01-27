@@ -93,11 +93,9 @@ class Accounts extends Observable {
               else if (arg .fieldName == 'intCategory' && account .category)
                 name += ' Interest';
             }
-            console.log ('xxx', eventType, arg, account, name);
             let type = [['category', 'disCategory', 'intCategory'] .indexOf (arg .fieldName)];
             let root = this ._budget ['get' + ['Savings', 'Withdrawals', 'Expense'] [type] + 'Category'] ();
             let cat  = (root .children || []) .find (c => {return c .name == name});
-            // TODO: Need to change category name when category changes between null and not null or when creditBalance changes
             if (! cat)
               cat = categories .get ((await schModel .insert ({name: name, account: account._id}, {inside: true, id: root._id})) [0]);
             else if (! cat .account)
@@ -311,14 +309,15 @@ class Accounts extends Observable {
 
   _removeAssetLiabilityPartOfAccount (account) {
     let entry = this._view .getEntry (account._id);
-    this._view .removeField ('accruedInterest', entry);
-    this._view .removeField ('balanceDate',     entry);
-    this._view .removeField ('liquid',          entry);
-    this._view .removeField ('apr',             entry);
-    this._view .removeField ('rateType',        entry);
-    this._view .removeField ('category',        entry);
-    this._view .removeField ('disCategory',     entry);
-    this._view .removeField ('intCategory',     entry);
+    this._view .removeField ('accruedInterest',  entry);
+    this._view .removeField ('balanceDate',      entry);
+    this._view .removeField ('liquid',           entry);
+    this._view .removeField ('apr',              entry);
+    this._view .removeField ('rateType',         entry);
+    this._view .removeField ('category',         entry);
+    this._view .removeField ('disCategory',      entry);
+    this._view .removeField ('intCategory',      entry);
+    this._view .removeField ('paymentFrequency', entry);
     this._view .removeRight (entry);
     this._view .removeLine  (entry, 3);
   }

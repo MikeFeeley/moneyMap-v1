@@ -70,6 +70,11 @@ class AccountsModel extends Observable {
       for (let f of Object .keys (arg))
         if (! f .startsWith ('_'))
           account [f] = arg [f];
+      let schModel = this._budgetModel .getSchedulesModel();
+      if (! account .cashFlow && ! account .creditBalance && account .intCategory && arg .category !== undefined)
+        await schModel .update (account .intCategory, {name: account .name + (arg .category? ' Interest': '')})
+      else if (! account .cashFlow && arg .creditBalance !== undefined && account .category && account .intCategory)
+        await schModel .update (account .intCategory, {name: account .name + (arg .creditBalance? '': ' Interest')});
     } else
       await this._updateModel();
     this._balanceCacheConsistencyCheck ('accounts', eventType, doc, arg);
@@ -631,9 +636,9 @@ class Account {
     } else {
       let intCat = this .intCategory && this._categories .get (this .intCategory);
       if (cat._id == this .category)
-        tip += ' Principal &mdash; Calculated from payments' + (intCat? ' entered for ' + intCat .name : ' entered elsewhere');
+        tip += ' Principal &mdash; Calculated from payments' + (intCat? ' entered under ' + intCat .name : ' entered elsewhere');
       else if (cat._id == this .intCategory)
-        tip += this .category? ' Interest &mdash; Calculated from <b><em>total</em></b> payments you enter here': ' Payments'
+        tip += this .category? ' Interest &mdash; Calculated from <b><em>total</em></b> payments (interest and principal) you enter here': ' Payments'
       else
         tip += ' Advances';
     }
