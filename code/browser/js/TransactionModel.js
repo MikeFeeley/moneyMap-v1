@@ -176,16 +176,4 @@ class TransactionModel extends Model {
   async has (query) {
     return super .has (query, await this._checkCache (query, undefined, false));
   }
-
-  /**
-   * TEMPORARY PROCEDURE EXCLUSIVELY FOR AccountsModel .getInterestDue XXX
-   */
-  // TODO: Figure out how to do interestDue properly and then delete this method
-  getMostRecentCachedBefore (cid, date) {
-    let matches = Array .from (this._collection._docs .values())
-      .filter (d => {return d .category == cid && d .date < date})
-      .sort   ((a,b) => {return a .date < b .date? 1: a .date == b .date? 0: -1});
-    return matches .length && matches [0];
-  }
-
 }

@@ -91,7 +91,7 @@ class TransactionTable extends Table {
     super._onModelChange (eventType, doc, arg, source);
   }
 
-  _onViewChange (eventType, arg) {
+  async _onViewChange (eventType, arg) {
     if (eventType == TupleViewEvent .UPDATE) {
       if (arg .fieldName == 'category') {
         let categories = this._variance .getBudget() .getCategories();
@@ -105,11 +105,11 @@ class TransactionTable extends Table {
       }
       else if (['debit', 'credit'] .includes (arg .fieldName)) {
         if (arg.value > 0)
-          this .updateField (arg.id, arg.fieldName == 'debit'? 'credit': 'debit', 0);
+          await this .updateField (arg.id, arg.fieldName == 'debit'? 'credit': 'debit', 0);
         else if (arg.value < 0) {
           var cancelEvent = true;
-          this .updateField (arg.id, 'debit',  arg.fieldName == 'credit'? -arg.value: 0);
-          this .updateField (arg.id, 'credit', arg.fieldName == 'debit'?  -arg.value: 0);
+          await this .updateField (arg.id, 'debit',  arg.fieldName == 'credit'? -arg.value: 0);
+          await this .updateField (arg.id, 'credit', arg.fieldName == 'debit'?  -arg.value: 0);
         }
       }
     }
@@ -141,7 +141,7 @@ class TransactionTable extends Table {
       await u;
   }
 
-  async _updateField (id, fieldName, value) {
+  async updateField (id, fieldName, value) {
     if (['debit', 'credit'] .includes (fieldName)) {
       var tran  = this._getTran (id);
       if (tran .group && tran [fieldName] != value)
@@ -155,7 +155,7 @@ class TransactionTable extends Table {
         await this._model .updateList (updateList);
       }
     }
-    await super._updateField (id, fieldName, value);
+    await super .updateField (id, fieldName, value);
   }
 
   async _insert (insert, pos) {

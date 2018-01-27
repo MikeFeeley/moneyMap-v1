@@ -60,8 +60,8 @@ class Model extends Observable {
   /**
    * Send COPY of document to each observer.
    */
-  _notifyObservers (eventType, doc, arg, source) {
-    super._notifyObservers (eventType, Object .keys (doc) .reduce ((o,k) => {o [k] = doc [k]; return o}, {}), arg, source);
+  async _notifyObservers (eventType, doc, arg, source) {
+    await super._notifyObserversAsync (eventType, Object .keys (doc) .reduce ((o,k) => {o [k] = doc [k]; return o}, {}), arg, source);
   }
 
   async _addGroupToModel (doc) {
@@ -78,7 +78,7 @@ class Model extends Observable {
         if (!this._ids .has (g._id)) {
           this._ids .add (g._id);
           group .push (g);
-          this._notifyObservers (ModelEvent .INSERT, g, null, null);
+          await this._notifyObserversAsync (ModelEvent .INSERT, g, null, null);
         }
       }
     }
@@ -108,14 +108,14 @@ class Model extends Observable {
             if (this._contains (doc) || (this._options && this._options .updateDoesNotRemove)) {
               if (this._options && this._options .groupBy && arg [this._options .groupBy] != null)
                 await this._addGroupToModel (doc);
-              this._notifyObservers (ModelEvent .UPDATE, doc, arg, source);
+              await this._notifyObserversAsync (ModelEvent .UPDATE, doc, arg, source);
             } else if (!this._options || !this._options .updateDoesNotRemove) {
               this._ids .delete (doc._id);
-              this._notifyObservers (ModelEvent .REMOVE, doc, doc._id);
+              await this._notifyObserversAsync (ModelEvent .REMOVE, doc, doc._id);
               this._removeGroupFromModel (doc);
             }
           } else if (this._contains (doc)) {
-            this._notifyObservers (ModelEvent .INSERT, doc, arg);
+            await this._notifyObserversAsync (ModelEvent .INSERT, doc, arg);
             this._ids .add (doc._id);
             await this._addGroupToModel (doc);
           }
@@ -123,14 +123,14 @@ class Model extends Observable {
         break;
       case ModelEvent .INSERT:
         if (doc && this._contains (doc)) {
-          this._notifyObservers (ModelEvent .INSERT, doc, arg, source);
+          await this._notifyObserversAsync (ModelEvent .INSERT, doc, arg, source);
           this._ids .add (doc._id);
           await this._addGroupToModel (doc);
         }
         break;
       case ModelEvent .REMOVE:
         if ((doc && this._ids .has (doc._id)) || this._isObserver) {
-          this._notifyObservers (ModelEvent .REMOVE, doc, arg, source);
+          await this._notifyObserversAsync (ModelEvent .REMOVE, doc, arg, source);
           this._ids .delete (doc._id);
           this._removeGroupFromModel (doc);
         }
@@ -442,7 +442,7 @@ class _Collection extends Observable {
       doc [f]                   = update [f];
       update ['_original_' + f] = orig   [f];
     }
-    await this._notifyObservers (ModelEvent.UPDATE, doc, update, this, source);
+    await this._notifyObserversAsync (ModelEvent.UPDATE, doc, update, this, source);
   }
 
   async update (id, update, source, isUndo, tid) {
@@ -490,7 +490,7 @@ class _Collection extends Observable {
 
   async _processInsert (insert, source) {
     this._docs .set (insert._id, insert);
-    await this._notifyObservers (ModelEvent.INSERT, insert, undefined, this, source);
+    await this._notifyObserversAsync (ModelEvent.INSERT, insert, undefined, this, source);
   }
 
   async insert (insert, source, isUndo, tid) {
@@ -522,7 +522,7 @@ class _Collection extends Observable {
 
   async _processRemove (doc, source) {
     this._docs .delete (doc._id);
-    await this._notifyObservers (ModelEvent.REMOVE, doc, undefined, this, source);
+    await this._notifyObserversAsync (ModelEvent.REMOVE, doc, undefined, this, source);
   }
 
   async remove (id, source, isUndo, tid) {

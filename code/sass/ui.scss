@@ -153,14 +153,17 @@ div._systemStatus {
             > ._field {
               border: 1px solid transparent;
             }
-            > ._field_apr ._content, ._field_balance ._content {
+            > ._field_apr ._content, ._field_balance ._content, ._field_accruedInterest ._content {
               text-align: right
             }
             > ._field_apr ._content {
-              width: 100px
+              width: 60px
             }
-            > ._field_balance ._content {
+            > ._field_balance ._content  {
               width: 110px
+            }
+            > ._field_accruedInterest ._content {
+              width: 100px
             }
             > ._field_balanceDate ._content {
               width: 110px;
@@ -168,8 +171,11 @@ div._systemStatus {
             > ._field_type {
               padding-top: 2px;
             }
+            > ._field_creditBalance, ._field_rateType, ._field_paymentFrequency {
+              margin-top: 2px;
+            }
             > ._field_category, ._field_disCategory, ._field_intCategory, ._field_liquid {
-              padding-top: 6px;
+              margin-top: 4px;
               > div > ._content ._suffix {
                 padding-left: 6px;
               }

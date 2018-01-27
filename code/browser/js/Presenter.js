@@ -23,23 +23,19 @@ class Presenter {
     }
   }
 
-  _onViewChange (eventType, arg) {
+  async _onViewChange (eventType, arg) {
     switch (eventType) {
       case ViewEvent.UPDATE:
         Model .newUndoGroup();
-        this .updateField (arg .id, arg .fieldName, arg .value);
+        await this .updateField (arg .id, arg .fieldName, arg .value);
         break;
     }
   }
 
-  async _updateField (id, fieldName, value) {
+  async updateField (id, fieldName, value) {
     let update         = {};
     update [fieldName] = value;
     await this._model .update (id, update, this._view);
-  }
-
-  updateField (id, fieldName, value) {
-    (async () => {await this._updateField (id, fieldName, value)}) ();
   }
 
   click() {

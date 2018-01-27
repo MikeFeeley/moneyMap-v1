@@ -25,7 +25,15 @@ class Observable {
         }
       }) ();
   }
- }
+  async _notifyObserversAsync() {
+    for (let o of this._observers || [])
+      try {
+        await o .observer .apply (o .thisArg, arguments);
+      } catch (e) {
+        console .log (e);
+      }
+  }
+}
 
 class FieldType {
   constructor (format) {
