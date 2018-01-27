@@ -59,8 +59,16 @@ class AccountBalance extends TuplePresenter {
         if (arg .name == 'Other')
           arg .id = 'other_' + arg .id;
         TransactionHUD .showCategory (arg .id, dates, this._accounts, this._variance, arg .toHtml, arg .position);
-      } else
-        TransactionHUD .showAccount  (arg .id, dates, this._accounts, this._variance, arg .toHtml, arg .position);
+      } else {
+        let account = this._accounts .getAccount (arg .id);
+        if (account .cashFlow)
+          TransactionHUD .showAccount  (arg .id, dates, this._accounts, this._variance, arg .toHtml, arg .position);
+        else {
+          let cid = arg .altKey? account .intCategory: account .category || account .intCategory;
+          if (cid)
+            TransactionHUD .showCategory (cid, dates, this._accounts, this._variance, arg .toHtml, arg .position);
+        }
+      }
     } else
       super._onViewChange (eventType, arg);
   }
@@ -135,7 +143,7 @@ class AccountBalance extends TuplePresenter {
 
   _addAssetLiability (accounts) {
     this._addEditableGroup ('Assets',      accounts .filter (a => {return a .type == AccountType .ACCOUNT && ! a .cashFlow && a .creditBalance}));
-    this._addEditableGroup ('Liabilities', accounts .filter (a => {return a .type == AccountType .ACCOUNT && ! a .cashFlow && ! a .creditBalance}))
+    this._addGroup         ('Liabilities', accounts .filter (a => {return a .type == AccountType .ACCOUNT && ! a .cashFlow && ! a .creditBalance}));
   }
 
   _buildHtml() {

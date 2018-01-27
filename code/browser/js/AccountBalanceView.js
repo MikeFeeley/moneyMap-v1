@@ -63,7 +63,7 @@ class AccountBalanceView extends TupleView {
     if (tuple)
       tuple = $('<div>') .appendTo (tuple);
     var tuple = super .addTuple (data, tuple, getToHtml);
-    tuple .find ('._field_name, ._field_balance') .click (e => {
+    tuple .find ('._field_name, ._field_balance') .on ('click webkitmouseforcedown', e => {
       let target   = $(e .target) .parent();
       let html     = target .offsetParent() .parent();
       this._notifyObservers (AccountBalanceViewEvent .CLICK, {
@@ -71,7 +71,8 @@ class AccountBalanceView extends TupleView {
         name:     data .name,
         toHtml:   html,
         position: {top: ui .calcPosition (target, html) .top, left: 50},
-        isCat:    data .isCat
+        isCat:    data .isCat,
+        altKey:   e .originalEvent .webkitForce > 1 || e .originalEvent .altKey
       });
     });
   }

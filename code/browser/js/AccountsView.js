@@ -180,23 +180,21 @@ class AccountsView extends View {
     return $('<div>', {class: '_line'}) .appendTo (toEntry);
   }
 
-  addField (field, id, value, toLine, label, afterField) {
-    let af = afterField && toLine .find ('> ._labeledField > ._field_' + afterField) .closest ('._labeledField') [0];
+  removeLine (entry, number) {
+    this .getLine (entry, number) .remove();
+  }
+
+  addField (field, id, value, toLine, label) {
     let f = field .newInstance (id);
     if (label) {
-      let lf = $('<div>', {class: '_labeledField'});
-      if (af)
-        lf .insertAfter (af);
-      else
-        lf .appendTo (toLine);
-      toLine = lf;
+      toLine = $('<div>', {class: '_labeledField'}) .appendTo (toLine);
       $('<div>', {class: '_label', text: label}) .appendTo (toLine);
     }
     f .addHtml (value, this, toLine);
   }
 
-  removeField (fieldName, line) {
-    let f = line .find ('._labeledField') .toArray() .find (e => {
+  removeField (fieldName, entry) {
+    let f = entry .find ('._labeledField') .toArray() .find (e => {
       let field = $(e) .find ('._field') .data ('field');
       return field && field._name == fieldName
     });

@@ -26,8 +26,6 @@ class Accounts extends Observable {
   }
 
   async _onModelChange (eventType, acc, arg, source) {
-    if (eventType == ModelEvent .UPDATE && arg .balance)
-      await this._model .update (acc._id, {balanceDate: Types .date .today()});
     if (this._accounts) {
       if (! this._view .isVisible())
         this._view .resetHtml();
@@ -67,6 +65,8 @@ class Accounts extends Observable {
         }
       }
     }
+    if (eventType == ModelEvent .UPDATE && arg .balance)
+      await this._model .update (acc._id, {balanceDate: Types .date .today()});
   }
 
   async _onParamModelChange (eventType, acc, arg, source) {
@@ -295,41 +295,42 @@ class Accounts extends Observable {
       new ViewTextbox ('balance', ViewFormats ('moneyDCZ'), '', '', 'Balance'),
       account._id, account .balance, line, 'Current Balance'
     )
-    if (! account .cashFlow) {
-      this._view .addField (
-        new ViewTextbox ('apr', ViewFormats ('percent2Z'), '', '', Types .percent2Z .toString (this._defaultRate)),
-        account._id, account .apr, line, 'Rate'
-      )
-      line = this._view .addLine (entry);
+    if (! account .cashFlow)
       await this._addAssetLiabilityPartOfAccount (account, entry);
-    }
     if (setFocus)
       this._view .setFocus (entry);
   }
 
   _removeAssetLiabilityPartOfAccount (account) {
     let entry = this._view .getEntry (account._id);
-    let line1  = this._view .getLine (entry, 1);
-    let line2  = this._view .getLine (entry, 2);
-    this._view .removeField ('liquid',      line1);
-    this._view .removeField ('rateType',    line1);
-    this._view .removeField ('category',    line2);
-    this._view .removeField ('disCategory', line2);
-    this._view .removeField ('intCategory', line2);
+    this._view .removeField ('accruedInterest', entry);
+    this._view .removeField ('balanceDate',     entry);
+    this._view .removeField ('liquid',          entry);
+    this._view .removeField ('apr',             entry);
+    this._view .removeField ('rateType',        entry);
+    this._view .removeField ('category',        entry);
+    this._view .removeField ('disCategory',     entry);
+    this._view .removeField ('intCategory',     entry);
     this._view .removeRight (entry);
+    this._view .removeLine  (entry, 3);
   }
 
   async _addAssetLiabilityPartOfAccount (account, entry = this._view .getEntry (account._id)) {
     let line1 = this._view .getLine (entry, 1);
-    let line2 = this._view .getLine (entry, 2);
-    this._view .addField (
-      new ViewTextbox ('balanceDate', this._dateViewFormat, '', '', 'Date'),
-      account._id, account .balanceDate, line1, 'Balance Date', 'balance'
-    )
+    let line2 = this._view .addLine (entry);
+
     if (account .creditBalance) {
+      this._view .addField (
+        new ViewTextbox ('balanceDate', this._dateViewFormat, '', '', 'Date'),
+        account._id, account .balanceDate, line1, 'Balance Date'
+      )
       this._view .addField (
         new ViewCheckbox ('liquid', ['Not Liquid', 'Liquid']),
         account._id, account .liquid, line1, 'Liquid Asset'
+      )
+      this._view .addField (
+        new ViewTextbox ('apr', ViewFormats ('percent2Z'), '', '', Types .percent2Z .toString (this._defaultRate)),
+        account._id, account .apr, line1, 'Rate'
       )
       this._view .addField (
         new ViewCheckbox ('category', ['Not Budgeted', 'Budgeted']),
@@ -340,25 +341,53 @@ class Accounts extends Observable {
         account._id, account .disCategory != null, line2, 'Disbursals'
       )
       await this._addBalanceHistory (account, this._view .addRight ('Balance History', entry));
+
+
     } else {
+      if (! account .creditBalance)
+        this._view .addField (
+          new ViewTextbox ('accruedInterest', ViewFormats ('moneyDCZ'), '', '', 'Amount'),
+          account._id, account .accruedInterest, line1, 'Accrued Interest'
+        )
+      this._view .addField (
+        new ViewTextbox ('balanceDate', this._dateViewFormat, '', '', 'Date'),
+        account._id, account .balanceDate, line1, 'Balance Date'
+      )
+      this._view .addField (
+        new ViewTextbox ('apr', ViewFormats ('percent2Z'), '', '', Types .percent2Z .toString (this._defaultRate)),
+        account._id, account .apr, line2, 'Rate'
+      )
       this._view .addField (
         new ViewSelect ('rateType',
           new ViewFormatOptionList (
             [['Simple Interest', RateType .SIMPLE], ['Canadian Mortgage', RateType .CANADIAN_MORTGAGE]]
           ), '', '', 'Rate Type'),
-        account._id, account .rateType, line1, 'Rate Type'
+        account._id, account .rateType, line2, 'Rate Type'
       )
+      this._view .addField (
+        new ViewSelect ('paymentFrequency',
+          new ViewFormatOptionList (
+            [
+              ['Monthly',      PaymentFrequency .MONTHLY],
+              ['Semi-Monthly', PaymentFrequency .SEMI_MONTHLY],
+              ['Bi-Weekly',    PaymentFrequency .BI_WEEKLY],
+              ['Weekly',       PaymentFrequency .WEEKLY]
+            ]
+          ), '', '', 'Payment Frequency'),
+        account._id, account .paymentFrequency, line2, 'Payment Frequency'
+      );
+      let line3 = this._view .addLine (entry);
       this._view .addField (
         new ViewCheckbox ('intCategory', ['Not Budgeted', 'Budgeted']),
-        account._id, account .intCategory != null, line2, 'Payments'
+        account._id, account .intCategory != null, line3, 'Payments'
       )
       this._view .addField (
-        new ViewCheckbox ('category', ['Expense', 'Savings']),
-        account._id, account .category != null, line2, 'Principal Payments'
+        new ViewCheckbox ('category', ['Not Budgeted', 'Budgeted']),
+        account._id, account .category != null, line3, 'Payments to Principal'
       )
       this._view .addField (
         new ViewCheckbox ('disCategory', ['Not Budgeted', 'Budgeted']),
-        account._id, account .disCategory != null, line2, 'Advances'
+        account._id, account .disCategory != null, line3, 'Advances'
       )
       await this._addBalanceHistory (account, this._view .addRight ('Balance History', entry));
       await this._addRateFuture     (account, this._view .addRight ('Rate Future', entry));

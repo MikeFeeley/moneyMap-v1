@@ -13,6 +13,8 @@
  *     apr                  annual interest rate or null to use default rate
  *  Liability only:
  *     rateType             type of rate calculation (e.g., simple interest or canadian mortgage)
+ *     paymentFrequency     regular payment frequency, needed for canadian mortgage interest calculation
+ *     accruedInterest      interest through balanceDate (including that date) that is unpaid
  *  Cash-Flow only:
  *     pendingTransactions  []
  *  Non Cash-Flow only:
@@ -63,7 +65,13 @@ class AccountsModel extends Observable {
   }
 
   async _onModelChange (eventType, doc, arg) {
-    await this._updateModel();
+    if (eventType == ModelEvent .UPDATE) {
+      let account = this .getAccount (doc._id);
+      for (let f of Object .keys (arg))
+        if (! f .startsWith ('_'))
+          account [f] = arg [f];
+    } else
+      await this._updateModel();
     this._balanceCacheConsistencyCheck ('accounts', eventType, doc, arg);
   }
 
@@ -132,7 +140,7 @@ class AccountsModel extends Observable {
         account .setRateFuture (this._rateFutureForAccount (account));
   }
 
-  _onTranModelChange (eventType, doc, arg, source) {
+  async _onTranModelChange (eventType, doc, arg, source) {
     if (doc .account) {
       var acc  = this._accounts .find (a => {return a._id == doc .account});
       var sign = acc .creditBalance? -1: 1;
@@ -147,7 +155,7 @@ class AccountsModel extends Observable {
             var pacc = this._accounts .find (a => {return a._id == arg ._original_account});
             if (pacc) {
               pacc .balance -= ((doc .debit || 0) - (doc .credit || 0)) * sign;
-              this._notifyObservers (ModelEvent .UPDATE, pacc, {balance: pacc .balance});
+              await this._notifyObserversAsync (ModelEvent .UPDATE, pacc, {balance: pacc .balance});
             }
           }
           break;
@@ -158,7 +166,16 @@ class AccountsModel extends Observable {
           acc .balance -= ((doc .debit || 0) - (doc .credit || 0)) * sign;
           break;
       }
-      this._notifyObservers (ModelEvent .UPDATE, acc, {balance: acc .balance});
+      await this._notifyObserversAsync (ModelEvent .UPDATE, acc, {balance: acc .balance});
+    }
+    let cid = doc .category || (arg && arg._original_category);
+    if (cid) {
+      let cat = this._budgetModel .getCategories() .get (cid);
+      if (cat .account) {
+        let acc = this._accounts .find (a => {return a._id == cat .account});
+        if (acc .category && acc .intCategory && [acc .category, acc .intCategory, acc .disCategory] .includes (cid))
+          await acc .handleTransaction (eventType, doc, arg);
+      }
     }
   }
 
@@ -323,39 +340,71 @@ class Account {
     this._rateFuture = rateFuture;
   }
 
+  async handleTransaction (eventType, tran, update) {
+    if (! this .cashFlow && ! this .creditBalance && this .category && this .intCategory) {
+      let categories = [this .category, this .intCategory];
+      if (categories .includes (tran .category) || (update && categories .includes (update._original_category))) {
+        let tranAmount = - ((tran .debit || 0) - (tran .credit || 0));
+        let delta = 0, origDelta = 0;
+        if (eventType == ModelEvent .REMOVE || eventType == ModelEvent .INSERT)
+          delta = (ModelEvent .REMOVE? -1: 1) * tranAmount;
+        else if (eventType == ModelEvent .UPDATE) {
+          if (update .debit !== undefined)
+            delta += -(update .debit - update._original_debit);
+          if (update .credit !== undefined)
+            delta += update .credit - update._original_credit;
+          if (update .category) {
+            delta     += categories .includes (tran .category)? tranAmount: 0;
+            origDelta -= categories .includes (update._original_category)? tranAmount: 0;
+          }
+        }
+        if (tran .date > this .balanceDate || delta || origDelta) {
+          let balanceDelta  = (tran .category == this .category? delta: 0)    + (update && update._original_category == this .category? origDelta: 0);
+          let interestDelta = (tran .category == this .intCategory? delta: 0) + (update && update._original_category == this .intCategory? origDelta: 0);
+          console.log(this .balance, balanceDelta, interestDelta);
+          if (tran .date > this .balanceDate)
+            interestDelta += this._getInterest (this .balance || 0, tran .date, Types .date .subDays (tran .date, this .balanceDate));
+          await this._model._model .update (this._id, {
+            balance:         (this .balance || 0)         + balanceDelta,
+            accruedInterest: (this .accruedInterest || 0) + interestDelta,
+            balanceDate:     Math .max (tran .date, this .balanceDate)
+          })
+        }
+      }
+    }
+  }
+
   /**
    *
-   * date or balance?
+   * get interest of balance for specified number of days
    */
-  _getInterest (balance, rateDate, compoundDays, days) {
-    let getRate = (date, compoundDays) => {
-      let rate = this._rateFuture && this._rateFuture .find (r => {return date >= r .date});
-      if (rate != null)
-        rate = rate .rate;
-      else if (this .apr != null)
-        rate = this .apr;
-      else
-        rate = PreferencesInstance .get() .apr;
-      switch (this .rateType || 0) {
-        case RateType .SIMPLE:
-          rate =  rate / 3650000;
-          break;
-        case RateType .CANADIAN_MORTGAGE:
-          rate = Math .pow (1 + rate / 2.0 / 10000.0, 2) - 1;  // effective semi-annual rate
-          rate = (Math .pow (1 + rate, compoundDays / 365) - 1) / compoundDays;
-          break;
-      }
-      return rate;
+  _getInterest (balance, date, days) {
+    let rate = this._rateFuture && this._rateFuture .find (r => {return date >= r .date});
+    if (rate != null)
+      rate = rate .rate;
+    else if (this .apr != null)
+      rate = this .apr;
+    else
+      rate = PreferencesInstance .get() .apr;
+    switch (this .rateType || 0) {
+      case RateType .SIMPLE:
+        rate =  rate / 3650000;
+        break;
+      case RateType .CANADIAN_MORTGAGE:
+        rate = Math .pow (1 + rate / 2.0 / 10000.0, 2);
+        let ppy = PAYMENTS_PER_YEAR [this .paymentFrequency || 0];
+        rate = (Math .pow (rate, (1.0 / ppy)) - 1) * ppy / 365;
+        break;
     }
-    return balance * getRate (rateDate, compoundDays) * days;
+    return Math .round (balance * rate * days);
   }
 
   getInterestDue (date) {
-    // TODO: Figure out how to do this properly ... total hack at the moment XXX
-    let balance     = this .getBalance (date, date) .amount;
-    let lastPayment = this._model._tranModel .getMostRecentCachedBefore (this .intCategory, date);
-    let days        = lastPayment? Types .date .subDays (date, lastPayment .date): 365 / 12;
-    return Math .abs (this._getInterest (balance, date, days, days));
+    if (! this .cashFlow && ! this .creditBalance && this .category && this .intCategory && this .balanceDate) {
+      let calcInterest = (day > this .balanceDate)? this._getInterest (this .balance, date, Types .date .subDays (date, this .balanceDate)): 0;
+      return calcInterest + (this .accruedInterest || 0);
+    } else
+      return 0;
   }
 
   /**
@@ -365,23 +414,19 @@ class Account {
    *        - cat == intCategory and account .category != null: return interest portion of amount
    */
   getAmount (cat, start, end, amount) {
-    if (this .creditBalance)
+    if (this .cashFlow || this .creditBalance || cat._id == this .disCategory || ! this .category || ! this .intCategory || ! [this .category, this .intCategory] .includes (cat._id))
       return amount;
     else {
-      if (cat._id == this .disCategory || ! this .category || ! this .intCategory)
-        return amount;
+      let st  = Types .date .monthStart (Types .date .addMonthStart (end, -1));
+      let en  = Types .date .monthEnd   (st);
+      let bal = this .getBalance  (st, en);
+      let int = this._getInterest (bal .amount, start, Types .date .subDays (end, start) + 1) * (this .creditBalance? 1: -1);
+      if (cat._id == this .intCategory)
+        return int;
       else {
-        let st  = Types .date .monthStart (Types .date .addMonthStart (end, -1));
-        let en  = Types .date .monthEnd   (st);
-        let bal = this .getBalance  (st, en);
-        let int = this._getInterest (bal .amount, start, 365.0 / 12, Types .date .subDays (end, start) + 1) * (this .creditBalance? 1: -1);
-        if (cat._id == this .intCategory)
-          return Math .round (int);
-        else {
-          let pri = this._budget .getAmount (this._categories .get (this .intCategory), start, end, true);
-          amount +=  (pri .month? pri .month .amount: 0) + (pri .year? pri .year .amount / 12 * (Types .date .subMonths (end, start) + 1): 0);
-          return Math .round (Math .max (0, amount - int));
-        }
+        let pri = this._budget .getAmount (this._categories .get (this .intCategory), start, end, true);
+        amount += (pri .month? pri .month .amount: 0) + (pri .year? pri .year .amount / 12 * (Types .date .subMonths (end, start) + 1): 0);
+        return Math .max (0, amount - int);
       }
     }
   }
@@ -515,7 +560,7 @@ class Account {
           add = (addCat? getBudget (addCat, mStart, mEnd): 0) + (intCat? getBudget (intCat, mStart, mEnd): 0);
           sub = subCat? getBudget (subCat, mStart, mEnd): 0;
           let days = Types .date .subDays (mEnd, mStart) + 1;
-          int = this._getInterest (balance, mStart, 365.0 / 12, days);
+          int = this._getInterest (balance, mStart, days);
           if (PreferencesInstance .get() .presentValue)
             inf = - balance * PreferencesInstance .get() .inflation / 3650000  * days;
         }
@@ -597,17 +642,26 @@ class Account {
   }
 }
 
-var AccountType = {
+const AccountType = {
   GROUP:   0,
   ACCOUNT: 1
 }
 
-var RateType = {
+const RateType = {
   SIMPLE: 0,
   CANADIAN_MORTGAGE: 1
 }
 
-var AccountsModelEvent = {
-  BALANCE_CHANGE: 500,
+const AccountsModelEvent = {
+  BALANCE_CHANGE:  500,
   CATEGORY_CHANGE: 501
 }
+
+const PaymentFrequency = {
+  MONTHLY: 0,
+  SEMI_MONTHLY: 1,
+  BI_WEEKLY: 2,
+  WEEKLY: 3
+}
+
+const PAYMENTS_PER_YEAR = [12, 24, 365.0 / 14, 365.0 / 7]
