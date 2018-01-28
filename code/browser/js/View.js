@@ -235,18 +235,19 @@ class ViewField {
     }
   }
   _setError (message) {
-    this._html .addClass ('_error');
-    this._html .off      ('change');
-    this._html .effect   ('shake');
-    this._html .change   (e => {this ._handleChange (e); return false});
-    if (message) {
+    let content = this._html .find ('._content');
+    content .addClass ('_error');
+    content .off      ('change');
+    content .effect   ('shake');
+    if (message)
       this._errorMessage = message;
+    if (this._errorMessage)
       this._html .find ('._toolTip') .addClass ('_error');
-    }
   }
   _clearError() {
+    let content = this._html .find ('._content');
     this._errorMessage = '';
-    this._html .removeClass ('_error');
+    content .removeClass ('_error');
     this._html .find ('._toolTip') .removeClass ('_error');
   }
   hasError() {

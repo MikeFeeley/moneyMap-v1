@@ -147,8 +147,8 @@ class AccountsModel extends Observable {
 
   async _onTranModelChange (eventType, doc, arg, source) {
     if (doc .account) {
-      var acc  = this._accounts .find (a => {return a._id == doc .account});
-      var sign = acc .creditBalance? -1: 1;
+      let acc  = this._accounts .find (a => {return a._id == doc .account});
+      let sign = acc .creditBalance? -1: 1;
       switch (eventType) {
         case ModelEvent .UPDATE:
           if (arg .debit != null)
@@ -173,15 +173,21 @@ class AccountsModel extends Observable {
       }
       await this._notifyObserversAsync (ModelEvent .UPDATE, acc, {balance: acc .balance});
     }
-    let cid = doc .category || (arg && arg._original_category);
-    if (cid) {
-      let cat = this._budgetModel .getCategories() .get (cid);
-      if (cat .account) {
-        let acc = this._accounts .find (a => {return a._id == cat .account});
-        if (acc .category && acc .intCategory && [acc .category, acc .intCategory, acc .disCategory] .includes (cid))
-          await acc .handleTransaction (eventType, doc, arg);
+    let acc = null;
+    for (let cid of [doc .category, arg && arg._original_category]) {
+      if (cid) {
+        let cat = this._budgetModel .getCategories() .get (cid);
+        if (cat .account) {
+          let a = this._accounts .find (a => {return a._id == cat .account});
+          if (a .category && a .intCategory && [a .category, a .intCategory, a .disCategory] .includes (cid)) {
+            acc = a;
+            break;
+          }
+        }
       }
     }
+    if (acc)
+      await acc .handleTransaction (eventType, doc, arg);
   }
 
   _smartLowerCase (s) {
@@ -405,7 +411,7 @@ class Account {
 
   getInterestDue (date) {
     if (! this .cashFlow && ! this .creditBalance && this .category && this .intCategory && this .balanceDate) {
-      let calcInterest = (day > this .balanceDate)? this._getInterest (this .balance, date, Types .date .subDays (date, this .balanceDate)): 0;
+      let calcInterest = (date > this .balanceDate)? this._getInterest (this .balance, date, Types .date .subDays (date, this .balanceDate)): 0;
       return calcInterest + (this .accruedInterest || 0);
     } else
       return 0;

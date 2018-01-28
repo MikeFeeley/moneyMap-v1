@@ -16,7 +16,6 @@ class Accounts extends Observable {
       (value => {return this._dateType .toString   (value)}),
       (view  => {return this._dateType .fromString (view)})
     )
-
   }
 
   delete() {
@@ -78,6 +77,8 @@ class Accounts extends Observable {
     switch (eventType) {
 
      case ViewEvent .UPDATE: {
+        if (arg .fieldName == 'balance' && arg .value == null)
+          arg .value = 0;
         if (['category', 'disCategory', 'intCategory'] .includes (arg .fieldName)) {
           if (!skipNewUndoGroup)
             Model .newUndoGroup();
@@ -248,7 +249,7 @@ class Accounts extends Observable {
 
   async _addBalanceHistory (account, entry) {
     let fields  = [
-      new ViewTextbox ('date',   ViewFormats ('dateDMY'),   '', '', 'Date'),
+      new ViewTextbox ('date',   this._dateViewFormat,   '', '', 'Date'),
       new ViewTextbox ('amount', ViewFormats ('moneyDCZ'), '', '', 'Balance')
     ];
     let headers = [];
@@ -264,7 +265,7 @@ class Accounts extends Observable {
 
   async _addRateFuture (account, entry) {
     let fields  = [
-      new ViewTextbox ('date', ViewFormats ('dateDMY'),   '', '', 'Date'),
+      new ViewTextbox ('date', this._dateViewFormat,   '', '', 'Date'),
       new ViewTextbox ('rate', ViewFormats ('percent2Z'), '', '', 'Rate')
     ];
     let headers = [];

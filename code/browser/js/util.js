@@ -409,6 +409,37 @@ class NumberType extends FieldType {
   }
 }
 
+class AmountFormulaType extends NumberType {
+  constructor() {
+    super ({style:'currency', currency:'USD', minimumFractionDigits:2}, 2);
+  }
+  toString (v) {
+    if (typeof v == 'string' && (v == 'due' || v .slice (-1) == '%'))
+      return v;
+    else
+      return super .toString (v);
+  }
+  fromString (s) {
+    if (typeof s == 'string') {
+      s = s .trim() .toLowerCase();
+      if (s == 'due')
+        return s;
+      if (s .slice (-1) == '%' && ! isNaN (s .slice (0, -1)) && Number (s .slice (0, -1)) >= 0)
+        return s
+      else
+        return super .fromString (s);
+    } else
+      return super .fromString (s);
+  }
+  static toViewFormat() {
+    var t = new AmountFormulaType();
+    return new ViewFormat (
+      value => {return t .toString   (value)},
+      view  => {return t .fromString (view)}
+    )
+  }
+}
+
 class BooleanType extends FieldType {
   toString (b) {
     return b;

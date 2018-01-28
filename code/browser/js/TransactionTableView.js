@@ -27,9 +27,9 @@ class TransactionTableView extends TableView {
       payee:       [new ViewLabel                ('payee',       ViewFormats ('string')),
                     new ViewScalableTextbox      ('payee',       ViewFormats ('string'), '', '', 'Payee')],
       debit:       [new ViewLabel                ('debit',       ViewFormats ('moneyDC')),
-                    new ViewScalableTextbox      ('debit',       ViewFormats ('moneyDC'), '', '', 'Debit')],
+                    new TransactionTableAmount   ('debit',       '', '', 'Debit', cats, accounts)],
       credit:      [new ViewLabel                ('credit',      ViewFormats ('moneyDC')),
-                    new ViewScalableTextbox      ('credit',      ViewFormats ('moneyDC'), '', '', 'Credit')],
+                    new TransactionTableAmount   ('credit',      '', '', 'Credit', cats, accounts)],
       account:     [new ViewLabel                ('account',     accFormat),
                     new ViewScalableSelect       ('account',     accFormat)],
       category:    [new ViewLabel                ('category',    catFormat),
@@ -290,5 +290,45 @@ class ViewCategoryEdit extends ViewTextbox {
 
 class ViewScalableCategoryEdit extends ViewScalable (ViewCategoryEdit) {}
 
+class TransactionTableAmount extends ViewScalableTextbox {
+
+  constructor(name, prefix='', suffix='', placeholder='', categories, accounts) {
+    super(name, AmountFormulaType .toViewFormat(), prefix, suffix, placeholder);
+    this._categories = categories;
+    this._accounts   = accounts;
+  }
+
+  get() {
+    if (this._get() == 'due') {
+      let errorMessage = 'The "due" calculation is not support for this transaction' + "'" + 's category';
+      let tr       = this._html .closest ('tr');
+      let catField = tr .find ('._field_category') .data('field');
+      if (catField) {
+        let cat = this._categories .get (catField .get());
+        if (cat && cat .account) {
+          let account = this._accounts .getAccount (cat .account);
+          if (account && ! account .cashFlow && ! account .creditBalance && account .category && account .intCategory && cat._id == account .intCategory) {
+            let dateField = tr .find ('._field_date') .data('field');
+            if (dateField) {
+              let date = dateField .get();
+              if (date) {
+                let debitField  = tr .find ('._field_debit')  .data('field');
+                let creditField = tr .find ('._field_credit') .data('field');
+                if (debitField && creditField)
+                  return account .getInterestDue (date) + debitField._value - creditField._value;
+                errorMessage = '';
+              }
+            }
+            if (errorMessage != '')
+              errorMessage = 'The "due" calculation requires a valid transaction date';
+          }
+        }
+      }
+      this._errorMessage = errorMessage;
+      return undefined;
+    } else
+      return super .get();
+  }
+}
 
 
