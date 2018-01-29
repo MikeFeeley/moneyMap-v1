@@ -492,6 +492,7 @@ var Types = {
   percent:      new NumberType ({style:'decimal', minNumFractionDigits: 1, maximumFractionDigits:1}, 0, false, true),
   percent2:     new NumberType ({style:'decimal', minNumFractionDigits: 0, maximumFractionDigits:2}, 4, false, true),
   percent2Z:    new NumberType ({style:'decimal', minNumFractionDigits: 0, maximumFractionDigits:2}, 4, true, true),
+  percent0Z:    new NumberType ({style:'decimal', minNumFractionDigits: 0, maximumFractionDigits:0}, 4, true, true),
   string:       new StringType (),
   boolean:      new BooleanType ()
 }

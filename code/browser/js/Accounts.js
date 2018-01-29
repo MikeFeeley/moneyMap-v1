@@ -319,6 +319,7 @@ class Accounts extends Observable {
     this._view .removeField ('disCategory',      entry);
     this._view .removeField ('intCategory',      entry);
     this._view .removeField ('paymentFrequency', entry);
+    this._view .removeField ('disTaxRate',       entry);
     this._view .removeRight (entry);
     this._view .removeLine  (entry, 3);
   }
@@ -347,6 +348,10 @@ class Accounts extends Observable {
       this._view .addField (
         new ViewCheckbox ('disCategory', ['Not Budgeted', 'Budgeted']),
         account._id, account .disCategory != null, line2, 'Disbursals'
+      )
+      this._view .addField (
+        new ViewTextbox ('disTaxRate', ViewFormats ('percent2Z'), '', '', 'Rate'),
+        account._id, account .disTaxRate, line2, 'Disbursal Tax Rate'
       )
       await this._addBalanceHistory (account, this._view .addRight ('Balance History', entry));
 

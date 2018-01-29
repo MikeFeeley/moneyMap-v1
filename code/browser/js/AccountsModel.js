@@ -11,6 +11,8 @@
  *     balanceDate          effective date of account balance (today if null or undefined)
  *     creditBalance        true if credit increases balance (chequing); false if decreases (visa)
  *     apr                  annual interest rate or null to use default rate
+ *  Asset only:
+ *     disTaxRate           tax rate for withdrawals
  *  Liability only:
  *     rateType             type of rate calculation (e.g., simple interest or canadian mortgage)
  *     paymentFrequency     regular payment frequency, needed for canadian mortgage interest calculation
@@ -580,6 +582,8 @@ class Account {
           if (PreferencesInstance .get() .presentValue && mEnd != curMonthEnd)
             inf = - balance * PreferencesInstance .get() .inflation / 3650000  * days;
         }
+        if (sub && this .disTaxRate)
+          sub /= (1.0 - this .disTaxRate / 10000.0)
         balance += add + sub + int + inf;
         this._balances .push ({
           date:    mEnd,
@@ -643,8 +647,11 @@ class Account {
     if (this .creditBalance) {
       if (cat._id == this .category)
         tip += 'Contributions';
-      else
+      else {
         tip += 'Withdrawals';
+        if (this .disTaxRate)
+          tip += ' After Tax';
+      }
     } else {
       let intCat = this .intCategory && this._categories .get (this .intCategory);
       if (cat._id == this .category)

@@ -153,11 +153,14 @@ div._systemStatus {
             > ._field {
               border: 1px solid transparent;
             }
-            > ._field_apr ._content, ._field_balance ._content, ._field_accruedInterest ._content {
+            > ._field_apr ._content, > ._field_balance ._content, > ._field_accruedInterest ._content, > ._field_disTaxRate ._content {
               text-align: right
             }
             > ._field_apr ._content {
               width: 60px
+            }
+            > ._field_disTaxRate ._content {
+              width: 50px;
             }
             > ._field_balance ._content  {
               width: 110px
