@@ -2,7 +2,7 @@
  * Accounts Model
  *     name
  *     type                 AccountType; GROUP or ACCOUNT
- *     cashFlow             true if account is used for cashflow for transactions
+ *     form                 CASH_FLOW, ASSET_LIABILITY, INCOME_SOURCE, TAX_TABLE
  *     sort
  *  ACCOUNT only:
  *     group                account id of group
@@ -11,16 +11,16 @@
  *     balanceDate          effective date of account balance (today if null or undefined)
  *     creditBalance        true if credit increases balance (chequing); false if decreases (visa)
  *     apr                  annual interest rate or null to use default rate
- *  Asset only:
+ *  ASSET:
  *     disTaxRate           tax rate for withdrawals
- *  Liability only:
+ *     liquid               true iff liquid asset / liability
+ *  LIABILITY:
  *     rateType             type of rate calculation (e.g., simple interest or canadian mortgage)
  *     paymentFrequency     regular payment frequency, needed for canadian mortgage interest calculation
  *     accruedInterest      interest through balanceDate (including that date) that is unpaid
- *  Cash-Flow only:
+ *  CASH_FLOW:
  *     pendingTransactions  []
- *  Non Cash-Flow only:
- *     liquid               true iff liquid asset / liability
+ *  ASSET / LIABILITY:
  *     category             savings: asset contribution or liability principal
  *     disCategory          withdrawal if asset or liability (disbursement or loan add-on)
  *     intCategory          expense; only for liabilities (entire payment or just interest part, depending)
@@ -73,9 +73,9 @@ class AccountsModel extends Observable {
         if (! f .startsWith ('_'))
           account [f] = arg [f];
       let schModel = this._budgetModel .getSchedulesModel();
-      if (! account .cashFlow && ! account .creditBalance && account .intCategory && arg .category !== undefined)
+      if (account .isLiabilityAccount() && account .intCategory && arg .category !== undefined)
         await schModel .update (account .intCategory, {name: account .name + (arg .category? ' Interest': '')})
-      else if (! account .cashFlow && arg .creditBalance !== undefined && account .category && account .intCategory)
+      else if (account .isPrincipalInterestLiabilityAccount() && arg .creditBalance !== undefined )
         await schModel .update (account .intCategory, {name: account .name + (arg .creditBalance? '': ' Interest')});
     } else
       await this._updateModel();
@@ -251,7 +251,7 @@ class AccountsModel extends Observable {
 
   getCashFlowBalance() {
     return this._accounts
-      .filter (a => {return a .cashFlow && a .type == AccountType .ACCOUNT})
+      .filter (a => {return a .isCashFlowAccount()})
       .reduce ((b, a) => {return b + a .balance * (a .creditBalance? 1: -1)}, 0)
   }
 
@@ -294,6 +294,22 @@ class Account {
     this._balances         = [];
     for (let p of Object .keys (modelData))
       this [p] = modelData [p];
+  }
+
+  isCashFlowAccount() {
+    return this .type == AccountType .ACCOUNT && this .form == AccountForm .CASH_FLOW;
+  }
+
+  isAssetAccount() {
+    return this .type == AccountType .ACCOUNT && this .form == AccountForm .ASSET_LIABILITY && this .creditBalance;
+  }
+
+  isLiabilityAccount() {
+    return this .type == AccountType .ACCOUNT && this .form == AccountForm .ASSET_LIABILITY && ! this .creditBalance;
+  }
+
+  isPrincipalInterestLiabilityAccount() {
+    return this .isLiabilityAccount() && this .intCategory && this .category;
   }
 
   _balanceCacheConsistencyCheck (modelName, eventType, doc, arg) {
@@ -354,7 +370,7 @@ class Account {
   }
 
   async handleTransaction (eventType, tran, update) {
-    if (! this .cashFlow && ! this .creditBalance && this .category && this .intCategory) {
+    if (this. isPrincipalInterestLiabilityAccount()) {
       let categories = [this .category, this .intCategory];
       if (categories .includes (tran .category) || (update && categories .includes (update._original_category))) {
         let tranAmount = - ((tran .debit || 0) - (tran .credit || 0));
@@ -412,7 +428,7 @@ class Account {
   }
 
   getInterestDue (date) {
-    if (! this .cashFlow && ! this .creditBalance && this .category && this .intCategory && this .balanceDate) {
+    if (this .isPrincipalInterestLiabilityAccount()) {
       let calcInterest = (date > this .balanceDate)? this._getInterest (this .balance, date, Types .date .subDays (date, this .balanceDate)): 0;
       return calcInterest + (this .accruedInterest || 0);
     } else
@@ -426,9 +442,7 @@ class Account {
    *        - cat == intCategory and account .category != null: return interest portion of amount
    */
   getAmount (cat, start, end, amount) {
-    if (this .cashFlow || this .creditBalance || cat._id == this .disCategory || ! this .category || ! this .intCategory || ! [this .category, this .intCategory] .includes (cat._id))
-      return amount;
-    else {
+    if (this .isPrincipalInterestLiabilityAccount() && [this .category, this .intCategory] .includes (cat._id)) {
       let st  = Types .date .monthStart (Types .date .addMonthStart (end, -1));
       let en  = Types .date .monthEnd   (st);
       let bal = this .getBalance  (st, en);
@@ -440,8 +454,10 @@ class Account {
         amount += (pri .month? pri .month .amount: 0) + (pri .year? pri .year .amount / 12 * (Types .date .subMonths (end, start) + 1): 0);
         return Math .max (0, amount - int);
       }
-    }
-  }
+
+    } else
+      return amount;
+   }
 
   /**
    * Returns account balance on last day of specified month
@@ -668,6 +684,13 @@ class Account {
 const AccountType = {
   GROUP:   0,
   ACCOUNT: 1
+}
+
+const AccountForm = {
+  CASH_FLOW:       0,
+  ASSET_LIABILITY: 1,
+  INCOME_SOURCE:   2,
+  TAX_TABLE:       3
 }
 
 const RateType = {

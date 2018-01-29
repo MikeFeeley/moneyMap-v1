@@ -4,9 +4,9 @@ class TransactionTableView extends TableView {
     var cats      = variance && variance .getBudget() .getCategories();
     var accFormat = new ViewFormatOptions (
       value => {return (accounts .getAccounts() .find (a => {return a._id  == value}) || {}) .name},
-      view  => {return (accounts .getAccounts() .find (a => {return a.name == view && a .type == AccountType .ACCOUNT && a .cashFlow}) || {}) ._id},
+      view  => {return (accounts .getAccounts() .find (a => {return a.name == view && a .isCashFlowAccount()}) || {}) ._id},
       value => {},
-      ()    => {return accounts .getAccounts() .filter (a => {return a .type == AccountType .ACCOUNT && a .cashFlow}) .map (a => {return a.name})}
+      ()    => {return accounts .getAccounts() .filter (a => {return a .isCashFlowAccount()}) .map (a => {return a.name})}
     );
     var catFormat = new ViewFormatOptions (
       value => {var cat = cats .get (value); return cat? cat.name: value},
@@ -307,7 +307,7 @@ class TransactionTableAmount extends ViewScalableTextbox {
         let cat = this._categories .get (catField .get());
         if (cat && cat .account) {
           let account = this._accounts .getAccount (cat .account);
-          if (account && ! account .cashFlow && ! account .creditBalance && account .category && account .intCategory && cat._id == account .intCategory) {
+          if (account && account .isPrincipalInterestLiabilityAccount()) {
             let dateField = tr .find ('._field_date') .data('field');
             if (dateField) {
               let date = dateField .get();

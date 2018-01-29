@@ -20,9 +20,9 @@ class ImportRulesView extends TupleView {
     ];
     var accFormat = new ViewFormatOptions (
       value => {return (accounts .getAccounts() .find (a => {return a._id  == value}) || {}) .name},
-      view  => {return (accounts .getAccounts() .find (a => {return a.name == view && a .type == AccountType .ACCOUNT && a .cashFlow}) || {}) ._id},
+      view  => {return (accounts .getAccounts() .find (a => {return a.name == view && a .isCashFlowAccount()}) || {}) ._id},
       value => {},
-      ()    => {return accounts .getAccounts() .filter (a => {return a .type == AccountType .ACCOUNT && a .cashFlow}) .map (a => {return a.name})}
+      ()    => {return accounts .getAccounts() .filter (a => {return a .type == a .isCashFlowAccount()}) .map (a => {return a.name})}
     );
     var cats      = variance .getBudget() .getCategories();
     var catFormat = new ViewFormatOptions (

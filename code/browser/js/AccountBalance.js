@@ -142,13 +142,13 @@ class AccountBalance extends TuplePresenter {
   }
 
   _addAssetLiability (accounts) {
-    this._addEditableGroup ('Assets',      accounts .filter (a => {return a .type == AccountType .ACCOUNT && ! a .cashFlow && a .creditBalance}));
-    this._addGroup         ('Liabilities', accounts .filter (a => {return a .type == AccountType .ACCOUNT && ! a .cashFlow && ! a .creditBalance}));
+    this._addEditableGroup ('Assets',      accounts .filter (a => {return a .isAssetAccount()}));
+    this._addGroup         ('Liabilities', accounts .filter (a => {return a .isLiabilityAccount()}));
   }
 
   _buildHtml() {
     let accounts = this._accounts .getAccounts() .sort ((a,b) => {return a .sort < b .sort? -1: 1});
-    for (let group of accounts .filter (a => {return a .type == AccountType .GROUP && a .cashFlow}))
+    for (let group of accounts .filter (a => {return a .type == AccountType .GROUP && a .form == AccountForm .CASH_FLOW}))
       this._addGroup (group .name, accounts .filter (a => {return a .group == group._id}))
     this._addNetToZero();
     this._addAssetLiability(accounts);

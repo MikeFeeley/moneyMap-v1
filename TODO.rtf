@@ -7,18 +7,22 @@
 
 \f0\fs36 \cf0 ==============\
 TO DO\
-	- balance calculation for end of current month is understated because it does not include planned, but not actualized transactions\
-		- perhaps go back to earlier plan for current where you take the plan and subtract out the actuals\
-	- assets need a taxCategory that\
-		- reduces amount of income, but does not affect how balance is calculated\
-		- what about actuals? \
-			- we'd have the tax net amount in actual \'85\
-			- don't really have to worry about actuals for a while\
-		- what about income and taxes?\
-			- Salary    after-tax of $5,000.00\
-						$5,000.00 - tax\
-			or separate category for tax (could be either income with credit amount or expense)\
-			- Income Tax Withheld    tax   \
+	- income source\
+		- tax rate or tax table applied to income category (or maybe expense category for cases where there is no withholding)\
+		- handles net-income calculation\
+		- fields\
+			- taxRate (or table?) - its an issue when income varies\
+			- incCategory is income category\
+				- enter gross amounts and calculates to either gross amount or net amount depending on setting of intCategory\
+			- budget tax as expense use intCategory \
+				- incCategory is gross amount and intCategory is an expense of taxes\
+			- piCategory and psCategory: pension income and savings (optional, but together)\
+		- EI/CPP\
+			- these could be in separate category and then combine the, in common parent\
+			- or could be calculated (e.g., as part of tax)\
+	- pension income\
+		- key issue is that you want enter the same amount in two different categories: income and savings\
+		- the amount calculation can be done offline; its just about matching these two numbers\
 \
 ==============\
 RAMBLINGS\

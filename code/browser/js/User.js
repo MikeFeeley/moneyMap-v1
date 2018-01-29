@@ -542,11 +542,13 @@ class User extends Observable {
     let pm = new Model ('parameters', this .getDatabaseName());
     let am = new Model ('accounts',   this .getDatabaseName());
     await pm .insert ({name: 'rates', apr: 575, inflation: 225, presentValue: true, futureYears: 40});
-    await am .insert ({type: AccountType .GROUP, name: 'Bank Accounts', cashFlow: true, sort: 1});
-    await am .insert ({type: AccountType .GROUP, name: 'Credit Cards', cashFlow: true, sort: 2});
-    await am .insert ({type: AccountType .GROUP, name: 'Cash', cashFlow: true, sort: 3});
-    await am .insert ({type: AccountType .GROUP, name: 'Investments', cashFlow: false, sort: 4});
-    await am .insert ({type: AccountType .GROUP, name: 'Savings', cashFlow: false, sort: 5});
+    await am .insert ({type: AccountType .GROUP, name: 'Bank Accounts', form: AccountForm .CASH_FLOW, sort: 1});
+    await am .insert ({type: AccountType .GROUP, name: 'Credit Cards', form: AccountForm .CASH_FLOW, sort: 2});
+    await am .insert ({type: AccountType .GROUP, name: 'Cash', form: AccountForm .CASH_FLOW, sort: 3});
+    await am .insert ({type: AccountType .GROUP, name: 'Investments', form: AccountForm .CASH_FLOW, sort: 4});
+    await am .insert ({type: AccountType .GROUP, name: 'Savings', form: AccountForm .CASH_FLOW, sort: 5});
+    await am .insert ({type: AccountType .GROUP, name: 'Salary', form: AccountForm .INCOME_SOURCE, sort: 6});
+    await am .insert ({type: AccountType .GROUP, name: 'Tax Table', form: AccountForm .TAX_TABLE, sort: 7});
     pm .delete();
     am .delete();
 

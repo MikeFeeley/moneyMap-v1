@@ -1694,7 +1694,7 @@ class Navigate {
 
     // initialize
     let accounts = this._accounts .getAccounts()
-      .filter (a => {return ! a .cashFlow})
+      .filter (a => {return a .form == AccountForm .ASSET_LIABILITY})
       .sort   ((a,b) => {return a .sort < b .sort? -1: 1});
     let idIndex = accounts .map (a => {return a._id});
     let balances = (await this._balances .find ({}))
@@ -1702,7 +1702,7 @@ class Navigate {
       .sort   ((a,b) => {return a .date < b .date? -1: a .date == b .date? 0: 1});
     let rows;
     if (! accountIds)
-      rows = accounts .filter (a => {return ! a .cashFlow && a .type == AccountType .GROUP})
+      rows = accounts .filter (a => {return a .form == AccountForm .ASSET_LIABILITY && a .type == AccountType .GROUP})
     else
       rows = accounts .filter (a => {return accountIds .includes (a._id)})
     let budgetStart = this._budget .getStartDate();

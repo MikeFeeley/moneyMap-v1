@@ -45,7 +45,7 @@ class Accounts extends Observable {
                     await schModel .update (cid, {name: arg [fieldName]})
               }
             }
-            if (acc .type == AccountType .ACCOUNT && ! acc .cashFlow && arg .creditBalance !== undefined) {
+            if (acc .type == AccountType .ACCOUNT && acc .form == AccountForm .ASSET_LIABILITY && arg .creditBalance !== undefined) {
               this._removeAssetLiabilityPartOfAccount (acc);
               this._addAssetLiabilityPartOfAccount (acc);
             }
@@ -88,7 +88,7 @@ class Accounts extends Observable {
           if (arg .value) {
             // add category
             let name = account .name, update;
-            if (! account .cashFlow && ! account .creditBalance) {
+            if (account .isLiabilityAccount()) {
               if (arg .fieldName == 'category')
                 name += ' Principal';
               else if (arg .fieldName == 'intCategory' && account .category)
@@ -143,7 +143,7 @@ class Accounts extends Observable {
         let sort = 0, targetSort, updateList = [];
         let siblings = (await (
           arg .groupNum
-            ? this._model .find ({cashFlow: arg .groupNum, type: AccountType .GROUP})
+            ? this._model .find ({form: GROUP_TO_FORM [arg .groupNum], type: AccountType .GROUP})
             : this._model .find ({group: arg .subgroupId})
         ))
           .sort ((a,b) => {return a .sort < b .sort? -1: a .sort == b .sort? 0: 1});
@@ -169,7 +169,7 @@ class Accounts extends Observable {
         Model .newUndoGroup();
         let target    = this._accounts .get (arg .id);
         let isSibling = target .type == AccountType .GROUP
-          ? a => {return a .type == AccountType .GROUP && a .cashFlow == target .cashFlow}
+          ? a => {return a .type == AccountType .GROUP && a .form == target .form}
           : a => {return a .group == target .group}
         let siblings = Array .from (this._accounts .values()) .filter (isSibling);
         if (target .type == AccountType .GROUP) {
@@ -208,14 +208,14 @@ class Accounts extends Observable {
         if (target .type == AccountType .GROUP && ! arg .inside) {
           let sort           = arg .before? target .sort: target .sort + 1;
           let sortUpdateList = Array .from (this._accounts .values())
-            .filter (a => {return a .type == AccountType .GROUP && a .cashFlow == target .cashFlow && a .sort >= sort})
+            .filter (a => {return a .type == AccountType .GROUP && a .form == target .form && a .sort >= sort})
             .map    (a => {return {id: a._id, update: {sort: a .sort + 1}}});
           if (sortUpdateList .length)
             promises .push (this._model .updateList (sortUpdateList, this));
           promises .push (this._model .insert ({
-            type:     AccountType .GROUP,
-            cashFlow: target .cashFlow,
-            sort:     sort
+            type: AccountType .GROUP,
+            form: target .form,
+            sort: sort
           }, this))
         } else {
           let group    = target .type == AccountType .ACCOUNT? target .group: target._id;
@@ -234,10 +234,10 @@ class Accounts extends Observable {
           if (sortUpdateList .length)
             promises .push (this._model .updateList (sortUpdateList, this));
           let acc = (await this._model .insert ({
-            type:     AccountType .ACCOUNT,
-            group:    group,
-            sort:     sort,
-            cashFlow: target .cashFlow,
+            type:  AccountType .ACCOUNT,
+            group: group,
+            sort:  sort,
+            form:  target .form,
           }, this));
           promises .push (this._balanceHistoryModel .insert ({account: acc._id}))
         }
@@ -295,14 +295,14 @@ class Accounts extends Observable {
     )
     line = this._view .addLine (entry);
     this._view .addField (
-      new ViewSelect ('creditBalance', new ViewFormatOptionList (account .cashFlow? CASH_FLOW_OPTIONS: NON_CASH_FLOW_OPTIONS), '', '', 'Type'),
+      new ViewSelect ('creditBalance', new ViewFormatOptionList (account .form == AccountForm .CASH_FLOW? CASH_FLOW_OPTIONS: NON_CASH_FLOW_OPTIONS), '', '', 'Type'),
       account._id, account .creditBalance, line, 'Type'
     )
     this._view .addField (
       new ViewTextbox ('balance', ViewFormats ('moneyDCZ'), '', '', 'Balance'),
       account._id, account .balance, line, 'Current Balance'
     )
-    if (! account .cashFlow)
+    if (account .form == AccountForm .ASSET_LIABILITY)
       await this._addAssetLiabilityPartOfAccount (account, entry);
     if (setFocus)
       this._view .setFocus (entry);
@@ -408,10 +408,11 @@ class Accounts extends Observable {
   }
 
   _addSubgroup (account, setFocus) {
+    let groupNum = FORM_TO_GROUP [account .form];
+
     this._view .addSubGroup (
       new ViewTextbox ('name', ViewFormats ('string'), '', '', 'Give this group a name'),
-      account._id, account .name, account .cashFlow? this._cashFlowGroup: this._nonCashFlowGroup, account .cashFlow, account .sort,
-      setFocus
+      account._id, account .name, this._group [groupNum], groupNum,  account .sort, setFocus
     );
   }
 
@@ -420,13 +421,13 @@ class Accounts extends Observable {
       this._defaultRate = (await this._paramModel .find ({name: 'rates'})) [0] .apr;
       await this._view .addHtml (toHtml, build);
       this._accounts = (await this._model .find()) .sort ((a,b) => {return a .sort < b .sort? -1: 1});
-      for (let cashFlow of [true, false]) {
-        if (cashFlow)
-          this._cashFlowGroup = this._view .addGroup ('Cash Flow Accounts');
-        else
-          this._nonCashFlowGroup = this._view .addGroup ('Asset and Liability Accounts');
+      this._group = [];
+      for (let groupNum of Array .from (Object .keys (GROUP_TO_FORM))) {
+        this._group [groupNum] = this._view .addGroup (
+          ['Cash Flow Accounts', 'Asset and Liability Accounts', 'Income Sources', 'Tax Tables'] [groupNum]
+        );
         for (let group of this._accounts)
-          if (group .cashFlow == cashFlow && group .type == AccountType .GROUP) {
+          if (group .form == GROUP_TO_FORM [groupNum] && group .type == AccountType .GROUP) {
             this._addSubgroup (group);
             for (let account of this._accounts)
               if (account .type == AccountType .ACCOUNT && account .group == group._id)
@@ -449,4 +450,18 @@ class AccountsAuxTable extends Table {
     insert .account = this._accountId;
     return await super._insert (insert, pos);
   }
+}
+
+const GROUP_TO_FORM = {
+  '0': AccountForm .CASH_FLOW,
+  '1': AccountForm .ASSET_LIABILITY,
+  '2': AccountForm .INCOME_SOURCE,
+  '3': AccountForm .TAX_TABLE
+}
+
+const FORM_TO_GROUP = {
+  [AccountForm .CASH_FLOW]: 0,
+  [AccountForm .ASSET_LIABILITY]: 1,
+  [AccountForm .INCOME_SOURCE]: 2,
+  [AccountForm .TAX_TABLE]: 3
 }
