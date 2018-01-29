@@ -180,7 +180,7 @@ class ImportRulesModel extends Observable {
   }
 
   async applyRule (rule, tran) {
-    let amount = (action, f) => {
+    let amount = (action, f, max) => {
       let field = action [f];
       if (typeof field == 'string') {
         if (field .endsWith ('%')) {
@@ -190,8 +190,8 @@ class ImportRulesModel extends Observable {
           if (cat .account) {
             let acc = this._accounts .getAccount (cat .account);
             if (cat._id == acc .intCategory && acc .category) {
-              let due = acc .getInterestDue (tran .date)
-              return Math .min (due, tran [f]);
+              let due = acc .getInterestDue (tran .date);
+              return max !== undefined? Math .min (due, max): due;
             }
           }
           return 0;
@@ -230,21 +230,27 @@ class ImportRulesModel extends Observable {
         let split = {
           group:       tran._id,
           sort:        ++sort,
-          debit:       amount (action, 'debit'),
-          credit:      amount (action, 'credit'),
+          debit:       amount (action, 'debit', tran .debit),
+          credit:      amount (action, 'credit', tran .credit),
           category:    action .category || null,
           description: action .description || ''
         }
-        if (i == 0)
-          await this._tranModel .update (tran._id, split);
-        else {
-          split._seq    = null;
-          split .leader = tran._seq;
-          for (let f of ['importTime', 'date', 'payee', 'account'])
-            split [f] = tran [f];
-          await this._tranModel .insert (split);
+        if (split .debit || split .credit) {
+          if (split .debit < 0)
+            [split .debit, split .credit] = [0, -split .debit];
+          else if (split .credit < 0)
+            [split .debit, split .credit] = [-split .credit, 0];
+          if (i == 0)
+            await this._tranModel .update (tran._id, split);
+          else {
+            split._seq    = null;
+            split .leader = tran._seq;
+            for (let f of ['importTime', 'date', 'payee', 'account'])
+              split [f] = tran [f];
+            await this._tranModel .insert (split);
+          }
+          remaining -= (split .debit - split .credit);
         }
-        remaining -= (split .debit - split .credit);
       }
 
       // handle remaining
@@ -275,12 +281,16 @@ class ImportRulesModel extends Observable {
           let update = {};
           for (let f of ['payee', 'credit', 'debit', 'account', 'category', 'description'])
             if (action [f + 'Update'])
-              update [f] = ['credit', 'debit'] .includes (f)? amount (action, f): action [f] || null;
+              update [f] = ['credit', 'debit'] .includes (f)? amount (action, f, tran [f]): action [f] || null;
+          if (update .debit < 0)
+            [update .debit, update .credit] = [0, - update .debit];
+          else if (update .credit < 0)
+            [update .debit, update .credit] = [- update .credit, 0];
           if (Object .keys (update) .length)
             await this._tranModel .update (tran._id, update);
           break;
         case ImportRulesModelType .ADD:
-          let insert = await this._tranModel .insert ({
+          let insert = {
             sort:        ++sort,
             importTime:  tran   .importTime,
             date:        tran   .date,
@@ -289,7 +299,12 @@ class ImportRulesModel extends Observable {
             credit:      amount (action, 'credit'),
             account:     action .account || null,
             description: action .description || ''
-          });
+          };
+          if (insert .debit < 0)
+            [insert .debit, insert .credit] = [0, - insert .debit];
+          else if (insert .credit < 0)
+            [insert .debit, insert .credit] = [- insert .credit, 0];
+          insert = await this._tranModel .insert (insert);
           if (action .group) {
             if (action .group == action._id) {
               insert .group = insert._id;
