@@ -140,6 +140,22 @@ class ViewFormatOptions extends ViewFormat {
 
 /**
  */
+class ViewFormatDynamicOptionList extends ViewFormat {
+  constructor (getOptionList) {
+    super (
+      value => {return (this._options .find (o => {return o [1] == value}) || []) [0]},
+      view  => {return (this._options .find (o => {return o [0] == view})  || []) [1]},
+      value => {}
+    )
+    this .getOptions  = () => {
+      this._options = getOptionList();
+      return this._options .map (o => {return o [0]});
+    }
+  }
+}
+
+/**
+ */
 class ViewFormatOptionList extends ViewFormat {
   constructor (options) {
     super (
@@ -465,6 +481,11 @@ class ViewSelect extends ViewEdit {
   _clearError() {
     super._clearError();
     this._html .removeClass ('_error_widget');
+  }
+  resetOptions() {
+    this._input .find ('option') .remove();
+    for (let op of this._format .getOptions())
+      $('<option>', {value: op, html: op}) .appendTo (this._input);
   }
 }
 

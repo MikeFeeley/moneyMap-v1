@@ -62,6 +62,11 @@ class Accounts extends Observable {
             this._accounts .delete (acc._id);
             break;
         }
+        let updateTaxAccountName   = eventType == ModelEvent .UPDATE && acc .type == AccountType .ACCOUNT && acc .form == AccountForm .TAX_TABLE && arg .name;
+        let insertDeleteTaxAccount = [ModelEvent .INSERT, ModelEvent .REMOVE] .includes (eventType) && acc .form == AccountForm .TAX_TABLE;
+        if (updateTaxAccountName || insertDeleteTaxAccount) {
+          this._view .resetOptions ('taxAccount');
+        }
       }
     }
     if (eventType == ModelEvent .UPDATE && arg .balance)
@@ -284,26 +289,53 @@ class Accounts extends Observable {
     const NON_CASH_FLOW_OPTIONS = [['Asset',   true], ['Liability', false]];
     let entry = this._view .addEntry (account._id, account .group, account .sort);
     let line;
-    line = this._view .addLine (entry);
-    this._view .addField (
-      new ViewTextbox ('name', ViewFormats ('string'), '', '', 'Name'),
-      account._id, account .name, line, 'Name'
-    )
-    this._view .addField (
-      new ViewTextbox ('number', ViewFormats ('string'), '', '', 'Number'),
-      account._id, account .number, line, 'Institution Account Number'
-    )
-    line = this._view .addLine (entry);
-    this._view .addField (
-      new ViewSelect ('creditBalance', new ViewFormatOptionList (account .form == AccountForm .CASH_FLOW? CASH_FLOW_OPTIONS: NON_CASH_FLOW_OPTIONS), '', '', 'Type'),
-      account._id, account .creditBalance, line, 'Type'
-    )
-    this._view .addField (
-      new ViewTextbox ('balance', ViewFormats ('moneyDCZ'), '', '', 'Balance'),
-      account._id, account .balance, line, 'Current Balance'
-    )
-    if (account .form == AccountForm .ASSET_LIABILITY)
-      await this._addAssetLiabilityPartOfAccount (account, entry);
+
+    if ([AccountForm .CASH_FLOW, AccountForm .ASSET_LIABILITY] .includes (account .form)) {
+      line = this._view .addLine (entry);
+      this._view .addField (
+        new ViewTextbox ('name', ViewFormats ('string'), '', '', 'Name'),
+        account._id, account .name, line, 'Name'
+      )
+      this._view .addField (
+        new ViewTextbox ('number', ViewFormats ('string'), '', '', 'Number'),
+        account._id, account .number, line, 'Institution Account Number'
+      )
+      line = this._view .addLine (entry);
+      this._view .addField (
+        new ViewSelect ('creditBalance', new ViewFormatOptionList (account .form == AccountForm .CASH_FLOW? CASH_FLOW_OPTIONS: NON_CASH_FLOW_OPTIONS), '', '', 'Type'),
+        account._id, account .creditBalance, line, 'Type'
+      )
+      this._view .addField (
+        new ViewTextbox ('balance', ViewFormats ('moneyDCZ'), '', '', 'Balance'),
+        account._id, account .balance, line, 'Current Balance'
+      )
+      if (account .form == AccountForm .ASSET_LIABILITY)
+        await this._addAssetLiabilityPartOfAccount (account, entry);
+
+    } else if (account .form == AccountForm .INCOME_SOURCE) {
+      line = this._view .addLine (entry);
+      this._view .addField (
+        new ViewTextbox ('name', ViewFormats ('string'), '', '', 'Name'),
+        account._id, account .name, line, 'Name'
+      )
+      let getTaxAccountOptions = () => {return [['', 0]] .concat (Array .from (this._accounts .values())
+        .filter (a     => {return a .type == AccountType .ACCOUNT && a .form == AccountForm .TAX_TABLE})
+        .sort   ((a,b) => {return a .sort < b .sort? -1: a .sort == b .sort? 0: 1})
+        .map    (a     => {return [a .name, a._id]}));
+      }
+      this._view .addField (
+        new ViewSelect ('taxAccount', new ViewFormatDynamicOptionList (getTaxAccountOptions)),
+        account._id, account .taxAccount, line, 'Tax Account'
+      )
+
+    } else if (account .form == AccountForm .TAX_TABLE) {
+      line = this._view .addLine (entry);
+      this._view .addField (
+        new ViewTextbox ('name', ViewFormats ('string'), '', '', 'Name'),
+        account._id, account .name, line, 'Name'
+      )
+    }
+
     if (setFocus)
       this._view .setFocus (entry);
   }
@@ -409,7 +441,6 @@ class Accounts extends Observable {
 
   _addSubgroup (account, setFocus) {
     let groupNum = FORM_TO_GROUP [account .form];
-
     this._view .addSubGroup (
       new ViewTextbox ('name', ViewFormats ('string'), '', '', 'Give this group a name'),
       account._id, account .name, this._group [groupNum], groupNum,  account .sort, setFocus
@@ -460,8 +491,8 @@ const GROUP_TO_FORM = {
 }
 
 const FORM_TO_GROUP = {
-  [AccountForm .CASH_FLOW]: 0,
+  [AccountForm .CASH_FLOW]:       0,
   [AccountForm .ASSET_LIABILITY]: 1,
-  [AccountForm .INCOME_SOURCE]: 2,
-  [AccountForm .TAX_TABLE]: 3
+  [AccountForm .INCOME_SOURCE]:   2,
+  [AccountForm .TAX_TABLE]:       3
 }

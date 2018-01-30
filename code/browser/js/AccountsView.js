@@ -111,6 +111,8 @@ class AccountsView extends View {
         e .stopPropagation();
         e .preventDefault();
       }
+      if (o .keyCode == 13) // not sure why this is need; seems to be only for Income and Tax groups; without this CR submits the form
+        e .stopPropagation();
      });
     return group;
   }
@@ -141,10 +143,12 @@ class AccountsView extends View {
     let before = subgroup .find ('> ul > li') .toArray() .find (li => {return $(li) .data ('sort') >= sort});
     let op     = before? 'insertBefore': 'appendTo';
     let el     = before? before:          subgroup .find ('> ul');
-    return $('<form>')
+    let entry = $('<form>')
       .appendTo ($('<div>', {class: '_left'})
         .appendTo ($('<div>', {class: '_entry'})
           .appendTo ($('<li>', {data: {id: id, subgroupId: subgroupId, sort: sort}}) [op] (el))));
+    entry .on ('submit', e => {return false});
+    return entry;
   }
 
   getEntry (id) {
@@ -210,6 +214,14 @@ class AccountsView extends View {
     return Array .from (this._html .find ('._field_' + name))
      .map  (e => {return $(e) .data ('field')})
      .find (f => {return f && f._id == id});
+  }
+
+  resetOptions (fieldName) {
+    for (let fieldHtml of this._html .find ('._field_' + fieldName) .toArray()) {
+      let field = $(fieldHtml) .data ('field');
+      if (field && field .resetOptions)
+        field .resetOptions();
+    }
   }
 }
 
