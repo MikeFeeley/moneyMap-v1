@@ -2,6 +2,7 @@ class Accounts extends Observable {
 
   constructor (accountsModel, budget) {
     super();
+    this._accountsModel       = accountsModel;
     this._model               = accountsModel .getModel();
     this._modelObserver       = this._model .addObserver (this, this._onModelChange);
     this._budget              = budget;
@@ -16,12 +17,21 @@ class Accounts extends Observable {
       (value => {return this._dateType .toString   (value)}),
       (view  => {return this._dateType .fromString (view)})
     )
+    this._models = [];
   }
 
   delete() {
     this._model .deleteObserver (this._modelObserver);
     this._paramModel .delete();
     this._balanceHistoryModel .delete();
+    for (let model of this._models)
+      model .delete();
+  }
+
+  createModel (name) {
+    let model = new Model (name);
+    this._models .push (model);
+    return model;
   }
 
   async _onModelChange (eventType, acc, arg, source) {
@@ -40,14 +50,17 @@ class Accounts extends Observable {
               account [fieldName] = arg [fieldName];
               let schModel = this._budget .getSchedulesModel();
               if (fieldName == 'name') {
-                for (let cid of [account .category, account .disCategory])
+                for (let cid of [account .category, account .disCategory, account .intCategory, account .incCategory])
                   if (cid)
-                    await schModel .update (cid, {name: arg [fieldName]})
+                    await schModel .update (cid, {name: account .getCategoryName (cid)})
               }
             }
             if (acc .type == AccountType .ACCOUNT && acc .form == AccountForm .ASSET_LIABILITY && arg .creditBalance !== undefined) {
               this._removeAssetLiabilityPartOfAccount (acc);
               this._addAssetLiabilityPartOfAccount (acc);
+            } else if (acc .form == AccountForm .INCOME_SOURCE && arg .taxType !== undefined) {
+              this._removeIncomeTaxFields    (acc);
+              await this._addIncomeTaxFields (acc);
             }
             break;
           case ModelEvent .INSERT:
@@ -61,11 +74,6 @@ class Accounts extends Observable {
             this._view .remove (acc._id, source == this);
             this._accounts .delete (acc._id);
             break;
-        }
-        let updateTaxAccountName   = eventType == ModelEvent .UPDATE && acc .type == AccountType .ACCOUNT && acc .form == AccountForm .TAX_TABLE && arg .name;
-        let insertDeleteTaxAccount = [ModelEvent .INSERT, ModelEvent .REMOVE] .includes (eventType) && acc .form == AccountForm .TAX_TABLE;
-        if (updateTaxAccountName || insertDeleteTaxAccount) {
-          this._view .resetOptions ('taxAccount');
         }
       }
     }
@@ -84,7 +92,7 @@ class Accounts extends Observable {
      case ViewEvent .UPDATE: {
         if (arg .fieldName == 'balance' && arg .value == null)
           arg .value = 0;
-        if (['category', 'disCategory', 'intCategory'] .includes (arg .fieldName)) {
+        if (['category', 'disCategory', 'intCategory', 'incCategory'] .includes (arg .fieldName)) {
           if (!skipNewUndoGroup)
             Model .newUndoGroup();
           let categories = this._budget   .getCategories();
@@ -95,24 +103,25 @@ class Accounts extends Observable {
             let name = account .name, update;
             if (account .isLiabilityAccount()) {
               if (arg .fieldName == 'category')
-                name += ' Principal';
+                name += ' Principal'
               else if (arg .fieldName == 'intCategory' && account .category)
-                name += ' Interest';
-            }
-            let type = [['category', 'disCategory', 'intCategory'] .indexOf (arg .fieldName)];
-            let root = this ._budget ['get' + ['Savings', 'Withdrawals', 'Expense'] [type] + 'Category'] ();
+                name += ' Interest'
+            } else if (account .form == AccountForm .INCOME_SOURCE && arg .fieldName == 'intCategory' && arg .value)
+              name += ' Deductions'
+            let type = [['category', 'disCategory', 'intCategory', 'incCategory'] .indexOf (arg .fieldName)];
+            let root = this ._budget ['get' + ['Savings', 'Withdrawals', 'Expense', 'Income'] [type] + 'Category'] ();
             let cat  = (root .children || []) .find (c => {return c .name == name});
             if (! cat)
-              cat = categories .get ((await schModel .insert ({name: name, account: account._id}, {inside: true, id: root._id})) [0]);
-            else if (! cat .account)
-              await schModel .update (cat._id, {account: account._id});
+              cat = categories .get ((await schModel .insert ({name: name}, {inside: true, id: root._id})) [0]);
             await this._model .update (account._id, {[arg .fieldName]: cat._id});
+            account[arg.fieldName] = cat._id;
+            await schModel .update (cat._id, {account: account._id});
           } else {
             // remove category
             let cat = categories .get (account [arg .fieldName]);
             if (cat) {
               let removeCat = false;
-              if (categories .hasType (cat, ScheduleType .NOT_NONE)) {
+              if (categories .hasType (cat, ScheduleType .NOT_NONE, true)) {
                 this._view .showFieldTip (arg .id, arg .fieldName, [
                   'This category has scheduled budget amounts.',
                   'It was not removed from your budget.'
@@ -124,19 +133,21 @@ class Accounts extends Observable {
                 ]);
               } else
                 removeCat = true;
+              await this._model .update (account._id, {[arg .fieldName]: null});
               if (removeCat)
                 await schModel .remove (cat._id);
               else
                 await schModel .update (cat._id, {account: null});
-              await this._model .update (account._id, {[arg .fieldName]: null});
             }
           }
-          if (arg .fieldName == 'intCategory' && ! arg .value && account .category) {
-            this._view .updateField (account._id, 'category', false);
-            await this._onViewChange (ViewEvent .UPDATE, {id: account._id, fieldName: 'category', value: false}, true)
-          } else if (arg .fieldName == 'category' && arg .value && ! account .intCategory) {
-            this._view .updateField (account._id, 'intCategory', true);
-            await this._onViewChange (ViewEvent .UPDATE, {id: account._id, fieldName: 'intCategory', value: true}, true)
+          if (account .isLiabilityAccount()) {
+            if (arg .fieldName == 'intCategory' && ! arg .value && account .category) {
+              this._view .updateField (account._id, 'category', false);
+              await this._onViewChange (ViewEvent .UPDATE, {id: account._id, fieldName: 'category', value: false}, true)
+            } else if (arg .fieldName == 'category' && arg .value && ! account .intCategory) {
+              this._view .updateField (account._id, 'intCategory', true);
+              await this._onViewChange (ViewEvent .UPDATE, {id: account._id, fieldName: 'intCategory', value: true}, true)
+            }
           }
         } else
           await this._model .update (arg .id, {[arg .fieldName]: arg .value}, this);
@@ -263,7 +274,7 @@ class Accounts extends Observable {
     let query   = {account: account._id};
     let sort    = (a,b) => {return a .date < b .date? -1: a .date == b .date? 0: 1};
     let columns = ['date', 'amount'];
-    let table = new AccountsAuxTable (account._id, new Model ('balanceHistory'), view, query, sort, options, columns);
+    let table = new AccountsAuxTable (account._id, this .createModel ('balanceHistory'), view, query, sort, options, columns);
     await table .addHtml ($('<div>') .appendTo (entry));
     this._view .scrollRightToBottom (entry);
   }
@@ -279,7 +290,7 @@ class Accounts extends Observable {
     let query   = {account: account._id};
     let sort    = (a,b) => {return a .date < b .date? -1: a .date == b .date? 0: 1};
     let columns = ['date', 'rate'];
-    let table = new AccountsAuxTable (account._id, new Model ('rateFuture'), view, query, sort, options, columns);
+    let table = new AccountsAuxTable (account._id, this .createModel ('rateFuture'), view, query, sort, options, columns);
     await table .addHtml ($('<div>') .appendTo (entry));
     this._view .scrollRightToBottom (entry);
   }
@@ -318,26 +329,80 @@ class Accounts extends Observable {
         new ViewTextbox ('name', ViewFormats ('string'), '', '', 'Name'),
         account._id, account .name, line, 'Name'
       )
-      let getTaxAccountOptions = () => {return [['', 0]] .concat (Array .from (this._accounts .values())
-        .filter (a     => {return a .type == AccountType .ACCOUNT && a .form == AccountForm .TAX_TABLE})
-        .sort   ((a,b) => {return a .sort < b .sort? -1: a .sort == b .sort? 0: 1})
-        .map    (a     => {return [a .name, a._id]}));
-      }
+      const taxTypes = [
+        ['None',       AccountsTaxType .NONE],
+        ['Percentage', AccountsTaxType .PERCENTAGE],
+        ['Tax Table',  AccountsTaxType .TABLE]
+      ];
       this._view .addField (
-        new ViewSelect ('taxAccount', new ViewFormatDynamicOptionList (getTaxAccountOptions)),
-        account._id, account .taxAccount, line, 'Tax Account'
+        new ViewSelect ('taxType', new ViewFormatOptionList (taxTypes)),
+        account._id, account .taxType, line, 'Tax Calculation'
       )
+      await this._addIncomeTaxFields (account, entry);
 
-    } else if (account .form == AccountForm .TAX_TABLE) {
-      line = this._view .addLine (entry);
+      let catLine = this._view .addLine (entry);
       this._view .addField (
-        new ViewTextbox ('name', ViewFormats ('string'), '', '', 'Name'),
-        account._id, account .name, line, 'Name'
+        new ViewCheckbox ('incCategory', ['Not Budgeted', 'Budgeted']),
+        account._id, account .incCategory != null, catLine, 'Income'
+      )
+      this._view .addField (
+        new ViewCheckbox ('intCategory', ['Withheld at Source', 'Budgeted Separately from Income']),
+        account._id, account .intCategory != null, catLine, 'Income Taxes'
       )
     }
 
     if (setFocus)
       this._view .setFocus (entry);
+  }
+
+  async _addIncomeTaxFields (account, entry = this._view .getEntry (account._id)) {
+    let line = this._view .getLine (entry, 0);
+
+    if (account .taxType == AccountsTaxType .PERCENTAGE) {
+      this._view .addField (
+        new ViewTextbox ('taxRate', ViewFormats ('percent2Z'), '', '', 'Rate'),
+        account._id, account .taxRate, line, 'Tax Rate'
+      )
+
+    } else if (account .taxType == AccountsTaxType .TABLE) {
+
+      this._view .addField (
+        new ViewSelect ('taxTable', new ViewFormatOptionList (TAX_TABLES .map (t => {return [t .name, t._id]}))),
+        account._id, account .taxTable, line, 'Tax Table'
+      )
+
+      let bottom = this._view .addBottom ('Monthly Deductions, Benefits and Tax Parameters', entry);
+      let fields = [
+        new ViewTextbox ('date',                this._dateViewFormat,   '', '',   'Date'),
+        new ViewTextbox ('beforeTaxDeductions', ViewFormats ('moneyDCZ'), '', '', 'Amount'),
+        new ViewTextbox ('afterTaxDeductions',  ViewFormats ('moneyDCZ'), '', '', 'Amount'),
+        new ViewTextbox ('taxableBenefits',     ViewFormats ('moneyDCZ'), '', '', 'Amount'),
+        new ViewTextbox ('federalClaim',        ViewFormats ('moneyDCZ'), '', '', 'Amount'),
+        new ViewTextbox ('provincialClaim',     ViewFormats ('moneyDCZ'), '', '', 'Amount')
+      ]
+      let headers = [
+        {name: 'date',                header: 'Starting Date'},
+        {name: 'beforeTaxDeductions', header:' Pre-Tax Deductions'},
+        {name: 'afterTaxDeductions',  header: 'After-Tax Deductions'},
+        {name: 'taxableBenefits',     header: 'Taxable Benefits'},
+        {name: 'federalClaim',        header: 'Federal Claim'},
+        {name: 'provincialClaim',     header: 'Provincial/State Claim'}
+      ];
+      let options = {keepOneEntry: true};
+      let view    = new TableView ('_taxDeductionTable', fields, headers, options);
+      let query   = {account: account._id};
+      let sort    = (a,b) => {return a .date < b .date? -1: a .date == b .date? 0: 1};
+      let columns = headers .map (h => {return h .name});
+      let table   = new AccountsAuxTable (account._id, this .createModel ('taxParameters'), view, query, sort, options, columns);
+      await table .addHtml ($('<div>', {class: '_taxDeductionTableContainer'}) .appendTo (bottom));
+    }
+  }
+
+  _removeIncomeTaxFields (account) {
+    let entry = this._view .getEntry (account._id);
+    this._view .removeField   ('taxRate', entry);
+    this._view .removeField   ('taxTable', entry);
+    this._view .removeBottom  (entry);
   }
 
   _removeAssetLiabilityPartOfAccount (account) {
@@ -451,11 +516,11 @@ class Accounts extends Observable {
     let build = async () => {
       this._defaultRate = (await this._paramModel .find ({name: 'rates'})) [0] .apr;
       await this._view .addHtml (toHtml, build);
-      this._accounts = (await this._model .find()) .sort ((a,b) => {return a .sort < b .sort? -1: 1});
+      this._accounts = this._accountsModel .getAccounts();
       this._group = [];
       for (let groupNum of Array .from (Object .keys (GROUP_TO_FORM))) {
         this._group [groupNum] = this._view .addGroup (
-          ['Cash Flow Accounts', 'Asset and Liability Accounts', 'Income Sources', 'Tax Tables'] [groupNum]
+          ['Cash Flow Accounts', 'Asset and Liability Accounts', 'Income Sources'] [groupNum]
         );
         for (let group of this._accounts)
           if (group .form == GROUP_TO_FORM [groupNum] && group .type == AccountType .GROUP) {
@@ -486,13 +551,12 @@ class AccountsAuxTable extends Table {
 const GROUP_TO_FORM = {
   '0': AccountForm .CASH_FLOW,
   '1': AccountForm .ASSET_LIABILITY,
-  '2': AccountForm .INCOME_SOURCE,
-  '3': AccountForm .TAX_TABLE
+  '2': AccountForm .INCOME_SOURCE
 }
 
 const FORM_TO_GROUP = {
   [AccountForm .CASH_FLOW]:       0,
   [AccountForm .ASSET_LIABILITY]: 1,
-  [AccountForm .INCOME_SOURCE]:   2,
-  [AccountForm .TAX_TABLE]:       3
+  [AccountForm .INCOME_SOURCE]:   2
 }
+

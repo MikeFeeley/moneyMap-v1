@@ -6,6 +6,7 @@ class ScheduleEntry extends List {
     this._budget     = budget;
     this._variance   = variance;
     this._categories = this._model .getCategories();
+    this._accounts   = accounts;
   }
 
   delete() {
@@ -49,8 +50,11 @@ class ScheduleEntry extends List {
         }
       };
       updateTotals (this._categories .get (doc .category || doc._id));
-      if (arg && arg ._original_parent)
-        updateTotals (this._categories .get (arg ._original_parent));
+      if (arg && (arg .account || arg._original_account || (arg .budgets && doc .account))) {
+        let account = this._accounts .getAccount (arg .account || arg._original_account || doc .account);
+        if (account .incCategory)
+          updateTotals (this._categories .get (account .incCategory));
+      }
       if (eventType == ModelEvent .UPDATE && arg .budgets) {
         let bid = this._budget .getId();
         if (! arg .budgets .includes (bid))

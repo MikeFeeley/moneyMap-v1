@@ -148,6 +148,9 @@ class DateType extends FieldType {
     var sm = this._month (stY);
     return dm >= sm? dy: dy - 1;
   }
+  getYearStart (d) {
+    return this._date (this._year(d), 1, 1);
+  }
   daysInMonth (d) {
     return this._daysInMonth (this._year (d), this._month (d));
   }
@@ -325,9 +328,6 @@ class DateType extends FieldType {
     var ad = new Date (this._year (a), this._month (a) - 1, this._day (a)) .valueOf();
     var bd = new Date (this._year (b), this._month (b) - 1, this._day (b)) .valueOf();
     return Math .floor ((ad - bd) / (1000 * 60 * 60 * 24));
-  }
-  subMonths (a,b) {
-    return this._diffMonths (this._yearMonth (a), this._yearMonth (b));
   }
   addDay (date, days) {
     return (d => {return this._date (d .getFullYear(), d .getMonth() + 1, d .getDate())})

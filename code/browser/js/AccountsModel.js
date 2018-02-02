@@ -24,6 +24,7 @@
  *     category             savings: asset contribution or liability principal
  *     disCategory          withdrawal if asset or liability (disbursement or loan add-on)
  *     intCategory          expense; only for liabilities (entire payment or just interest part, depending)
+ *     incCategory          income category use for income-source accounts
  *
  *  BalanceHistory Model
  *     account
@@ -49,10 +50,11 @@ class AccountsModel extends Observable {
     this._balanceHistoryModel .addObserver (this, this._onBalanceHistoryModelChange);
     this._rateFutureModel = new Model ('rateFuture');
     this._rateFutureModel .addObserver (this, this._onRateFutureModelChange);
+    this._taxParametersModel = new Model ('taxParameters');
+    this._taxParametersModel .addObserver (this, this._onTaxParametersModelChange);
     this._domParser = new DOMParser();
     this._budgetObserver = this._budgetModel .addObserver (this, this._onBudgetModelChange);
     this._preferencesObserver = PreferencesInstance .addObserver (this, this._onPreferencesModelChange);
-
   }
 
   delete() {
@@ -60,6 +62,7 @@ class AccountsModel extends Observable {
     this._tranModel           .delete();
     this._balanceHistoryModel .delete();
     this._rateFutureModel     .delete();
+    this._taxParametersModel  .delete();
     this._budgetModel .removeObserver (this._budgetObserver);
     PreferencesInstance .removeObserver (this._preferencesObserver);
     if (this._actualsObserver)
@@ -90,6 +93,12 @@ class AccountsModel extends Observable {
 
   async _onRateFutureModelChange (eventType, doc, arg) {
     await this._updateRateFutureModel();
+    this._notifyObservers (eventType, doc, arg);
+    this._balanceCacheConsistencyCheck ('accounts', eventType, doc, arg);
+  }
+
+  async _onTaxParametersModelChange (eventType, doc, arg) {
+    await this._updateTaxParametersModel();
     this._notifyObservers (eventType, doc, arg);
     this._balanceCacheConsistencyCheck ('accounts', eventType, doc, arg);
   }
@@ -125,6 +134,11 @@ class AccountsModel extends Observable {
       .filter (r => {return r .account == a._id});
   }
 
+  _taxParametersForAccount (a) {
+    return this._taxParameters && this._taxParameters
+      .filter (p => {return p .account == a._id});
+  }
+
   async _updateModel() {
     this._accounts = (await this._model .find()) .map (a => {
       return new Account (this, a, this._budgetModel, this._actualsModel, this._balanceHistoryForAccount (a), this._rateFutureForAccount (a));
@@ -145,6 +159,14 @@ class AccountsModel extends Observable {
     if (this._accounts)
       for (let account of this._accounts)
         account .setRateFuture (this._rateFutureForAccount (account));
+  }
+
+  async _updateTaxParametersModel() {
+    this._taxParameters = (await this._taxParametersModel .find())
+      .sort ((a,b) => {return a .date < b .date? 1: a .date == b .date? 0: -1});
+    if (this._accounts)
+      for (let account of this._accounts)
+        account .setTaxParameters (this._taxParametersForAccount (account));
   }
 
   async _onTranModelChange (eventType, doc, arg, source) {
@@ -259,6 +281,7 @@ class AccountsModel extends Observable {
     await this._updateModel();
     await this._updateBalanceHistoryModel();
     await this._updateRateFutureModel();
+    await this._updateTaxParametersModel();
   }
 
   getModel() {
@@ -351,7 +374,7 @@ class Account {
 
   _invalidateBalanceCache() {
     this._balances = [];
-    for (let cid of [this .category, this .intCategory, this .disCategory])
+    for (let cid of [this .category, this .intCategory, this .disCategory, this .incCategory])
       if (cid)
         this._model._notifyObservers (AccountsModelEvent .CATEGORY_CHANGE, {
           id: cid
@@ -367,6 +390,10 @@ class Account {
 
   setRateFuture (rateFuture) {
     this._rateFuture = rateFuture;
+  }
+
+  setTaxParameters (taxParameters) {
+    this._taxParameters = taxParameters;
   }
 
   async handleTransaction (eventType, tran, update) {
@@ -438,10 +465,11 @@ class Account {
   /**
    * Return budget amount for cat between start and end where amount is the normal scheduled amount for this period
    *    - liability: amount is payment
-   *        - cat == account .category: return principal portion of amount
-   *        - cat == intCategory and account .category != null: return interest portion of amount
+   *       - cat == account .category: return principal portion of amount
+   *       - cat == intCategory and account .category != null: return interest portion of amount
    */
   getAmount (cat, start, end, amount) {
+
     if (this .isPrincipalInterestLiabilityAccount() && [this .category, this .intCategory] .includes (cat._id)) {
       let st  = Types .date .monthStart (Types .date .addMonthStart (end, -1));
       let en  = Types .date .monthEnd   (st);
@@ -451,13 +479,84 @@ class Account {
         return int;
       else {
         let pri = this._budget .getAmount (this._categories .get (this .intCategory), start, end, true);
-        amount += (pri .month? pri .month .amount: 0) + (pri .year? pri .year .amount / 12 * (Types .date .subMonths (end, start) + 1): 0);
+        amount += (pri .month? pri .month .amount: 0) + (pri .year? pri .year .amount / 12 * (Types .date._difMonths (end, start)): 0);
         return Math .max (0, amount - int);
       }
 
-    } else
+    } else if (this .form == AccountForm .INCOME_SOURCE)
+      return -this._getIncomeSourceAmount (cat, start, end, -amount);
+
+    else
       return amount;
-   }
+  }
+
+  /**
+   * Get income-source amount
+   */
+  _getIncomeSourceAmount (cat, start, end, amount) {
+    if (this .form == AccountForm .INCOME_SOURCE) {
+
+      if (this .taxType == AccountsTaxType .PERCENTAGE) {
+        if (cat._id == this .incCategory && ! this .intCategory)
+          amount = Math .round (amount * (1 - this .taxRate / 10000.0));
+        else if (this .incCategory && this .intCategory && cat._id == this .intCategory) {
+          let inc = this._budget .getAmount (this._categories .get (this .incCategory), start, end, true);
+          amount -= (inc .month? inc .month .amount: 0) + (inc .year? inc .year .amount / 12 * (Types .date._difMonths (end, start)): 0);
+          amount = Math .round (amount * (this .taxRate / 10000.0));
+        }
+      }
+
+      if (this .taxType == AccountsTaxType .TABLE) {
+        let monthAmount = Math .round (amount / Types .date._difMonths (end, start));
+        let deduction = 0;
+        for (let dt = start; dt <= Types .date .monthStart (end); dt = Types .date .addMonthStart (dt, 1))
+          deduction += this._calcMonthDeduction (dt, monthAmount);
+        if (cat._id == this .incCategory && ! this .intCategory)
+          amount -= deduction;
+        else if (this .incCategory && this .intCategory && cat._id == this .intCategory)
+          amount = deduction;
+      }
+    }
+    return amount;
+  }
+
+  _calcMonthDeduction (date, amount) {
+    let tbl = TAX_TABLES .find (t => {return t._id == this .taxTable});
+    if (tbl) {
+      let par = this._taxParameters .find (p => {return date >= (p .date || 0)});
+      if (par) {
+        let annualTaxableIncome = (amount - par .beforeTaxDeductions + par .taxableBenefits) * 12;
+        let cppEarnings         = amount + par .taxableBenefits;
+        if (annualTaxableIncome > 0) {
+
+          let ps = Types .date .getYearStart  (date);
+          let pe = Types .date .addMonthStart (date, -1);
+          let pm = Types .date._difMonths (pe, ps);
+          let pc = this._budget .getCategories() .get (this .incCategory);
+          let pa = pe >= ps? this._budget .getAmount (pc, ps, Types .date .monthEnd (pe), true): {};
+          let priorAmount = -(pa .month? pa .month .amount: 0) + (pa .year? pa .year .amount: 0) / 12 * pm + par .taxableBenefits * pm;
+
+          let cppPaid = Math .min (tbl .cpp[1], (priorAmount - tbl .cpp[0] /12) * tbl .cpp[2]);
+          let eiPaid  = Math .min (tbl .ei[0],  priorAmount * tbl .ei[1]);
+          let cpp = Math .min (tbl .cpp[1] - cppPaid, (cppEarnings - tbl .cpp[0] / 12) * tbl .cpp [2]);
+          let ei  = Math .min (tbl .ei[0] - eiPaid,   amount * tbl .ei [1]);
+          let annualizedCppEi = tbl .cpp[1] + tbl .ei[0];
+
+          let [f, fedRate, fedConst] = tbl .federalRates .find (r => {return annualTaxableIncome >= r[0]});
+          let fedCredits = (par .federalClaim + annualizedCppEi + tbl .federalEmploymentCredit) * tbl .federalRates .slice (-1) [0][1];
+          let fedTax = annualTaxableIncome * fedRate - fedConst - fedCredits;
+
+          let [p, proRate, proConst] = tbl .provincialRates .find (r => {return annualTaxableIncome >= r[0]});
+          let proCredits = (par .provincialClaim + annualizedCppEi) * tbl .provincialRates .slice (-1) [0][1];
+          let proTax = annualTaxableIncome * proRate - proConst - proCredits;
+
+          // TODO cpp and ei don't go away after fully paid
+          return Math .round ((fedTax + proTax) / 12 + cpp + ei + par .beforeTaxDeductions + par .afterTaxDeductions);
+        }
+      }
+    }
+    return 0;
+  }
 
   /**
    * Returns account balance on last day of specified month
@@ -679,6 +778,18 @@ class Account {
     }
     return tip;
   }
+
+  getCategoryName (cid) {
+    let name = this .name;
+    if (this .isPrincipalInterestLiabilityAccount()) {
+      if (cid == this .intCategory)
+        name += ' Interest'
+      else if (cid == this .category)
+        name += ' Principal'
+    } else if (this .form == AccountForm .INCOME_SOURCE && cid == this .intCategory)
+      name += ' Deductions'
+    return name;
+  }
 }
 
 const AccountType = {
@@ -689,8 +800,7 @@ const AccountType = {
 const AccountForm = {
   CASH_FLOW:       0,
   ASSET_LIABILITY: 1,
-  INCOME_SOURCE:   2,
-  TAX_TABLE:       3
+  INCOME_SOURCE:   2
 }
 
 const RateType = {
@@ -711,3 +821,9 @@ const PaymentFrequency = {
 }
 
 const PAYMENTS_PER_YEAR = [12, 24, 365.0 / 14, 365.0 / 7]
+
+const AccountsTaxType = {
+  NONE:       0,
+  PERCENTAGE: 1,
+  TABLE:      2
+}

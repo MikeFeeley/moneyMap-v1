@@ -134,12 +134,19 @@ div._systemStatus {
         }
         ._entry {
           display: flex;
-          flex-direction: row;
-          > ._left {
-            flex-grow: 1
+          flex-direction: column;
+          > ._leftRight {
+            display: flex;
+            flex-direction: row;
+            > ._left {
+              flex-grow: 1
+            }
+            > ._right {
+              flex-grow: 0
+            }
           }
-          > ._right {
-            flex-grow: 0
+          > ._bottom {
+            margin-top: 16px;
           }
         }
         ._line {
@@ -153,13 +160,15 @@ div._systemStatus {
             > ._field {
               border: 1px solid transparent;
             }
-            > ._field_apr ._content, > ._field_balance ._content, > ._field_accruedInterest ._content, > ._field_disTaxRate ._content {
-              text-align: right
+            > ._field_apr, > ._field_balance, > ._field_accruedInterest, > ._field_disTaxRate, ._field_taxRate {
+              ._content {
+                text-align: right
+              }
             }
             > ._field_apr ._content {
               width: 60px
             }
-            > ._field_disTaxRate ._content {
+            > ._field_disTaxRate ._content, > ._field_taxRate ._content {
               width: 50px;
             }
             > ._field_balance ._content  {
@@ -174,10 +183,10 @@ div._systemStatus {
             > ._field_type {
               padding-top: 2px;
             }
-            > ._field_creditBalance, ._field_rateType, ._field_paymentFrequency {
+            > ._field_creditBalance, ._field_rateType, ._field_paymentFrequency, ._field_taxType, ._field_taxTable {
               margin-top: 2px;
             }
-            > ._field_category, ._field_disCategory, ._field_intCategory, ._field_liquid {
+            > ._field_category, ._field_disCategory, ._field_intCategory, ._field_incCategory, ._field_liquid {
               margin-top: 4px;
               > div > ._content ._suffix {
                 padding-left: 6px;
@@ -191,13 +200,14 @@ div._systemStatus {
         ._line:not(:last-child) {
           margin-bottom: 16px;
         }
-        ._right {
+        ._right, ._bottom {
           > div:not(:last-child) {
             margin-bottom: 16px;
           }
           > div > ._label {
             font-size: 14px;
             color: #aaa;
+            margin-bottom: 2px;
           }
           > div > ._content {
             border: solid 1px #ccc;
@@ -221,6 +231,38 @@ div._systemStatus {
                 > ._field_amount ._content, ._field_rate ._content {
                   width: 110px;
                   text-align: right
+                }
+              }
+            }
+            ._taxDeductionTable {
+              padding-left: 4px;
+              width: 100%;
+              td ._content {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                padding: 0px;
+                margin: 2px;
+              }
+              td div._content, td label._content {
+                border: 2px solid transparent;
+              }
+              th ._content {
+                font-size: 14px;
+                font-weight: 400;
+                color: #aaa;
+                margin-top:     4px;
+                margin-bottom: -4px;
+              }
+              position: relative;
+              > tbody > tr > td {
+                > ._field_date ._content {
+                  width: 100px
+                }
+                > ._field_beforeTaxDeductions, > ._field_afterTaxDeductions, > ._field_taxableBenefits, ._field_federalClaim, ._field_provincialClaim {
+                  ._content {
+                    width: 120px;
+                    text-align: right
+                  }
                 }
               }
             }

@@ -548,7 +548,6 @@ class User extends Observable {
     await am .insert ({type: AccountType .GROUP, name: 'Investments', form: AccountForm .CASH_FLOW, sort: 4});
     await am .insert ({type: AccountType .GROUP, name: 'Savings', form: AccountForm .CASH_FLOW, sort: 5});
     await am .insert ({type: AccountType .GROUP, name: 'Salary', form: AccountForm .INCOME_SOURCE, sort: 6});
-    await am .insert ({type: AccountType .GROUP, name: 'Tax Table', form: AccountForm .TAX_TABLE, sort: 7});
     pm .delete();
     am .delete();
 

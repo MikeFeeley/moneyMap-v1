@@ -17,10 +17,9 @@ async function main() {
     db = await db;
     let sort = 1;
     let group = [];
-    // for (let account of await db .collection ('accounts') .find() .toArray())
-    //   await db .collection ('accounts') .updateOne ({_id: account._id}, {$set: {form: account .cashFlow? 0: 1}, $unset: {cashFlow: true}});
+    for (let account of await db .collection ('accounts') .find() .toArray())
+      await db .collection ('accounts') .updateOne ({_id: account._id}, {$set: {form: account .cashFlow? 0: 1}, $unset: {cashFlow: true}});
     await db .collection ('accounts') .insert ({type: 0, form: 2, name: 'UBC', sort: 0});
-    await db .collection ('accounts') .insert ({type: 0, form: 3, name: 'UBC Withholding', sort: 0});
   } catch (e) {
     console .log(e);
   } finally {

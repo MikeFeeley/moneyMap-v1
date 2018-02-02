@@ -145,15 +145,16 @@ class AccountsView extends View {
     let el     = before? before:          subgroup .find ('> ul');
     let entry = $('<form>')
       .appendTo ($('<div>', {class: '_left'})
-        .appendTo ($('<div>', {class: '_entry'})
-          .appendTo ($('<li>', {data: {id: id, subgroupId: subgroupId, sort: sort}}) [op] (el))));
+        .appendTo ($('<div>', {class: '_leftRight'})
+          .appendTo ($('<div>', {class: '_entry'})
+            .appendTo ($('<li>', {data: {id: id, subgroupId: subgroupId, sort: sort}}) [op] (el)))));
     entry .on ('submit', e => {return false});
     return entry;
   }
 
   getEntry (id) {
     return $(this._html .find ('._subgroup > ul > li') .toArray() .find (e => {return $(e) .data ('id') == id}))
-      .find ('> ._entry > ._left > form');
+      .find ('> ._entry > ._leftRight > ._left > form');
   }
 
   getLine (entry, number) {
@@ -161,13 +162,24 @@ class AccountsView extends View {
   }
 
   addRight (text, entry) {
-    let toHtml = entry .closest ('._entry');
+    let toHtml = entry .closest ('._leftRight');
     let right = toHtml .find ('._right');
     if (right .length == 0)
       right = $('<div>', {class: '_right'}) .appendTo (toHtml);
     let box = $('<div>') .appendTo (right)
       .append   ($('<div>', {class: '_label', text: text}))
       .append   ($('<div>', {class: '_content'}))
+    return box .find ('._content');
+  }
+
+  addBottom (text, entry) {
+    let toHtml = entry .closest ('._entry');
+    let bottom = toHtml .find ('._bottom');
+    if (bottom .length == 0)
+      bottom = $('<div>', {class: '_bottom'}) .appendTo (toHtml);
+    let box = $('<div>') .appendTo (bottom)
+    .append   ($('<div>', {class: '_label', text: text}))
+    .append   ($('<div>', {class: '_content'}))
     return box .find ('._content');
   }
 
@@ -208,6 +220,10 @@ class AccountsView extends View {
 
   removeRight (entry) {
     entry .closest ('._entry') .find ('._right') .remove();
+  }
+
+  removeBottom (entry) {
+    entry .closest ('._entry') .find ('._bottom') .remove();
   }
 
   _getField (id, name) {

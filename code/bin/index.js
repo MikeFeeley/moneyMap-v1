@@ -13,6 +13,7 @@ router.get('/', function(req, res, next) {
       'Model',
       'View',
       'Presenter',
+      'TaxTables',
       'AccountsModel',
       'ActualsModel',
       'BudgetModel',

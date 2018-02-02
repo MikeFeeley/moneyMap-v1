@@ -248,7 +248,7 @@ class SchedulesModel extends Observable {
           if (c .account) {
             let account = accounts .find (a => {return a._id == c .account});
             if (account) {
-              for (let field of ['category', 'disCategory', 'intCategory'])
+              for (let field of ['category', 'disCategory', 'intCategory', 'incCategory'])
                 if (account [field] == c._id)
                   return {id: account._id, update: {[field]: null}}
             }
@@ -380,11 +380,13 @@ class Schedules extends Categories {
     }
   }
 
-  getType (cat) {
-    if (cat .account) {
+  getType (cat, noIndirectSchedule) {
+    if (! noIndirectSchedule && cat .account) {
       let account = this._model._actModel .getAccountsModel() .getAccount (cat .account);
       if (cat._id == account .category && account .intCategory)
         cat = this .get (account .intCategory);
+      else if (cat._id == account .intCategory && account .incCategory)
+        cat = this .get (account .incCategory);
     }
     for (let s of cat .schedule || []) {
       if (Types .date .isYear (s .start))
@@ -395,11 +397,11 @@ class Schedules extends Categories {
     return ScheduleType .NONE;
   }
 
-  hasType (cat, type) {
+  hasType (cat, type, noIndirectSchedule) {
     let typeMatch = catType => {return Array .isArray (type)? type .includes (catType): catType == type}
     if (cat == null)
       return false
-    else if (typeMatch (this .getType (cat)))
+    else if (typeMatch (this .getType (cat, noIndirectSchedule)))
       return true;
     else
       return ((cat .children || []) .concat (cat .zombies || [])) .find (c => {
