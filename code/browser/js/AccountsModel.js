@@ -550,7 +550,6 @@ class Account {
           let proCredits = (par .provincialClaim + annualizedCppEi) * tbl .provincialRates .slice (-1) [0][1];
           let proTax = annualTaxableIncome * proRate - proConst - proCredits;
 
-          // TODO cpp and ei don't go away after fully paid
           return Math .round ((fedTax + proTax) / 12 + cpp + ei + par .beforeTaxDeductions + par .afterTaxDeductions);
         }
       }
@@ -787,7 +786,7 @@ class Account {
       else if (cid == this .category)
         name += ' Principal'
     } else if (this .form == AccountForm .INCOME_SOURCE && cid == this .intCategory)
-      name += ' Deductions'
+      name += ' Taxes'
     return name;
   }
 }

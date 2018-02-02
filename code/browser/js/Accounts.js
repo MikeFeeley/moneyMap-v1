@@ -107,7 +107,7 @@ class Accounts extends Observable {
               else if (arg .fieldName == 'intCategory' && account .category)
                 name += ' Interest'
             } else if (account .form == AccountForm .INCOME_SOURCE && arg .fieldName == 'intCategory' && arg .value)
-              name += ' Deductions'
+              name += ' Taxes'
             let type = [['category', 'disCategory', 'intCategory', 'incCategory'] .indexOf (arg .fieldName)];
             let root = this ._budget ['get' + ['Savings', 'Withdrawals', 'Expense', 'Income'] [type] + 'Category'] ();
             let cat  = (root .children || []) .find (c => {return c .name == name});
