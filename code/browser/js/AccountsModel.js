@@ -512,10 +512,16 @@ class Account {
           let pri = this._budget .getAmount (this._categories .get (this .incCategory), start, end, true);
           amount -= (pri .month? pri .month .amount: 0) + (pri .year? pri .year .amount / 12 * (Types .date._difMonths (end, start)): 0);
         }
-        let monthAmount = Math .round (amount / Types .date._difMonths (end, start));
         let deduction = 0;
-        for (let dt = start; dt <= Types .date .monthStart (end); dt = Types .date .addMonthStart (dt, 1))
+        let multiMonth = Types .date._difMonths (end, start) > 1;
+        let monthAmount = amount;
+        for (let dt = start; dt <= Types .date .monthStart (end); dt = Types .date .addMonthStart (dt, 1)) {
+          if (multiMonth) {
+            let mon = this._budget .getAmount (cat, dt, Types .date .monthEnd (dt), true);
+            monthAmount = -((mon .month? mon .month .amount: 0) + (mon .year? mon .year .amount / 12: 0));
+          }
           deduction += this._calcMonthDeduction (dt, monthAmount);
+        }
         if (cat._id == this .incCategory && ! this .intCategory)
           amount -= deduction;
         else if (this .incCategory && this .intCategory && cat._id == this .intCategory)
