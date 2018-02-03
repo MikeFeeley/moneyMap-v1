@@ -115,6 +115,9 @@ body {
         height: auto;
         margin-bottom: 8px;
       }
+      > ._field_name._account ._content {
+        color: #3d993d;
+      }
     }
     ._icons {
       flex-grow: 0;

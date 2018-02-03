@@ -771,12 +771,20 @@ class Account {
   }
 
   getToolTip (cat) {
-    let tip = 'ACCOUNT: ' + this .name + ' ';
-    if (this .creditBalance) {
+    let tip = 'ACCOUNT: ' + this .name;
+    if (this .form == AccountForm .INCOME_SOURCE) {
+      if (cat._id == this .incCategory) {
+        if (! this .intCategory)
+          tip += ' Gross Income'
+        else
+          tip += ' Net Income'
+      } else
+        tip += ' Income Tax and Deductions'
+    } else if (this .creditBalance) {
       if (cat._id == this .category)
-        tip += 'Contributions';
+        tip += ' Contributions';
       else {
-        tip += 'Withdrawals';
+        tip += ' Withdrawals';
         if (this .disTaxRate)
           tip += ' After Tax';
       }

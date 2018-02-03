@@ -154,9 +154,28 @@ class ScheduleName extends ViewTextbox {
     } else
       super._addHtml();
   }
+  _get() {
+    if (this .cat && this .cat .account)
+      return this .cat .name;
+    else
+      return super._get();
+  }
 }
 
 class ScheduleEntryName extends ViewScalable (ScheduleName) {
+  constructor (name, format, prefix='', suffix='', placeholder='', catagories) {
+    super (name, format, prefix, suffix, placeholder);
+    this._categories = catagories;
+  }
+  newInstance (id) {
+    return Object.create (this, {
+      _id: {value: id},
+      cat: {value: this._categories .get (id)}
+    });
+  }
+}
+
+class ScheduleEntryNameNotScalable extends ScheduleName {
   constructor (name, format, prefix='', suffix='', placeholder='', catagories) {
     super (name, format, prefix, suffix, placeholder);
     this._categories = catagories;
