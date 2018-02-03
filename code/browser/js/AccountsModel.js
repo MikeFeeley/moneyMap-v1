@@ -508,6 +508,10 @@ class Account {
       }
 
       if (this .taxType == AccountsTaxType .TABLE) {
+        if (cat._id == this .intCategory) {
+          let pri = this._budget .getAmount (this._categories .get (this .incCategory), start, end, true);
+          amount -= (pri .month? pri .month .amount: 0) + (pri .year? pri .year .amount / 12 * (Types .date._difMonths (end, start)): 0);
+        }
         let monthAmount = Math .round (amount / Types .date._difMonths (end, start));
         let deduction = 0;
         for (let dt = start; dt <= Types .date .monthStart (end); dt = Types .date .addMonthStart (dt, 1))
@@ -515,15 +519,18 @@ class Account {
         if (cat._id == this .incCategory && ! this .intCategory)
           amount -= deduction;
         else if (this .incCategory && this .intCategory && cat._id == this .intCategory)
-          amount = deduction;
+          amount = -deduction;
       }
     }
+
     return amount;
   }
 
   _calcMonthDeduction (date, amount) {
-    let tbl = TAX_TABLES .find (t => {return t._id == this .taxTable});
-    if (tbl) {
+    let taxTable = TAX_TABLES .find (t => {return t._id == this .taxTable});
+    if (taxTable) {
+      let year = Types .date._year (date);
+      let tbl = taxTable .years .find (t => {return t .year <= year}) || t .year .slice (-1) [0];
       let par = this._taxParameters .find (p => {return date >= (p .date || 0)});
       if (par) {
         let annualTaxableIncome = (amount - par .beforeTaxDeductions + par .taxableBenefits) * 12;
