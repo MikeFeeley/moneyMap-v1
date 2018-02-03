@@ -469,6 +469,7 @@ class Account {
    *       - cat == intCategory and account .category != null: return interest portion of amount
    */
   getAmount (cat, start, end, amount) {
+    end = Types .date .monthEnd (end);
 
     if (this .isPrincipalInterestLiabilityAccount() && [this .category, this .intCategory] .includes (cat._id)) {
       let st  = Types .date .monthStart (Types .date .addMonthStart (end, -1));

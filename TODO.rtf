@@ -7,40 +7,8 @@
 
 \f0\fs36 \cf0 ==============\
 TO DO\
-	- income source\
-		- tax rate or tax table applied to income category (or maybe expense category for cases where there is no withholding)\
-		- handles net-income calculation\
-		- fields\
-			- taxRate (or table?) - its an issue when income varies\
-			- incCategory is income category\
-				- enter gross amounts and calculates to either gross amount or net amount depending on setting of intCategory\
-			- budget tax as expense use intCategory \
-				- incCategory is gross amount and intCategory is an expense of taxes\
-			- piCategory and psCategory: pension income and savings (optional, but together)\
-		- EI/CPP\
-			- these could be in separate category and then combine the, in common parent\
-			- or could be calculated (e.g., as part of tax)\
-	- pension income\
-		- key issue is that you want enter the same amount in two different categories: income and savings\
-		- the amount calculation can be done offline; its just about matching these two numbers\
 \
-To do withholding correctly you need\
-(1) fed/pro tax tables and CPP/IE info for each year - no gui for this (added by util; maybe later by scraping)\
-(2) track YTD CPP/IE\
-(3) before-tax deductions, after-tax deductions, taxable benefits\
-		- note pension amount is based on regular salary and so it increases when salary does\
-		- other things can change at arbitrary points; most are fixed amounts, but things like union dues are based on salary\
 \
-Really; you'd like something simple that can be entered directly from pay stub\
-	- and if its off a little or if there's a month where its different, want an easy way to make corrections\
-	- one way is to treat this as an estimate such that prior month budget is taken from actual\
-		- one possible drawback is that you don't see errors in plan (esp if last pay cheque is at the end of the month)\
-			- you do see the budget change each month, but perhaps mysteriously\
-		- another possible drawback is that discrepancy really be a carry-forward thing (e.g., you get something lump sum that you thought would be gradual)\
-	- another idea is to have a button that adjust plan to actual up to start of this month\
-		- this could be added to all categories\
-		- where would you put the button in HUD?\
-		- even here though, the future year calculation would be wrong\
 \
 ==============\
 RAMBLINGS\
@@ -87,7 +55,7 @@ Salary\
 \
 
 \fs36 ==============\
-BUGS\
+BACKLOGGED BUGS\
 	- networth page (today box at least) does not respond to model updates while its showing\
 		- mostly okay except for hitting undo key with networth showing and, for example, changing an account balance\
 		- same problem with accounts page (undo)\
