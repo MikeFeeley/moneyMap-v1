@@ -50,6 +50,10 @@ class ScheduleEntry extends List {
         }
       };
       updateTotals (this._categories .get (doc .category || doc._id));
+      if (doc .parent)
+        updateTotals (this._categories .get (doc .parent));
+      if (arg && arg._original_parent)
+        updateTotals (this._categories .get (arg._original_parent));
       if (arg && (arg .account || arg._original_account || (arg .budgets && doc .account))) {
         let account = this._accounts .getAccount (arg .account || arg._original_account || doc .account);
         if (account .incCategory)
