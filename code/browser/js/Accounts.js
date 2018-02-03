@@ -11,7 +11,6 @@ class Accounts extends Observable {
     this._balanceHistoryModel = new Model ('balanceHistory');
     this._view                = new AccountsView();
     this._view .addObserver (this, this._onViewChange);
-    this._accounts            = null;
     this._dateType            = new DateType ('DMY', true);
     this._dateViewFormat      =  new ViewFormat (
       (value => {return this._dateType .toString   (value)}),
@@ -35,7 +34,7 @@ class Accounts extends Observable {
   }
 
   async _onModelChange (eventType, acc, arg, source) {
-    if (this._accounts) {
+    if (this._accountsModel .getAccounts()) {
       if (! this._view .isVisible())
         this._view .resetHtml();
       else {
@@ -45,7 +44,7 @@ class Accounts extends Observable {
               this._view .updateSort (acc._id, arg .sort)
             else {
               let fieldName = Array .from (Object .keys (arg)) [0];
-              let account   = this._accounts .get (acc._id);
+              let account   = this._accountsModel .getAccount (acc._id);
               this._view .updateField (acc._id, fieldName, arg [fieldName]);
               account [fieldName] = arg [fieldName];
               let schModel = this._budget .getSchedulesModel();
@@ -68,11 +67,9 @@ class Accounts extends Observable {
               this._addSubgroup (acc, source == this);
             else
               this._addAccount (acc, source == this);
-            this._accounts .set (acc._id, acc);
             break;
           case ModelEvent .REMOVE:
             this._view .remove (acc._id, source == this);
-            this._accounts .delete (acc._id);
             break;
         }
       }
@@ -97,7 +94,7 @@ class Accounts extends Observable {
             Model .newUndoGroup();
           let categories = this._budget   .getCategories();
           let schModel   = this._budget   .getSchedulesModel();
-          let account    = this._accounts .get (arg .id);
+          let account    = this._accountsModel .getAccount (arg .id);
           if (arg .value) {
             // add category
             let name = account .name, update;
@@ -134,10 +131,9 @@ class Accounts extends Observable {
               } else
                 removeCat = true;
               await this._model .update (account._id, {[arg .fieldName]: null});
+              await schModel .update (cat._id, {account: null});
               if (removeCat)
                 await schModel .remove (cat._id);
-              else
-                await schModel .update (cat._id, {account: null});
             }
           }
           if (account .isLiabilityAccount()) {
@@ -183,17 +179,17 @@ class Accounts extends Observable {
 
       case AccountsViewEvent .REMOVE: {
         Model .newUndoGroup();
-        let target    = this._accounts .get (arg .id);
+        let target    = this._accountsModel .getAccount (arg .id);
         let isSibling = target .type == AccountType .GROUP
           ? a => {return a .type == AccountType .GROUP && a .form == target .form}
           : a => {return a .group == target .group}
-        let siblings = Array .from (this._accounts .values()) .filter (isSibling);
+        let siblings = Array .from (this._accountsModel .getAccounts() .values()) .filter (isSibling);
         if (target .type == AccountType .GROUP) {
           if (siblings .length == 1) {
             this._view .showFieldTip (arg .id, 'name', ['You can not delete the last group']);
             break;
           }
-          if (Array .from (this._accounts .values()) .find (a => {return a .group == arg .id})) {
+          if (Array .from (this._accountsModel .getAccounts() .values()) .find (a => {return a .group == arg .id})) {
             this._view .showFieldTip (arg .id, 'name', ['You can not delete a group that has accounts']);
             break;
           }
@@ -201,13 +197,12 @@ class Accounts extends Observable {
         if (target .type == AccountType .ACCOUNT) {
           let schModel   = this._budget .getSchedulesModel();
           let categories = this._budget .getCategories();
-          for (let cid of [target .category, target .disCategory]) {
+          for (let cid of [target .category, target .disCategory, target .intCategory, target .incCategory]) {
             if (cid) {
               let cat = categories .get (cid);
               if (cat) {
-                if (categories .hasType (cat, ScheduleType .NON_NONE) || await schModel .hasTransactions (cat))
-                  await schModel .update (cid, {account: null});
-                else
+                await schModel .update (cid, {account: null});
+                if (! categories .hasType (cat, ScheduleType .NOT_NONE) && ! (await schModel .hasTransactions (cat)))
                   await schModel .remove (cid);
               }
             }
@@ -220,10 +215,10 @@ class Accounts extends Observable {
 
       case AccountsViewEvent .INSERT: {
         Model .newUndoGroup();
-        let target = this._accounts .get (arg .id), promises = [];
+        let target = this._accountsModel .getAccount (arg .id), promises = [];
         if (target .type == AccountType .GROUP && ! arg .inside) {
           let sort           = arg .before? target .sort: target .sort + 1;
-          let sortUpdateList = Array .from (this._accounts .values())
+          let sortUpdateList = Array .from (this._accountsModel .getAccounts() .values())
             .filter (a => {return a .type == AccountType .GROUP && a .form == target .form && a .sort >= sort})
             .map    (a => {return {id: a._id, update: {sort: a .sort + 1}}});
           if (sortUpdateList .length)
@@ -235,7 +230,7 @@ class Accounts extends Observable {
           }, this))
         } else {
           let group    = target .type == AccountType .ACCOUNT? target .group: target._id;
-          let siblings = Array .from (this._accounts .values())
+          let siblings = Array .from (this._accountsModel .getAccounts() .values())
             .filter (a =>     {return a .group == group})
             .sort   ((a,b) => {return a .sort < b .sort? -1: 1})
           let sort;
@@ -516,21 +511,19 @@ class Accounts extends Observable {
     let build = async () => {
       this._defaultRate = (await this._paramModel .find ({name: 'rates'})) [0] .apr;
       await this._view .addHtml (toHtml, build);
-      this._accounts = this._accountsModel .getAccounts();
       this._group = [];
       for (let groupNum of Array .from (Object .keys (GROUP_TO_FORM))) {
         this._group [groupNum] = this._view .addGroup (
           ['Cash Flow Accounts', 'Asset and Liability Accounts', 'Income Sources'] [groupNum]
         );
-        for (let group of this._accounts)
+        for (let group of this._accountsModel .getAccounts())
           if (group .form == GROUP_TO_FORM [groupNum] && group .type == AccountType .GROUP) {
             this._addSubgroup (group);
-            for (let account of this._accounts)
+            for (let account of this._accountsModel .getAccounts())
               if (account .type == AccountType .ACCOUNT && account .group == group._id)
                 await this._addAccount (account);
           }
         }
-      this._accounts = this._accounts .reduce ((m,a) => {return m .set (a._id, a)}, new Map());
     }
     await build();
   }
