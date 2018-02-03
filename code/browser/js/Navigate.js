@@ -1710,7 +1710,7 @@ class Navigate {
 
     // compute column dates
     let startDate = Types .dateFY .getFYEnd (
-      balances .map (b => {return b .date}) .reduce ((m ,d) => {return Math .min (m, d)}),
+      balances .map (b => {return b .date}) .reduce ((m ,d) => {return d? Math .min (m, d): m}),
       budgetStart, budgetEnd
     );
     let today   = Types .date .today();
