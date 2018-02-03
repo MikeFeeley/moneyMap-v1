@@ -1649,8 +1649,10 @@ class Navigate {
       var updater = this._addUpdater (view, (eventType, model, ids) => {
         dataset .groups   = this._getHistoryData (parentIds, date, date) .groups;
         let ds            = JSON .parse (JSON .stringify (dataset));
-        ds .cols = ds .cols .map (c => {return c .slice (-4)})
+        ds .cols = ds .cols .map (c => {return c .slice (-4)});
         this._filterHistoryBySlider (ds)
+        for (let g of ds .groups)
+          g .rows = g .rows .filter (r => {return r .amounts .find (a => {return a .value != 0})});
         updateView ([{replace: ds}])
       });
       var updateView = view .addHistoryTable (datasetCopy, datasetCopy .cols .length == 1, skipFoot, popup, position, () => {
@@ -1791,8 +1793,9 @@ class Navigate {
 
   async _addNetWorthTable (view, dataset, popup, html, position) {
     let updater = this._addUpdater (view, (eventType, model, ids) => {
-      if (['Accounts', 'ActualsModel', 'BalanceHistory'] .includes (model))
+      if (['Accounts', 'ActualsModel', 'BalanceHistory'] .includes (model)) {
         updateView();
+      }
     })
     let updateView = view .addNetWorthTable (dataset, popup, html, position, () => {
       this._deleteUpdater (view, updater);
