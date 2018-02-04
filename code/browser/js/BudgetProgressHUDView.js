@@ -41,6 +41,7 @@ class BudgetProgressHUDView extends View {
   addHtml (toHtml, position, titlePresenter) {
     this._resetHtml (toHtml);
     this._html .appendTo (toHtml);
+    this._html .mousedown (e => {e.stopPropagation()})
     this._position = position;
     if (position)
       this._html .css ({top: position .top, right: position .right, left: position .left});

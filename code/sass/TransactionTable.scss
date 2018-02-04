@@ -173,7 +173,7 @@ div._fieldTip {
 
 div._TransactionHUD > ._TransactionReadOnly > ._body > ._TransactionAndRulesTable > form > table {
   @include transaction-table-base (18px, 13px, 18px);
-  tr > td:first-child, tr > th:first-child {display: none}
+  > tbody > tr > td:first-child, > thead > tr > th:first-child {display: none}
 }
 div._TransactionHUD > :not(._TransactionReadOnly) > ._body > ._TransactionAndRulesTable > form > table,
 table._ImportTransactionsTable._TransactionAndRulesTable:not(._needsAttention) {
