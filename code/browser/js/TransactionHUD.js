@@ -105,7 +105,7 @@ class TransactionHUD extends TransactionAndRulesTable {
 
   _setTitleDate() {
     let budget = this._variance .getBudget();
-    let [title, subtitle]  = this._title .map (t => {return t .split (' ')})
+    let [title, subtitle]  = this._title .map (t => {return t .split (' ')});
     title .length = this._titleLength;
     if (subtitle) {
       let pos = subtitle .findIndex (w => {return w == 'Date'});
@@ -379,8 +379,7 @@ class TransactionHUD extends TransactionAndRulesTable {
   }
 
   static showAccount (id, dates, accounts, variance, toHtml, position) {
-    var title = accounts .getAccounts() .find (a => {return a._id == id}) .name +
-      ' for ' + Types .dateMonthY .toString (dates .start);
+    var title = [accounts .getAccounts() .find (a => {return a._id == id}) .name, ""]
     var query = {
       account:  id,
       date:     {$gte: dates .start, $lte: dates .end},
