@@ -775,11 +775,13 @@ class Account {
     if (this .form == AccountForm .INCOME_SOURCE) {
       if (cat._id == this .incCategory) {
         if (! this .intCategory)
-          tip += ' Gross Income'
+          tip += ' Net Income &mdash; Calculated from <b><em>gross income</em></b> entered here'
         else
-          tip += ' Net Income'
-      } else
-        tip += ' Income Tax and Deductions'
+          tip += ' Gross Income'
+      } else {
+        let incCat = this .incCategory && this._categories .get (this .incCategory);
+        tip += ' Income Tax and Deductions &mdash; Calculated from ' + (incCat? ' entered under ' + incCat .name: ' entered elsewhere');
+      }
     } else if (this .creditBalance) {
       if (cat._id == this .category)
         tip += ' Contributions';
@@ -793,7 +795,7 @@ class Account {
       if (cat._id == this .category)
         tip += ' Principal &mdash; Calculated from payments' + (intCat? ' entered under ' + intCat .name : ' entered elsewhere');
       else if (cat._id == this .intCategory)
-        tip += this .category? ' Interest &mdash; Calculated from <b><em>total</em></b> payments (interest and principal) you enter here': ' Payments'
+        tip += this .category? ' Interest &mdash; Calculated from <b><em>total</em></b> payments (interest and principal) entered here': ' Payments'
       else
         tip += ' Advances';
     }
