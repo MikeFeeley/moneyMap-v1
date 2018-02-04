@@ -61,7 +61,7 @@ class AccountBalance extends TuplePresenter {
         TransactionHUD .showCategory (arg .id, dates, this._accounts, this._variance, arg .toHtml, arg .position);
       } else {
         let account = this._accounts .getAccount (arg .id);
-        if (account .cashFlow)
+        if (account .form == AccountForm .CASH_FLOW)
           TransactionHUD .showAccount  (arg .id, dates, this._accounts, this._variance, arg .toHtml, arg .position);
         else {
           let cid = arg .altKey? account .intCategory: account .category || account .intCategory;
