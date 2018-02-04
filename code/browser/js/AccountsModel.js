@@ -143,6 +143,9 @@ class AccountsModel extends Observable {
     this._accounts = (await this._model .find()) .map (a => {
       return new Account (this, a, this._budgetModel, this._actualsModel, this._balanceHistoryForAccount (a), this._rateFutureForAccount (a));
     });
+    await this._updateBalanceHistoryModel();
+    await this._updateRateFutureModel();
+    await this._updateTaxParametersModel();
   }
 
   async _updateBalanceHistoryModel() {
@@ -279,9 +282,6 @@ class AccountsModel extends Observable {
 
   async find() {
     await this._updateModel();
-    await this._updateBalanceHistoryModel();
-    await this._updateRateFutureModel();
-    await this._updateTaxParametersModel();
   }
 
   getModel() {
