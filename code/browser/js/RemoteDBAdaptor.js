@@ -30,10 +30,12 @@ class RemoteDBAdaptor extends DBAdaptor {
         this._updatePendingOperations (operation, -1);
       } catch (rejection) {
         if (rejection .status !== undefined && rejection .status == 0) {
-          this._setState (DBAdaptorState .DOWN);
-          if (!firstTry)
+          if (firstTry)
+            firstTry = false;
+          else {
+            this._setState (DBAdaptorState .DOWN);
             await (new Promise (resolve => setTimeout (resolve, CLIENT_RETRY_INTERVAL)));
-          firstTry = false;
+          }
         } else {
           this._setState (DBAdaptorState .PERMANENTLY_DOWN);
           response = null;

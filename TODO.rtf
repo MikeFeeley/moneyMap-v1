@@ -7,25 +7,19 @@
 
 \f0\fs36 \cf0 ==============\
 TO DO\
-	- Just added Income Source account has wrong value for taxType (apparently TABLE, but should be PERCENTAGE)\
+	- newly added Income Source income category added without a schedule (undo/redo fixes this)\
+		- sometimes\
 	- Different disbursal tax rates for different years \'85\
 	- Show disbursal gross and net in graph hover?\
+	- Tax Table for non-employment income \'85 retirement income\
+		- requires collecting all taxable income sources \
+		- add an option; use all taxable income to determine tax rate (something like this; or this could be built into tax table choice)\
+			- otherwise its the same as other IncomeSource categories\
 \
 \
 ==============\
 RAMBLINGS\
 \
-Taxable Income\
-	- enter gross amount\
-	- automatic expense category for tax (withheld)\
-\
-\
-LATER \'85 TAXABLE INCOME\
-(1) New account type for income source. Identify individual(s) with % split for tax liability\
-(2) Account exports a tax withheld calculation that is the total tax withheld in a month for specified income source\
-(3) Amounts in Plan can then be entered as Gross amount with an automatic calculation of tax as a deduction from income\
-(4) Or, if there is no withholding, then income credit can be an expense \'85 this is an option in the account\
-(5) So, all that's actually needed is a category with no / immutable amount, to hold the taxes\
 \
 \
 	- Handling Model Connectivity / Errors:  add idle mode in which upcallls are suspended?\
@@ -44,17 +38,8 @@ LATER \'85 TAXABLE INCOME\
 				- model caches find results\
 					- could return a promise for updating those results\
 \
-Salary\
-	- new account type: "Income Sources"\
-		- indicates that its taxable and some details about that\
-		- option to add income category\
-			- this would be gross income\
-		- option to add tax expense category\
-			- amount for this category would be automatically calculated from associated income category\
-			- this auto calc is also available in transaction rules (or even transaction edit?)\
 
 \fs24 \
-\
 
 \fs36 ==============\
 BACKLOGGED BUGS\
