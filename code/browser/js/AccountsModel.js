@@ -463,10 +463,16 @@ class Account {
   }
 
   /**
-   * Return budget amount for cat between start and end where amount is the normal scheduled amount for this period
-   *    - liability: amount is payment
+   * Get budget amount for cat between start and end where amount is the normal scheduled amount for this period
+   *    - asset: amount is net (before-tax) amount
+   *    - liability: amount is payment full payment amount
    *       - cat == account .category: return principal portion of amount
    *       - cat == intCategory and account .category != null: return interest portion of amount
+   *    - income source:
+   *        - if cat == incCategory && ! intCategory; return net after tax amount
+   *        - if cat == intCateogry; return tax amount
+   * returns [budgetAmount, accountAmount] pair
+   *    - accountAmount is normally undefined, but for taxable asset, it is the gross amount
    */
   getAmount (cat, start, end, amount) {
     end = Types .date .monthEnd (end);
@@ -490,6 +496,12 @@ class Account {
     else
       return amount;
   }
+
+  getGrossAmount (cat, amount) {
+    if (this .form == AccountForm .ASSET_LIABILITY && this .creditBalance && this .disTaxRate) {
+     return Math .round (amount / ((1.0 - this .disTaxRate / 10000.0)));
+    }
+}
 
   /**
    * Get income-source amount

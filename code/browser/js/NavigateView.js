@@ -392,6 +392,7 @@ class NavigateView extends Observable  {
             label:       c .name,
             id:          c .id,
             data:        c .amounts .map (a => {return a .value}),
+            gross:       c .amounts .map (a => {return a .gross}),
             borderWidth: 1,
             type:        c .type
           }
@@ -556,7 +557,9 @@ class NavigateView extends Observable  {
           backgroundColor: 'rgba(0,0,0,0.6)',
           callbacks: {
             label: (t, d) => {
-              return d .datasets [t .datasetIndex] .label + ': ' +Types .moneyDZ .toString (t .yLabel);
+              let gross = d .datasets [t .datasetIndex] .gross [t .index];
+              return d .datasets [t .datasetIndex] .label + ': ' +Types .moneyDZ .toString (t .yLabel)
+                + (gross? ' --- Before Tax: ' + Types .moneyDZ .toString (gross): '');
             }
           }
         },
@@ -638,6 +641,7 @@ class NavigateView extends Observable  {
         datasetsCopy  = datasets .map (ds => {
           ds = Object .assign ({}, ds);
           ds .data = ds .data .map (d => {return d});
+          ds .gross = ds .gross .map (d => {return d});
           return ds;
         });
         startCol = 0;
@@ -648,14 +652,17 @@ class NavigateView extends Observable  {
       if (start > startCol) {
         /* remove from front */
         config .data .labels .splice (0, start - startCol);
-        for (let ds of config .data .datasets)
+        for (let ds of config .data .datasets) {
           ds .data .splice (0, start - startCol);
+          ds .gross .splice (0, start - startCol);
+        }
       } else
         /* add to front */
         for (let c = startCol - 1; c >= start; c--) {
           config .data .labels .splice (0, 0, colsCopy [c]);
           for (let i = 0; i < config .data .datasets .length; i++) {
-            config .data .datasets [i] .data .splice (0, 0, datasetsCopy [i] .data [c]);
+            config .data .datasets [i] .data  .splice (0, 0, datasetsCopy [i] .data  [c]);
+            config .data .datasets [i] .gross .splice (0, 0, datasetsCopy [i] .gross [c]);
           }
         }
       if (end < endCol) {
@@ -663,14 +670,18 @@ class NavigateView extends Observable  {
         let deleteCount = endCol - end;
         let spliceStart = config .data .labels .length - deleteCount;
         config .data .labels .splice (spliceStart, deleteCount);
-        for (let ds of config .data .datasets)
-          ds .data .splice (spliceStart, deleteCount);
+        for (let ds of config .data .datasets) {
+          ds .data  .splice (spliceStart, deleteCount);
+          ds .gross .splice (spliceStart, deleteCount);
+        }
       } else
         /* add to end */
         for (let c = endCol + 1; c <= end; c++) {
           config .data .labels .push (colsCopy [c]);
-          for (let i = 0; i < config .data .datasets .length; i++)
-            config .data .datasets [i] .data .push (datasetsCopy [i] .data [c]);
+          for (let i = 0; i < config .data .datasets .length; i++) {
+            config .data .datasets [i] .data  .push (datasetsCopy [i] .data  [c]);
+            config .data .datasets [i] .gross .push (datasetsCopy [i] .gross [c]);
+          }
         }
       startCol = start;
       endCol   = end;
@@ -689,9 +700,13 @@ class NavigateView extends Observable  {
                 if (dsc) {
                   dsc .data = update .update .amounts .map (a => {return a .value});
                   ds  .data = dsc .data .slice (startCol, endCol + 1);
+                  dsc .gross = update .update .amounts .map (a => {return a .gross});
+                  ds  .gross = dsc .gross .slice (startCol, endCol + 1);
                 }
-              } else
-                ds .data = update .update .amounts .map (a => {return a .value});
+              } else {
+                ds .data  = update .update .amounts .map (a => {return a .value});
+                ds .gross = update .update .amounts .map (a => {return a .gross});
+              }
             }
             if (update .update .name != null)
               ds .label = update .update .name;
@@ -967,11 +982,31 @@ class NavigateView extends Observable  {
           .concat (vm)
           .concat (totalRows? (dataset .income? Types .percent .toString (rowTotal / dataset .income): ['']) : [])
         tr .empty();
-        for (let i=0; i< vs.length; i++)
-          $('<td>', {
+        for (let i=0; i< vs.length; i++) {
+          let td = $('<td>', {
             text: vs [i] || '',
             class: (vs [i] && vs [i] .charAt (0) == '-'? 'negative': '') + (dataset .highlight == i - 1? ' _highlight': '')
           }) .appendTo (tr);
+          if (i > 0 && row .amounts [i-1] .gross) {
+
+            let tt;
+            td .hover (
+              e => {
+                tt = $('<div>', {
+                  class: '_toolTipNoPosition',
+                  text: 'Before Tax: ' + Types .moneyDZ .toString (row .amounts [i-1] .gross),
+                }) .appendTo (td);
+                window .setTimeout (() => {
+                  if (tt) {
+                    tt .css (ui .calcPosition (td, td .offsetParent(), {top: -20, left: 8})) .fadeIn (UI_TOOL_TIP_FADE_MS);
+                  }
+                })
+              },
+              e => {
+                tt .remove();
+              });
+          }
+       }
       }
     }
 

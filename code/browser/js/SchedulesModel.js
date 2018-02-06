@@ -286,6 +286,7 @@ class SchedulesModel extends Observable {
       for (let cat of cats || []) {
         let am = 0;
         let om = 0;
+        let gr;
         let yr = false;
         for (let sch of cat .schedule || []) {
           yr |= Types .dateMYorYear .isYear (sch .start);
@@ -309,13 +310,17 @@ class SchedulesModel extends Observable {
         }
         if (! skipAccountCalculation && cat .account) {
           let account = this._actModel .getAccountsModel() .getAccount (cat .account);
-          if (account)
-            am = account .getAmount (cat, start, end, am);
+          if (account) {
+            am = account .getAmount      (cat, start, end, am);
+            gr = account .getGrossAmount (cat, am);
+          }
         }
         let ds = includeDescendants? ga (cat .children, start, end, yr || getOtherMonths): {amount: 0};
         if (yr) {
           let amt                = Math [isCredit? 'min': 'max'] (am, ds .amount);
           rs .amount            += amt;
+          if (gr)
+            rs .grossAmount = (rs .grossAmount || 0) + gr;
           rs .year               = (rs .year || {amount: 0, allocated: 0, unallocated: 0});
           rs .year .amount      += Math [isCredit? 'min': 'max'] (am, ds .amount + ((ds .otherMonths && ds .otherMonths) || 0))
                                    - (((ds .month && ds .month .amount) || 0) + ((ds .otherMonths && ds .otherMonths) || 0));

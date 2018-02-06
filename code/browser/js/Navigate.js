@@ -1378,15 +1378,18 @@ class Navigate {
         });
         let isCredit = this._budget .isCredit (parent);
         let isGoal   = this._budget .isGoal   (parent);
-        for (let cat of (parent .children || []))
+        for (let cat of (parent .children || [])) {
+          let ba = this._budget .getAmount (cat, budget .start, budget .end);
           amounts .push ({
             id:       cat._id,
             name:     cat .name,
             sort:     cat .sort,
             isCredit: isCredit,
             isGoal:   isGoal,
-            amount:   this._budget .getAmount (cat, budget .start, budget .end) .amount * (isCredit? -1: 1)
+            amount:   ba .amount * (isCredit? -1: 1),
+            grossAmount: ba .grossAmount && ba .grossAmount * (isCredit? -1: 1)
           });
+        }
         var parentAmount = this._budget .getAmount (parent, budget .start, budget .end) .amount * (isCredit? -1: 1);
         var otherAmount  = parentAmount - amounts .reduce ((t,a) => {return t + a .amount}, 0);
         if (otherAmount != 0)
@@ -1474,11 +1477,13 @@ class Navigate {
                     .reduce ((o,e) => {
                       o .id .push (e .id);
                       o .amount += e .amount;
+                      o .grossAmount = e .grossAmount && (o .grossAmount || 0) + e .grossAmount
                       return o;
-                    }, {id: [], amount: 0});
+                    }, {id: [], amount: 0, grossAmount: undefined});
                   return {
                     id:    a .id,
-                    value: a .amount
+                    value: a .amount,
+                    gross: a .grossAmount
                   }
                 } else
                   return {value: 0}
