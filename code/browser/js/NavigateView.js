@@ -987,8 +987,7 @@ class NavigateView extends Observable  {
             text: vs [i] || '',
             class: (vs [i] && vs [i] .charAt (0) == '-'? 'negative': '') + (dataset .highlight == i - 1? ' _highlight': '')
           }) .appendTo (tr);
-          if (i > 0 && row .amounts [i-1] .gross) {
-
+          if (i > 0 && row .amounts [i-1] && row .amounts [i-1] .gross) {
             let tt;
             td .hover (
               e => {
