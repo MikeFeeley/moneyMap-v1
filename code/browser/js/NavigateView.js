@@ -1326,14 +1326,15 @@ class NavigateView extends Observable  {
       });
     };
 
-    var addPopup = (e, detail, isCredit) => {
+    let addPopup = (e, detail, isCredit) => {
       let target   = $(e .target);
       let column   = target .index();
       let html     = target .offsetParent();
       let padding  = target.css ('padding-left');
-      let position = ui .calcPosition (target, html, {top: 12, left: -2 + Number (padding .slice (0, padding .indexOf ('px')))})
+      let position = ui .calcPosition (target, html, {top: 12, left: -2 + Number (padding .slice (0, padding .indexOf ('px')))});
+      let popup;
       if (detail .intAmt || detail .addAmt || detail .subAmt || detail .infAmt) {
-        let popup = $('<div>', {class: '_popup _netWorthTable fader'})
+        popup = $('<div>', {class: '_popup _netWorthTable fader'})
           .appendTo (html)
           .append   ($('<div>', {class: '_popupContent'}))
           .click    (e => {
@@ -1385,14 +1386,10 @@ class NavigateView extends Observable  {
             .click  (ce => {handleCellClick (ce, detail .ids, detail .subCat)})
         ui .scrollIntoView (popup);
         popup .css (position);
-        ui .ModalStack .add (
-          e  => {return e && !$.contains (popup .get (0), e .target) && popup .get (0) != e .target},
-          () => {popup .removeClass ('fader_visible') .one ('transitionend', () => {popup .remove()})},
-          true
-        );
         setTimeout (() => {popup .addClass ('fader_visible')}, 0);
       }
       e .stopPropagation();
+      return  popup;
     }
 
     /** main code **/
@@ -1432,12 +1429,17 @@ class NavigateView extends Observable  {
         if (row .liquid)
           liquid = row .amounts .map ((a,i) => {return a + (liquid [i] || 0)});
         for (let i=0; i<vs.length; i++) {
+          let hover;
           $('<td>', {html: vs [i]+'&nbsp;', class: dataset .highlight == i - 1? '_highlight': ''}) .appendTo (tr)
             .click (e => {
-              if (i > 0)
-                addPopup (e, row .detail [i-1], vs[i-1] .startsWith ('-'))
-              else
+              if (i == 0)
                 addSubTablePopup (e, row);
+            })
+            .hover (e => {
+              hover = addPopup (e, row .detail [i-1], vs[i-1] .startsWith ('-'))
+            }, e => {
+              if (hover)
+                hover .remove();
             })
         }
       }
