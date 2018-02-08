@@ -679,7 +679,7 @@ class Account {
 
     let balanceEntry = this._balances .find (b => {return b .date == baseDate});
 
-    if (balanceEntry == null) {
+    if (balanceEntry == null && (this._balances .length == 0 || baseDate > this._balances .slice (-1) [0] .date)) {
 
       // determine where we need to start
       let mStart, balance;
@@ -735,7 +735,7 @@ class Account {
         mStart = Types .date .addMonthStart (mStart, 1);
       }
 
-      balanceEntry = this._balances .slice (-1) [0] || {balance: 0};
+      balanceEntry = this._balances .find (b => {return b .date == baseDate});
     }
 
     let int = 0, add = 0, sub = 0, inf = 0;
@@ -754,8 +754,8 @@ class Account {
       sub += subCat? getActual (subCat, st, endDate): 0;
     }
 
-    return {
-      amount: balanceEntry .balance,
+    let debug = {
+      amount: balanceEntry? balanceEntry .balance: 0,
       detail: {
         intAmt: int,
         infAmt: inf,
@@ -767,6 +767,7 @@ class Account {
         intCat: intCat
       }
     };
+    return debug;
   }
 
   getBalances (dates) {
