@@ -1354,7 +1354,7 @@ class NavigateView extends Observable  {
       let column   = target .index();
       let html     = target .offsetParent();
       let padding  = target.css ('padding-left');
-      let position = ui .calcPosition (target, html, {top: 12, left: -2 + Number (padding .slice (0, padding .indexOf ('px')))});
+      let position = ui .calcPosition (target, html, {top: 12, left: -103 + Number (padding .slice (0, padding .indexOf ('px')))});
       let popup;
       if (detail .intAmt || detail .addAmt || detail .subAmt || detail .infAmt) {
         popup = $('<div>', {class: '_popup _netWorthTable fader'})
@@ -1407,7 +1407,6 @@ class NavigateView extends Observable  {
             .append ($('<td>', {text: 'Withdrawals'}))
             .append ($('<td>', {text: Types .moneyD .toString (detail .subAmt), class: 'negative'}))
             .click  (ce => {handleCellClick (ce, detail .ids, detail .subCat)})
-        ui .scrollIntoView (popup);
         popup .css (position);
         setTimeout (() => {popup .addClass ('fader_visible')}, 0);
       }
