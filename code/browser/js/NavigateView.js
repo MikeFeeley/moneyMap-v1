@@ -1458,7 +1458,8 @@ class NavigateView extends Observable  {
                 addSubTablePopup (e, row);
             })
             .hover (e => {
-              hover = addPopup (e, row .detail [i-1], vs[i-1] .startsWith ('-'))
+              if (i > 0)
+                hover = addPopup (e, row .detail [i-1], vs[i-1] .startsWith ('-'))
             }, e => {
               if (hover)
                 hover .remove();
