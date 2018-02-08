@@ -362,7 +362,7 @@ div._budgetMonthsGraphs, div._activityMonthsGraphs, div._budgetHistoryGraphs {
   position: relative;
 }
 
-div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._progressGraph {
+div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._progressGraph, div._budgetHistoryGraph_months {
   position: relative;
   &._popup, & > ._popup {
     @include popup-container();
@@ -387,8 +387,13 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
           flex-grow: 1;
           margin-bottom: 24px;
           > ._heading {
-            font-size:     48px;
+            font-size:     42px;
             font-weight:   100;
+            max-width:     380px;
+            display:       inline-block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
           }
           > ._subheading {
             color: #666;

@@ -548,7 +548,8 @@ class Account {
     let taxTable = TAX_TABLES .find (t => {return t._id == this .taxTable});
     if (taxTable) {
       let year = Types .date._year (date);
-      let tbl = taxTable .years .find (t => {return t .year <= year}) || t .year .slice (-1) [0];
+      let tbl = taxTable .years .find (t => {return t .year <= year}) || taxTable .years .slice (-1) [0];
+      // TODO: Race on load resulting in this._taxParameters not being set
       let par = this._taxParameters .find (p => {return date >= (p .date || 0)});
       if (par) {
         let annualTaxableIncome = (amount - par .beforeTaxDeductions + par .taxableBenefits) * 12;

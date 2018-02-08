@@ -200,6 +200,7 @@ class Navigate {
         await this._addMonthsGraph ('_budgetMonthsGraph', arg.view, [arg .id], true, arg .position, arg .html);
       else
         await this._addMonthsGraph ('_activityMonthsGraph', arg.view, [arg .id], true, arg .position, arg .html);
+
     } else if (eventType == NavigateViewEvent .BUDGET_CHART_CLICK  && arg .id) {
       /* Yearly Chart (Budget or Actual) */
       if (arg .altClick) {
@@ -220,7 +221,7 @@ class Navigate {
 
     } else if (eventType == NavigateViewEvent .BUDGET_GRAPH_CLICK && arg .id) {
       /* Monthly or History Graph (Budget or Actual) */
-      if (['_budgetMonthsGraph', '_activityMonthsGraph'] .includes (arg .name)) {
+      if (arg .name .startsWith ('_budgetMonthsGraph') || arg .name .startsWith('_activityMonthsGraph')) {
         let sel = arg .data && arg .data .reduce ((s,d) => {return s || d .rows .find (r => {return r .id == arg .id})}, null);
         let im  = sel && sel .hasMonth;
         let iy  = sel && sel .hasYear;
@@ -232,7 +233,7 @@ class Navigate {
             arg .date .start = arg .labelIndex < 12? Types .date .addMonthStart (this._budget .getStartDate(), arg .labelIndex) : Types .date .monthStart (today);
             arg .date .end   = Types .date .monthEnd (dates .start);
           }
-          if (arg .name == '_budgetMonthsGraph') {
+          if (arg .name .startsWith ('_budgetMonthsGraph')) {
             BudgetProgressHUD .show (id, arg .html, arg .position, this._accounts, this._variance, arg .labelIndex < 12? arg .date .end: undefined);
           } else
             TransactionHUD .showCategory (arg .id, arg .date, this._accounts, this._variance, arg .html, arg .position, im, iy, sel && sel .addCats);
@@ -268,6 +269,21 @@ class Navigate {
         let name = (arg .date .start < this._budget .getStartDate()? '_activity': '_budget') + 'MonthsGraph';
         await this._addMonthsGraph (name, arg .view, arg .id, true, arg .position, arg .html, true, true, [], arg .date);
       }
+
+    } else if (eventType == NavigateViewEvent .BUDGET_GRAPH_PREV_NEXT) {
+      let dates = arg .dates .map (d => {
+        let st = Types .date .addMonthStart (d .start, 12 * (arg .prev? -1: 1));
+        return {
+          start: st,
+          end:   Types .date .monthEnd (st)
+        }
+      })
+      let name = dates [0] .start < this._budget .getStartDate()
+        ? '_activityMonthsGraph' + ' ' + arg .name
+        : dates [0] .start > this._budget .getEndDate()
+          ? '_budgetMonthsGraph' + ' ' + arg .name
+          : arg .name .split (' ') .slice (-1) [0];
+      await this._addMonthsGraph (name, arg .view, arg .id, true, arg .position, arg .html, true, true, [], dates);
 
     } else if (eventType == NavigateViewEvent .BUDGET_GRAPH_TITLE_CLICK && arg .id) {
       /* Graph Title */
@@ -511,6 +527,8 @@ class Navigate {
                      .reduce ((s,t) => {return s - (t .credit || 0) + (t .debit || 0)}, 0)  * (isCredit? -1: 1)
           }}))
         } else {
+          if (dates .slice (-1) [0] .end < Types .date .addMonthStart (this._budget .getStartDate(), -12))
+            await this._actuals .findHistory();
           let isOther = id .includes ('other_');
           let tc = [cat];
           return dates .map (date => {
@@ -569,10 +587,13 @@ class Navigate {
   _getNote (type, id, includeMonths, includeYears, altDates) {
     let yr = '';
     if (altDates) {
-      if (altDates .start == this._budget .getStartDate())
+      let dt = [] .concat (altDates);
+      let start = dt [0] .start;
+      let end   = dt .slice (-1) [0] .end;
+      if (start == Types .date .addMonthStart (this._budget .getStartDate(), -12))
         yr = ' Last Year';
-      else {
-        yr = ' for ' + BudgetModel .getLabelForDates (altDates .start, altDates .end);
+      else if (dt .start != this._budget .getStartDate()) {
+        yr = ' for ' + BudgetModel .getLabelForDates (start, end);
       }
     }
     switch (type) {
@@ -841,13 +862,16 @@ class Navigate {
     var type    = name .includes ('budget')? NavigateValueType .BUDGET_YR_AVE_ACT: NavigateValueType .ACTUALS_BUD;
     var dataset = await this._getMonthsData (type, dates, ids, includeMonths, includeYears, addCats);
     if (!ids || ids .length > 1) {
+      let dt = dates && [] .concat (dates);
+      let start = dt && dt [0] .start;
+      let end   = dt && dt .slice (-1) [0] .end;
       let year;
-      if (!dates || dates .start == this._budget .getStartDate())
+      if (!dt || start == this._budget .getStartDate())
         year = 'This Year';
-      else if (dates .start == Types .date .addYear (this._budget .getStartDate(), -1))
+      else if (start == Types .date .addYear (this._budget .getStartDate(), -1))
         year = 'Last Year';
       else {
-        year = ' for ' + BudgetModel .getLabelForDates (dates .start, dates .end);
+        year = ' for ' + BudgetModel .getLabelForDates (start, end);
       }
       dataset .note = (type ==  NavigateValueType .BUDGET_YR_AVE_ACT? 'Budget ': 'Activity ') + year;
     }

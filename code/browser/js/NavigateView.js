@@ -494,8 +494,31 @@ class NavigateView extends Observable  {
         }
         else if (dataset .groups [0] .hasNoParent)
           goUp .addClass ('_disabled');
+        let goPrevNext = prev => {
+          let html     = container .closest ('div:not(._popup)');
+          let position = ui .calcPosition (graph, html, {top: 50, left: 50});
+          this._notifyObservers (NavigateViewEvent .BUDGET_GRAPH_PREV_NEXT, {
+            name:     name,
+            id:       Array .from (data .reduce ((s,d) => {return [] .concat (d .id) .reduce((s,i) => {return s .add (i)},s)}, new Set())),
+            dates:    dataset .dates,
+            prev:     prev,
+            position: position,
+            html:     html,
+            view:     this
+          })
+        }
+        $('<div>', {class:'_prevButton lnr-chevron-left'}) .appendTo (icons) .click (e => {
+          goPrevNext (true);
+          e .stopPropagation();
+          return false;
+        });
+        $('<div>', {class:'_nextButton lnr-chevron-right'}) .appendTo (icons) .click (e => {
+          goPrevNext (false);
+          e .stopPropagation();
+          return false;
+        });
         head [0] .addEventListener ('webkitmouseforcewillbegin', e => {e .preventDefault()}, true);
-        $('<span>', {class: '_heading', text: [] .concat (dataset .note? dataset .note: data [0] .name)}) .appendTo (head);
+        $('<div>', {class: '_heading', text: [] .concat (dataset .note? dataset .note: data [0] .name)}) .appendTo (head);
         if (!dataset .note && data [0] .note)
           $('<span>', {class: '_subheading', text: data [0] .note}) .appendTo (head);
       }
@@ -1488,7 +1511,8 @@ var NavigateViewEvent = Object.create (ViewEvent,{
   PROGRESS_GRAPH_TITLE_CLICK: {value: 207},
   PROGRESS_SIDEBAR_CLICK:     {value: 208},
   NETWORTH_TABLE_CLICK:       {value: 209},
-  NETWORTH_TABLE_ROW_CLICK:   {value: 210}
+  NETWORTH_TABLE_ROW_CLICK:   {value: 210},
+  BUDGET_GRAPH_PREV_NEXT:     {value: 211}
 });
 
 
