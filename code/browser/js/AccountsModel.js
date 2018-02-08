@@ -309,7 +309,6 @@ class AccountsModel extends Observable {
 class Account {
   constructor (model, modelData, budgetModel, actualsModel, balanceHistory, rateFuture) {
     this._model            = model;
-    this._categories       = budgetModel .getCategories();
     this._budget           = budgetModel;
     this._actuals          = actualsModel;
     this._balanceHistory   = balanceHistory;
@@ -361,7 +360,7 @@ class Account {
         let possibleAffectedCats = getFamily (
           [this .category, this .intCategory, this .disCategory]
             .filter (cid => {return cid})
-            .map    (cid => {return this._categories .get (cid)})
+            .map    (cid => {return this._budget .getCategories() .get (cid)})
         );
         let isAffected = possibleAffectedCats .find (c => {
           return [doc .category, arg && arg .category, arg && arg._original_category] .includes (c._id);
@@ -485,7 +484,7 @@ class Account {
       if (cat._id == this .intCategory)
         return int;
       else {
-        let pri = this._budget .getAmount (this._categories .get (this .intCategory), start, end, true);
+        let pri = this._budget .getAmount (this._budget .getCategories() .get (this .intCategory), start, end, true);
         amount += (pri .month? pri .month .amount: 0) + (pri .year? pri .year .amount / 12 * (Types .date._difMonths (end, start)): 0);
         return Math .max (0, amount - int);
       }
@@ -513,7 +512,7 @@ class Account {
         if (cat._id == this .incCategory && ! this .intCategory)
           amount = Math .round (amount * (1 - this .taxRate / 10000.0));
         else if (this .incCategory && this .intCategory && cat._id == this .intCategory) {
-          let inc = this._budget .getAmount (this._categories .get (this .incCategory), start, end, true);
+          let inc = this._budget .getAmount (this._budget .getCategories() .get (this .incCategory), start, end, true);
           amount -= (inc .month? inc .month .amount: 0) + (inc .year? inc .year .amount / 12 * (Types .date._difMonths (end, start)): 0);
           amount = Math .round (amount * (this .taxRate / 10000.0));
         }
@@ -521,7 +520,7 @@ class Account {
 
       if (this .taxType == AccountsTaxType .TABLE) {
         if (cat._id == this .intCategory) {
-          let pri = this._budget .getAmount (this._categories .get (this .incCategory), start, end, true);
+          let pri = this._budget .getAmount (this._budget .getCategories() .get (this .incCategory), start, end, true);
           amount -= (pri .month? pri .month .amount: 0) + (pri .year? pri .year .amount / 12 * (Types .date._difMonths (end, start)): 0);
         }
         let deduction = 0;
@@ -549,7 +548,6 @@ class Account {
     if (taxTable) {
       let year = Types .date._year (date);
       let tbl = taxTable .years .find (t => {return t .year <= year}) || taxTable .years .slice (-1) [0];
-      // TODO: Race on load resulting in this._taxParameters not being set
       let par = this._taxParameters .find (p => {return date >= (p .date || 0)});
       if (par) {
         let annualTaxableIncome = (amount - par .beforeTaxDeductions + par .taxableBenefits) * 12;
@@ -660,7 +658,7 @@ class Account {
         // reduce yearly budget by any yearly actuals before start
         let ds = this._budget .getStartDate();
         let de = Types .date .monthEnd (Types .date .addMonthStart (end, -1));
-        if (this._categories .getType (cat) == ScheduleType .YEAR)
+        if (this._budget .getCategories() .getType (cat) == ScheduleType .YEAR)
           yr -= getActual (cat, ds, de, false);
         yr -= this._actuals .getAmountRecursively (cat, ds, de, false, true);
         yr = Math .max (0, yr);
@@ -670,9 +668,9 @@ class Account {
 
     /*** getBalance body ***/
 
-    let addCat = this .category    && this._categories .get (this .category);
-    let subCat = this .disCategory && this._categories .get (this .disCategory);
-    let intCat = this .intCategory && this._categories .get (this .intCategory);
+    let addCat = this .category    && this._budget .getCategories() .get (this .category);
+    let subCat = this .disCategory && this._budget .getCategories() .get (this .disCategory);
+    let intCat = this .intCategory && this._budget .getCategories() .get (this .intCategory);
     let baseDate = Types .date .monthEnd (endDate);
     if (baseDate != endDate)
       baseDate = Types .date .monthEnd (Types .date .addMonthStart(endDate, -1));
@@ -792,7 +790,7 @@ class Account {
         else
           tip += ' Gross Income'
       } else {
-        let incCat = this .incCategory && this._categories .get (this .incCategory);
+        let incCat = this .incCategory && this._budget .getCategories() .get (this .incCategory);
         tip += ' Income Tax and Deductions &mdash; Calculated from ' + (incCat? ' entered under ' + incCat .name: ' entered elsewhere');
       }
     } else if (this .creditBalance) {
@@ -804,7 +802,7 @@ class Account {
           tip += ' After Tax';
       }
     } else {
-      let intCat = this .intCategory && this._categories .get (this .intCategory);
+      let intCat = this .intCategory && this._budget .getCategories() .get (this .intCategory);
       if (cat._id == this .category)
         tip += ' Principal &mdash; Calculated from payments' + (intCat? ' entered under ' + intCat .name : ' entered elsewhere');
       else if (cat._id == this .intCategory)

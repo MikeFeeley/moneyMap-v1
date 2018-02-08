@@ -221,10 +221,9 @@ class App {
       this._models   = [this._budModel, this._actModel, this._varModel, this._accModel, this._prefs];
 
       /* queries */
-      this._accounts = this._accModel .find();
+      await this._accModel .find();
       await this._budModel .find (this._user .getBudgetId(), this._actModel);
       await this._actModel .findCurrent();
-      await this._accModel .find();
       await this._prefs    .init (prefsWasShowing);
 
       /* presenters */

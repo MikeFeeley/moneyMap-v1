@@ -155,7 +155,6 @@ class AccountBalance extends TuplePresenter {
   }
 
   async addHtml (toHtml) {
-    await this._accounts .find();
     this._view .addHtml (toHtml, () => {this._buildHtml()});
     this._buildHtml();
   }
