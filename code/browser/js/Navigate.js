@@ -592,9 +592,8 @@ class Navigate {
       let end   = dt .slice (-1) [0] .end;
       if (start == Types .date .addMonthStart (this._budget .getStartDate(), -12))
         yr = ' Last Year';
-      else if (dt .start != this._budget .getStartDate()) {
+      else if (start != this._budget .getStartDate())
         yr = ' for ' + BudgetModel .getLabelForDates (start, end);
-      }
     }
     switch (type) {
       case NavigateValueType .BUDGET: case NavigateValueType .BUDGET_YR_AVE: case NavigateValueType .BUDGET_YR_AVE_ACT:
@@ -859,7 +858,7 @@ class Navigate {
    * Add GRAPH (either budget or actual) showing children of specified root list
    */
   async _addMonthsGraph (name, view, ids, popup, position, toHtml, includeMonths=true, includeYears=true, addCats=[], dates=null, startColor=0) {
-    var type    = name .includes ('budget')? NavigateValueType .BUDGET_YR_AVE_ACT: NavigateValueType .ACTUALS_BUD;
+    var type    = name .startsWith ('_budget')? NavigateValueType .BUDGET_YR_AVE_ACT: NavigateValueType .ACTUALS_BUD;
     var dataset = await this._getMonthsData (type, dates, ids, includeMonths, includeYears, addCats);
     if (!ids || ids .length > 1) {
       let dt = dates && [] .concat (dates);
@@ -870,9 +869,8 @@ class Navigate {
         year = 'This Year';
       else if (start == Types .date .addYear (this._budget .getStartDate(), -1))
         year = 'Last Year';
-      else {
+      else if (start != this._budget .getStartDate())
         year = ' for ' + BudgetModel .getLabelForDates (start, end);
-      }
       dataset .note = (type ==  NavigateValueType .BUDGET_YR_AVE_ACT? 'Budget ': 'Activity ') + year;
     }
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
