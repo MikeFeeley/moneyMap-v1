@@ -420,13 +420,33 @@ class Navigate {
       en = altDates .end;
     }
     return (await this._actuals .getTransactions (cat, st, en))
-      .map (t => {
-          let stop = t .payee .match (payeeTruncate);
-          return (stop && stop .index? t .payee .slice (0, stop .index): t .payee) .split (' ') .slice (0,3) .join (' ');
-        })
-      .sort   ((a,b)   => {return a<b? -1: a==b? 0: 1})
-      .filter ((p,i,a) => {return i==0 || ! p .startsWith (a [i-1])})
-      .map    (p       => {return 'payee_' + p + '_' + cat._id})
+      .map (tran => {
+        let stop = tran .payee .match (payeeTruncate);
+        return {
+          payee:  (stop && stop .index? tran .payee .slice (0, stop .index): tran .payee) .split (' ') .slice (0,3) .join (' '),
+          date:   tran .date,
+          amount: (tran .credit || 0) + (tran .debit || 0)
+        }
+      })
+      .sort ((a,b) => {return a .payee < b .payee? -1: a .payee == b .payee? (a .date < b .date? -1: a .date == b .date? 0: 1): 1})
+      .reduce ((sum, tran) => {
+        let month    = Types .date._yearMonth (tran .date);
+        let curPayee = sum .slice (-1) [0];
+        if (curPayee && curPayee .payee == tran .payee) {
+          let cur = curPayee .amounts .find (a => {return a .month == month});
+          if (! cur) {
+            cur = {month: month, amount: 0}
+            curPayee .amounts .push (cur);
+          }
+          cur .amount += tran .amount;
+        } else
+          sum .push ({payee: tran .payee, amounts: [{month: month, amount: tran .amount}]});
+        return sum;
+      }, [])
+      .map (p => {return {
+        payee:  'payee_' + p .payee + '_' + cat._id,
+        amounts: p .amounts
+      }});
   }
 
   async _getChildren (type, id, altDates) {
@@ -506,42 +526,45 @@ class Navigate {
         }
 
       case NavigateValueType .ACTUALS: case NavigateValueType .ACTUALS_BUD:
-        let ida = id .split ('_');
-        let cat = this._categories .get (ida .slice (-1) [0]);
-        if (type == NavigateValueType .ACTUALS_BUD && id .includes ('budget_'))
-          return dates .filter (d => {return d .start <= Types .date .today()}) .map (date => {
-            let va = this._variance .getAmount (cat._id, date .start - 1);
-            let ma = includeMonths && va .month? va .month .amounts .available || 0: 0;
-            let ya = includeYears  && va .year?  va .year  .amounts .available || 0: 0;
-            return {id: id, value: ma + ya}
-          })
-        else if (id .includes ('payee_')) {
-          let payee = ida .slice (-2) [0];
-          return await Promise .all (dates .map (async date => {return {
-            id:    id,
-            value: (await this._actuals .getTransactions (cat, date .start, date .end))
-                     .filter (t     => {return t .payee .startsWith (payee)})
-                     .reduce ((s,t) => {return s - (t .credit || 0) + (t .debit || 0)}, 0)  * (isCredit? -1: 1)
-          }}))
-        } else {
-          if (dates .slice (-1) [0] .end < Types .date .addMonthStart (this._budget .getStartDate(), -12))
-            await this._actuals .findHistory();
-          let isOther = id .includes ('other_');
-          let tc = [cat];
+        if (id .payee) {
+          let realId = id .payee .split ('_') .slice (-1) [0];
           return dates .map (date => {
-            let value;
-            if (isOther)
-              value = tc .reduce ((t, cat) => {
-                return t + this._actuals .getAmount (cat, date .start, date .end, null, includeMonths, includeYears, addCats) * (isCredit? -1: 1)
-              }, 0);
-            else
-              value = tc .reduce ((t, cat) => {
-                return t + this._actuals .getAmountRecursively (cat, date .start, date .end, null, includeMonths, includeYears, addCats) * (isCredit? -1: 1)
-              }, 0);
+            let month = Types .date._yearMonth (date .start);
             return {
-              id:    altDates? tc .map (cat => {return cat._id}): cat._id,
-              value: value
-            }})
+              id:    realId,
+              value: (id .amounts .find (a => {return a .month == month}) || {amount: 0}) .amount * (isCredit? -1: 1)
+            }
+          })
+        } else {
+          let ida = id .split ('_');
+          let cat = this._categories .get (ida .slice (-1) [0]);
+          if (type == NavigateValueType .ACTUALS_BUD && id .includes ('budget_'))
+            return dates .filter (d => {return d .start <= Types .date .today()}) .map (date => {
+              let va = this._variance .getAmount (cat._id, date .start - 1);
+              let ma = includeMonths && va .month? va .month .amounts .available || 0: 0;
+              let ya = includeYears  && va .year?  va .year  .amounts .available || 0: 0;
+              return {id: id, value: ma + ya}
+            })
+          else {
+            if (dates .slice (-1) [0] .end < Types .date .addMonthStart (this._budget .getStartDate(), -12))
+              await this._actuals .findHistory();
+            let isOther = id .includes ('other_');
+            let tc = [cat];
+            return dates .map (date => {
+              let value;
+              if (isOther)
+                value = tc .reduce ((t, cat) => {
+                  return t + this._actuals .getAmount (cat, date .start, date .end, null, includeMonths, includeYears, addCats) * (isCredit? -1: 1)
+                }, 0);
+              else
+                value = tc .reduce ((t, cat) => {
+                  return t + this._actuals .getAmountRecursively (cat, date .start, date .end, null, includeMonths, includeYears, addCats) * (isCredit? -1: 1)
+                }, 0);
+              return {
+                id:    altDates? tc .map (cat => {return cat._id}): cat._id,
+                value: value
+              }})
+          }
         }
     }
   }
@@ -629,7 +652,7 @@ class Navigate {
       let children = [], realChildren;
       let processChildren = async childrenIds => {
         children = children .concat (
-          (await Promise .all (childrenIds .map (async cid => {return {cat: cid, amounts: await getAmounts (cid)}})))
+          (await Promise .all (childrenIds .map (async cid => {return {cat: cid .payee || cid, amounts: await getAmounts (cid)}})))
             .filter (child => {return child .amounts .find (a => {
               return a .value != 0  || [] .concat (a .id) .find (i => {return i .startsWith ('budget_')})
             })})
