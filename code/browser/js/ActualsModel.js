@@ -123,7 +123,11 @@ class ActualsModel extends Observable {
   }
 
   async getTransactions (cat, st = this._budget .getStartDate(), en = this._budget .getEndDate()) {
-    return this._transactionModel .find ({date: {$gte: st, $lte: en}, category: cat._id})
+    let homonyms = ((cat .parent && cat .parent .children) || []) .concat ((cat .parent && cat .parent .zombies) || [])
+      .filter (c => {return c .name == cat .name})
+      .map    (h => {return h._id});
+
+    return this._transactionModel .find ({date: {$gte: st, $lte: en}, category: {$in: homonyms}});
   }
 
   async hasTransactions (query) {

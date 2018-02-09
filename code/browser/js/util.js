@@ -264,8 +264,9 @@ class DateType extends FieldType {
    *  stY, enY:         current fiscal year start and end
    */
   inRange (st0, en0, rp, lm, st1, en1, stY, enY) {
-    if (this .isBlank (st0) || st1 > en1)
+    if (this .isBlank (st0) || this._yearMonth (st1) > this._yearMonth (en1)) {
       return 0;
+    }
     switch (this._format) {
       case 'MYorYear':
         if (this .isYear (st0)) {

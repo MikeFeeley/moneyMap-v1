@@ -358,7 +358,7 @@ class NavigateView extends Observable  {
   }
 
   addHistoryGraph (dataset, popup, position, onClose, toHtml, startColor=0) {
-    return this._addBudgetGraph ('_budgetHistoryGraph', dataset, popup, position, onClose, toHtml, startColor);
+    return this._addBudgetGraph ('_budgetHistoryGraph', dataset, popup, position, onClose, toHtml, startColor, false);
   }
 
   /**
@@ -378,11 +378,34 @@ class NavigateView extends Observable  {
    *   }
    */
 
-  _addBudgetGraph (name, dataset, popup, position, onClose, toHtml, startColor=0) {
+  _addBudgetGraph (name, dataset, popup, position, onClose, toHtml, startColor=0, hasPrevNext=true) {
     var startCol, endCol;
     dataset  = JSON .parse (JSON .stringify (dataset));
     startCol = 0;
     endCol   = dataset .cols .length - 1;
+
+    let processData = (data, name, multipleGroups, stackPosition) => {
+      const backgroundAlphas = [0.5, 0.075];
+      const borderAlphas     = [1,   0.55];
+      if (data .type == 'line') {
+        data .borderColor     = 'rgba(221,0,0,1)';
+        data .backgroundColor = 'rgba(0,0,0,0)';
+        data .pointBackgroundColor = 'rgba(221,0,0,1)';
+      } else {
+        data .backgroundColor      = this._getColor (multipleGroups? backgroundAlphas [stackPosition [1]]:       0.3,       true);
+        data .hoverBackgroundColor = this._getColor (multipleGroups? backgroundAlphas [stackPosition [1]] + 0.0: 0.3 + 0.0, true);
+        data .borderColor          = this._getColor (borderAlphas [stackPosition [1]], true);
+        data .stack                = stackPosition [0];
+        data .colorIndex           = this._colorIndex;
+      }
+      data .borderWidth = 1;
+      if (name != data .label)
+        data .label = name + ':' + data .label;
+      if (data .type != 'line' && data .data .find (a => {return a != 0}))
+        this._nextColor (true);
+      return data;
+    }
+
     var processDataset = () => {
       labels = dataset .cols;
       data   = dataset .groups;
@@ -398,8 +421,6 @@ class NavigateView extends Observable  {
           }
         })
       });
-      const backgroundAlphas = [0.5, 0.075];
-      const borderAlphas     = [1,   0.55];
       let   stacks = [];
       for (let g of groups) {
         let idx = groups .indexOf (g);
@@ -408,21 +429,7 @@ class NavigateView extends Observable  {
         for (let i = 0; i < startColor || 0; i ++)
           this._nextColor (true);
         for (let d of g) {
-          if (d .type == 'line') {
-            d .borderColor     = 'rgba(221,0,0,1)';
-            d .backgroundColor = 'rgba(0,0,0,0)';
-            d .pointBackgroundColor = 'rgba(221,0,0,1)';
-          } else {
-            d .backgroundColor      = this._getColor (groups .length > 1? backgroundAlphas [stackPosition [1]]:       0.3,       true);
-            d .hoverBackgroundColor = this._getColor (groups .length > 1? backgroundAlphas [stackPosition [1]] + 0.0: 0.3 + 0.0, true);
-            d .borderColor          = this._getColor (borderAlphas     [stackPosition [1]], true);
-            d .stack                = stackPosition [0];
-            d .colorIndex           = this._colorIndex;
-          }
-          if (data [idx] .name != d .label)
-            d .label = data [idx] .name + ':' + d .label;
-          if (d .type != 'line' && d .data .find (a => {return a != 0}))
-            this._nextColor (true);
+          processData (d, data [idx] .name, groups .length > 1, stackPosition);
         }
         if (stackPosition [1])
           stacks [stackPosition [0]] = (stacks [stackPosition [0]] || []) .concat (g)
@@ -504,19 +511,22 @@ class NavigateView extends Observable  {
             prev:     prev,
             position: position,
             html:     html,
-            view:     this
+            view:     this,
+            update:   update
           })
         }
-        $('<div>', {class:'_prevButton lnr-chevron-left'}) .appendTo (icons) .click (e => {
-          goPrevNext (true);
-          e .stopPropagation();
-          return false;
-        });
-        $('<div>', {class:'_nextButton lnr-chevron-right'}) .appendTo (icons) .click (e => {
-          goPrevNext (false);
-          e .stopPropagation();
-          return false;
-        });
+        if (hasPrevNext) {
+          let prev = $('<div>', {class:'_prevButton lnr-chevron-left'}) .appendTo (icons) .click (e => {
+            goPrevNext (true);
+            e .stopPropagation();
+            return false;
+          });
+          let next = $('<div>', {class:'_nextButton lnr-chevron-right'}) .appendTo (icons) .click (e => {
+            goPrevNext (false);
+            e .stopPropagation();
+            return false;
+          });
+        }
         head [0] .addEventListener ('webkitmouseforcewillbegin', e => {e .preventDefault()}, true);
         $('<div>', {class: '_heading', text: [] .concat (dataset .note? dataset .note: data [0] .name)}) .appendTo (head);
         if (!dataset .note && data [0] .note)
@@ -709,38 +719,97 @@ class NavigateView extends Observable  {
       startCol = start;
       endCol   = end;
     }
-    return (updates) => {
+
+    let findMatch = (list, ids) => {
+      let cleanse = id => {
+        if (id .startsWith ('leaf_'))
+          return id .slice (5);
+        else
+          return id;
+      }
+      let cleanIds = [] .concat (ids) .map (id => {return cleanse (id)});
+      return list .find (l => {
+        return [] .concat (l .id) .find (id => {return cleanIds .includes (cleanse (id))})
+      });
+    };
+
+    let updateOne = (update, upsert) => {
+      let ds = findMatch (config .data .datasets, update .id);
+      if (! ds && upsert) {
+        ds = processData ({
+          label: update .name,
+          id:    update .id,
+          data:  update .amounts .map (a => {return a.value}),
+          gross: [],
+          type:  update .type
+        }, update .name, false, [0,0]);
+        chart .data .datasets .push (ds);
+      }
+      if (ds) {
+        if (update .amounts) {
+          if (datasetsCopy) {
+            let dsc = findMatch (datasetsCopy, update .id);
+            if (dsc) {
+              dsc .data = update .amounts .map (a => {return a .value});
+              ds  .data = dsc .data .slice (startCol, endCol + 1);
+              dsc .gross = update .amounts .map (a => {return a .gross});
+              ds  .gross = dsc .gross .slice (startCol, endCol + 1);
+            }
+          } else {
+            ds .data  = update .amounts .map (a => {return a .value});
+            ds .gross = update .amounts .map (a => {return a .gross});
+          }
+        }
+        if (update .name != null)
+          ds .label = update .name;
+      }
+      if (data [0] .id == update .id) {
+        let head = graph .find ('div._heading');
+        if (update .name)
+          head .find ('> div._heading') .text (update .name);
+        let sub = head .find ('> span._subheading');
+        if (sub .length && ! update .note)
+          sub.remove();
+        if (update .note) {
+          if (sub .length == 0)
+            sub = $('<span>', {class: '_subheading'}) .appendTo (head);
+          sub .text (update .note);
+        }
+      }
+    };
+
+    let update = updates => {
       for (let update of updates || [])
-        if (update .update) {
-          let findMatch = ds => {
-            return ds .find (d => {return [] .concat (d .id) .find (i => {return [] .concat (update .update .id) .includes (i)})})
-          };
-          let ds = findMatch (config .data .datasets);
-          if (ds) {
-            if (update .update .amounts) {
-              if (datasetsCopy) {
-                let dsc = findMatch (datasetsCopy);
-                if (dsc) {
-                  dsc .data = update .update .amounts .map (a => {return a .value});
-                  ds  .data = dsc .data .slice (startCol, endCol + 1);
-                  dsc .gross = update .update .amounts .map (a => {return a .gross});
-                  ds  .gross = dsc .gross .slice (startCol, endCol + 1);
-                }
-              } else {
-                ds .data  = update .update .amounts .map (a => {return a .value});
-                ds .gross = update .update .amounts .map (a => {return a .gross});
+        if (update .dates)
+          dataset .dates = update .dates;
+        else if (update .highlight !== undefined)
+          dataset .highlight = update .highlight? update .highlight: undefined;
+        else if (update .name)
+          name = update .name;
+
+        else if (update .updateAll) {
+          for (let u of update .updateAll)
+            updateOne (u .update, true);
+          let updIds = update .updateAll .map (u => {return {id: u .update .id}});
+          for (let ds of chart .data .datasets)
+            if (! findMatch (updIds, ds .id)) {
+              if (ds .type == 'line')
+                chart .data .datasets .splice (chart .data .datasets .indexOf (ds), 1);
+              else {
+                for (let i=0; i < ds .data .length; i++)
+                  ds .data [i] = 0;
               }
             }
-            if (update .update .name != null)
-              ds .label = update .update .name;
-          }
-          if (data [0] .id == update .update .id && update .update .name)
-            graph .find ('span._heading') .text (update .update .name)
-        } else if (update .filterCols) {
+
+        } else if (update .update)
+          updateOne (update .update, false)
+
+        else if (update .filterCols) {
           filter (update .filterCols .start, update .filterCols .end);
+
         } else if (update .replace) {
           dataset  = Object .assign ({}, update .replace);
-          if (popup)
+          if (popup && dataset .groups .length)
             graph .find ('span._heading') .text (dataset .groups [0] .name);
           processDataset();
           setDataset();
@@ -749,6 +818,7 @@ class NavigateView extends Observable  {
         }
       chart .update();
     }
+    return update;
   }
 
   addGroup (name, toHtml) {
