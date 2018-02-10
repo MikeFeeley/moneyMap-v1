@@ -736,14 +736,17 @@ class NavigateView extends Observable  {
     let updateOne = (update, upsert) => {
       let ds = findMatch (config .data .datasets, update .id);
       if (! ds && upsert) {
-        ds = processData ({
-          label: update .name,
-          id:    update .id,
-          data:  update .amounts .map (a => {return a.value}),
-          gross: [],
-          type:  update .type
-        }, update .name, false, [0,0]);
-        chart .data .datasets .push (ds);
+        if ([] .concat (id) .length == 1) {
+          ds = processData ({
+            label: update .name,
+            id:    update .id,
+            data:  update .amounts .map (a => {return a.value}),
+            gross: [],
+            type:  update .type
+          }, update .name, false, [0,0]);
+          chart .data .datasets .push (ds);
+        } else
+          console.log ('XXX Upsert to grouped graph not currently implemented');
       }
       if (ds) {
         if (update .amounts) {
