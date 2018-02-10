@@ -763,17 +763,22 @@ class NavigateView extends Observable  {
         if (update .name != null)
           ds .label = update .name;
       }
-      if (data [0] .id == update .id) {
+      if (update .note !== undefined) {
         let head = graph .find ('div._heading');
-        if (update .name)
-          head .find ('> div._heading') .text (update .name);
-        let sub = head .find ('> span._subheading');
-        if (sub .length && ! update .note)
-          sub.remove();
-        if (update .note) {
-          if (sub .length == 0)
-            sub = $('<span>', {class: '_subheading'}) .appendTo (head);
-          sub .text (update .note);
+        if (update .id .length > 1) {
+          if (update .note)
+            head .find ('> div._heading') .text (update .note);
+        } else {
+          if (update .name)
+            head .find ('> div._heading') .text (update .name);
+          let sub = head .find ('> span._subheading');
+          if (sub .length && ! update .note)
+            sub.remove();
+          if (update .note) {
+            if (sub .length == 0)
+              sub = $('<span>', {class: '_subheading'}) .appendTo (head);
+            sub .text (update .note);
+          }
         }
       }
     };
@@ -791,16 +796,18 @@ class NavigateView extends Observable  {
           for (let u of update .updateAll)
             updateOne (u .update, true);
           let updIds = update .updateAll .map (u => {return {id: u .update .id}});
+          let del = []
           for (let ds of chart .data .datasets)
             if (! findMatch (updIds, ds .id)) {
               if (ds .type == 'line')
-                chart .data .datasets .splice (chart .data .datasets .indexOf (ds), 1);
+                del .push (ds);
               else {
                 for (let i=0; i < ds .data .length; i++)
                   ds .data [i] = 0;
               }
             }
-
+          for (let d of del)
+            chart .data .datasets .splice (chart .data .datasets .indexOf (d), 1);
         } else if (update .update)
           updateOne (update .update, false)
 

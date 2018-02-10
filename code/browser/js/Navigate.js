@@ -901,10 +901,12 @@ class Navigate {
     }
     let updateView;
     if (viewUpdater) {
-      let rows = (dataset .groups [0] && dataset .groups [0] .rows) || [];
+      let rows = dataset .groups .reduce ((rows, group) => {
+        return rows .concat (group .rows || []);
+      }, [])
       viewUpdater ([
         {name:      name},
-        {update:    {id: ids[0], note: dataset .subnote}},
+        {update:    {id: ids, note: ids .length > 1? dataset .note: dataset .subnote}},
         {dates:     dataset .dates},
         {highlight: dataset .highlight || false},
         {updateAll: rows .map (row => {return {update: row}})}
