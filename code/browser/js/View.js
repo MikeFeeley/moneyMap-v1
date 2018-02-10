@@ -267,7 +267,7 @@ class ViewField {
     this._html .find ('._toolTip') .removeClass ('_error');
   }
   hasError() {
-    return this._html && this._html .hasClass ('_error');
+    return this._html && this._html .find ('._content') .hasClass ('_error');
   }
   _getTooltip() {
     if (this._errorMessage)
@@ -431,6 +431,8 @@ var ViewScalable = Base => class extends Base {
           let c = this._inputContainer;
           let d = c .data();
           if (d && d .field) {
+            if (d .field .hasError())
+              d .field._set (d .field._value);
             let v = d .field .get();
             if (v != null)
               d .field._value = v;
