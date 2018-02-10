@@ -495,29 +495,37 @@ class NavigateView extends Observable  {
           });
           return false;
         }
-        let getHUD = $('<div>', {class: 'lnr-map'}) .appendTo (icons) .click (() => {iconClick (false)});
+        let getHUD =  dataset .groups .length == 1 && $('<div>', {class: 'lnr-map'}) .appendTo (icons) .click (() => {iconClick (false)});
         let goUp   = $('<div>', {class: 'lnr-exit-up'}) .appendTo (icons) .click (() => {iconClick (true)});
         if (data [0] .id .includes ('_')) {
-          getHUD .addClass ('_disabled');
+          if (getHUD)
+            getHUD .addClass ('_disabled');
           goUp   .addClass ('_disabled');
         }
         else if (dataset .groups [0] .hasNoParent)
           goUp .addClass ('_disabled');
         let goPrevNext = prev => {
-          let html     = container .closest ('div:not(._popup)');
-          let position = ui .calcPosition (graph, html, {top: 50, left: 50});
           this._notifyObservers (NavigateViewEvent .BUDGET_GRAPH_PREV_NEXT, {
             name:     name,
             id:       Array .from (data .reduce ((s,d) => {return [] .concat (d .id) .reduce((s,i) => {return s .add (i)},s)}, new Set())),
             dates:    dataset .dates,
             prev:     prev,
-            position: position,
-            html:     html,
-            view:     this,
             update:   update
           })
         }
         if (hasPrevNext) {
+          $('<div>', {class:'_prevButton lnr-calendar-full'}) .appendTo (icons) .click (e => {
+            let html     = container .closest ('div:not(._popup)');
+            let position = ui .calcPosition (graph, html, {top: 50, left: 50});
+            this._notifyObservers (NavigateViewEvent .BUDGET_GRAPH_GET_HISTORY, {
+              id:       Array .from (data .reduce ((s,d) => {return [] .concat (d .id) .reduce((s,i) => {return s .add (i)},s)}, new Set())),
+              position: position,
+              html:     html,
+              view:     this,
+            })
+            e .stopPropagation();
+            return false;
+          });
           let prev = $('<div>', {class:'_prevButton lnr-chevron-left'}) .appendTo (icons) .click (e => {
             goPrevNext (true);
             e .stopPropagation();
@@ -1602,7 +1610,8 @@ var NavigateViewEvent = Object.create (ViewEvent,{
   PROGRESS_SIDEBAR_CLICK:     {value: 208},
   NETWORTH_TABLE_CLICK:       {value: 209},
   NETWORTH_TABLE_ROW_CLICK:   {value: 210},
-  BUDGET_GRAPH_PREV_NEXT:     {value: 211}
+  BUDGET_GRAPH_PREV_NEXT:     {value: 211},
+  BUDGET_GRAPH_GET_HISTORY:   {value: 212}
 });
 
 

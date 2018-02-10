@@ -282,6 +282,11 @@ class Navigate {
           : arg .name .split (' ') .slice (-1) [0];
       await this._addMonthsGraph (name, arg .view, arg .id, true, arg .position, arg .html, true, true, [], dates, undefined, arg .update);
 
+    } else if (eventType == NavigateViewEvent .BUDGET_GRAPH_GET_HISTORY) {
+      let ids = [] .concat (arg .id) .filter (i => {return ! i .startsWith ('other_')});
+      await this._actuals .findHistory();
+      this._addHistoryGraph (ids, true, arg .position, arg .view, this._getHistoryData (ids, undefined, true), arg .html, arg .colorIndex);
+
     } else if (eventType == NavigateViewEvent .BUDGET_GRAPH_TITLE_CLICK && arg .id) {
       /* Graph Title */
       if (arg .name == '_budgetHistoryGraph') {
@@ -1602,15 +1607,22 @@ class Navigate {
   }
 
   _filterHistoryBySlider (dataset) {
-    let first = this._historySliderLeft || 0;
-    let last  = this._historySliderRight? this._historySliderRight + 1: dataset .cols .length;
+    let first = this._historySliderLeft;
+    let last  = this._historySliderRight && this._historySliderRight + 1;
+    if (! first || ! last) {
+      let cbi = dataset .cols .indexOf (this._budget .getLabel());
+      if (cbi < 0)
+        cbi = 0;
+      first = first || Math .max (cbi-5, 0);
+      last  = last  || Math .min (cbi+5, dataset .cols .length-1);
+    }
     dataset .cols     = dataset .cols .slice  (first, last);
     dataset .dates    = dataset .dates .slice (first, last);
     dataset .startBal = dataset .startBal .slice (first, last);
     for (let g of dataset .groups)
       for (let r of g .rows)
         r .amounts = r .amounts .slice (first, last);
-    dataset .highlight -= this._historySliderLeft || 0;
+    dataset .highlight -= first;
     dataset .groups = dataset .groups .filter (g => {return g .rows .find (r => {return r .amounts .find (a => {return a.value != 0})})})
     return dataset;
   }
