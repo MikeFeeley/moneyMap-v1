@@ -901,8 +901,9 @@ class Navigate {
     }
     let updateView;
     if (viewUpdater) {
+      let multipleGroups = dataset .groups .length > 1;
       let rows = dataset .groups .reduce ((rows, group) => {
-        return rows .concat (group .rows || []);
+        return rows .concat (group .rows || []) .map (r => {r .multipleGroups = multipleGroups; r .stackPosition = group .stackPosition; return r});
       }, [])
       viewUpdater ([
         {name:      name},

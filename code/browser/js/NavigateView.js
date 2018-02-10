@@ -399,6 +399,7 @@ class NavigateView extends Observable  {
         data .colorIndex           = this._colorIndex;
       }
       data .borderWidth = 1;
+      data .stackPosition = stackPosition;
       if (name != data .label)
         data .label = name + ':' + data .label;
       if (data .type != 'line' && data .data .find (a => {return a != 0}))
@@ -736,17 +737,19 @@ class NavigateView extends Observable  {
     let updateOne = (update, upsert) => {
       let ds = findMatch (config .data .datasets, update .id);
       if (! ds && upsert) {
-        if ([] .concat (id) .length == 1) {
-          ds = processData ({
-            label: update .name,
-            id:    update .id,
-            data:  update .amounts .map (a => {return a.value}),
-            gross: [],
-            type:  update .type
-          }, update .name, false, [0,0]);
+        ds = processData ({
+          label: update .name,
+          id:    update .id,
+          data:  update .amounts .map (a => {return a.value}),
+          gross: [],
+          type:  update .type
+        }, update .name, update .multipleGroups, update .stackPosition);
+        let gt     = (a,b) => {return a[0] > b[0]? true: a[0] < b[0]? false: a[1] > b[1]? true: false};
+        let insPos = chart .data .datasets .findIndex (d => {return gt (d .stackPosition, update .stackPosition)});
+        if (insPos > 0)
+          chart .data .datasets .splice (insPos, 0, ds);
+        else
           chart .data .datasets .push (ds);
-        } else
-          console.log ('XXX Upsert to grouped graph not currently implemented');
       }
       if (ds) {
         if (update .amounts) {
