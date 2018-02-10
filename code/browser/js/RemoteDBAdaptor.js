@@ -45,11 +45,8 @@ class RemoteDBAdaptor extends DBAdaptor {
     return response;
   }
 
-  connect() {
-    let database = _default_database_id;
+  _connect (database) {
     let active = () => {return ! this._disconnected && database == _default_database_id};
-    this._disconnected = false;
-    this._setState (DBAdaptorState .UP);
     let timeoutId = setTimeout (() => {
       if (! this._getState() == DBAdaptorState .PERMANENTLY_DOWN && active())
         this._setState (DBAdaptorState .DOWN);
@@ -72,7 +69,7 @@ class RemoteDBAdaptor extends DBAdaptor {
             clearTimeout (RemoteDBAdaptor_serverDisconnectTimeoutId);
             RemoteDBAdaptor_serverDisconnectTimeoutId = null;
           }
-          setTimeout (() => {this .connect()}, 0);
+          setTimeout (() => {this._connect()}, 0);
           if (data .upcalls)
             this._processUpcall (data);
         }
@@ -82,10 +79,16 @@ class RemoteDBAdaptor extends DBAdaptor {
           if (this._getState() != DBAdaptorState .PERMANENTLY_DOWN)
             this._setState (DBAdaptorState .DOWN);
           clearTimeout (timeoutId);
-          setTimeout (() => {this .connect()}, CLIENT_RETRY_INTERVAL);
+          setTimeout (() => {this._connect()}, CLIENT_RETRY_INTERVAL);
         }
       }
     })
+  }
+
+  connect() {
+    this._disconnected = false;
+    this._setState (DBAdaptorState .UP);
+    this._connect (_default_database_id);
   }
 
   async disconnect() {
