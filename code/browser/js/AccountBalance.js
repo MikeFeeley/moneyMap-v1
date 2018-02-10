@@ -15,9 +15,9 @@ class AccountBalance extends TuplePresenter {
   delete() {
     super       .delete();
     this._model .delete();
-    this._budget  .removeObserver (this._budgetObserver);
-    this._actuals .removeObserver (this._actualsObserver);
-    this._model   .removeObserver (this._accountsObserver);
+    this._budget  .deleteObserver (this._budgetObserver);
+    this._actuals .deleteObserver (this._actualsObserver);
+    this._model   .deleteObserver (this._accountsObserver);
   }
 
   _onBudgetChange (eventType, doc, arg, source, model) {

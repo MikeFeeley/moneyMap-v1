@@ -31,7 +31,7 @@ class SchedulesModel extends Observable {
   delete() {
     this._catModel .delete();
     this._schModel .delete();
-    this._accModel .removeObserver (this._accObserver);
+    this._accModel .deleteObserver (this._accObserver);
   }
 
   _onCatModelChange (eventType, doc, arg, source) {

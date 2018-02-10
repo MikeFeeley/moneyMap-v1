@@ -1,4 +1,4 @@
-var APP_VERSION = '2.0.0-dev (Feb 7 2018 927bf8e)';
+var APP_VERSION = '2.0.0-dev (Feb 9 2018 8fb480a)';
 
 var PreferencesInstance;
 

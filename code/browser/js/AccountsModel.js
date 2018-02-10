@@ -63,10 +63,10 @@ class AccountsModel extends Observable {
     this._balanceHistoryModel .delete();
     this._rateFutureModel     .delete();
     this._taxParametersModel  .delete();
-    this._budgetModel .removeObserver (this._budgetObserver);
-    PreferencesInstance .removeObserver (this._preferencesObserver);
+    this._budgetModel .deleteObserver (this._budgetObserver);
+    PreferencesInstance .deleteObserver (this._preferencesObserver);
     if (this._actualsObserver)
-      this._actualsModel .removeObserver (this._actualsObserver);
+      this._actualsModel .deleteObserver (this._actualsObserver);
   }
 
   async _onModelChange (eventType, doc, arg) {
@@ -244,7 +244,7 @@ class AccountsModel extends Observable {
 
   setActualsModel (actualsModel) {
     if (this._actualsObserver && this._actualsModel)
-      this._actualsModel .removeObserver (this._actualsObserver);
+      this._actualsModel .deleteObserver (this._actualsObserver);
     this._actualsModel = actualsModel;
     this._actualsObserver = this._actualsModel .addObserver (this, this._onActualsModelChange);
   }
