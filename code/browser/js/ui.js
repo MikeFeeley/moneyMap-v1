@@ -72,16 +72,16 @@ var ui = {
     }, 0);
   },
 
-  calcPosition (element, relativeToElement, position = {top: 0, left: 0}, width = 0, minLeft) {
+  calcPosition (element, relativeToElement, position = {top: 0, left: 0}, DEPRICATED = 0, minLeft) {
     let ep = element .offset();
     let rp = relativeToElement .offset();
     let cp = {top: position .top  + ep .top  - rp .top + relativeToElement .scrollTop()}
     if (position .left !== undefined)
-      cp .left  = ep .left - rp .left + position .left - Math .max (0, ep .left + width - (document .body .clientWidth -8)) + relativeToElement .scrollLeft()
+      cp .left  = ep .left - rp .left + position .left;
     if (minLeft !== undefined)
       cp .left = Math .max (cp .left, minLeft);
     if (position .right !== undefined)
-      cp .right = (document .body .clientWidth - ep .left) - Math .max (0, (document .body .clientWidth - (rp .left + relativeToElement .width())))
+      cp .right = (document .body .clientWidth - ep .left);
     return cp
   },
 
