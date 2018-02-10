@@ -514,18 +514,20 @@ class NavigateView extends Observable  {
           })
         }
         if (hasPrevNext) {
-          $('<div>', {class:'_prevButton lnr-calendar-full'}) .appendTo (icons) .click (e => {
-            let html     = container .closest ('div:not(._popup)');
-            let position = ui .calcPosition (graph, html, {top: 50, left: 50});
-            this._notifyObservers (NavigateViewEvent .BUDGET_GRAPH_GET_HISTORY, {
-              id:       Array .from (data .reduce ((s,d) => {return [] .concat (d .id) .reduce((s,i) => {return s .add (i)},s)}, new Set())),
-              position: position,
-              html:     html,
-              view:     this,
-            })
-            e .stopPropagation();
-            return false;
-          });
+          if (dataset .groups .length == 1) {
+            $('<div>', {class:'_prevButton lnr-calendar-full'}) .appendTo (icons) .click (e => {
+              let html     = container .closest ('div:not(._popup)');
+              let position = ui .calcPosition (graph, html, {top: 50, left: 50});
+              this._notifyObservers (NavigateViewEvent .BUDGET_GRAPH_GET_HISTORY, {
+                id:       Array .from (data .reduce ((s,d) => {return [] .concat (d .id) .reduce((s,i) => {return s .add (i)},s)}, new Set())),
+                position: position,
+                html:     html,
+                view:     this,
+              })
+              e .stopPropagation();
+              return false;
+            });
+          }
           let prev = $('<div>', {class:'_prevButton lnr-chevron-left'}) .appendTo (icons) .click (e => {
             goPrevNext (true);
             e .stopPropagation();
