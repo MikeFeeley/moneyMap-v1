@@ -209,7 +209,7 @@ class App {
 
       /* models */
       let prefsWasShowing = this._prefs && this._prefs .isShowing();
-      Model .databaseDisconnect();
+      await Model .databaseDisconnect();
       Model .setDatabase (this._user .getDatabaseName());
       Model .databaseConnect();
       this._deleteModels();

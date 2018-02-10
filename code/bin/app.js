@@ -45,6 +45,9 @@ app .post ('/upcall', function (req, res) {
           dbConnections .delete (req .body .sessionId);
           if (dbConnections .size == 1)
             module .exports .notifyOtherClients (req .body .database, req .body .sessionId, {sharing: false});
+          res .json ({disconnected: true});
+          if (connection .response)
+            connection .response .json ({disconnected: true});
           return;
         }
 
@@ -64,6 +67,11 @@ app .post ('/upcall', function (req, res) {
           res .json ({database: req .body .database, upcalls: [{sharing: true}]});
           return;
         }
+      }
+
+      if (req .body .disconnect) {
+        res .json ({noDisconnectNotConnected: true});
+        return;
       }
 
       // set sessions disconnect timer
@@ -159,7 +167,7 @@ app.use(function (req, res, next) {
   } catch (e) {
     console .log (e);
   }
-})
+});
 
 app.use ('/transaction', require ('./transaction'))
 app.use ('/find',        require ('./find'));

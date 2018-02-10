@@ -46,47 +46,61 @@ class RemoteDBAdaptor extends DBAdaptor {
   }
 
   connect() {
+    let database = _default_database_id;
+    let active = () => {return ! this._disconnected && database == _default_database_id};
+    this._disconnected = false;
+    this._setState (DBAdaptorState .UP);
     let timeoutId = setTimeout (() => {
-      if (! this._getState() == DBAdaptorState .PERMANENTLY_DOWN)
+      if (! this._getState() == DBAdaptorState .PERMANENTLY_DOWN && active())
         this._setState (DBAdaptorState .DOWN);
     }, CLIENT_KEEP_ALIVE_INTERVAL);
     if (! RemoteDBAdaptor_serverDisconnectTimeoutId)
       RemoteDBAdaptor_serverDisconnectTimeoutId = setTimeout (() => {
-      this._setState (DBAdaptorState .PERMANENTLY_DOWN);
-    }, SERVER_DISCONNECT_THRESHOLD)
+        if (active())
+          this._setState (DBAdaptorState .PERMANENTLY_DOWN);
+      }, SERVER_DISCONNECT_THRESHOLD)
     $.ajax ({url: '/upcall', type: 'POST', contentType: 'application/json', processData: false,
       data: JSON .stringify (this._processPayload({
         database:           _default_database_id,
         respondImmediately: this._getState() == DBAdaptorState .DOWN
       })),
       success: data => {
-        this._setState (DBAdaptorState .UP);
-        clearTimeout (timeoutId);
-        if (RemoteDBAdaptor_serverDisconnectTimeoutId) {
-          clearTimeout (RemoteDBAdaptor_serverDisconnectTimeoutId);
-          RemoteDBAdaptor_serverDisconnectTimeoutId = null;
+        if (active()) {
+          this._setState (DBAdaptorState .UP);
+          clearTimeout (timeoutId);
+          if (RemoteDBAdaptor_serverDisconnectTimeoutId) {
+            clearTimeout (RemoteDBAdaptor_serverDisconnectTimeoutId);
+            RemoteDBAdaptor_serverDisconnectTimeoutId = null;
+          }
+          setTimeout (() => {this .connect()}, 0);
+          if (data .upcalls)
+            this._processUpcall (data);
         }
-        setTimeout (() => {this .connect()}, 0);
-        if (data .upcalls)
-          this._processUpcall (data);
       },
       error: data => {
-        if (this._getState() != DBAdaptorState .PERMANENTLY_DOWN)
-          this._setState (DBAdaptorState .DOWN);
-        clearTimeout (timeoutId);
-        setTimeout (() => {this .connect()}, CLIENT_RETRY_INTERVAL);
+        if (active()) {
+          if (this._getState() != DBAdaptorState .PERMANENTLY_DOWN)
+            this._setState (DBAdaptorState .DOWN);
+          clearTimeout (timeoutId);
+          setTimeout (() => {this .connect()}, CLIENT_RETRY_INTERVAL);
+        }
       }
     })
   }
 
-  disconnect() {
+  async disconnect() {
     if (_default_database_id) {
-      $.ajax ({url:'/upcall', type: 'POST', contentType: 'application/json', processData: false,
-        data: JSON .stringify (this._processPayload ({
-          database:   _default_database_id,
-          disconnect: true
-        }))
-      })
+      try {
+        await $.ajax ({url:'/upcall', type: 'POST', contentType: 'application/json', processData: false,
+          data: JSON .stringify (this._processPayload ({
+            database:   _default_database_id,
+            disconnect: true
+          }))
+        });
+      } catch (e) {
+        console.log('disconnect error: ', e)
+      }
+      this._disconnected = true;
     }
   }
 }

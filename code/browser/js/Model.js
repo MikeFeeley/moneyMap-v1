@@ -29,7 +29,7 @@ class Model extends Observable {
     _db .connect();
   }
 
-  static databaseDisconnect() {
+  static async databaseDisconnect() {
     if (_db)
       _db .disconnect();
   }

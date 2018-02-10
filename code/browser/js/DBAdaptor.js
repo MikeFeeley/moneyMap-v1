@@ -52,7 +52,7 @@ class DBAdaptor extends Observable {
 
   connect() {}
 
-  disconnect() {}
+  async disconnect() {}
 }
 
 var DatabaseOperation = {
