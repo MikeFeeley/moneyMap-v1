@@ -81,7 +81,7 @@ var ui = {
     if (minLeft !== undefined)
       cp .left = Math .max (cp .left, minLeft);
     if (position .right !== undefined)
-      cp .right = (document .body .clientWidth - ep .left);
+      cp .right = (document .body .clientWidth - ep .left) + position .right;
     return cp
   },
 
