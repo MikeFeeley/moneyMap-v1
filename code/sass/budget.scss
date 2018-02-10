@@ -468,6 +468,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
           text-align: right;
         }
         > tfoot {
+          > tr > td {padding-top: 4px}
           border-top: 1px solid #aaa;
         }
       }

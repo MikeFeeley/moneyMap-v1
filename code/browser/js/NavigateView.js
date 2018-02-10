@@ -1424,7 +1424,8 @@ class NavigateView extends Observable  {
       let column   = target .index();
       let html     = target .offsetParent();
       let padding  = target.css ('padding-left');
-      let position = ui .calcPosition (target, html, {top: 12, left: -103 + Number (padding .slice (0, padding .indexOf ('px')))});
+      // let position = ui .calcPosition (target, html, {top: 12, left: -103 + Number (padding .slice (0, padding .indexOf ('px')))});
+      let position = ui .calcPosition (target, html, {top: 12, right: -84 - Number (padding .slice (0, padding .indexOf ('px')))});
       let popup;
       if (detail .intAmt || detail .addAmt || detail .subAmt || detail .infAmt) {
         popup = $('<div>', {class: '_popup _netWorthTable fader'})
@@ -1544,18 +1545,23 @@ class NavigateView extends Observable  {
         for (let vs of vss) {
           var tr = $('<tr>') .appendTo (tfoot);
           if (vs .slice (1) .find (v => {return v != ''}))
-            for (let i = 0; i < cols .length; i++)
-              $('<td>', {text: vs [i] || '', class: dataset .highlight == i - 1? '_highlight': ''})
-                .appendTo (tr)
-                .click (e => {
+            for (let i = 0; i < cols .length; i++) {
+              let hover;
+              let td = $('<td>', {text: vs [i] || '', class: dataset .highlight == i - 1? '_highlight': ''}) .appendTo (tr);
+              if (i > 1)
+                td .hover (e => {
                   let total = dataset .rows .reduce ((t, r) => {
                     if (vss .indexOf (vs) == 1 || r .liquid)
-                      for (let p of ['int', 'addAmt', 'subAmt'])
+                      for (let p of ['intAmt', 'addAmt', 'subAmt', 'incAmt'])
                         t [p] += r .detail [i-1] [p];
                     return t;
-                  }, {int: 0, addAmt: 0, subAmt: 0})
-                  addPopup (e, total);
+                  }, {addAmt: 0, subAmt: 0, intAmt: 0, infAmt: 0})
+                  hover = addPopup (e, total);
+                }, e => {
+                  if (hover)
+                    hover .remove();
                 })
+            }
         }
       }
     }
