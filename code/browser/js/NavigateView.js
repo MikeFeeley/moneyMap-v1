@@ -385,6 +385,7 @@ class NavigateView extends Observable  {
     endCol   = dataset .cols .length - 1;
 
     let processData = (data, name, multipleGroups, stackPosition) => {
+      stackPosition = stackPosition || [0,0];
       const backgroundAlphas = [0.5, 0.075];
       const borderAlphas     = [1,   0.55];
       if (data .type == 'line') {
@@ -745,7 +746,7 @@ class NavigateView extends Observable  {
           type:  update .type
         }, update .name, update .multipleGroups, update .stackPosition);
         let gt     = (a,b) => {return a[0] > b[0]? true: a[0] < b[0]? false: a[1] > b[1]? true: false};
-        let insPos = chart .data .datasets .findIndex (d => {return gt (d .stackPosition, update .stackPosition)});
+        let insPos = update .stackPosition? chart .data .datasets .findIndex (d => {return gt (d .stackPosition, update .stackPosition)}): -1;
         if (insPos > 0)
           chart .data .datasets .splice (insPos, 0, ds);
         else
