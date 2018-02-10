@@ -647,6 +647,7 @@ div._systemStatus {
       border-right: 6px solid transparent;
       border-top: 3px solid transparent;
       border-bottom: 3px solid transparent;
+      white-space: nowrap;
     }
     > div._selected {
       background: #008ee6;
