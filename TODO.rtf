@@ -6,7 +6,16 @@
 \pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
 
 \f0\fs36 \cf0 ==============\
-TO DO\
+BUGS\
+	- changing yearly schedule to monthly (government) did not change in model ?!\
+	- networth table footer doesn't hover (does click)\
+	- hover position for drilled table is wrong when table exceeds original width (limited to original width)\
+	- can you get hover popup to scroll with table (i.e., put div inside of td)? - probably no as this would constrain its h/w to td\
+	- graph next: going from actual to budget doesn't clear out actual in update\
+\
+TODO\
+	- add a button to accounts with balance history ("save to history")\
+\
 	- newly added Income Source income category added without a schedule (undo/redo fixes this)\
 		- sometimes\
 	- Different disbursal tax rates for different years \'85\
@@ -35,10 +44,12 @@ RAMBLINGS\
 				- model caches find results\
 					- could return a promise for updating those results\
 \
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
 
-\fs24 \
+\fs24 \cf0 \
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
 
-\fs36 ==============\
+\fs36 \cf0 ==============\
 BACKLOGGED BUGS\
 	- networth page (today box at least) does not respond to model updates while its showing\
 		- mostly okay except for hitting undo key with networth showing and, for example, changing an account balance\
@@ -147,10 +158,12 @@ NEXT STEPS\
 		- update from model changes from another instance of client\
 		- show that you're sharing (maybe have user ids and so you can show who)\
 \
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
 
-\fs24 \
+\fs24 \cf0 \
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
 
-\fs36 BUGS (middle burner)\
+\fs36 \cf0 BUGS (middle burner)\
 	- %Z undo when editing a field must just to standard undo / undo typing.  Only do db undo if not editing a field\
 	- add increase-by % to schedule \
 	- change model so that \

@@ -177,6 +177,7 @@ app.use ('/remove',      require ('./remove'));
 app.use ('/admin',       require ('./admin'));
 
 app.use(function(req, res, next) {
+  console.log ('Error Not Found', req .url, req .body);
   var err = new Error('Not Found');
   err.status = 404;
   next(err);
@@ -193,6 +194,7 @@ if (app.get('env') === 'development') {
 }
 
 app.use(function(err, req, res, next) {
+  console.log('Error B', req .body, req .url, err, err .status, err .message);
   res.status(err.status || 500);
   res.render('error 500b', {
     message: err.message,
