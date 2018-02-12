@@ -1446,9 +1446,8 @@ class NavigateView extends Observable  {
     let addPopup = (e, detail, isCredit) => {
       let target   = $(e .target);
       let column   = target .index();
-      let html     = target .offsetParent();
+      let html     = target .closest ('._list');
       let padding  = target.css ('padding-left');
-      // let position = ui .calcPosition (target, html, {top: 12, left: -103 + Number (padding .slice (0, padding .indexOf ('px')))});
       let position = ui .calcPosition (target, html, {top: 12, right: -84 - Number (padding .slice (0, padding .indexOf ('px')))});
       let popup;
       if (detail .intAmt || detail .addAmt || detail .subAmt || detail .infAmt) {
