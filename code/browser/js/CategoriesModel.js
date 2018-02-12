@@ -62,6 +62,11 @@ class Categories {
               cat .parent .zombies .splice (zombieIdx, 1);
           }
         }
+        if (arg .sort !== undefined) {
+          let cat = this .get (doc._id);
+          if (cat && cat .parent && cat .parent .children)
+            cat .parent .children = cat .parent .children .sort ((a,b) => {return a .sort < b .sort? -1: a .sort == b .sort? 0: 1});
+        }
         break;
       case ModelEvent.INSERT:
         this._index .set (doc._id, doc);
