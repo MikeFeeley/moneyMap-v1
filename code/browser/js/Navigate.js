@@ -418,6 +418,7 @@ class Navigate {
 
   async _getPayees (cat, altDates) {
     const payeeTruncate = /\d|#|\(/;
+    let   sign = this._budget .isCredit (cat)? -1: 1;
     let   st = this._budget .getStartDate();
     let   en = this._budget .getEndDate();
     if (altDates) {
@@ -430,7 +431,7 @@ class Navigate {
         return {
           payee:  (stop && stop .index? tran .payee .slice (0, stop .index): tran .payee) .split (' ') .slice (0,3) .join (' '),
           date:   tran .date,
-          amount: (tran .credit || 0) + (tran .debit || 0)
+          amount: ((tran .credit || 0) + (tran .debit || 0)) * sign
         }
       })
       .sort ((a,b) => {return a .payee < b .payee? -1: a .payee == b .payee? (a .date < b .date? -1: a .date == b .date? 0: 1): 1})
@@ -533,6 +534,7 @@ class Navigate {
       case NavigateValueType .ACTUALS: case NavigateValueType .ACTUALS_BUD:
         if (id .payee) {
           let realId = id .payee .split ('_') .slice (-1) [0];
+          console.log(id.amounts);
           return dates .map (date => {
             let month = Types .date._yearMonth (date .start);
             return {
@@ -674,9 +676,8 @@ class Navigate {
           .length == 0;
         if (isLeaf)
           children [0] .cat = 'leaf_' + children [0] .cat;
-      } else if (realChildren .length == 0) {
+      } else if (realChildren .length == 0)
         children .push ({cat: 'leaf_' + id, amounts: thisAmounts});
-      }
       let data = children .map (child => {
         let hasMonth, hasYear;
         let cat = this._categories .get (child .cat .split ('_') .slice (-1) [0]);
