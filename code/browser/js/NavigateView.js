@@ -1572,7 +1572,7 @@ class NavigateView extends Observable  {
             for (let i = 0; i < cols .length; i++) {
               let hover;
               let td = $('<td>', {text: vs [i] || '', class: dataset .highlight == i - 1? '_highlight': ''}) .appendTo (tr);
-              if (i > 1)
+              if (i > 0)
                 td .hover (e => {
                   let total = dataset .rows .reduce ((t, r) => {
                     if (vss .indexOf (vs) == 1 || r .liquid)
