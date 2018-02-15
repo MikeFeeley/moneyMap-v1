@@ -1503,9 +1503,11 @@ class NavigateView extends Observable  {
             .append ($('<td>', {text: Types .moneyD .toString (detail .subAmt), class: 'negative'}))
             .click  (ce => {handleCellClick (ce, detail .ids, detail .subCat)})
         popup .css (position);
-        setTimeout (() => {popup .addClass ('fader_visible')}, 0);
+        setTimeout (() => {popup .addClass ('fader_visible')},  UI_TOOL_TIP_FADE_MS);
         if (onHover)
-          popup .hover (e => {onHover (true)}, e => {onHover (false)});
+          popup
+            .hover (e => {onHover (true)}, e => {onHover (false)})
+            .click (e => {onHover (false)});
         ui .scrollIntoView (popup);
       }
       e .stopPropagation();
@@ -1573,7 +1575,7 @@ class NavigateView extends Observable  {
                   hover = null;
                 }
                 isHovering = false;
-              },0);
+              }, 0);
             })
         }
       }
@@ -1613,7 +1615,7 @@ class NavigateView extends Observable  {
                       hover = null;
                     }
                     isHovering = false;
-                  },0);
+                  }, 0);
                 })
             }
         }
