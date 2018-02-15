@@ -1516,12 +1516,13 @@ class NavigateView extends Observable  {
 
     /** main code **/
 
+    let hoverShowing = 0;
     let table = $('<table>', {class: '_netWorthTable'});
     if (popup) {
       let container = $('<div>', {class: '_netWorthTable _popup fader'}) .appendTo (html) .append ($('<div>', {class: '_popupContent'}) .append (table))
       container .css (position);
       ui .ModalStack .add (
-        e  => {return e && !$.contains (container .get (0), e .target) && container .get (0) != e .target},
+        e  => {return hoverShowing == 0 && e && !$.contains (container .get (0), e .target) && container .get (0) != e .target},
         () => {container .removeClass ('fader_visible') .one ('transitionend', () => {container .remove(); onClose()})},
         true
       );
@@ -1563,16 +1564,19 @@ class NavigateView extends Observable  {
                   if (! isHovering && hover) {
                     hover .remove();
                     hover = null;
+                    hoverShowing--;
                   }
                   isPopupHovering = h;
                 });
                 isHovering = true;
+                hoverShowing++;
               }
             }, e => {
               setTimeout(() => {
                 if (hover && ! isPopupHovering) {
                   hover .remove();
                   hover = null;
+                  hoverShowing--;
                 }
                 isHovering = false;
               }, 0);
@@ -1588,8 +1592,8 @@ class NavigateView extends Observable  {
           var tr = $('<tr>') .appendTo (tfoot);
           if (vs .slice (1) .find (v => {return v != ''}))
             for (let i = 0; i < cols .length; i++) {
-              let hover, isHovering, isPopupHovering;
               let td = $('<td>', {text: vs [i] || '', class: dataset .highlight == i - 1? '_highlight': ''}) .appendTo (tr);
+              let hover, isHovering, isPopupHovering;
               if (i > 0)
                 td .hover (e => {
                   let total = dataset .rows .reduce ((t, r) => {
@@ -1602,17 +1606,20 @@ class NavigateView extends Observable  {
                     hover = addPopup (e, total, false, h => {
                       if (! isHovering && hover) {
                         hover .remove();
-                         hover = null;
+                        hover = null;
+                        hoverShowing--;
                       }
                       isPopupHovering = h;
                    });
                    isHovering = true;
+                   hoverShowing++;
                   }
                 }, e => {
                   setTimeout(() => {
                     if (hover && ! isPopupHovering) {
                       hover .remove();
                       hover = null;
+                      hoverShowing--;
                     }
                     isHovering = false;
                   }, 0);
