@@ -184,7 +184,7 @@ class ImportRulesModel extends Observable {
       let field = action [f];
       if (typeof field == 'string') {
         if (field .endsWith ('%')) {
-          return Math .round (tran [f] * Number (field .slice (0, -1)) / 100.0);
+          return Math .round (Math .abs (tran .debit + tran .credit) * Number (field .slice (0, -1)) / 100.0);
         } else if (field == 'due') {
           let cat = this._categories .get (action .category);
           if (cat .account) {
