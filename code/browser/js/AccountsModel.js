@@ -764,7 +764,7 @@ class Account {
       sub += subCat? getActual (subCat, st, endDate): 0;
     }
 
-    let debug = {
+    return {
       amount: balanceEntry? balanceEntry .balance: 0,
       detail: {
         intAmt: int,
@@ -777,7 +777,6 @@ class Account {
         intCat: intCat
       }
     };
-    return debug;
   }
 
   getBalances (dates) {

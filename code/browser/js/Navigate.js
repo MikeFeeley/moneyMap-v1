@@ -388,7 +388,7 @@ class Navigate {
         BudgetProgressHUD .show (parent._id, arg .html, arg .position, this._accounts, this._variance);
 
     } else if (eventType == NavigateViewEvent .NETWORTH_TABLE_CLICK) {
-      if (arg .ids .length > 1) {
+      if (arg .ids && arg .ids .length > 1) {
         this._addNetWorthTable (arg .view, await this._getNetWorthData (arg .ids, arg .label), true, arg .html, arg .position);
       } else {
         arg .id = arg .cats [0]._id;
@@ -1817,11 +1817,12 @@ class Navigate {
           })}, []),
         detail:  rowData
           .reduce ((s, acc) => {return acc .detail  .map ((d, i) => {
+            let intAmt = ((d && d .intAmt) || 0);
             return {
               ids:    ((s[i] && s[i] .ids)    || []) .concat ((d && d .id) || []),
-              intAmt: ((s[i] && s[i] .intAmt) || 0) + ((d && d .intAmt) || 0),
+              intAmt: ((s[i] && s[i] .intAmt) || 0) + (row .type != AccountType .GROUP || intAmt > 0? intAmt: 0),
               infAmt: ((s[i] && s[i] .infAmt) || 0) + ((d && d .infAmt) || 0),
-              addAmt: ((s[i] && s[i] .addAmt) || 0) + ((d && d .addAmt) || 0),
+              addAmt: ((s[i] && s[i] .addAmt) || 0) + ((d && d .addAmt) || 0) + (row .type == AccountType .GROUP && intAmt < 0? intAmt: 0),
               subAmt: ((s[i] && s[i] .subAmt) || 0) + ((d && d .subAmt) || 0),
               addCat: ((s[i] && s[i] .addCat) || []) .concat ((d && d. addCat) || []),
               subCat: ((s[i] && s[i] .subCat) || []) .concat ((d && d. subCat) || [])

@@ -1597,9 +1597,10 @@ class NavigateView extends Observable  {
               if (i > 0)
                 td .hover (e => {
                   let total = dataset .rows .reduce ((t, r) => {
-                    if (vss .indexOf (vs) == 1 || r .liquid)
-                      for (let p of ['intAmt', 'addAmt', 'subAmt', 'incAmt'])
+                    if (vss .indexOf (vs) == 1 || r .liquid) {
+                      for (let p of ['intAmt', 'addAmt', 'subAmt', 'infAmt'])
                         t [p] += r .detail [i-1] [p];
+                    }
                     return t;
                   }, {addAmt: 0, subAmt: 0, intAmt: 0, infAmt: 0})
                   if (! hover) {
