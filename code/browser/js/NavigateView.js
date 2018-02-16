@@ -1444,12 +1444,12 @@ class NavigateView extends Observable  {
       });
     };
 
-    let addPopup = (e, detail, isCredit, onHover) => {
+    let addPopup = (e, detail, isCredit) => {
       let target   = $(e .target);
       let column   = target .index();
       let html     = target .closest ('._list');
       let padding  = target.css ('padding-left');
-      let position = ui .calcPosition (target, html, {top: 12, right: -84 - Number (padding .slice (0, padding .indexOf ('px')))});
+      let position = ui .calcPosition (target, html, {top: 12, left: -103 + Number (padding .slice (0, padding .indexOf ('px')))});
       let popup;
       if (detail .intAmt || detail .addAmt || detail .subAmt || detail .infAmt) {
         popup = $('<div>', {class: '_popup _netWorthTable fader'})
@@ -1503,11 +1503,12 @@ class NavigateView extends Observable  {
             .append ($('<td>', {text: Types .moneyD .toString (detail .subAmt), class: 'negative'}))
             .click  (ce => {handleCellClick (ce, detail .ids, detail .subCat)})
         popup .css (position);
+        ui .ModalStack .add (
+          e  => {return e && !$.contains (popup .get (0), e .target) && popup .get (0) != e .target},
+          () => {popup .removeClass ('fader_visible') .one ('transitionend', () => {popup .remove()})},
+          true
+        );
         setTimeout (() => {popup .addClass ('fader_visible')},  UI_TOOL_TIP_FADE_MS);
-        if (onHover)
-          popup
-            .hover (e => {onHover (true)}, e => {onHover (false)})
-            .click (e => {onHover (false)});
         ui .scrollIntoView (popup);
       }
       e .stopPropagation();
@@ -1516,7 +1517,6 @@ class NavigateView extends Observable  {
 
     /** main code **/
 
-    let hoverShowing = 0;
     let table = $('<table>', {class: '_netWorthTable'});
     if (popup) {
       let container = $('<div>', {class: '_netWorthTable _popup fader'}) .appendTo (html) .append ($('<div>', {class: '_popupContent'}) .append (table))
@@ -1552,36 +1552,14 @@ class NavigateView extends Observable  {
         if (row .liquid)
           liquid = row .amounts .map ((a,i) => {return a + (liquid [i] || 0)});
         for (let i=0; i<vs.length; i++) {
-          let hover, isHovering, isPopupHovering;
           $('<td>', {html: vs [i]+'&nbsp;', class: dataset .highlight == i - 1? '_highlight': ''}) .appendTo (tr)
             .click (e => {
               if (i == 0)
                 addSubTablePopup (e, row);
+              else
+                addPopup (e, row .detail [i-1], vs[i-1] .startsWith ('-'));
             })
-            .hover (e => {
-              if (i > 0 && ! hover) {
-                hover = addPopup (e, row .detail [i-1], vs[i-1] .startsWith ('-'), h => {
-                  if (! isHovering && hover) {
-                    hover .remove();
-                    hover = null;
-                    hoverShowing--;
-                  }
-                  isPopupHovering = h;
-                });
-                isHovering = true;
-                hoverShowing++;
-              }
-            }, e => {
-              setTimeout(() => {
-                if (hover && ! isPopupHovering) {
-                  hover .remove();
-                  hover = null;
-                  hoverShowing--;
-                }
-                isHovering = false;
-              }, 0);
-            })
-        }
+         }
       }
       if (showHeadFoot) {
         var vss = [
@@ -1593,9 +1571,8 @@ class NavigateView extends Observable  {
           if (vs .slice (1) .find (v => {return v != ''}))
             for (let i = 0; i < cols .length; i++) {
               let td = $('<td>', {text: vs [i] || '', class: dataset .highlight == i - 1? '_highlight': ''}) .appendTo (tr);
-              let hover, isHovering, isPopupHovering;
               if (i > 0)
-                td .hover (e => {
+                td .click (e => {
                   let total = dataset .rows .reduce ((t, r) => {
                     if (vss .indexOf (vs) == 1 || r .liquid) {
                       for (let p of ['intAmt', 'addAmt', 'subAmt', 'infAmt'])
@@ -1603,29 +1580,9 @@ class NavigateView extends Observable  {
                     }
                     return t;
                   }, {addAmt: 0, subAmt: 0, intAmt: 0, infAmt: 0})
-                  if (! hover) {
-                    hover = addPopup (e, total, false, h => {
-                      if (! isHovering && hover) {
-                        hover .remove();
-                        hover = null;
-                        hoverShowing--;
-                      }
-                      isPopupHovering = h;
-                   });
-                   isHovering = true;
-                   hoverShowing++;
-                  }
-                }, e => {
-                  setTimeout(() => {
-                    if (hover && ! isPopupHovering) {
-                      hover .remove();
-                      hover = null;
-                      hoverShowing--;
-                    }
-                    isHovering = false;
-                  }, 0);
-                })
-            }
+                  addPopup (e, total);
+                });
+             }
         }
       }
     }
