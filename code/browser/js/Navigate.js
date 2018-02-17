@@ -534,7 +534,6 @@ class Navigate {
       case NavigateValueType .ACTUALS: case NavigateValueType .ACTUALS_BUD:
         if (id .payee) {
           let realId = id .payee .split ('_') .slice (-1) [0];
-          console.log(id.amounts);
           return dates .map (date => {
             let month = Types .date._yearMonth (date .start);
             return {
@@ -859,7 +858,7 @@ class Navigate {
           if (this._getModels (type) .includes (model) && eventIds .includes (g .id))
             update .push ({update: {id: g .id, name: this._getName (type, g .id)}})
           let u = await g .getUpdate (eventType, model, eventIds);
-          if (u) {
+          if (u && u .length) {
             if (u [0] .needReplace)
               u = [{replace: await this._getData (type, dates, ids, includeMonths, includeYears, addCats)}]
             update = update .concat (u) .concat ({updateIncome: this._getIncome (type, dates [0] .start, dates [dates .length - 1] .end)});
