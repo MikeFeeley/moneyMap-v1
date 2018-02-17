@@ -1522,7 +1522,7 @@ class NavigateView extends Observable  {
       let container = $('<div>', {class: '_netWorthTable _popup fader'}) .appendTo (html) .append ($('<div>', {class: '_popupContent'}) .append (table))
       container .css (position);
       ui .ModalStack .add (
-        e  => {return hoverShowing == 0 && e && !$.contains (container .get (0), e .target) && container .get (0) != e .target},
+        e  => {return e && !$.contains (container .get (0), e .target) && container .get (0) != e .target},
         () => {container .removeClass ('fader_visible') .one ('transitionend', () => {container .remove(); onClose()})},
         true
       );
