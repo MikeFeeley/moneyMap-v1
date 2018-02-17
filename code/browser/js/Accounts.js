@@ -74,8 +74,10 @@ class Accounts extends Observable {
         }
       }
     }
-    if (eventType == ModelEvent .UPDATE && arg .balance)
+    if (eventType == ModelEvent .UPDATE && arg .balance && acc .form == AccountForm .ASSET_LIABILITY && this .creditBalance) {
+      // asset balances are updated by user to current date
       await this._model .update (acc._id, {balanceDate: Types .date .today()});
+    }
   }
 
   async _onParamModelChange (eventType, acc, arg, source) {
