@@ -360,8 +360,8 @@ class TransactionHUD extends TransactionAndRulesTable {
     var name = field._name .charAt (0) .toUpperCase() + field._name .slice (1);
     var [t,s] = Array .isArray (title)? title: [title,''];
     s = s + (s.length? ' and ': 'Where ') + name + ' ' + desc;
-    if (field._name == 'category' && context) {
-      context = Object .assign ({}, context);
+    if (field._name == 'category') {
+      context = Object .assign ({}, context || {});
       context .cat = variance .getBudget() .getCategories() .get (field._value);
     }
     TransactionHUD .show ([t,s], query, accounts, variance, toHtml, position, onClose, monthStart, monthEnd, context);
