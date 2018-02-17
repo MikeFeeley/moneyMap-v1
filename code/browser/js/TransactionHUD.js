@@ -1,13 +1,16 @@
 class TransactionHUD extends TransactionAndRulesTable {
-  constructor (title, query, accounts, variance, onClose, monthStart, monthEnd) {
+  constructor (title, query, accounts, variance, onClose, monthStart, monthEnd, context) {
     let columns      = ['date','payee','debit','credit','account','category','description'];
     let options      = {readOnly: false, noGrouping: true};
     super (query, null, undefined, '', undefined, undefined, options);
+    this._accounts    = accounts;
+    this._variance    = variance;
     this._title       = [] .concat (title);
     this._titleLength = this._title .length;
-    this._onClose    = onClose;
-    this._monthStart = monthStart || query .date .$gte;
-    this._monthEnd   = monthEnd   || query .date .$lte;
+    this._onClose     = onClose;
+    this._monthStart  = monthStart || query .date .$gte;
+    this._monthEnd    = monthEnd   || query .date .$lte;
+    this._context     = context;
   }
 
   delete() {
@@ -232,7 +235,7 @@ class TransactionHUD extends TransactionAndRulesTable {
               this._title, JSON .parse (JSON .stringify (this._query)), field, selectedText, this._accounts, this._variance, this._html .offsetParent(),
               {top: position .top + 50, left: position .left + 50, right: 'auto'},
               () => {if (this._html) this._html .removeClass ('_occluded')},
-              this._monthStart, this._monthEnd
+              this._monthStart, this._monthEnd, this._context
             );
             this._html .addClass ('_occluded');
           }
@@ -257,6 +260,28 @@ class TransactionHUD extends TransactionAndRulesTable {
     $('<div>', {class: '_calendarButton lnr-calendar-full'}) .appendTo (buttons)
       .on ('click',                e => {this._toggleMonthYear()})
       .on ('webkitmouseforcedown', e => {this._calendarYear()})
+    if (this._context && this._context .cat) {
+      let cat = this._context .cat;
+      $('<div>', {class:'_nextButton lnr-map'}) .appendTo (buttons) .click (e => {
+        let date = this._query .date && this._query .date .$lte;
+        BudgetProgressHUD .show (cat._id, this._html, {top: 60, left: 30}, this._accounts, this._variance, date);
+        e .stopPropagation();
+        return false;
+      });
+      if (cat .parent)
+        $('<div>', {class:'_nextButton lnr-exit-up'}) .appendTo (buttons) .click (e => {
+          let dates = this._query .date && {
+            start: this._query .date .$gte,
+            end:   this._query .date .$lte
+          }
+          TransactionHUD .showCategory (
+              cat .parent._id, dates, this._accounts, this._variance, this._html, {top: 60, left: 30},
+              this._context .includeMonths, this._context .includeYears, this._context .addCats
+          );
+          e .stopPropagation();
+          return false;
+        });
+    }
     $('<div>', {class:'_prevButton lnr-chevron-left'}) .appendTo (buttons) .click (e => {
       this._changeMonth (-1);
       e .stopPropagation();
@@ -293,8 +318,8 @@ class TransactionHUD extends TransactionAndRulesTable {
     this._html .addClass ('_occluded');
   }
 
-  static showRefineByField (title, query, field, selectedText, accounts, variance, toHtml, position, onClose, monthStart, monthEnd) {
-    query = Object .keys (query) .reduce ((o,f) => {o[f] = query[f]; return o}, {});
+  static showRefineByField (title, query, field, selectedText, accounts, variance, toHtml, position, onClose, monthStart, monthEnd, context) {
+    query = Object .assign ({}, query);
     let desc = '';
     if (field._name == 'date') {
       if (selectedText && selectedText != field) {
@@ -335,7 +360,11 @@ class TransactionHUD extends TransactionAndRulesTable {
     var name = field._name .charAt (0) .toUpperCase() + field._name .slice (1);
     var [t,s] = Array .isArray (title)? title: [title,''];
     s = s + (s.length? ' and ': 'Where ') + name + ' ' + desc;
-    TransactionHUD .show ([t,s], query, accounts, variance, toHtml, position, onClose, monthStart, monthEnd);
+    if (field._name == 'category' && context) {
+      context = Object .assign ({}, context);
+      context .cat = variance .getBudget() .getCategories() .get (field._value);
+    }
+    TransactionHUD .show ([t,s], query, accounts, variance, toHtml, position, onClose, monthStart, monthEnd, context);
   }
 
   static showCategory (id, dates, accounts, variance, toHtml, position, includeMonths=true, includeYears=true, addCats=[]) {
@@ -375,7 +404,10 @@ class TransactionHUD extends TransactionAndRulesTable {
     };
     if (selectPayee)
       query .payee = {$regex: '^' + selectPayee .replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + '.*'};
-    TransactionHUD .show (title, query, accounts, variance, toHtml, position);
+    TransactionHUD .show (
+      title, query, accounts, variance, toHtml, position, undefined, undefined, undefined,
+      {cat: cat, includeMonths: includeMonths, includeYears: includeYears, addCats: addCats}
+    );
   }
 
   static showAccount (id, dates, accounts, variance, toHtml, position) {
@@ -388,8 +420,8 @@ class TransactionHUD extends TransactionAndRulesTable {
     TransactionHUD .show (title, query, accounts, variance, toHtml, position);
   }
 
-  static show (title, query, accounts, variance, toHtml, position, onClose, monthStart, monthEnd) {
-    let hud = new TransactionHUD (title, query, accounts, variance, onClose, monthStart, monthEnd);
+  static show (title, query, accounts, variance, toHtml, position, onClose, monthStart, monthEnd, context) {
+    let hud = new TransactionHUD (title, query, accounts, variance, onClose, monthStart, monthEnd, context);
     (async () => {await hud .addHtml (toHtml, position)}) ();
   }
 }
