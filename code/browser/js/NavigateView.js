@@ -163,10 +163,10 @@ class NavigateView extends Observable  {
     this._content .remove();
     this._content = this._html;
     this._progressSidebar = $('<div>', {class: '_progressSidebar _sidebar_right'}) .appendTo (this._content);
-    this._hideButton      = $('<button>', {class: '_sidebar_right_hide_botton', click: () => {
+    this._hideButton      = $('<button>', {class: '_sidebar_right_hide_botton lnr-cross', click: () => {
       this._progressSidebar .hide();
       this._showButton      .show();
-    }, html: '&times;'}) .appendTo (this._progressSidebar);
+    }}) .appendTo (this._progressSidebar);
   }
 
   _addTooltip (element, text) {
@@ -267,12 +267,12 @@ class NavigateView extends Observable  {
   addProgressGraph (to, popup, position, onClose) {
     if (!this._progressGraphs) {
       this._progressGraphs = $('<div>', {class: '_progressGraphs'}) .appendTo (this._content);
-      this._showButton     = $('<button>', {class: '_sidebar_right_show_button', click: e => {
+      this._showButton     = $('<button>', {class: '_sidebar_right_show_button lnr-menu', click: e => {
         this._progressSidebar .show();
         this._showButton      .hide();
         e .stopPropagation();
         return false;
-      }, html: '&#9776;'}) .appendTo (this._progressGraphs);
+      }}) .appendTo (this._progressGraphs);
       this._container = $('<div>', {class: '_container'}) .appendTo (this._progressGraphs);
     }
     var container = to || this._container;

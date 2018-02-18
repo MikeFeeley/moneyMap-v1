@@ -181,29 +181,30 @@ table > tbody > tr > td > ._field > div > ._content {
   @keyframes animateright{from{right:-300px;opacity:0} to{right:0;opacity:1}}
 
   ._sidebar_right_hide_botton {
+    @include icon-button();
     border:none;
     position: absolute;
-    right:   0px;
-    top:   -18px;
+    right:   4px;
     background-color:rgba(0,0,0,0);
     white-space:nowrap;
-    font-size: 40px;
+    font-size: 18px;
     font-weight: 100;
-    color: #eee;
+    color: #ababab;
     cursor:pointer;
   }
 }
 
 ._sidebar_right_show_button {
+  @include icon-button();
   border:none;
   position: fixed;
   right: 0px;
-  top: 44px;
+  top: 48px;
   background-color:inherit;
   white-space:nowrap;
-  font-size: 20px;
-  font-weight: 100;
-  color: #ddd;
+  font-size: 18px;
+  font-weight: 100!important;
+  color: #d1d1d1;
   cursor:pointer;
   z-index: 9999;
 }
