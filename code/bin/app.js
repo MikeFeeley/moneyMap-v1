@@ -132,12 +132,6 @@ function getDB (name) {
   return dbCache .get (name) || dbCache .set (name, db .connect ('mongodb://localhost:27017/' + name)) .get (name);
 }
 
-app.get ('/debug', function (req, res, next) {
-  req .url = '/';
-  req .body .database = 'debug';
-  next(req, res, next);
-})
-
 app.use ('/', require ('./index'));
 
 app.use(function (req, res, next) {
@@ -147,7 +141,7 @@ app.use(function (req, res, next) {
       let err     = new Error ('Direct access to Admin database not permitted');
       err .status = 403;
       res .status(err.status || 500);
-      res .render('error 500', {
+      res .render('error', {
         message: err.message,
         error: err
       });
@@ -185,23 +179,12 @@ app.use(function(req, res, next) {
   console.log ('Error Not Found', req .url, req .body);
   var err = new Error('Not Found');
   err.status = 404;
-  next(err, req, res);
+  next(err);
 });
 
-if (app.get('env') === 'development') {
-  app.use(function(err, req, res, next) {
-    res.status(err.status || 500);
-    res.render('error 500a', {
-      message: err.message,
-      error: err
-    });
-  });
-}
-
 app.use(function(err, req, res, next) {
-  console.log('Error B', req .body, req .url, err, err .status, err .message);
-  res.status(err.status || 500);
-  res.render('error 500b', {
+  res.status (err.status || 500);
+  res.render('error', {
     message: err.message,
     error: {}
   });
