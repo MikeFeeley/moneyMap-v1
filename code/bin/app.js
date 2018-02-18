@@ -112,7 +112,7 @@ module .exports = {
   notifyOtherClients: (database, thisSessionId, event) => {
     let dbConnections = connections .get (database);
     if (dbConnections)
-      for (let [sessionId, connection] of dbConnections .entries())
+      for (let [sessionId, connection] of dbConnections .entries()) {
         if (sessionId != thisSessionId) {
           if (connection .response) {
             clearTimeout (connection .timeoutId);
@@ -121,6 +121,7 @@ module .exports = {
           } else
             connection .queue .push (event);
         }
+      }
    }
 }
 
@@ -134,7 +135,7 @@ function getDB (name) {
 app.get ('/debug', function (req, res, next) {
   req .url = '/';
   req .body .database = 'debug';
-  next();
+  next(req, res, next);
 })
 
 app.use ('/', require ('./index'));
@@ -145,7 +146,11 @@ app.use(function (req, res, next) {
     if (database == 'admin') {
       let err     = new Error ('Direct access to Admin database not permitted');
       err .status = 403;
-      next (err);
+      res .status(err.status || 500);
+      res .render('error 500', {
+        message: err.message,
+        error: err
+      });
     } else if (req .body) {
       if (req .url .startsWith ('/admin/'))
         database = 'admin';
@@ -180,7 +185,7 @@ app.use(function(req, res, next) {
   console.log ('Error Not Found', req .url, req .body);
   var err = new Error('Not Found');
   err.status = 404;
-  next(err);
+  next(err, req, res);
 });
 
 if (app.get('env') === 'development') {

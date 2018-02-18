@@ -69,7 +69,7 @@ class RemoteDBAdaptor extends DBAdaptor {
             clearTimeout (RemoteDBAdaptor_serverDisconnectTimeoutId);
             RemoteDBAdaptor_serverDisconnectTimeoutId = null;
           }
-          setTimeout (() => {this._connect()}, 0);
+          setTimeout (() => {this._connect (database)}, 0);
           if (data .upcalls)
             this._processUpcall (data);
         }
@@ -79,7 +79,7 @@ class RemoteDBAdaptor extends DBAdaptor {
           if (this._getState() != DBAdaptorState .PERMANENTLY_DOWN)
             this._setState (DBAdaptorState .DOWN);
           clearTimeout (timeoutId);
-          setTimeout (() => {this._connect()}, CLIENT_RETRY_INTERVAL);
+          setTimeout (() => {this._connect (database)}, CLIENT_RETRY_INTERVAL);
         }
       }
     })
