@@ -813,7 +813,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
     box-shadow: 0px 0px 3px 0 rgba(0,0,0,0.3), 2px 0px 6px 0 rgba(0,0,0,0.1);
     width: $left-width;
     //background-color: $left-background;
-    background: #fafafa;
+    background: $left-background;
   }
   > ._head {
     background-color: $left-background;
