@@ -17,8 +17,17 @@ function notregexReplace (obj) {
 
 async function get (req, res, next) {
   try {
+    let limit = req .body .query && req .body .query .$limit;
+    if (limit)
+      delete req .body .query .$limit;
+    let sort =  req .body .query && req .body .query .$sort;
+    if (sort)
+      delete req .body .query .$sort;
     notregexReplace (req.body.query);
-    res.json (await (await req .dbPromise) .collection (req.body.collection) .find (req.body.query, req.body.projection) .sort (req.body.sort) .toArray());
+    let find = (await req .dbPromise) .collection (req.body.collection) .find (req.body.query, req.body.projection);
+    if (limit)
+      find = limit? find .sort (sort || req.body.sort) .limit (limit): find .sort (sort || req.body.sort);
+    res.json (await find .toArray());
   } catch (e) {
     console .log ('get: ', e, req .body);
     next (e);

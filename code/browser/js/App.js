@@ -179,6 +179,30 @@ class App {
     this._models = [];
   }
 
+  _search() {
+    if (! this._searchPopup) {
+      this._searchPopup = $('<div>', {class: '_search _input'}) .appendTo ($('body'));
+      $('<label>') .appendTo ($('<div>') .appendTo (this._searchPopup))
+        .append ($('<span>',  {class: 'lnr-magnifier'}))
+        .append ($('<input>', {type: 'text', placeholder: 'Search'}))
+      let input = this._searchPopup .find ('input');
+      input .keypress (e => {
+        if (e .keyCode == 13) {
+          TransactionHUD .search (input.val(), this._accModel, this._varModel, $('body'), {top: 100, left: 30});
+          this._searchPopup .remove();
+          this._searchPopup = null;
+          ui .ModalStack .delete (modal);
+        }
+      });
+      input.focus();
+      let modal = ui .ModalStack .add (
+        e => {return e && $.contains (document .body, e .target) && ! $.contains (this._searchPopup .get (0), e .target)},
+        e => {this._searchPopup .remove(); this._searchPopup = null},
+        true
+      )
+    }
+  }
+
   async _configurationChange (eventType) {
 
     let handleNameClick = e => {
@@ -188,6 +212,12 @@ class App {
     if (eventType == UserEvent .NEW_USER) {
 
       this._tabs = new ui.Tabs ($('body'), handleNameClick);
+      $('body') .keypress (e => {
+        if (e .metaKey && (e .keyCode == 70 || e .keyCode == 102)) {
+          this._search();
+          e .preventDefault();
+        }
+      })
       this._proT = this._tabs .addTab  ('Progress');
       this._traT = this._tabs .addTab  ('Inbox');
       this._actT = this._tabs .addTab  ('Activity');

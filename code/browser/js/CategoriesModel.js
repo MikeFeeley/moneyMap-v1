@@ -88,6 +88,21 @@ class Categories {
         return c;
   }
 
+  _findAll (cats, query, includeZombies) {
+    if (cats .length) {
+      let children = cats .reduce ((list, cat) => {
+        let c = (cat .children || []) .concat (includeZombies? cat .zombies || []: []);
+        return list .concat (c);
+      }, []);
+      return cats .filter (c => {return query (c)}) .concat (this._findAll (children, query, includeZombies));
+    } else
+      return []
+  }
+
+  findAll (query, includeZombies) {
+    return this._findAll (this._roots, query, includeZombies);
+  }
+
   get (id) {
     return this._index .get (id);
   }

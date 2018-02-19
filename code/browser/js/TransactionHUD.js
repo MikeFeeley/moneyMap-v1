@@ -8,8 +8,8 @@ class TransactionHUD extends TransactionAndRulesTable {
     this._title       = [] .concat (title);
     this._titleLength = this._title .length;
     this._onClose     = onClose;
-    this._monthStart  = monthStart || query .date .$gte;
-    this._monthEnd    = monthEnd   || query .date .$lte;
+    this._monthStart  = monthStart || (query .date && query .date .$gte);
+    this._monthEnd    = monthEnd   || (query .date && query .date .$lte);
     this._context     = context;
   }
 
@@ -231,8 +231,11 @@ class TransactionHUD extends TransactionAndRulesTable {
               selectedText =  window .getSelection() .toString() .split ('\n') [0];
             window .getSelection() .empty();
             let position = this._html .position();
+            let html     = this._html .offsetParent();
+            if (html .closest ('body') .length == 0)
+              html = $('body');
             TransactionHUD .showRefineByField (
-              this._title, JSON .parse (JSON .stringify (this._query)), field, selectedText, this._accounts, this._variance, this._html .offsetParent(),
+              this._title, JSON .parse (JSON .stringify (this._query)), field, selectedText, this._accounts, this._variance, html,
               {top: position .top + 50, left: position .left + 50, right: 'auto'},
               () => {if (this._html) this._html .removeClass ('_occluded')},
               this._monthStart, this._monthEnd, this._context
@@ -257,46 +260,49 @@ class TransactionHUD extends TransactionAndRulesTable {
       e .stopPropagation();
       return false;
     })
-    $('<div>', {class: '_calendarButton lnr-calendar-full'}) .appendTo (buttons)
-      .on ('click',                e => {this._toggleMonthYear()})
-      .on ('webkitmouseforcedown', e => {this._calendarYear()})
-    if (this._context && this._context .cat) {
-      let cat = this._context .cat;
-      $('<div>', {class:'_nextButton lnr-map'}) .appendTo (buttons) .click (e => {
-        let date = this._query .date && this._query .date .$lte;
-        BudgetProgressHUD .show (cat._id, this._html, {top: 60, left: 30}, this._accounts, this._variance, date);
-        e .stopPropagation();
-        return false;
-      });
-      if (cat .parent)
-        $('<div>', {class:'_nextButton lnr-exit-up'}) .appendTo (buttons) .click (e => {
-          let dates = this._query .date && {
-            start: this._query .date .$gte,
-            end:   this._query .date .$lte
-          }
-          TransactionHUD .showCategory (
-              cat .parent._id, dates, this._accounts, this._variance, this._html, {top: 60, left: 30},
-              this._context .includeMonths, this._context .includeYears, this._context .addCats
-          );
+    if (this._query .date) {
+      $('<div>', {class: '_calendarButton lnr-calendar-full'}) .appendTo (buttons)
+        .on ('click',                e => {this._toggleMonthYear()})
+        .on ('webkitmouseforcedown', e => {this._calendarYear()})
+      if (this._context && this._context .cat) {
+        let cat = this._context .cat;
+        $('<div>', {class:'_nextButton lnr-map'}) .appendTo (buttons) .click (e => {
+          let date = this._query .date && this._query .date .$lte;
+          BudgetProgressHUD .show (cat._id, this._html, {top: 60, left: 30}, this._accounts, this._variance, date);
           e .stopPropagation();
           return false;
         });
+        if (cat .parent)
+          $('<div>', {class:'_nextButton lnr-exit-up'}) .appendTo (buttons) .click (e => {
+            let dates = this._query .date && {
+              start: this._query .date .$gte,
+              end:   this._query .date .$lte
+            }
+            TransactionHUD .showCategory (
+                cat .parent._id, dates, this._accounts, this._variance, this._html, {top: 60, left: 30},
+                this._context .includeMonths, this._context .includeYears, this._context .addCats
+            );
+            e .stopPropagation();
+            return false;
+          });
+      }
+      $('<div>', {class:'_prevButton lnr-chevron-left'}) .appendTo (buttons) .click (e => {
+        this._changeMonth (-1);
+        e .stopPropagation();
+        return false;
+      });
+      $('<div>', {class:'_nextButton lnr-chevron-right'}) .appendTo (buttons) .click (e => {
+        this._changeMonth (1);
+        e .stopPropagation();
+        return false;
+      });
     }
-    $('<div>', {class:'_prevButton lnr-chevron-left'}) .appendTo (buttons) .click (e => {
-      this._changeMonth (-1);
-      e .stopPropagation();
-      return false;
-    });
-    $('<div>', {class:'_nextButton lnr-chevron-right'}) .appendTo (buttons) .click (e => {
-      this._changeMonth (1);
-      e .stopPropagation();
-      return false;
-    });
     var body = $('<div>', {class: '_body'}) .appendTo (this._content);
     if (this._title [1])
       $('<div>', {text: this._title [1], class: '_subtitle'}) .appendTo (body);
     this._view._options .readOnly = true;
-    this._setTitleDate();
+    if (this._query .date)
+      this._setTitleDate();
     await super .addHtml (body);
     this._modalStackEntry = ui .ModalStack .add (
       (e) => {return ! $.contains (this._content .get (0), e .target) && this._content .get (0) != e .target},
@@ -357,8 +363,8 @@ class TransactionHUD extends TransactionAndRulesTable {
       query [field._name] = value;
       desc                = 'is ' + field._get();
     }
-    var name = field._name .charAt (0) .toUpperCase() + field._name .slice (1);
-    var [t,s] = Array .isArray (title)? title: [title,''];
+    let name = field._name .charAt (0) .toUpperCase() + field._name .slice (1);
+    let [t,s] = Array .isArray (title)? title .concat(['','']): [title,''];
     s = s + (s.length? ' and ': 'Where ') + name + ' ' + desc;
     if (field._name == 'category') {
       context = Object .assign ({}, context || {});
@@ -423,6 +429,33 @@ class TransactionHUD extends TransactionAndRulesTable {
   static show (title, query, accounts, variance, toHtml, position, onClose, monthStart, monthEnd, context) {
     let hud = new TransactionHUD (title, query, accounts, variance, onClose, monthStart, monthEnd, context);
     (async () => {await hud .addHtml (toHtml, position)}) ();
+  }
+
+  static async _search (text, accounts, variance, toHtml, position) {
+    let family = cats => {
+      if (cats .length) {
+        return cats .reduce ((list, cat) => {
+          let ch = (cat .children || []) .concat (cat .zombies || []);
+          return list .concat (cat) .concat (family (ch))
+        }, [])
+      } else
+        return []
+    }
+    let matchingCats = family (variance .getBudget() .getCategories()
+      .findAll (c => {return c .name && c .name .toLowerCase() .includes (text .toLowerCase() .trim())}, true)
+    ) .map (c => {return c._id});
+    let regex = '.*' + text .replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + '.*';
+    let query = {$limit: 100, $sort: {date: -1}, $or: [
+      {category:    {$in:    matchingCats}},
+      {payee:       {$regex: regex}},
+      {description: {$regex: regex}}
+    ]};
+    let title = 'Top Search Results for "' + text + '"';
+    TransactionHUD .show (title, query, accounts, variance, toHtml, position);
+  }
+
+  static search (text, accounts, variance, toHtml, position) {
+    (async () => {await TransactionHUD._search (text, accounts, variance, toHtml, position)})();
   }
 }
 
