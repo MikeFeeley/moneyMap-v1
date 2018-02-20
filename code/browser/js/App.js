@@ -181,6 +181,13 @@ class App {
 
   _search() {
     if (! this._searchPopup) {
+      let oldPopup = $('body') .find ('> ._TransactionHUD ');
+      if (oldPopup .length) {
+        let modal = oldPopup .data ('modal');
+        if (modal)
+          ui .ModalStack .delete (modal);
+        oldPopup .remove();
+      }
       this._searchPopup = $('<div>', {class: '_search _input'}) .appendTo ($('body'));
       $('<label>') .appendTo ($('<div>') .appendTo (this._searchPopup))
         .append ($('<span>',  {class: 'lnr-magnifier'}))

@@ -11,6 +11,9 @@ function notregexReplace (obj) {
     if (p == '$notregex') {
       obj ['$not'] = new RegExp (obj [p]);
       delete obj ['$notregex'];
+    } else if (p == '$regexi') {
+      obj .$regex = new RegExp (obj [p], 'i');
+      delete obj .$regexi;
     } else if (typeof obj [p] == 'object')
       notregexReplace (obj [p])
 }

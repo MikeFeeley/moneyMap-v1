@@ -308,6 +308,7 @@ class TransactionHUD extends TransactionAndRulesTable {
       (e) => {return ! $.contains (this._content .get (0), e .target) && this._content .get (0) != e .target},
       ()  => {this._html .removeClass ('fader_visible') .one ('transitionend', () => {this .delete()})}, true
     );
+    this._html .data ('modal', this._modalStackEntry);
     ui .scrollIntoView (this._html);
     setTimeout (() => {this._html .addClass ('fader_visible')}, 0);
   }
@@ -441,17 +442,29 @@ class TransactionHUD extends TransactionAndRulesTable {
       } else
         return []
     }
-    let matchingCats = family (variance .getBudget() .getCategories()
-      .findAll (c => {return c .name && c .name .toLowerCase() .includes (text .toLowerCase() .trim())}, true)
-    ) .map (c => {return c._id});
-    let regex = '.*' + text .replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + '.*';
-    let query = {$limit: 100, $sort: {date: -1}, $or: [
-      {category:    {$in:    matchingCats}},
-      {payee:       {$regex: regex}},
-      {description: {$regex: regex}}
-    ]};
-    let title = 'Top Search Results for "' + text + '"';
-    TransactionHUD .show (title, query, accounts, variance, toHtml, position);
+    let matchingCats = term => {
+      return family (variance .getBudget() .getCategories()
+        .findAll (c => {return c .name && c .name .toLowerCase() .includes (term)}), true)
+        .map     (c => {return c._id});
+    }
+    if (text && text .length) {
+      let inq = false;
+      let terms = text .split ('"') .reduce ((list, q) => {
+        let t = inq? q: q .split (' ') .filter (t => {return t});
+        inq = ! inq;
+        return list .concat (t);
+      }, []) .map (t => {return t .trim() .toLowerCase()});
+      let query = {$limit: 100, $sort: {date: -1}, $and: terms .map (term => {
+        let regex = '.*' + term .replace (/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + '.*';
+        let cids  = matchingCats (term);
+        return {$or: (cids .length? [{category: {$in: cids}}]: []) .concat (['payee', 'description'] .map (field => {
+          return {[field]: {$regexi: regex}}
+        }))}
+      })}
+      // TODO: before / after / this year / last year / between ???
+      let title = "Top Search Results for '" + text + "'";
+      TransactionHUD .show (title, query, accounts, variance, toHtml, position);
+    }
   }
 
   static search (text, accounts, variance, toHtml, position) {

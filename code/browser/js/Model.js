@@ -619,7 +619,9 @@ function _query_ismatch (query, doc) {
       case '$nin':
         return ! val .includes (doc [field]);
       case '$regex':
-        return doc [field] && doc [field] .match (new RegExp (val))
+        return doc [field] && doc [field] .match (new RegExp (val));
+      case '$regexi':
+        return doc [field] && doc [field] .match (new RegExp (val, 'i'));
       case '$notregex':
         return ! doc [field] || ! doc [field] .match (new RegExp (val));
     }
