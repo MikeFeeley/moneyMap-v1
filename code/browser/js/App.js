@@ -213,12 +213,12 @@ class App {
     if (eventType == UserEvent .NEW_USER) {
 
       this._tabs = new ui.Tabs ($('body'), handleNameClick);
-      $('body') .keypress (e => {
+      document .documentElement .addEventListener ('keydown', e => {
         if (e .metaKey && (e .keyCode == 70 || e .keyCode == 102)) {
           this._search();
           e .preventDefault();
         }
-      })
+        }, true);
       this._proT = this._tabs .addTab  ('Progress');
       this._traT = this._tabs .addTab  ('Inbox');
       this._actT = this._tabs .addTab  ('Activity');
