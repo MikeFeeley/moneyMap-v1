@@ -260,32 +260,35 @@ class TransactionHUD extends TransactionAndRulesTable {
       e .stopPropagation();
       return false;
     })
-    if (this._query .date) {
+    let isMonth = this._query .date && this._query .date .$gte && this._query .date .$lte && Types .date._yearMonth (this._query .date .$gte) == Types .date._yearMonth (this._query .date .$lte)
+    if (isMonth) {
       $('<div>', {class: '_calendarButton lnr-calendar-full'}) .appendTo (buttons)
         .on ('click',                e => {this._toggleMonthYear()})
         .on ('webkitmouseforcedown', e => {this._calendarYear()})
-      if (this._context && this._context .cat) {
-        let cat = this._context .cat;
-        $('<div>', {class:'_nextButton lnr-map'}) .appendTo (buttons) .click (e => {
-          let date = this._query .date && this._query .date .$lte;
-          BudgetProgressHUD .show (cat._id, this._html, {top: 60, left: 30}, this._accounts, this._variance, date);
+    }
+    if (this._context && this._context .cat) {
+      let cat = this._context .cat;
+      $('<div>', {class:'_nextButton lnr-map'}) .appendTo (buttons) .click (e => {
+        let date = this._query .date && this._query .date .$lte;
+        BudgetProgressHUD .show (cat._id, this._html, {top: 60, left: 30}, this._accounts, this._variance, date);
+        e .stopPropagation();
+        return false;
+      });
+      if (cat .parent)
+        $('<div>', {class:'_nextButton lnr-exit-up'}) .appendTo (buttons) .click (e => {
+          let dates = this._query .date && {
+            start: this._query .date .$gte,
+            end:   this._query .date .$lte
+          }
+          TransactionHUD .showCategory (
+            cat .parent._id, dates, this._accounts, this._variance, this._html, {top: 60, left: 30},
+            this._context .includeMonths, this._context .includeYears, this._context .addCats
+          );
           e .stopPropagation();
           return false;
         });
-        if (cat .parent)
-          $('<div>', {class:'_nextButton lnr-exit-up'}) .appendTo (buttons) .click (e => {
-            let dates = this._query .date && {
-              start: this._query .date .$gte,
-              end:   this._query .date .$lte
-            }
-            TransactionHUD .showCategory (
-                cat .parent._id, dates, this._accounts, this._variance, this._html, {top: 60, left: 30},
-                this._context .includeMonths, this._context .includeYears, this._context .addCats
-            );
-            e .stopPropagation();
-            return false;
-          });
-      }
+    }
+    if (this._query .date) {
       $('<div>', {class:'_prevButton lnr-chevron-left'}) .appendTo (buttons) .click (e => {
         this._changeMonth (-1);
         e .stopPropagation();
@@ -366,7 +369,8 @@ class TransactionHUD extends TransactionAndRulesTable {
     }
     let name = field._name .charAt (0) .toUpperCase() + field._name .slice (1);
     let [t,s] = Array .isArray (title)? title .concat(['','']): [title,''];
-    s = s + (s.length? ' and ': 'Where ') + name + ' ' + desc;
+    if (desc .length)
+      s = s + (s.length? ' and ' + (! s .toLowerCase() .includes ('where')? ' where ': ''): 'Where ') + name + ' ' + desc;
     if (field._name == 'category') {
       context = Object .assign ({}, context || {});
       context .cat = variance .getBudget() .getCategories() .get (field._value);
@@ -447,22 +451,108 @@ class TransactionHUD extends TransactionAndRulesTable {
         .findAll (c => {return c .name && c .name .toLowerCase() .includes (term)}), true)
         .map     (c => {return c._id});
     }
+    let query = {$limit: 100, $sort: {date: -1}};
     if (text && text .length) {
       let inq = false;
       let terms = text .split ('"') .reduce ((list, q) => {
+        if (!inq) {
+          let bs = variance .getBudget() .getStartDate();
+          let be = variance .getBudget() .getEndDate();
+          for (let tok of ['this year', 'last year', 'in', 'before', 'after', 'this month', 'last month']) {
+            let pos = q .indexOf (tok);
+            if (pos != -1 && (pos + tok .length == q .length || q [pos + tok .length] == ' ')) {
+              if (['in', 'before', 'after'] .includes (tok)) {
+                let nts = q .slice (pos + tok .length + 1) .trim() .split (' ');
+                if (nts .length) {
+                  let date   = Types .dateMYorYear .fromString (nts[0]);
+                  let endPos = q .slice (pos) .indexOf (nts[0]) + nts[0] .length + pos;
+                  if (!date && nts .length > 1) {
+                    date = Types .dateMYorYear .fromString (nts[0] + '-' + nts[1]);
+                    endPos = q .slice (pos) .indexOf (nts[1]) + nts[1] .length + pos;
+                  }
+                  if (!date) {
+                    let mo = Types .date._mthsLC .indexOf (nts[0]);
+                    if (mo == -1)
+                      mo = Types .date._monthsLC .indexOf (nts[0]);
+                    if (mo != -1) {
+                      mo += 1;
+                      let ty = Types .date._year (Types .date .today());
+                      let tm = Types .date._month (Types .date .today());
+                      date = Types .date._date (mo <= tm? ty: ty - 1, mo, 1);
+                      endPos = q .slice (pos) .indexOf (nts[0]) + nts[0] .length + pos;
+                    }
+                  }
+                  if (date) {
+                    let st, en;
+                    if (Types .date .isYear (date)) {
+                      st = Types .date._yearStart (date, bs, be);
+                      en = Types .date._yearEnd   (date, bs, be);
+                    } else {
+                      st = Types .date .monthStart (date);
+                      en = Types .date .monthEnd   (date);
+                    }
+                    switch (tok) {
+                      case 'in':
+                        query .date = {$gte: st, $lte: en};
+                        break;
+                      case 'before':
+                        query .date = {$lt: st};
+                        break;
+                      case 'after':
+                        query .date = {$gt: en};
+                        break;
+                    }
+                    q = q .slice (0, pos - 1) + q .slice (endPos);
+                  }
+                }
+
+              } else {
+                let st, en;
+                switch (tok) {
+                  case 'this month': case 'last month':
+                    st = Types .date .monthStart (Types .date .today());
+                    break;
+                  case 'this year': case 'last year':
+                    st = Types .dateFY .getFYStart (Types .date .today(), bs, be)
+                    break;
+                }
+                let md = 0;
+                switch (tok) {
+                  case 'last month':
+                    md = -1;
+                    break;
+                  case 'last year':
+                    md = -12;
+                    break;
+                }
+                st = Types .date .addMonthStart (st, md);
+                switch (tok) {
+                  case 'this month': case 'last month':
+                    en = Types .date .monthEnd (st);
+                    break;
+                  case 'this year': case 'last year':
+                    en = Types .dateFY .getFYEnd (st, bs, be);
+                    break;
+                }
+                query .date = {$gte: st, $lte: en};
+                q = q .slice (0, pos - 1) + q .slice (pos + tok .length);
+              }
+            }
+          }
+        }
         let t = inq? q: q .split (' ') .filter (t => {return t});
         inq = ! inq;
         return list .concat (t);
       }, []) .map (t => {return t .trim() .toLowerCase()});
-      let query = {$limit: 100, $sort: {date: -1}, $and: terms .map (term => {
+      query .$and = terms .map (term => {
         let regex = '.*' + term .replace (/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + '.*';
         let cids  = matchingCats (term);
         return {$or: (cids .length? [{category: {$in: cids}}]: []) .concat (['payee', 'description'] .map (field => {
           return {[field]: {$regexi: regex}}
         }))}
-      })}
-      // TODO: before / after / this year / last year / between ???
-      let title = "Top Search Results for '" + text + "'";
+      });
+      let desc = terms .map (t => {return t .includes (' ')? "'" + t + "'": t}) .join (' ');
+      let title = ['Search Results', 'Top Matches for "' + desc + '"'];
       TransactionHUD .show (title, query, accounts, variance, toHtml, position);
     }
   }

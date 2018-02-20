@@ -145,6 +145,12 @@ var ui = {
         ui._modalStack .splice (index, 1);
     }
 
+    static clear() {
+      for (let entry of ui._modalStack || [])
+        entry .action();
+      ui._modalStack = [];
+    }
+
     static init() {
       $('html') [0] .addEventListener ('mousedown',            e => {ui .ModalStack._onMouseDown (e)},         true);
       $('html') [0] .addEventListener ('webkitmouseforcedown', e => {ui .ModalStack._onForceClick (e)},        true);

@@ -5,8 +5,8 @@ var async    = require ('../lib/async.js');
 var ObjectID = require ('mongodb').ObjectID
 var router   = express .Router();
 
-// Workaround Mongodb limitation that $not can not be combined with $regex
-function notregexReplace (obj) {
+// Workaround Mongodb limitation that $not can not be combined with $regex and use $regexi for case insensitive
+function handleNonStandardQueryOptions (obj) {
   for (let p in obj)
     if (p == '$notregex') {
       obj ['$not'] = new RegExp (obj [p]);
@@ -15,7 +15,7 @@ function notregexReplace (obj) {
       obj .$regex = new RegExp (obj [p], 'i');
       delete obj .$regexi;
     } else if (typeof obj [p] == 'object')
-      notregexReplace (obj [p])
+      handleNonStandardQueryOptions (obj [p])
 }
 
 async function get (req, res, next) {
@@ -26,7 +26,7 @@ async function get (req, res, next) {
     let sort =  req .body .query && req .body .query .$sort;
     if (sort)
       delete req .body .query .$sort;
-    notregexReplace (req.body.query);
+    handleNonStandardQueryOptions (req .body .query);
     let find = (await req .dbPromise) .collection (req.body.collection) .find (req.body.query, req.body.projection);
     if (limit)
       find = limit? find .sort (sort || req.body.sort) .limit (limit): find .sort (sort || req.body.sort);
@@ -39,7 +39,7 @@ async function get (req, res, next) {
 
 async function has (req, res, next) {
   try {
-    notregexReplace (req .body .query);
+    handleNonStandardQueryOptions (req .body .query);
     res .json ((await (await req .dbPromise) .collection (req .body .collection) .findOne (req .body .query)) != null);
   } catch (e) {
     console .log ('has: ', e, req .body);

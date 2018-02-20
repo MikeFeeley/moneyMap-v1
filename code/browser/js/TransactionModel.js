@@ -82,6 +82,8 @@ class TransactionModel extends Model {
    *   - update list of previous queries
    */
   async _checkCache (query, append, loadOnMiss) {
+    if (query .$and || query .$or)
+      return false;
     let queries = this._getQueries();
     let dates, categories, cacheHit;
     if (query .date) {
