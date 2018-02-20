@@ -1278,7 +1278,7 @@ class Navigate {
       let stc = this._actuals .getCashFlowBalance (this._budget .getStartDate());
       if (stc < -50 || stc > 50) {
         let tt =
-            'You will end year with ' +
+            'End of year ' +
             Types .moneyDZ .toString (Math .abs (stc + una + ovr)) +
             ' cash-flow ' +
             (stc + una + ovr < 0? ' deficit.': stc + una + ovr == 0? 'balance.': 'surplus.');
