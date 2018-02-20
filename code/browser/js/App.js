@@ -189,16 +189,19 @@ class App {
       let input = this._searchPopup .find ('input');
       input .keypress (e => {
         if (e .keyCode == 13) {
-          TransactionHUD .search (input.val(), this._accModel, this._varModel, $('body'), {top: 100, left: 30});
+          TransactionHUD .search (input .val(), this._accModel, this._varModel, $('body'), {top: 100, left: 30});
+          this._lastSearch = input .val();
           this._searchPopup .remove();
           this._searchPopup = null;
           ui .ModalStack .delete (modal);
         }
       });
-      input.focus();
+      if (this._lastSearch)
+        input .val (this._lastSearch);
+      input .select();
       let modal = ui .ModalStack .add (
         e => {return e && $.contains (document .body, e .target) && ! $.contains (this._searchPopup .get (0), e .target)},
-        e => {this._searchPopup .remove(); this._searchPopup = null},
+        e => {this._lastSearch = input .val(); this._searchPopup .remove(); this._searchPopup = null},
         true
       )
     }
