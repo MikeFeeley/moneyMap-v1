@@ -644,6 +644,8 @@ function _query_ismatch (query, doc) {
       case '$nor':
         match = !v.length || (!_query_ismatch (v[0], doc) && _query_ismatch ({'$nor': v.slice(1)},doc));
         break;
+      case '$limit': case '$sort':
+        break;
       default:
         if (typeof v == 'object' && v != null) {
           for (let vk in v)
