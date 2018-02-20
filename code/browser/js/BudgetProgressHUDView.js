@@ -284,13 +284,15 @@ class BudgetProgressHUDView extends View {
   }
 
   removeHtml() {
-    if (this._html .hasClass ('fader_visible'))
-      this._html
-        .removeClass ('fader_visible')
-        .one ('transitionend', () => {this._html .remove(); this._html = null})
-    else {
-      this._html .remove();
-      this._html = null;
+    if (this._html) {
+      if (this._html .hasClass ('fader_visible'))
+        this._html
+          .removeClass ('fader_visible')
+          .one ('transitionend', () => {this._html .remove(); this._html = null})
+      else {
+        this._html .remove();
+        this._html = null;
+      }
     }
   }
 

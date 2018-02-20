@@ -146,10 +146,10 @@ var ui = {
     }
 
     static clear() {
-      for (let entry of ui._modalStack || [])
-        if (entry .remove)
-          entry .action();
-      ui._modalStack = ui._modalStack && ui._modalStack .filter (entry => {return entry .remove});
+      for (let entry of ui._modalStack || []) {
+        entry .action();
+      }
+      ui._modalStack = ui._modalStack && ui._modalStack .filter (entry => {return ! entry .remove});
     }
 
     static init() {
