@@ -187,7 +187,7 @@ class App {
         .append ($('<span>',  {class: 'lnr-magnifier'}))
         .append ($('<input>', {type: 'text', placeholder: 'Search'}))
       let input = this._searchPopup .find ('input');
-      input .keypress (e => {
+      input[0] .addEventListener ('keydown', e => {
         if (e .keyCode == 13) {
           TransactionHUD .search (input .val(), this._accModel, this._varModel, $('body'), {top: 100, left: 30});
           this._lastSearch = input .val();
@@ -195,7 +195,10 @@ class App {
           this._searchPopup = null;
           ui .ModalStack .delete (modal);
         }
-      });
+        if (e .keyCode == 90 && e .metaKey) {
+          e .stopImmediatePropagation();
+        }
+      }, true);
       if (this._lastSearch)
         input .val (this._lastSearch);
       input .select();
