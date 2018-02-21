@@ -7,8 +7,18 @@
 
 \f0\fs36 \cf0 ==============\
 BUGS\
-	- get clear idea of what express next() does or \'85 get rid of express!\
+	- search\
+		- consider going to calendar year\
 	- there is something wrong with starting-cash-flow calculation; it keeps fluctuating by small amounts\
+		- its the handling of reimbursements\
+		- we are trying to ignore them from budget\
+		- and so a reimb debit changes the starting balance as if the reib happened before the start\
+			- seems broken\
+			- but, if you don't do that then what?  XXX  is something else broken?\
+	- rethink the category children add-to, subtract-from rules\
+		- there are times when you want to use the subtract from rule for monthly parent\
+		- makes it difficult to switch between yearly and monthly when there are siblings\
+		- BUT, need a simple, clear rule \'85 complexity here will be confusing\
 \
 TODO\
 	- add a button to accounts with balance history ("save to history")\

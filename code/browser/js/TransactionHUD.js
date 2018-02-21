@@ -115,9 +115,15 @@ class TransactionHUD extends TransactionAndRulesTable {
       if (pos != -1)
         subtitle .splice (pos - 1, subtitle [pos + 2] == 'between'? 7: 4);
     }
-    let st = this._query .date .$gte, en = this._query .date .$lte, dsc = [];
+    let st = this._query .date .$gte || (this._query .date .$gt && Types .date .addDay (this._query .date .$gt,  1));
+    let en = this._query .date .$lte || (this._query .date .$lt && Types .date .addDay (this._query .date .$lt, -1));
+    let dsc = [];
     let bst = budget .getStartDate(), ben = budget .getEndDate();
-    if (Types .date ._difMonths (en, st) == 1) {
+    if (st && ! en)
+      dsc = ('Starting ' + Types .dateMonthY .toString (st)) .split (' ');
+    else if (!st && en)
+      dsc = ('Ending ' + Types .dateMonthY .toString (en)) .split (' ');
+    else if (Types .date ._difMonths (en, st) == 1) {
       dsc = Types .dateMonthY .toString (st) .split (' ');
       if (st != Types .date .monthStart (st) || en != Types .date .monthEnd (en))
         if (st == en)
@@ -134,7 +140,7 @@ class TransactionHUD extends TransactionAndRulesTable {
     else
       dsc = (Types .dateMY .toString (st) .split ('-') [0] + ' ' + Types .date._day (st) +  ', ' + Types .date._year (st) + ' - ' +
         Types .dateMY .toString (en) .split ('-') [0] + ' ' + Types .date._day (en) + ', ' + Types .date._year (en)) .split (' ')
-    title = (title .join (' ') + ' for ' + dsc .join (' ')) .split (' ');
+    title = (title .join (' ') + (! dsc .includes ('Starting') && ! dsc .includes ('Ending')? ' for ': ' ') + dsc .join (' ')) .split (' ');
     this._title = [title, subtitle]    .map  (t => {return (t && t .join (' ')) || ''})
     this._content .find ('._title')    .text (this._title [0]);
     this._content .find ('._subtitle') .text (this._title [1])
@@ -288,7 +294,7 @@ class TransactionHUD extends TransactionAndRulesTable {
           return false;
         });
     }
-    if (this._query .date) {
+    if (this._query .date && this._query .date .$gte && this._query .date .$lte) {
       $('<div>', {class:'_prevButton lnr-chevron-left'}) .appendTo (buttons) .click (e => {
         this._changeMonth (-1);
         e .stopPropagation();
@@ -458,11 +464,12 @@ class TransactionHUD extends TransactionAndRulesTable {
         if (!inq) {
           let bs = variance .getBudget() .getStartDate();
           let be = variance .getBudget() .getEndDate();
-          for (let tok of ['this year', 'last year', 'in', 'before', 'after', 'this month', 'last month']) {
+          q = q .split (' ') .filter (s => {return s}) .join (' ');
+          for (let tok of ['in', 'before', 'after', 'since', 'this year', 'last year', 'this month', 'last month']) {
             let pos = q .indexOf (tok);
             if (pos != -1 && (pos + tok .length == q .length || q [pos + tok .length] == ' ')) {
-              if (['in', 'before', 'after'] .includes (tok)) {
-                let nts = q .slice (pos + tok .length + 1) .trim() .split (' ');
+              if (['in', 'before', 'after', 'since'] .includes (tok)) {
+                let nts = q .slice (pos + tok .length + 1) .split (' ');
                 if (nts .length) {
                   let date   = Types .dateMYorYear .fromString (nts[0]);
                   let endPos = q .slice (pos) .indexOf (nts[0]) + nts[0] .length + pos;
@@ -470,7 +477,7 @@ class TransactionHUD extends TransactionAndRulesTable {
                     date = Types .dateMYorYear .fromString (nts[0] + '-' + nts[1]);
                     endPos = q .slice (pos) .indexOf (nts[1]) + nts[1] .length + pos;
                   }
-                  if (!date) {
+                  if (! date) {
                     let mo = Types .date._mthsLC .indexOf (nts[0]);
                     if (mo == -1)
                       mo = Types .date._monthsLC .indexOf (nts[0]);
@@ -481,6 +488,19 @@ class TransactionHUD extends TransactionAndRulesTable {
                       date = Types .date._date (mo <= tm? ty: ty - 1, mo, 1);
                       endPos = q .slice (pos) .indexOf (nts[0]) + nts[0] .length + pos;
                     }
+                  }
+                  if (! date) {
+                    let str = nts[0] + ' ' + nts [1];
+                    if (str == 'this month')
+                      date = Types .date .today()
+                    else if (str == 'this year')
+                      date = Types .date._year (Types .dateFY .getFYStart (Types .date .today(), bs, be));
+                    else if (str == 'last month')
+                      date = Types .dates .addMonthStart (Types .date .today(), -1);
+                    else if (str == 'last year')
+                      date = Types .date._year (Types .dateFY .getFYStart (Types .date .today(), bs, be)) - 1;
+                    if (date)
+                      endPos = q .slice (pos) .indexOf (nts[0]) + nts[0] .length + nts[1] .length + pos + 1;
                   }
                   if (date) {
                     let st, en;
@@ -501,8 +521,11 @@ class TransactionHUD extends TransactionAndRulesTable {
                       case 'after':
                         query .date = {$gt: en};
                         break;
+                      case 'since':
+                        query .date = {$gte: st};
+                        break;
                     }
-                    q = q .slice (0, pos - 1) + q .slice (endPos);
+                    q = (pos> 0? q .slice (0, pos - 1): '') + q .slice (endPos);
                   }
                 }
 
@@ -535,7 +558,7 @@ class TransactionHUD extends TransactionAndRulesTable {
                     break;
                 }
                 query .date = {$gte: st, $lte: en};
-                q = q .slice (0, pos - 1) + q .slice (pos + tok .length);
+                q = (pos> 0? q .slice (0, pos - 1): '') + q .slice (pos + tok .length);
               }
             }
           }
@@ -544,16 +567,18 @@ class TransactionHUD extends TransactionAndRulesTable {
         inq = ! inq;
         return list .concat (t);
       }, []) .map (t => {return t .trim() .toLowerCase()});
-      query .$and = terms .map (term => {
-        let regex = '.*' + term .replace (/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + '.*';
-        let cids  = matchingCats (term);
-        return {$or: (cids .length? [{category: {$in: cids}}]: []) .concat (['payee', 'description'] .map (field => {
-          return {[field]: {$regexi: regex}}
-        }))}
-      });
-      let desc = terms .map (t => {return t .includes (' ')? "'" + t + "'": t}) .join (' ');
-      let title = ['Search Results', 'Top Matches for "' + desc + '"'];
-      TransactionHUD .show (title, query, accounts, variance, toHtml, position);
+      if (terms .length) {
+        query .$and = terms .map (term => {
+          let regex = '.*' + term .replace (/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + '.*';
+          let cids  = matchingCats (term);
+          return {$or: (cids .length? [{category: {$in: cids}}]: []) .concat (['payee', 'description'] .map (field => {
+            return {[field]: {$regexi: regex}}
+          }))}
+        });
+        let desc = terms .map (t => {return t .includes (' ')? "'" + t + "'": t}) .join (' ');
+        let title = ['Search Results', 'Top Matches for "' + desc + '"'];
+        TransactionHUD .show (title, query, accounts, variance, toHtml, position);
+      }
     }
   }
 

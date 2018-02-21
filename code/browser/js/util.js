@@ -332,7 +332,7 @@ class DateType extends FieldType {
   }
   addDay (date, days) {
     return (d => {return this._date (d .getFullYear(), d .getMonth() + 1, d .getDate())})
-      (new Date (this._year (date), this._month (date) - 1, this._day (date)) .valueOf() + days * 1000 * 60 * 60 * 24);
+      (new Date (new Date (this._year (date), this._month (date) - 1, this._day (date)) .valueOf() + days * 1000 * 60 * 60 * 24));
 
   }
 }
