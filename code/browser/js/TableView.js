@@ -114,7 +114,7 @@ class TableView extends TupleView {
       }
       e.stopPropagation();
     });
-    $('body') .on ('click', e => {if (!this._options || ! this._options .readOnly) this._clearSelectedTuple()});
+    $('html') [0] .addEventListener ('click',  e => {if (!this._options || ! this._options .readOnly) this._clearSelectedTuple()});
   }
 
   _hasFocus() {

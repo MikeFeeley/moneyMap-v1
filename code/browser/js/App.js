@@ -200,7 +200,7 @@ class App {
         input .val (this._lastSearch);
       input .select();
       let modal = ui .ModalStack .add (
-        e => {return e && $.contains (document .body, e .target) && ! $.contains (this._searchPopup .get (0), e .target)},
+        e => {return e && ! $.contains (this._searchPopup .get (0), e .target)},
         e => {this._lastSearch = input .val(); this._searchPopup .remove(); this._searchPopup = null},
         true
       )

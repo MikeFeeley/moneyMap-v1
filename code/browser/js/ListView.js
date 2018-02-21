@@ -181,7 +181,7 @@ class ListView extends SortedTupleView {
 
   addHtml (toHtml) {
     this._html = $('<ul>') .appendTo ($('<div>', {class: '_List ' + this._name}) .appendTo (toHtml));
-    $('body') .on ('click', e => {this._clearSelectedTuple()});
+    $('html') [0] .addEventListener ('click',  e => {this._clearSelectedTuple()});
     if (! this._options .noMove)
       this._html .nestedSortable ({
         listType:            'ul',
