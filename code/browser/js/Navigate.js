@@ -1255,6 +1255,8 @@ class Navigate {
       let ovr = ovp + ovc;
       let una = -(inc + (sav + exp));
       let list = [];
+      if (sav > 0)
+        list .push ({name: 'Planned Savings', amount: sav});
       if (una < -50 || una > 50)
         list .push ({
           name:    una > 0? 'Unallocated Income' : 'Over-Allocated Income',
@@ -1290,9 +1292,9 @@ class Navigate {
       }
       if (wth < 0)
         list .push ({name: 'Savings Withdrawals', amount: wth})
-      list .push ({name: 'Net Savings',          amount: sav + una + ovr + stc + wth});
+      list .push ({name: 'Projected Savings',          amount: sav + una + ovr + stc + wth});
       if (inc != 0)
-        list .push ({name: 'Savings Rate',         percent: (sav + una + ovr + stc + wth) * 1.0 / (-inc)});
+        list .push ({name: 'Income Saved',         percent: (sav + una + ovr + stc + wth) * 1.0 / (-inc)});
       updateView (list);
     }
     return update;
