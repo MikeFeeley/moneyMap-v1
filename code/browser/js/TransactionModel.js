@@ -123,12 +123,16 @@ class TransactionModel extends Model {
           } else if ((! categories && ! q .categories) || (categories && q .categories && this._isEqual (categories, q .categories))) {
             // same categories, extending date range
             if (dates .start < q .start && Types .date .subDays (q .start, dates .end) <= 1) {
-              infill   = {date: {$gte: dates .start, $lt: q.start}, category: {$in: q .categories}};
+              infill   = {date: {$gte: dates .start, $lt: q.start}};
+              if (q .categories)
+                infill .category = {$in: q .categories};
               q .start = dates .start;
               queries .sort ((a,b) => {return a .start < b .start? -1: a .start == b .start? 0: 1})
               matched  = true;
             } if (Types .date .subDays (dates .start, q .end) <= 1 && dates .end > q .end) {
-              infill  = {date: {$gt: q .end, $lte: dates .end}, category: {$in: q .categories}};
+              infill  = {date: {$gt: q .end, $lte: dates .end}};
+              if (q .categories)
+                infill .category = {$in: q .categories};
               q .end  = dates .end;
               matched = true;
             }
