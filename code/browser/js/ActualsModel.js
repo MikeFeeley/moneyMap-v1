@@ -138,18 +138,14 @@ class ActualsModel extends Observable {
    * Returns starting cash flow balance for specified date
    *     (a) start with current balance
    *     (b) undo transactions since date (or beginning of budget if dates is in future) to get starting balance
-   *     (c) ignore prior-year suspense and double current year (in anticipating of repayment)
-   *     (d) if date is in future, add budget results date less one month
+   *     (c) if date is in future, add budget results date less one month
    */
   getCashFlowBalance (date) {
     let bal      = this._accounts .getCashFlowBalance();
     let today    = Types .date .today();
     let start    = Math .min (date, this._budget .getStartDate());
     for (let cat of this._budget .getCategories() .getRoots())
-      if (cat == this._budget .getSuspenseCategory())
-        bal += this .getAmountRecursively (cat, this._budget .getStartDate(), today) * 2
-      else
-        bal += this .getAmountRecursively (cat, start, today);
+      bal += this .getAmountRecursively (cat, start, today);
     if (date > today) {
       let end = Types .date .addMonthStart (date, -1);
       for (let cat of this._budget .getCategories() .getRoots())

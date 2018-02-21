@@ -7,6 +7,8 @@
 
 \f0\fs36 \cf0 ==============\
 BUGS\
+\
+TODO\
 	- search\
 		- consider going to calendar year\
 	- there is something wrong with starting-cash-flow calculation; it keeps fluctuating by small amounts\
@@ -20,7 +22,6 @@ BUGS\
 		- makes it difficult to switch between yearly and monthly when there are siblings\
 		- BUT, need a simple, clear rule \'85 complexity here will be confusing\
 \
-TODO\
 	- add a button to accounts with balance history ("save to history")\
 \
 	- issue with changing from yearly schedule to monthly\
@@ -37,6 +38,11 @@ TODO\
 		- requires collecting all taxable income sources \
 		- add an option; use all taxable income to determine tax rate (something like this; or this could be built into tax table choice)\
 			- otherwise its the same as other IncomeSource categories\
+\
+==== CASH FLOW BALANCE\
+Starting cash flow balance  + budget delta should equal ending cash flow balance\
+Assumes that there are no outstanding reimbursements at start or end of year\
+If there are, then you credit the account at end of year to get the REAL balance and then debit it after the start of the year\
 \
 \
 ==============\
