@@ -183,7 +183,7 @@ class Navigate {
         if (arg .altClick || isOther || ! this._addProgressGraph (root, arg .html, true, arg .position, undefined, im, ! im))
           BudgetProgressHUD .show (root._id, arg .html, arg .position, this._accounts, this._variance);
       } else {
-        var today = Types .dateMY .today();
+        var today = Math .min (Types .dateMY .today(), this._budget .getEndDate());
         var dates  = {
           start: Types .dateMY .monthStart (today),
           end:   Types .dateMY .monthEnd   (today)
@@ -1081,7 +1081,7 @@ class Navigate {
   _addProgressGraph (root, side, popup, position, labelWidth, includeMonths=true, includeYears=true, bigHeading=false) {
 
     var getAllData = () => {
-      amounts = (root .children || []) .map (cat => {return {
+      amounts = (root .children || []) .concat (root .zombies || []) .map (cat => {return {
         cat:    cat,
         amount: this._variance .getAmount (cat._id, date)
       }});
@@ -1114,7 +1114,7 @@ class Navigate {
           }
         }
         return o;
-      }, {})
+      }, {});
       for (let per of ['month', 'year']) {
         if (otherAmount [per] && otherAmount [per] .preOverActual < 0) {
           otherAmount [per] .preBudgetedActual += otherAmount [per] .preOverActual;
@@ -1123,6 +1123,10 @@ class Navigate {
         if (otherAmount [per] && otherAmount [per] .curOverActual < 0) {
           otherAmount [per] .curBudgetedActual += otherAmount [per] .curOverActual;
           otherAmount [per] .curOverActual     = 0;
+        }
+        if (otherAmount [per] && otherAmount [per] .curBudgetedActual < 0) {
+          otherAmount [per] .preBudgetedActual += otherAmount [per] .curBudegtedActual;
+          otherAmount [per] .curBudgetedActual = 0;
         }
       }
       let oaTotal = ['month', 'year'] .reduce ((o,per) => {

@@ -178,7 +178,7 @@ class VarianceModel extends Observable {
   _getAmountDown (cat, period, skip, excludeChild, transactionFocused) {
     var type      = this._getScheduleTypeName (cat);
     var amount    = this._getAmount (cat, period, skip);
-    var chiAmount = (cat .children || [])
+    var chiAmount = (cat .children || []) .concat (cat .zombies || [])
       .filter (c => {return c != excludeChild})
       .reduce ((a, c) => {
         return this._addAmounts (a, this._getAmountDown (c, period, skip));
@@ -242,7 +242,7 @@ class VarianceModel extends Observable {
       var amount = this._getAmount (cat .parent, period, skip);
       // subtract children if this is a yearly budget
       if (this._budget .getCategories() .getType (cat .parent) == ScheduleType .YEAR)
-        amount .year .budget .prev = Math .max (0, amount .year .budget .prev - (cat .parent .children || []) .reduce ((t,c) => {
+        amount .year .budget .prev = Math .max (0, amount .year .budget .prev - (cat .parent .children || []) .concat (cat .parent .zombies || []) .reduce ((t,c) => {
           return t + this._budget .getIndividualAmount(c) .amount;
         }, 0));
       var upAmount = this._getAmountUp (cat .parent, period, skip);
@@ -265,7 +265,7 @@ class VarianceModel extends Observable {
       if (unalloc .prev > 0 || unalloc .cur > 0) {
 
         // get amounts for children
-        var children = (cat .parent .children || []) .map (child => {
+        var children = (cat .parent .children || []) .concat (cat .parent .zombies || []) .map (child => {
           return {cat: child, amount: this._getAmountDown (child, period, skip)};
         });
 
