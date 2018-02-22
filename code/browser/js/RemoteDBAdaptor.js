@@ -47,42 +47,44 @@ class RemoteDBAdaptor extends DBAdaptor {
 
   _connect (database) {
     let active = () => {return ! this._disconnected && database == _default_database_id};
-    let timeoutId = setTimeout (() => {
-      if (! this._getState() == DBAdaptorState .PERMANENTLY_DOWN && active())
-        this._setState (DBAdaptorState .DOWN);
-    }, CLIENT_KEEP_ALIVE_INTERVAL);
-    if (! RemoteDBAdaptor_serverDisconnectTimeoutId)
-      RemoteDBAdaptor_serverDisconnectTimeoutId = setTimeout (() => {
-        if (active())
-          this._setState (DBAdaptorState .PERMANENTLY_DOWN);
-      }, SERVER_DISCONNECT_THRESHOLD)
-    $.ajax ({url: '/upcall', type: 'POST', contentType: 'application/json', processData: false,
-      data: JSON .stringify (this._processPayload({
-        database:           _default_database_id,
-        respondImmediately: this._getState() == DBAdaptorState .DOWN
-      })),
-      success: data => {
-        if (active()) {
-          this._setState (DBAdaptorState .UP);
-          clearTimeout (timeoutId);
-          if (RemoteDBAdaptor_serverDisconnectTimeoutId) {
-            clearTimeout (RemoteDBAdaptor_serverDisconnectTimeoutId);
-            RemoteDBAdaptor_serverDisconnectTimeoutId = null;
+    if (active()) {
+      let timeoutId = setTimeout (() => {
+        if (! this._getState() == DBAdaptorState .PERMANENTLY_DOWN && active())
+          this._setState (DBAdaptorState .DOWN);
+      }, CLIENT_KEEP_ALIVE_INTERVAL);
+      if (! RemoteDBAdaptor_serverDisconnectTimeoutId)
+        RemoteDBAdaptor_serverDisconnectTimeoutId = setTimeout (() => {
+          if (active())
+            this._setState (DBAdaptorState .PERMANENTLY_DOWN);
+        }, SERVER_DISCONNECT_THRESHOLD)
+      $.ajax ({url: '/upcall', type: 'POST', contentType: 'application/json', processData: false,
+        data: JSON .stringify (this._processPayload({
+          database:           _default_database_id,
+          respondImmediately: this._getState() == DBAdaptorState .DOWN
+        })),
+        success: data => {
+          if (active()) {
+            this._setState (DBAdaptorState .UP);
+            clearTimeout (timeoutId);
+            if (RemoteDBAdaptor_serverDisconnectTimeoutId) {
+              clearTimeout (RemoteDBAdaptor_serverDisconnectTimeoutId);
+              RemoteDBAdaptor_serverDisconnectTimeoutId = null;
+            }
+            setTimeout (() => {this._connect (database)}, 0);
+            if (data .upcalls)
+              this._processUpcall (data);
           }
-          setTimeout (() => {this._connect (database)}, 0);
-          if (data .upcalls)
-            this._processUpcall (data);
+        },
+        error: data => {
+          if (active()) {
+            if (this._getState() != DBAdaptorState .PERMANENTLY_DOWN)
+              this._setState (DBAdaptorState .DOWN);
+            clearTimeout (timeoutId);
+            setTimeout (() => {this._connect (database)}, CLIENT_RETRY_INTERVAL);
+          }
         }
-      },
-      error: data => {
-        if (active()) {
-          if (this._getState() != DBAdaptorState .PERMANENTLY_DOWN)
-            this._setState (DBAdaptorState .DOWN);
-          clearTimeout (timeoutId);
-          setTimeout (() => {this._connect (database)}, CLIENT_RETRY_INTERVAL);
-        }
-      }
-    })
+      })
+    }
   }
 
   connect() {
@@ -94,6 +96,7 @@ class RemoteDBAdaptor extends DBAdaptor {
   async disconnect() {
     if (_default_database_id) {
       try {
+        this._disconnected = true;
         await $.ajax ({url:'/upcall', type: 'POST', contentType: 'application/json', processData: false,
           data: JSON .stringify (this._processPayload ({
             database:   _default_database_id,
@@ -103,7 +106,6 @@ class RemoteDBAdaptor extends DBAdaptor {
       } catch (e) {
         console.log('disconnect error: ', e)
       }
-      this._disconnected = true;
     }
   }
 }

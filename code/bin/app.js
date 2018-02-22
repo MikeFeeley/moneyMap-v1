@@ -43,8 +43,9 @@ app .post ('/upcall', function (req, res) {
 
         if (req .body .disconnect) {
           dbConnections .delete (req .body .sessionId);
-          if (dbConnections .size == 1)
+          if (dbConnections .size == 1) {
             module .exports .notifyOtherClients (req .body .database, req .body .sessionId, {sharing: false});
+          }
           res .json ({disconnected: true});
           if (connection .response)
             connection .response .json ({disconnected: true});
@@ -54,8 +55,8 @@ app .post ('/upcall', function (req, res) {
         // use this connection for any queued events
         if (connection .queue .length) {
           res .json ({database: req .body .database, upcalls: connection .queue});
+          res = null;
           connection .queue = [];
-          return;
         }
 
       } else {
@@ -70,7 +71,7 @@ app .post ('/upcall', function (req, res) {
         if (dbConnections .size > 0) {
           dbConnections .set (req .body .sessionId, {queue: []});
           res .json ({database: req .body .database, upcalls: [{sharing: true}]});
-          return;
+          res = null;
         }
       }
 
@@ -85,14 +86,17 @@ app .post ('/upcall', function (req, res) {
         }
       }, util .SERVER_DISCONNECT_THRESHOLD);
 
-      // set client keep-alive timer
-      let timeoutId = setTimeout(() => {
-        let connection = dbConnections .get (req .body .sessionId);
-        if (connection && connection .response) {
-          connection .response .json ({timeout: true});
-          connection .response = null;
-        }
-      }, util .SERVER_HEART_BEAT_INTERVAL);
+      // set client keep-alive timer (if we still have a response to use)
+      let timeoutId;
+      if (res) {
+         timeoutId = setTimeout(() => {
+          let connection = dbConnections .get (req .body .sessionId);
+          if (connection && connection .response) {
+            connection .response .json ({timeout: true});
+            connection .response = null;
+          }
+        }, util .SERVER_HEART_BEAT_INTERVAL);
+      }
 
       // save connection
       dbConnections .set (req .body .sessionId, {
