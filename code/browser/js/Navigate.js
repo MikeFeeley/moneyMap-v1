@@ -1790,12 +1790,10 @@ class Navigate {
     let budgetStart = this._budget .getStartDate();
     let budgetEnd   = this._budget .getEndDate();
 
-    // compute column dates
-    let startDate = Types .dateFY .getFYEnd (
-      balances .map (b => {return b .date}) .reduce ((m ,d) => {return d? Math .min (m, d): m}),
-      budgetStart, budgetEnd
-    );
-    let today   = Types .date .today();
+    // compute column dates; start at end of FY with oldest history or LAST FY if no history
+    let today         = Types .date .today();
+    let oldestHistory = balances .map (b => {return b .date}) .reduce ((m ,d) => {return m? d? Math .min (m,d): m: d}, null);
+    let startDate     = Types .dateFY .getFYEnd (oldestHistory || Types .date .addMonthStart (today, -12), budgetStart, budgetEnd);
     let endDate = Types .date .addYear (Types .dateFY .getFYEnd (today, budgetStart, budgetEnd), PreferencesInstance .get() .futureYears || 0);
     let colDates = [];
     for (let d = startDate; d <= endDate; d = Types .date .addYear (d, 1))
@@ -1806,7 +1804,9 @@ class Navigate {
       let rowAccounts = row .type == AccountType .GROUP
         ? accounts .filter (a => {return a .group == row._id})
         : [row];
-      let rowData = rowAccounts .map (account => {return account .getBalances (colDates)});
+      let rowData = rowAccounts .length
+        ? rowAccounts .map (account => {return account .getBalances (colDates)})
+        : [Account .getZeroBalances (colDates)];
       return {
         id:     row._id,
         name:   row .name,

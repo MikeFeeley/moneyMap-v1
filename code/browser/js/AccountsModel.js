@@ -88,7 +88,7 @@ class AccountsModel extends Observable {
   async _onBalanceHistoryModelChange (eventType, doc, arg) {
     await this._updateBalanceHistoryModel();
     this._notifyObservers (eventType, doc, arg);
-    this._balanceCacheConsistencyCheck ('accounts', eventType, doc, arg);
+    this._balanceCacheConsistencyCheck ('balanceHistory', eventType, doc, arg);
   }
 
   async _onRateFutureModelChange (eventType, doc, arg) {
@@ -150,7 +150,9 @@ class AccountsModel extends Observable {
 
   async _updateBalanceHistoryModel() {
     this._balanceHistory = (await this._balanceHistoryModel .find ())
-      .sort ((a,b) => {return a .date < b .date? -1: a .date == b .date? 0: 1});
+      .filter (h     => {return h .date})
+      .map    (h     => {h .amount = h .amount || 0; return h;})
+      .sort   ((a,b) => {return a .date < b .date? -1: a .date == b .date? 0: 1});
     if (this._accounts)
       for (let account of this._accounts)
         account .setBalanceHistory (this._balanceHistoryForAccount (account));
@@ -347,6 +349,10 @@ class Account {
       return getAncestors (cl) .concat (cl) .concat (getDescendants (cl))
     }
     switch (modelName) {
+      case 'balanceHistory':
+        if (doc .account == this._id)
+          this._invalidateBalanceCache();
+        break;
       case 'accounts':
         if (doc._id == this._id)
           this._invalidateBalanceCache();
@@ -698,7 +704,7 @@ class Account {
         mStart  = Types .date .addMonthStart (b .date, 1);
         balance = b .balance;
       } else if (this._balanceHistory .length) {
-        mStart  = Types .date .monthStart (this._balanceHistory [0] .date);
+        mStart  = Types .date .addMonthStart (this._balanceHistory [0] .date, -1);
         balance = 0;
       } else {
         mStart  = Types .date .monthStart (this._balanceDate || Types .date .today());
@@ -788,6 +794,15 @@ class Account {
       liquid:  this .liquid,
       amounts: balances .map (d => {return d && d .amount}),
       detail:  balances .map (d => {return d && d .detail})
+    }
+  }
+
+  static getZeroBalances (dates) {
+    return {
+      curBal:  0,
+      liquid:  true,
+      amounts: dates .map (() => {return 0}),
+      detail:  dates .map (() => {return {}})
     }
   }
 
