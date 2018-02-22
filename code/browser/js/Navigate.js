@@ -1189,7 +1189,7 @@ class Navigate {
       .filter (a => {return Object .keys (a .amounts) .reduce ((s,k) => {return s + a .amounts [k]} ,0)})
     }
 
-    var date    = Types .dateMY .today();
+    var date    = Math .min (Types .dateMY .today(), this._budget .getEndDate());
     var amounts, months, years, updateMonthView, updateYearView;
     getAllData();
     if ((months && months .length) || (years  && years .length)) {
