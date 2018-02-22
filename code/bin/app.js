@@ -86,17 +86,14 @@ app .post ('/upcall', function (req, res) {
         }
       }, util .SERVER_DISCONNECT_THRESHOLD);
 
-      // set client keep-alive timer (if we still have a response to use)
-      let timeoutId;
-      if (res) {
-         timeoutId = setTimeout(() => {
-          let connection = dbConnections .get (req .body .sessionId);
-          if (connection && connection .response) {
-            connection .response .json ({timeout: true});
-            connection .response = null;
-          }
-        }, util .SERVER_HEART_BEAT_INTERVAL);
-      }
+      // set client keep-alive timer
+      let timeoutId = setTimeout(() => {
+        let connection = dbConnections .get (req .body .sessionId);
+        if (connection && connection .response) {
+          connection .response .json ({timeout: true});
+          connection .response = null;
+        }
+      }, util .SERVER_HEART_BEAT_INTERVAL);
 
       // save connection
       dbConnections .set (req .body .sessionId, {
