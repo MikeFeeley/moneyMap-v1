@@ -60,6 +60,11 @@ app .post ('/upcall', function (req, res) {
 
       } else {
 
+        if (req .body .disconnect) {
+          res .json ({noDisconnectNotConnected: true});
+          return;
+        }
+
         // do notifications for new connection
         module .exports .notifyOtherClients (req .body .database, req .body .sessionId, {sharing: true});
         if (dbConnections .size > 0) {
@@ -67,11 +72,6 @@ app .post ('/upcall', function (req, res) {
           res .json ({database: req .body .database, upcalls: [{sharing: true}]});
           return;
         }
-      }
-
-      if (req .body .disconnect) {
-        res .json ({noDisconnectNotConnected: true});
-        return;
       }
 
       // set sessions disconnect timer
