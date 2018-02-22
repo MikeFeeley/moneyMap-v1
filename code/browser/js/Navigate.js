@@ -1291,7 +1291,7 @@ class Navigate {
         });
       }
       if (wth < 0)
-        list .push ({name: 'Savings Withdrawals', amount: wth})
+        list .push ({name: 'Savings Withdrawals', amount: wth});
       list .push ({name: 'Projected Savings',          amount: sav + una + ovr + stc + wth});
       if (inc != 0)
         list .push ({name: 'Income Saved',         percent: (sav + una + ovr + stc + wth) * 1.0 / (-inc)});

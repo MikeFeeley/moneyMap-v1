@@ -19,6 +19,28 @@ body {
   background: rgba(90,151,243,.75);
 }
 
+._helpPopup {
+  @include popup-container();
+  > div {
+    @include tip-popup();
+    display: inline-block;
+    border-radius: 6px;
+    width: 800px;
+    > div {
+      text-align: left;
+    }
+    > div:not(:last-child) {
+      margin-bottom: 10px;
+    }
+    > table {
+      margin-top: 10px;
+      > tr > td:not(:first-child) {
+        padding-left: 16px;
+      }
+    }
+  }
+}
+
 ._helpInline {
   text-align: center;
   > div {

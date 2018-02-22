@@ -252,7 +252,6 @@ class Accounts extends Observable {
             sort:  sort,
             form:  target .form,
           }, this));
-          promises .push (this._balanceHistoryModel .insert ({account: acc._id}))
         }
         await Promise.all (promises);
         break;
@@ -514,6 +513,7 @@ class Accounts extends Observable {
       this._defaultRate = (await this._paramModel .find ({name: 'rates'})) [0] .apr;
       await this._view .addHtml (toHtml, build);
       this._group = [];
+      let hasAccount;
       for (let groupNum of Array .from (Object .keys (GROUP_TO_FORM))) {
         this._group [groupNum] = this._view .addGroup (
           ['Cash Flow Accounts', 'Asset and Liability Accounts', 'Income Sources'] [groupNum]
@@ -522,10 +522,25 @@ class Accounts extends Observable {
           if (group .form == GROUP_TO_FORM [groupNum] && group .type == AccountType .GROUP) {
             this._addSubgroup (group);
             for (let account of this._accountsModel .getAccounts())
-              if (account .type == AccountType .ACCOUNT && account .group == group._id)
+              if (account .type == AccountType .ACCOUNT && account .group == group._id) {
+                hasAccount = true;
                 await this._addAccount (account);
+              }
           }
         }
+        if (! hasAccount)
+          this._view .addHelpTable (
+            ['There are three types of accounts: '+
+              'Cash-Flow accounts for bank accounts whose transactions you track, '+
+              'Asset and Liability that determine your net worth shown on the Wealth page, and '+
+              'Income Source accounts project your after-tax income.',
+            'Within each type, accounts are organized into groups.', 'Get started ...'],
+            [
+              ['Add an account group', 'CMD + ALT + ENTER'],
+              ['Add a group',          'CMD + ENTER'],
+              ['Delete',               'CMD + DELETE']
+              ]
+          );
     }
     await build();
   }

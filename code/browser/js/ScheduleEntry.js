@@ -236,6 +236,37 @@ class ScheduleEntry extends List {
       }
     } else
       this._addCats (this._categories .getRoots());
+    if (toHtml .hasClass ('_list')) {
+      let hasSchedule;
+      for (let cat of this._categories .getRoots())
+        if (this._categories .hasType (cat, ScheduleType .NOT_NONE)) {
+          hasSchedule = true;
+          break;
+        }
+      if (! hasSchedule)
+        this._view .addHelpTable (
+          ['A budget plan consists of a hierarchical list of named categories.  ' +
+          'You classify transactions by associating them with one of these categories.',
+          'You assign a budget amount to a category by giving it (or one of its desendants) a schedule.  ' +
+          'Each schedule is a list of budget amounts for a particular year, month, or range of months.  ' +
+          'A category can have full-year, or monthly schedules, but not both.  ',
+          "A category's budget is the aggregation of its descendants.  " +
+          'If a category has a yearly schedule, then its descendants allocate that yearly budget.  ' +
+          'If a category has a monthly schedule, then its descendants add to its budget.',
+          'Get started ...'
+          ],
+          [
+            ['Add a sibling category or schedule','CMD + ENTER'],
+            ['Add a subcategory',                 'CMD + ALT + ENTER'],
+            ['Delete',                            'CMD + DELETE'],
+            ['Enter a schedule',                  'TAB to the Start field'],
+            ['Budget for whole year',             'Enter a year number for Start'],
+            ['Budget for a single month',         'Enter month-year (e.g., Aug-19) and leave End date blank'],
+            ['Budget for a range of months',      'Enter values in Start and End fields'],
+            ['Budget starting at a month',        'Enter ... for End field'],
+            ['Repeat budget in future years',     'Click Repeat and optionally limit the number of years'],
+          ]);
+    }
   }
 
   _addCats (cats, depth = 0) {

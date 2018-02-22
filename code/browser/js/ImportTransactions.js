@@ -41,6 +41,27 @@ class ImportTransactions extends Observable {
     await this._view .addTable (this._attention);
     if (!this._view || ! this._view .addTable) {console.log('DEBUG', this, this._view)}
     await this._view .addTable (this._lastImport);
+    toHtml .data ('visible', () => {
+      if (! this._lastImport._batch)
+        this._view .addHelpTable (
+          ['Download transaction files from your bank and drag them here (or to any page).  ' +
+          'Transactions are imported if the account number matches a Cash Flow account you have entered and ' +
+          'if an identical transaction was not previously imported.  Check that your account balance on the right matches your bank ' +
+          'following the import and adjust if necessary by adding transactions or updating the balance.',
+          'Then assign the transactions to a category (or  split them into multiple categories); this categorization will normally ' +
+          'be performed automatically based on transaction rules you enter.',
+          'To setup a rule, click on the R button to the left of a transaction.  For each rule you describe which transactions ' +
+          'it applies to and what should happen help it does apply: edit the transaction, split it, or add additional transactions.',
+          'Transactions that are yet to be categorized or have a question mark in their comment show in the INBOX.',
+          'Get started ...'],
+          [
+            ['Import',              'Drag bank file'],
+            ['Enter a rule',        'Click R'],
+            ['Enter a transaction', 'CMD + ENTER or (+) button'],
+            ['Split a transaction', 'CMD + ALT + ENTER'],
+            ['Delete',              'CMD + DELETE']
+          ])
+    });
   }
 
   async getModelData() {

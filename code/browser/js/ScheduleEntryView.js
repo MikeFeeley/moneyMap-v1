@@ -101,6 +101,27 @@ class ScheduleEntryView extends ListView {
     ]);
   }
 
+  addHelpTable (descData, tableData, top=60, left=60) {
+    let popup = $('<div>', {class: '_helpPopup'})
+    .appendTo (this._html)
+    .css ({top: top, left: left});
+    let help = $('<div>') .appendTo (popup);
+    $('<div>', {text: 'TIP'}) .appendTo (help);
+    for (let desc of descData)
+      $('<div>', {text: desc}) .appendTo (help);
+    let table = $('<table>') .appendTo (help);
+    for (let row of tableData) {
+      let tr = $('<tr>') .appendTo (table);
+      for (let t of row)
+        $('<td>', {text: t}) .appendTo (tr);
+    }
+    ui .ModalStack .add (
+      e => {return true},
+      e => {popup .remove()},
+      true
+    )
+  }
+
 }
 
 class ScheduleEntryTotal extends ViewLabel {

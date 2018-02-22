@@ -545,8 +545,8 @@ class User extends Observable {
     await am .insert ({type: AccountType .GROUP, name: 'Bank Accounts', form: AccountForm .CASH_FLOW, sort: 1});
     await am .insert ({type: AccountType .GROUP, name: 'Credit Cards', form: AccountForm .CASH_FLOW, sort: 2});
     await am .insert ({type: AccountType .GROUP, name: 'Cash', form: AccountForm .CASH_FLOW, sort: 3});
-    await am .insert ({type: AccountType .GROUP, name: 'Investments', form: AccountForm .CASH_FLOW, sort: 4});
-    await am .insert ({type: AccountType .GROUP, name: 'Savings', form: AccountForm .CASH_FLOW, sort: 5});
+    await am .insert ({type: AccountType .GROUP, name: 'Investments', form: AccountForm .ASSET_LIABILITY, sort: 4});
+    await am .insert ({type: AccountType .GROUP, name: 'Loans', form: AccountForm .ASSET_LIABILITY, sort: 5});
     await am .insert ({type: AccountType .GROUP, name: 'Salary', form: AccountForm .INCOME_SOURCE, sort: 6});
     pm .delete();
     am .delete();

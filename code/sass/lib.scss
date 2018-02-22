@@ -98,11 +98,16 @@ table > tbody > tr > td > ._field > div > ._content {
       color: #e8d57a;
     }
     &:not(:first-child) {
-      font-weight: 300;
-      font-size: 18px;
       margin-top: 4px;
+      font-size: 18px;
+      font-weight: 300;
       color: #666600;
     }
+  }
+  > table > tr > td {
+    font-size: 18px;
+    font-weight: 300;
+    color: #666600;
   }
 }
 
