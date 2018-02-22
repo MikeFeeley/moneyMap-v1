@@ -238,7 +238,7 @@ class NavigateView extends Observable  {
               return false;
             })
           this._addTooltip ($('<td>', {text: item .name}) .appendTo (tr), item .nameTooltip);
-          if (item .amount) {
+          if (item .amount !== undefined) {
             this._addTooltip ($('<td>', {
               text: Types .moneyDZ .toString (item .amount),
               class: item .amount < 0? 'negative': ''
