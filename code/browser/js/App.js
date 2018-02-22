@@ -180,34 +180,39 @@ class App {
   }
 
   _search() {
+    let close = skipDeleteModal => {
+      this._lastSearch = this._searchInput .val();
+      this._searchPopup .remove();
+      this._searchPopup = null;
+      if (! skipDeleteModal)
+        ui .ModalStack .delete (this._searchModal);
+    }
     if (! this._searchPopup) {
       ui .ModalStack .clear();
       this._searchPopup = $('<div>', {class: '_search _input'}) .appendTo ($('body'));
       $('<label>') .appendTo ($('<div>') .appendTo (this._searchPopup))
         .append ($('<span>',  {class: 'lnr-magnifier'}))
         .append ($('<input>', {type: 'text', placeholder: 'Search'}))
-      let input = this._searchPopup .find ('input');
-      input[0] .addEventListener ('keydown', e => {
+      this._searchInput = this._searchPopup .find ('input');
+      this._searchInput [0] .addEventListener ('keydown', e => {
         if (e .keyCode == 13) {
-          TransactionHUD .search (input .val(), this._accModel, this._varModel, $('body'), {top: 100, left: 30});
-          this._lastSearch = input .val();
-          this._searchPopup .remove();
-          this._searchPopup = null;
-          ui .ModalStack .delete (modal);
+          TransactionHUD .search (this._searchInput .val(), this._accModel, this._varModel, $('body'), {top: 100, left: 30});
+          close();
         }
         if (e .keyCode == 90 && e .metaKey) {
           e .stopImmediatePropagation();
         }
       }, true);
       if (this._lastSearch)
-        input .val (this._lastSearch);
-      input .select();
-      let modal = ui .ModalStack .add (
+        this._searchInput .val (this._lastSearch);
+      this._searchInput .select();
+      this._searchModal = ui .ModalStack .add (
         e => {return e && ! $.contains (this._searchPopup .get (0), e .target)},
-        e => {this._lastSearch = input .val(); this._searchPopup .remove(); this._searchPopup = null},
+        e => {close (true)},
         true
       )
-    }
+    } else
+      close();
   }
 
   async _configurationChange (eventType) {
