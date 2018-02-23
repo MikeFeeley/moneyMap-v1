@@ -259,7 +259,7 @@ class ScheduleEntry extends List {
             ['Add sibling category or schedule',  'CMD + ENTER'],
             ['Add child category',                'CMD + ALT + ENTER'],
             ['Delete',                            'CMD + DELETE'],
-            ['Enter schedule',                    'TAB or click to the Start field'],
+            ['Enter schedule',                    'TAB the Start field'],
             ['Budget for whole year',             'Enter a year number for Start'],
             ['Budget for single month',           'Enter month-year (e.g., Aug-19) and leave End date blank'],
             ['Budget for range of months',        'Enter values in Start and End fields'],
