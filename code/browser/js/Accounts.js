@@ -536,7 +536,7 @@ class Accounts extends Observable {
               'Income Source accounts project your after-tax income.',
             'Within each type, accounts are organized into groups.', 'Get started ...'],
             [
-              ['Add an account group', 'CMD + ALT + ENTER'],
+              ['Add account to group', 'CMD + ALT + ENTER'],
               ['Add a group',          'CMD + ENTER'],
               ['Delete',               'CMD + DELETE']
               ]
