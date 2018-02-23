@@ -32,6 +32,8 @@ class AccountBalance extends TuplePresenter {
 
   _onAccountsChange (eventType, doc, arg) {
     super._onModelChange (eventType, doc, arg);
+    if (eventType == AccountsModelEvent .BALANCE_CHANGE)
+      this._updateBalance (doc .id);
   }
 
   _onModelChange (eventType, doc, arg) {
@@ -94,6 +96,11 @@ class AccountBalance extends TuplePresenter {
     acc .editable_balance = acc .balance;
     delete acc .balance;
     this._addTuple (acc, group);
+  }
+
+  _updateBalance (aid) {
+    let acc = this._accounts .getAccount (aid);
+    this._view .updateField (acc._id, 'balance', acc .balance);
   }
 
   _addNetToZero() {

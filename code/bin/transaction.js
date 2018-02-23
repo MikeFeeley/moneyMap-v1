@@ -108,7 +108,7 @@ async function update (db, id, update) {
   let transactions = db .collection ('transactions');
 
   let tran;
-  if (update .debit != null || update .credit != null || update .account != null || update .category != null || update .date != null) {
+  if (update .debit != null || update .credit != null || update .account != null || update .category !== undefined || update .date != null) {
     tran = await transactions .findOne ({_id: id});
     if (!tran)
       throw 'Update transaction not found ' + id
@@ -141,12 +141,14 @@ async function update (db, id, update) {
       await apply               (db, pt);
     }
 
-  } else if (update .date != null) {
+
+  } else if (update .category !== undefined)
+    addDateToActualsBlacklist (db, tran .date);
+
+  else if (update .date != null) {
     addDateToActualsBlacklist (db, update .date);
     addDateToActualsBlacklist (db, tran   .date);
-
-  } else
-    addDateToActualsBlacklist (db, tran .date);
+  }
 
   await transactions .updateOne ({_id: id}, {$set: update});
   return true;
