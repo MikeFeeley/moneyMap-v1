@@ -12,12 +12,12 @@ class ImportTransactionsView extends View {
       this._html .remove();
       this._html = null;
     }
-    $('body') .off ('dragover');
-    $('body') .off ('drop');
+    $('html') .off ('dragover');
+    $('html') .off ('drop');
   }
   async addHtml (toHtml) {
     this._html = $('<div>', {class: '_ImportTransactions'}) .appendTo (toHtml);
-    $('body') .on ({
+    $('html') .on ({
       dragover: e => {e .preventDefault()},
       drop:     e => {
         e.preventDefault();
