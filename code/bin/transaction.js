@@ -141,13 +141,12 @@ async function update (db, id, update) {
       await apply               (db, pt);
     }
 
-  } else if (update .category != null) {
-    addDateToActualsBlacklist (db, tran .date);
-
   } else if (update .date != null) {
     addDateToActualsBlacklist (db, update .date);
     addDateToActualsBlacklist (db, tran   .date);
-  }
+
+  } else
+    addDateToActualsBlacklist (db, tran .date);
 
   await transactions .updateOne ({_id: id}, {$set: update});
   return true;
@@ -296,8 +295,8 @@ async function updateActuals (actuals, transactions, start, end) {
   let acum  = new Map();
   while (await trans .hasNext()) {
     let tran = await trans .next();
-    if (tran .date && tran .category && (tran .debit || tran .credit)) {
-      let key = String (getYearMonth (tran .date)) + '$' + String (tran .category);
+    if (tran .date && (tran .debit || tran .credit)) {
+      let key = String (getYearMonth (tran .date)) + '$' + (String (tran .category) || '@NULL@');
       acum .set (key, (acum .get (key) || 0) + tran .debit - tran .credit);
     }
   }
@@ -305,6 +304,8 @@ async function updateActuals (actuals, transactions, start, end) {
   let up = [];
   for (let e of acum .entries()) {
     e[0] = e[0] .split ('$');
+    if (e[0] == '@NULL@')
+      e[0] = null;
     let m = Number (e[0][0]);
     let c = e[0][1];
     let a = e[1];

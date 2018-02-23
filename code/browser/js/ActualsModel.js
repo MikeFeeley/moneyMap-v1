@@ -8,6 +8,7 @@ class ActualsModel extends Observable {
     this._transactionModel .observe ();
     this._actualsModel = new Model ('actuals');
     this._accounts .setActualsModel (this);
+    this._nullCat = {};
   }
   
   delete() {
@@ -20,27 +21,23 @@ class ActualsModel extends Observable {
       if (m < this._oldsetMonth)
         this._oldestMonth = m;
     };
-    if (tran .category && tran .date) {
-      let c = this._budget .getCategories() .get (tran .category);
-      if (c) {
-        let a = (tran .debit || 0) - (tran .credit || 0);
-        let s = eventType == ModelEvent .REMOVE? -1: 1;
-        let m = Types .date._yearMonth (tran .date);
-        updateActuals (c, m, a * s);
-      }
+    if (tran .date) {
+      let c = this._budget .getCategories() .get (tran .category) || this._nullCat;
+      let a = (tran .debit || 0) - (tran .credit || 0);
+      let s = eventType == ModelEvent .REMOVE? -1: 1;
+      let m = Types .date._yearMonth (tran .date);
+      updateActuals (c, m, a * s);
     }
     if (eventType == ModelEvent .UPDATE) {
       // remove original amount
       let original = {};
       for (let p of ['date', 'category', 'debit', 'credit'])
         original [p] = '_original_' + p in update? update ['_original_' + p]: tran [p];
-      if (original .date && original .category) {
-        let c = this._budget .getCategories() .get (original .category);
-        if (c) {
-          let a = (original .debit || 0) - (original .credit || 0);
-          let m = Types .date._yearMonth (original .date);
-          updateActuals (c, m, -a);
-        }
+      if (original .date) {
+        let c = this._budget .getCategories() .get (original .category) || this._nullCat;
+        let a = (original .debit || 0) - (original .credit || 0);
+        let m = Types .date._yearMonth (original .date);
+        updateActuals (c, m, -a);
       }
     }
     this._notifyObservers (eventType, tran, update, source);
@@ -48,9 +45,8 @@ class ActualsModel extends Observable {
 
   _add (data) {
     for (let d of data) {
-      let cat = this._budget .getCategories() .get (d .category);
-      if (cat)
-        cat .actuals = (cat .actuals || new Map()) .set (d .month, d .amount);
+      let cat = this._budget .getCategories() .get (d .category) || this._nullCat;
+      cat .actuals = (cat .actuals || new Map()) .set (d .month, d .amount);
     }
   }
 
@@ -92,6 +88,7 @@ class ActualsModel extends Observable {
 
   getAmountRecursively (cat, st = this._budget .getStartDate(), en = this._budget .getEndDate(), skip, includeMonths=true, includeYears=true) {
     let type = this._budget .getCategories() .getType (cat);
+    cat = cat || this._nullCat;
     let include = (includeMonths && type == ScheduleType .MONTH) || (includeYears  && type == ScheduleType .YEAR) || type == ScheduleType .NONE;
     var amt = include? this .getAmount (cat, st, en, skip): 0;
     for (let child of (cat .children || []) .concat (cat .zombies || []))
@@ -144,7 +141,7 @@ class ActualsModel extends Observable {
     let bal      = this._accounts .getCashFlowBalance();
     let today    = Types .date .today();
     let start    = Math .min (date, this._budget .getStartDate());
-    for (let cat of this._budget .getCategories() .getRoots())
+    for (let cat of this._budget .getCategories() .getRoots() .concat (null))
       bal += this .getAmountRecursively (cat, start, today);
     if (date > today) {
       let end = Types .date .addMonthStart (date, -1);

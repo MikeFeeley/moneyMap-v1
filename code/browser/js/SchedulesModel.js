@@ -386,18 +386,20 @@ class Schedules extends Categories {
   }
 
   getType (cat, noIndirectSchedule) {
-    if (! noIndirectSchedule && cat .account) {
-      let account = this._model._actModel .getAccountsModel() .getAccount (cat .account);
-      if (cat._id == account .category && account .intCategory)
-        cat = this .get (account .intCategory);
-      else if (cat._id == account .intCategory && account .incCategory)
-        cat = this .get (account .incCategory);
-    }
-    for (let s of cat .schedule || []) {
-      if (Types .date .isYear (s .start))
-        return ScheduleType .YEAR;
-      else if (Types .date .isMonth (s .start))
-        return ScheduleType .MONTH;
+    if (cat) {
+      if (! noIndirectSchedule && cat .account) {
+        let account = this._model._actModel .getAccountsModel() .getAccount (cat .account);
+        if (cat._id == account .category && account .intCategory)
+          cat = this .get (account .intCategory);
+        else if (cat._id == account .intCategory && account .incCategory)
+          cat = this .get (account .incCategory);
+      }
+      for (let s of cat .schedule || []) {
+        if (Types .date .isYear (s .start))
+          return ScheduleType .YEAR;
+        else if (Types .date .isMonth (s .start))
+          return ScheduleType .MONTH;
+      }
     }
     return ScheduleType .NONE;
   }
