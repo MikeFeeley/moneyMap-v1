@@ -169,7 +169,7 @@ class ScheduleName extends ViewTextbox {
   _addHtml() {
     if (this .cat && this .cat .account) {
       this._inputContainer = $('<div>', {data: {field: this}})         .appendTo (this._html);
-      this._input = $('<div>', {class: '_content', text: this .get()}) .appendTo (this._inputContainer);
+      this._input = $('<input>', {class: '_content', prop: {readonly: true}, text: this .get()}) .appendTo (this._inputContainer);
       $('<div>', {class: '_prefix', text: this._prefix})               .appendTo (this._inputContainer);
       $('<div>', {class: '_suffix', text: this._suffix})               .appendTo (this._inputContainer);
     } else
