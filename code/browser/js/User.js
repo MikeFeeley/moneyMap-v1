@@ -145,14 +145,8 @@ class User extends Observable {
             this._username  = arg .username;
             this._name      = arg .name;
             this._setModelsForConfig();
-            this._cid     = (await this._configModel .insert ({user: this._uid, name: 'Default'}))._id;
+            await this._createEmptyConfig ('Default');
             this._configs = this._sortByName (await this._configModel .find({deleted: null}));
-            await Model .updateUser (this._uid, this._accessCap, {curConfiguration: this._cid});
-            this._setModelsForConfig();
-            await this._createEmptyBudget();
-            await this._configModel .update (this._cid, {curBudget: this._bid});
-            this._budgets = this._sortByName (await this._budgetModel .find());
-            this._bid     = b._id;
             if (arg .remember)
               this._addCookie();
             this._view .removeLogin();
@@ -534,8 +528,8 @@ class User extends Observable {
   /**
    * Create a new empty configuration
    */
-  async _createEmptyConfig() {
-    this._cid = (await this._configModel .insert ({user: this._uid, name: 'Untitled'}))._id;
+  async _createEmptyConfig (name = 'Untitled') {
+    this._cid = (await this._configModel .insert ({user: this._uid, name: name}))._id;
     await Model .updateUser (this._uid, this._accessCap, {curConfiguration: this._cid});
     this._setModelsForConfig();
 
