@@ -55,11 +55,11 @@ class ImportTransactions extends Observable {
           'Transactions that are yet to be categorized or have a question mark in their comment show in the INBOX.',
           'Get started ...'],
           [
-            ['Import',              'Drag bank file'],
-            ['Enter a rule',        'Click R'],
-            ['Enter a transaction', 'CMD + ENTER or (+) button'],
-            ['Split a transaction', 'CMD + ALT + ENTER'],
-            ['Delete',              'CMD + DELETE']
+            ['Import',            'Drag bank file'],
+            ['Enter rule',        'Click R on transaction line'],
+            ['Enter transaction', 'CMD + ENTER or (+) button'],
+            ['Split transaction', 'CMD + ALT + ENTER'],
+            ['Delete',            'CMD + DELETE']
           ])
     });
   }

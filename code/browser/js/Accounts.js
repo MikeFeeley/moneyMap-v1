@@ -537,7 +537,7 @@ class Accounts extends Observable {
             'Within each type, accounts are organized into groups.', 'Get started ...'],
             [
               ['Add account to group', 'CMD + ALT + ENTER'],
-              ['Add a group',          'CMD + ENTER'],
+              ['Add group',            'CMD + ENTER'],
               ['Delete',               'CMD + DELETE']
               ]
           );
