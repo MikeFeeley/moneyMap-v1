@@ -199,7 +199,7 @@ class ImportRulesModel extends Observable {
       } else
         return field;
     }
-    let sort      = this._tranModel
+    let sort = this._tranModel
       .refine (t     => {return (t .leader || t._seq) == tran._seq})
       .reduce ((m,t) => {return Math .max (m, t .sort || 0)}, 0);
 

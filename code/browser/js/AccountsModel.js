@@ -408,18 +408,18 @@ class Account {
         let tranAmount = - ((tran .debit || 0) - (tran .credit || 0));
         let delta = 0, origDelta = 0;
         if (eventType == ModelEvent .REMOVE || eventType == ModelEvent .INSERT)
-          delta = (ModelEvent .REMOVE? 1: -1) * tranAmount;
+          delta = (eventType == ModelEvent .REMOVE? -1: 1) * tranAmount;
         else if (eventType == ModelEvent .UPDATE) {
           if (update .debit !== undefined) {
             let amt = -(update .debit - (update._original_debit || 0));
-            if (update .category == undefined)
+            if (update .category === undefined)
               delta += amt;
             else
               origDelta += amt;
           }
           if (update .credit !== undefined) {
             let amt = update .credit - (update._original_credit || 0);
-            if (update .category == undefined)
+            if (update .category === undefined)
               delta += amt;
             else
               origDelta += amt;
