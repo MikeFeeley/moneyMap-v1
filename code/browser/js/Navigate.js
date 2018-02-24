@@ -1096,7 +1096,7 @@ class Navigate {
         if (total [per] .budgetlessActual) {
           let t = Array .from (Object .keys (total [per])) .reduce ((t,p) => {return t + total [per] [p]}, 0);
           if (t != total [per] .budgetlessActual)
-            total [per] .budgetlessActual = 0;
+            total [per] .budgetlessActual = t;
         }
         return total
       }, {})
@@ -1115,20 +1115,6 @@ class Navigate {
         }
         return o;
       }, {});
-      for (let per of ['month', 'year']) {
-        if (otherAmount [per] && otherAmount [per] .preOverActual < 0) {
-          otherAmount [per] .preBudgetedActual += otherAmount [per] .preOverActual;
-          otherAmount [per] .preOverActual     = 0;
-        }
-        if (otherAmount [per] && otherAmount [per] .curOverActual < 0) {
-          otherAmount [per] .curBudgetedActual += otherAmount [per] .curOverActual;
-          otherAmount [per] .curOverActual     = 0;
-        }
-        if (otherAmount [per] && otherAmount [per] .curBudgetedActual < 0) {
-          otherAmount [per] .preBudgetedActual += otherAmount [per] .curBudegtedActual;
-          otherAmount [per] .curBudgetedActual = 0;
-        }
-      }
       let oaTotal = ['month', 'year'] .reduce ((o,per) => {
         o [per] = (otherAmount [per]? Array .from (Object .keys (otherAmount [per])): []) .reduce ((t,p) => {
           return t + (otherAmount [per] [p] || 0);
@@ -1296,9 +1282,10 @@ class Navigate {
       }
       if (wth < 0)
         list .push ({name: 'Savings Withdrawals', amount: wth});
-      list .push ({name: 'Projected Savings',          amount: sav + una + ovr + stc + wth});
+      if (sav + una + ovr + wth)
+        list .push ({name: 'Projected Savings', amount: sav + una + ovr + wth});
       if (inc != 0)
-        list .push ({name: 'Income Saved',         percent: (sav + una + ovr + stc + wth) * 1.0 / (-inc)});
+        list .push ({name: 'Income Saved', percent: (sav + una + ovr + wth) * 1.0 / (-inc)});
       updateView (list);
     }
     return update;

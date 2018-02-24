@@ -41,6 +41,7 @@ class BudgetProgressGraph extends Observable {
     var darkGreyGreen   = '#a3c2a3';
     var lightGreyGreen  = '#d1e0d1';
     var blue            = '#4db8ff';
+    var softBlue        = '#80d0ff';
     var lightBlue       = '#e6f5ff';
     this._constraintDatasets  = [
       ['From Last Month',           'preBudgetedActual',   darkGreen,  darkGreen],
@@ -54,7 +55,7 @@ class BudgetProgressGraph extends Observable {
       ['This Transaction (Credit)', 'thisCreditAvailable', clear,      grey],
       ['Unused Last Month',         'prevAvailable',       '#f3fff2',  grey],
       ['Available',                 'curAvailable',        clear,      grey, 'Additional Available this Month', 'Unused Last Month'],
-      ['Actual this Month',         'budgetlessActual',    blue,       blue]
+      ['Actual this Month',         'budgetlessActual',    softBlue,   softBlue]
     ];
     this._budgetlessDatasets  = [
       ['From Last Month',           'preBudgetedActual',   darkGreen,  darkGreen],
@@ -67,7 +68,7 @@ class BudgetProgressGraph extends Observable {
       ['This Transaction',          'thisOver',            lightBlue,  blue],
       ['This Transaction (Credit)', 'thisCreditAvailable', clear,      grey],
       ['Available',                 'available',           clear,      grey],
-      ['Actual this Month',         'budgetlessActual',    blue,       blue]
+      ['Actual this Month',         'budgetlessActual',    softBlue,   softBlue]
     ];
     this._constraintYearDatasets  = [
       ['Prior Months',              'preBudgetedActual',   darkGreen,  darkGreen],
@@ -80,7 +81,7 @@ class BudgetProgressGraph extends Observable {
       ['This Transaction',          'thisOver',            lightRed,   red],
       ['This Transaction (Credit)', 'thisCreditAvailable', clear,      grey],
       ['Available',                 'available',           clear,      grey],
-      ['Actual this Month',         'budgetlessActual',    blue,       blue]
+      ['Actual this Month',         'budgetlessActual',    softBlue,   softBlue]
     ];
     this._goalDatasets  = [
       ['Prior Months',              'preBudgetedActual',   darkGreen,       darkGreen],
@@ -94,7 +95,7 @@ class BudgetProgressGraph extends Observable {
       ['This Transaction (Credit)', 'thisCreditAvailable', lightGreyRed,    greyRed],
       ['Under Budget Prior Months', 'prevAvailable',       red,             red],
       ['Under Budget this Month',   'curAvailable',        lightGreyRed,    greyRed],
-      ['Actual this Month',         'budgetlessActual',    blue,            blue]
+      ['Actual this Month',         'budgetlessActual',    softBlue,        softBlue]
     ];
   }
 
