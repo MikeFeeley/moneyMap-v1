@@ -187,32 +187,34 @@ class App {
       if (! skipDeleteModal)
         ui .ModalStack .delete (this._searchModal);
     }
-    if (! this._searchPopup) {
-      ui .ModalStack .clear();
-      this._searchPopup = $('<div>', {class: '_search _input'}) .appendTo ($('body'));
-      $('<label>') .appendTo ($('<div>') .appendTo (this._searchPopup))
-        .append ($('<span>',  {class: 'lnr-magnifier'}))
-        .append ($('<input>', {type: 'text', placeholder: 'Search'}))
-      this._searchInput = this._searchPopup .find ('input');
-      this._searchInput [0] .addEventListener ('keydown', e => {
-        if (e .keyCode == 13) {
-          TransactionHUD .search (this._searchInput .val(), this._accModel, this._varModel, $('body'), {top: 100, left: 30});
-          close();
-        }
-        if (e .keyCode == 90 && e .metaKey) {
-          e .stopImmediatePropagation();
-        }
-      }, true);
-      if (this._lastSearch)
-        this._searchInput .val (this._lastSearch);
-      this._searchInput .select();
-      this._searchModal = ui .ModalStack .add (
-        e => {return e && ! $.contains (this._searchPopup .get (0), e .target)},
-        e => {close (true)},
-        true
-      )
-    } else
-      close();
+    if (! this._isDown) {
+      if (! this._searchPopup) {
+        ui .ModalStack .clear();
+        this._searchPopup = $('<div>', {class: '_search _input'}) .appendTo ($('body'));
+        $('<label>') .appendTo ($('<div>') .appendTo (this._searchPopup))
+          .append ($('<span>',  {class: 'lnr-magnifier'}))
+          .append ($('<input>', {type: 'text', placeholder: 'Search'}))
+        this._searchInput = this._searchPopup .find ('input');
+        this._searchInput [0] .addEventListener ('keydown', e => {
+          if (e .keyCode == 13) {
+            TransactionHUD .search (this._searchInput .val(), this._accModel, this._varModel, $('body'), {top: 100, left: 30});
+            close();
+          }
+          if (e .keyCode == 90 && e .metaKey) {
+            e .stopImmediatePropagation();
+          }
+        }, true);
+        if (this._lastSearch)
+          this._searchInput .val (this._lastSearch);
+        this._searchInput .select();
+        this._searchModal = ui .ModalStack .add (
+          e => {return e && ! $.contains (this._searchPopup .get (0), e .target)},
+          e => {close (true)},
+          true
+        )
+      } else
+        close();
+    }
   }
 
   async _configurationChange (eventType) {
