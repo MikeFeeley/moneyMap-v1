@@ -431,7 +431,7 @@ class Navigate {
         return {
           payee:  (stop && stop .index? tran .payee .slice (0, stop .index): tran .payee) .split (' ') .slice (0,3) .join (' '),
           date:   tran .date,
-          amount: ((tran .credit || 0) + (tran .debit || 0)) * sign
+          amount: (-(tran .credit || 0) + (tran .debit || 0)) * sign
         }
       })
       .sort ((a,b) => {return a .payee < b .payee? -1: a .payee == b .payee? (a .date < b .date? -1: a .date == b .date? 0: 1): 1})
@@ -666,8 +666,16 @@ class Navigate {
         realChildren = children .filter (child => {return ! child .cat .startsWith ('budget_')});
       }
       await processChildren (await this._getChildren (type, id, altDates));
-      if ([NavigateValueType .ACTUALS, NavigateValueType .ACTUALS_BUD] .includes (type) && realChildren .length == 0 && ! id .includes ('payee_'))
-        await processChildren (await this._getPayees (thisCat, altDates));
+      if ([NavigateValueType .ACTUALS, NavigateValueType .ACTUALS_BUD] .includes (type) && realChildren .length == 0) {
+        let payees = await this._getPayees (thisCat, altDates);
+        if (id .includes ('payee_')) {
+          await processChildren (payees .filter (p => {return p .payee == id}));
+          thisAmounts = children [0] .amounts;
+          children = [];
+          realChildren = [];
+        } else
+          await processChildren (payees);
+      }
       if (realChildren .length == 1 && ! realChildren [0] .cat .includes ('_')) {
          let isLeaf = (await this._getChildren (type, realChildren [0] .cat, altDates))
           .filter (cat       => {return ! cat .startsWith ('budget_')})
