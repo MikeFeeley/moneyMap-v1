@@ -56,7 +56,7 @@ body {
 
 ._about {
   @include popup-content();
-  position: absolute;
+  position: fixed!important;
   display: inline-block;
   border-radius: 6px;
   padding: 16px;
