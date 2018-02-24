@@ -38,7 +38,7 @@ class ImportTransactionsView extends View {
     let popup        = $('<div>', {class: '_import_status_popup fader'}) .appendTo ($('body'));
     let popupContent = $('<div>', {class: '_popupContent'}) .appendTo (popup);
     for (let m of [] .concat (message))
-      $('<div>', {text: m}) .appendTo (popupContent);
+      $('<div>', {html: m}) .appendTo (popupContent);
     ui .ModalStack .add (
       e  => {return e && ! $.contains (popup .get (0), e .target) && popup .get (0) != e .target},
       () => {popup .removeClass ('fader_visible') .one ('transitionend', () => {popup .remove()})},

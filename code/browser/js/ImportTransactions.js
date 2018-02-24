@@ -77,7 +77,7 @@ class ImportTransactions extends Observable {
       })
     })
     var it = this._accounts .parseTransactions (csv .data);
-    var st = it .reduce ((m,t) => {return Math .min (m, t .date)}, it [0] .date);
+    var st = it .reduce ((m,t) => {return Math .min (m, t .date)}, it [0] && it[0] .date);
     var en = it .reduce ((m,t) => {return Math .max (m, t .date)}, 0);
     var ct = await this._transactionModel .find ({date: {$gte: st, $lte: en}});
     for (let i of it)
@@ -113,7 +113,18 @@ class ImportTransactions extends Observable {
       s .push (ic + ' transaction' + (ic>1? 's': '') + ' imported');
     if (dc)
       s .push (dc + ' duplicate'   + (dc>1? 's': '') + ' skipped');
-    this._view .updateImportStatus (s .length > 1? s: 'empty file');
+    if (ic + dc == 0) {
+      if (csv .data .length > 1) {
+        let acts = csv .data .slice (1)
+          .sort   ((a,b)   => {a[0] < b[0]? -1: a[0] == b[0]? 0: 1})
+          .filter (c       => {return c[0]})
+          .filter ((c,i,a) => {return i == a .length - 1 || a[i][0] != a[i+1][0]})
+          .map    (c       => {return '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + c[1] + '&nbsp;&nbsp;&nbsp;(' + c[0]+')'})
+        s = s .concat (['Nothing Imported &mdash; Accounts in File not Setup','&nbsp;']) .concat (acts)
+      } else
+        s .push ('empty or malformed file');
+    }
+    this._view .updateImportStatus (s);
     if (trans .length)
       await this._lastImport .refreshToLatest();
     await this._attention .refreshHtml();
