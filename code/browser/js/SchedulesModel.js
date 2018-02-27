@@ -96,6 +96,10 @@ class SchedulesModel extends Observable {
     return this._categories;
   }
 
+  getActuals() {
+    return this._actModel;
+  }
+
   /**
    * Move to new position.  
    * Tricky case is moving last schedule from category or adding schedule to an "empty" category;
@@ -148,6 +152,15 @@ class SchedulesModel extends Observable {
     if (data [mis .model .parent])
       data [mis .model .parent] = this._splitMI (data [mis .model .parent] ._id) .id;
     return await mis.model.update (mis.id, data, source);
+  }
+
+  async updateCategorySort (cat, sort) {
+    await this._catModel .update (cat._id, {sort: sort});
+    let ul = (cat .parent .children || [])
+      .filter (c => {return c .sort >= sort})
+      .map    (c => {return {id: c._id, update: {sort: c .sort + 1}}})
+    if (ul .length)
+      await this._catModel .updateList (ul);
   }
 
   /**
@@ -220,7 +233,7 @@ class SchedulesModel extends Observable {
     if (mis .model == this._schModel) {
       let sch = this._categories .get (mi);
       if (sch .category && (sch .category .schedule || []) .length == 1 && (sch .category .schedule || []) .includes (sch)) {
-        if (await this .hasTransactions (sch .category)) {
+        if (this .hasTransactions (sch .category)) {
           await mis .model .update (mis .id, {start: ''});
         } else {
           mi  = sch .category._id;
@@ -233,12 +246,22 @@ class SchedulesModel extends Observable {
       let cat = this._categories .get (mi);
       let bid = this._budget .getId();
       let cl  = [cat] .concat (this._categories .getDescendants (cat));
-      let ul  = cl .map (c => {
-        return {
-          id:     c._id,
-          update: {budgets: c .budgets .filter (b => {return b != bid})}
+
+      // remove budget from cat and see if cat can be remove
+      let ul = [], rl = [];
+      for (let cat of cl) {
+        let budgets = cat .budgets .filter (budget => {return budget != bid});
+        let remove;
+        if (budgets .length == 0) {
+          await this._actModel .findHistory();
+          remove = ! this._actModel .hasTransactions ([cat] .concat (this._categories .getDescendants (cat, true)));
         }
-      });
+        if (remove)
+          rl .push (cat._id)
+        else if (budgets .length < cat .budgets .length)
+          ul .push ({id: cat._id, update: {budgets: budgets}});
+      }
+
       let sl = cl .reduce ((l,c) => {
         return l .concat ((c .schedule || []) .map (s => {return this._splitMI (s._id) .id}));
       }, []);
@@ -258,17 +281,18 @@ class SchedulesModel extends Observable {
       let accUpd = al .length == 0 || this._accModel .getModel() .updateList (al);
       let schUpd = sl .length == 0 || this._schModel .removeList (sl);
       let catUpd = ul .length == 0 || this._catModel .updateList (ul);
-      result = (await sl) && (await cl);
+      let catRem = rl .length == 0 || this._catModel .removeList (rl);
+      result = (await accUpd) && (await schUpd) && (await catUpd) && (await catRem);
     }
     return result;
   }
 
-  async hasTransactions (cat) {
-    let query = {
-      category: {$in: [cat] .concat (this._categories .getDescendants (cat)) .map (c => {return c._id})},
-      date:     {$gte: this._budget .getStartDate(), $lte: this._budget .getEndDate()}
-    }
-    return this._actModel .hasTransactions (query);
+  /**
+   * return true iff cat or any of its descendants have a transaction in current budget year
+   */
+  hasTransactions (cat, start = this._budget .getStartDate(), end = this._budget .getEndDate()) {
+    let cats = [cat] .concat (this._categories .getDescendants (cat));
+    return this._actModel .hasTransactions (cats, start, end);
   }
 
   isCredit (cat) {
@@ -414,5 +438,9 @@ class Schedules extends Categories {
       return ((cat .children || []) .concat (cat .zombies || [])) .find (c => {
         return this .hasType (c, type);
       }) != null
+  }
+
+  getActuals() {
+    return this._model .getActuals();
   }
 }

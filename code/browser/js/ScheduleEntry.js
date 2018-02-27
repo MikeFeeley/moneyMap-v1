@@ -26,8 +26,8 @@ class ScheduleEntry extends List {
           if (eventType == ModelEvent .INSERT && depth > this._options .depthLimit)
             return;
           else if (eventType == ModelEvent .UPDATE) {
-            this._removeTuple (cat._id);
-            this._addCats     ([cat], depth - 1);
+            this._removeTuple   (cat._id);
+            await this._addCats ([cat], depth - 1);
           }
         }
       }
@@ -49,25 +49,30 @@ class ScheduleEntry extends List {
           updateTotals (cat .parent);
         }
       };
-      updateTotals (this._categories .get (doc .category || doc._id));
-      if (doc .parent)
-        updateTotals (this._categories .get (doc .parent));
-      if (arg && arg._original_parent)
-        updateTotals (this._categories .get (arg._original_parent));
-      if (arg && (arg .account || arg._original_account || (arg .budgets && doc .account))) {
-        let account = this._accounts .getAccount (arg .account || arg._original_account || doc .account);
-        if (account .incCategory)
-          updateTotals (this._categories .get (account .incCategory));
+      if (this._options .showVariance) {
+        updateTotals (this._categories .get (doc .category || doc._id));
+        if (doc .parent)
+          updateTotals (this._categories .get (doc .parent));
+        if (arg && arg._original_parent)
+          updateTotals (this._categories .get (arg._original_parent));
+        if (arg && (arg .account || arg._original_account || (arg .budgets && doc .account))) {
+          let account = this._accounts .getAccount (arg .account || arg._original_account || doc .account);
+          if (account .incCategory)
+            updateTotals (this._categories .get (account .incCategory));
+        }
       }
       if (eventType == ModelEvent .UPDATE && arg .budgets) {
         let bid = this._budget .getId();
-        if (! arg .budgets .includes (bid))
-          this._removeTuple (doc._id);
-        else if (! arg ._original_budgets .includes (bid)) {
-          let cat = this._categories .get (doc._id)
-          if (! this._options .depthLimit || this._options .depthLimit >= calcDepth (cat))
-            this._addTuple (cat);
-        }
+        if (! this._options .includeZombieActiveYears) {
+          if (! arg .budgets .includes (bid))
+            this._removeTuple (doc._id);
+          else if (! arg ._original_budgets .includes (bid)) {
+            let cat = this._categories .get (doc._id)
+            if (! this._options .depthLimit || this._options .depthLimit >= calcDepth (cat))
+              await this._addTuple (cat);
+          }
+        } else
+          await this._updateZombieFields (doc._id);
       }
       if (eventType == ModelEvent .UPDATE && arg .start != null && doc._id && source != this._view)
         this._setVisibility (doc._id, arg);
@@ -123,6 +128,12 @@ class ScheduleEntry extends List {
           this._view .cancelMove (arg.id);
           return;
         }
+        if (this._options .includeZombies) {
+          if (! arg .pos || ! arg .pos .inside || (this._categories .isZombie (arg .pos .inside) && ! this._categories .isZombie (target._id))) {
+            this._view .cancelMove (arg .id);
+            return;
+          }
+        }
         this._move (arg .id, arg .pos, this._view);
         break;
 
@@ -165,8 +176,12 @@ class ScheduleEntry extends List {
             }
           }
         }
-        if (arg .fieldName == 'name')
-          this._view .showTipNameChange (arg .id);
+        if (arg .fieldName == 'name') {
+          let cat = this._categories .get (arg .id);
+          let end = Types .date .monthEnd (Types .date .addMonthStart (this._budget .getStartDate(), -1));
+          if (this._categories .getActuals() .hasTransactions (cat, null, end))
+            this._view .showTipNameChange (arg .id);
+        }
         if (eventType != ListViewEvent .CANCELLED)
           this ._setVisibility (arg.id, arg);
         break;
@@ -192,9 +207,14 @@ class ScheduleEntry extends List {
           this._onViewChange (ListViewEvent .UPDATE, {id: arg, fieldName: 'start', value: ''});
           eventType = ListViewEvent .CANCELLED;
         }
-        if (await this._model .hasTransactions (target)) {
+        if (this._model .hasTransactions (target)) {
           this._view .flagTupleError  (arg);
           this._view .showTipNoRemove (arg);
+          eventType = ListViewEvent .CANCELLED;
+        }
+        if (this._options .includeZombies && this._categories .isZombie (target._id) && this._model .hasTransactions (target, null, null)) {
+          this._view .flagTupleError  (arg);
+          this._view .showTipNoRemoveZombie (arg);
           eventType = ListViewEvent .CANCELLED;
         }
         break;
@@ -202,6 +222,10 @@ class ScheduleEntry extends List {
       case ListViewEvent .FIELD_CLICK:
         if (this._options .onFieldClick)
           this._options .onFieldClick (arg .id, arg .name, arg .html .parent() .parent(), {top: 50, left: 50});
+        break;
+
+      case ScheduleEntryViewEvent .REACTIVATE_ZOMBIE:
+        await this._reactivateZombie (arg .id, arg .after);
         break;
     }
     super._onViewChange  (eventType, arg);
@@ -223,19 +247,19 @@ class ScheduleEntry extends List {
     await this._model .move (id, pos, source);
   }
 
-  addHtml (toHtml) {
+  async addHtml (toHtml) {
     this._view .addHtml (toHtml);
     if (this._options .categoriesOnlyWithParent)
       for (let p of this._options .categoriesOnlyWithParent)
         for (let c of this._categories .get (p) .children || [])
-          this._addTuple (c);
+          await this._addTuple (c);
     else if (this._options .scheduleOnly) {
       for (let c of this._options .scheduleOnly) {
         for (let s of this._categories .get (c) .schedule || [])
-          this._addTuple (s);
+          await this._addTuple (s);
       }
     } else
-      this._addCats (this._categories .getRoots());
+      await this._addCats (this._categories .getRoots());
     if (toHtml .hasClass ('_list')) {
       let hasSchedule;
       for (let cat of this._categories .getRoots())
@@ -269,43 +293,76 @@ class ScheduleEntry extends List {
     }
   }
 
-  _addCats (cats, depth = 0) {
+  async _addCats (cats, depth = 0) {
     if (!this._options .depthLimit || depth < this._options .depthLimit)
       for (let cat of cats || []) {
-        this ._addTuple (cat);
-        for (let sch of cat.schedule || [])
-          this ._addTuple (sch);
-        if (cat.children && cat.children.length)
-          this._addCats (cat.children, depth + 1);
-      }
+        await this ._addTuple (cat);
+        for (let sch of cat .schedule || [])
+          await this ._addTuple (sch);
+        if (cat .children && cat .children.length)
+          await this._addCats (cat .children, depth + 1);
+        if (this._options .includeZombies)
+          if (cat .zombies && cat .zombies.length)
+            await this._addCats (cat .zombies, depth + 1);      }
   }
 
-  _addTuple (doc) {
-    var type = doc .category? 'scheduleLine': 'categoryLine';
-    var data = this._view .getLineData (type, doc);
+  async _addTuple (cat) {
+    var type = cat .category? 'scheduleLine': 'categoryLine';
+    var data = this._view .getLineData (type, cat);
     var skip =
       (this._options .categoriesOnlyWithParent &&
-        (type != 'categoryLine' || ! this._options .categoriesOnlyWithParent .find (id => {return doc .parent && doc .parent ._id == id})));
+        (type != 'categoryLine' || ! this._options .categoriesOnlyWithParent .find (id => {return cat .parent && cat .parent ._id == id})));
     skip |= this._options .categoriesOnly && type != 'categoryLine';
     if (! skip) {
-      if (type == 'categoryLine') {
-        var amt               = this._model .getAmount (doc, this._options .startDate, this._options .endDate);
-        var sign              = this._model .isCredit (doc)? -1: 1;
+      if (type == 'categoryLine' && this._options .showVariance) {
+        var amt               = this._model .getAmount (cat, this._options .startDate, this._options .endDate);
+        var sign              = this._model .isCredit (cat)? -1: 1;
         data .total           = amt .amount;
-        data .unallocated     = this._categories .getType (doc) == ScheduleType .YEAR && (amt .year && amt .year .allocated)
+        data .unallocated     = this._categories .getType (cat) == ScheduleType .YEAR && (amt .year && amt .year .allocated)
           ? amt .year .unallocated: 0;
         data ._computedAmount = amt;
-        if (this._model .isCredit (doc)) {
+        if (this._model .isCredit (cat)) {
           data .total          = - data .total;
           data .unallocated    = - data .unallocated;
         }
       }
       if (! this._options .selectCategory || this._options .selectCategory (data)) {
-        var parent = doc [type == 'categoryLine'? 'parent': 'category'];
+        if (this._options .includeZombies)
+          data = await this._getZombieData (data, cat);
+        let parent = cat [type == 'scheduleLine'? 'category': 'parent'];
         this._view .addTuple (type, data, parent && parent ._id);
-        this._setVisibility   (data._id);
+        this._setVisibility  (data._id);
       }
     }
+  }
+
+  async _getZombieData (data, cat) {
+    let isZombie     = this._categories .isZombie (cat._id);
+    let zombieActive = '';
+    if (isZombie && this._options .includeZombieActiveYears) {
+      await this._categories .getActuals() .findHistory();
+      let activePeriod = this._categories .getActuals() .getActivePeriod ([cat]. concat (this._categories .getDescendants(cat, true)));
+      if (! activePeriod .none) {
+        zombieActive = 'Transactions: ' + Types .dateMYear .toString (activePeriod .start);
+        if (activePeriod .end != activePeriod .start)
+          zombieActive += ' - ' + Types .dateMYear .toString (activePeriod .end)
+        zombieActive += '';
+      }
+      if (cat .budgets .length) {
+        zombieActive += (zombieActive .length? ' and ': '') + 'Budgets: ' +
+          cat .budgets .map (bid => {return this._budget .getName (bid)}) .join (', ')
+      }
+      if (zombieActive == '')
+        zombieActive = 'Unused';
+    }
+    return {_id: data._id, _sort: data._sort, name: data .name, zombie: isZombie, zombieActive: zombieActive};
+  }
+
+  async _updateZombieFields (cid) {
+    let cat  = this._categories .get (cid);
+    let data = await this._getZombieData ({}, cat);
+    this._view .updateField (cat._id, 'zombie', data .zombie);
+    this._view .updateField (cat._id, 'zombieActive', data .zombieActive);
   }
 
   _moveTuple (id, pid) {
@@ -321,5 +378,17 @@ class ScheduleEntry extends List {
     var cat = this._categories .get (id);
     if (cat)
       this._view .removeTupleIds (this._categories .getDescendants (cat) .map (d => {return d._id}));
+  }
+
+  async _reactivateZombie (id, after) {
+    Model .newUndoGroup();
+    let cat = this._categories .get (id);
+    let bid = this._budget .getId();
+    let budgets = cat .budgets;
+    if (! budgets .includes (bid))
+      budgets = budgets .concat (bid);
+    if ((cat .parent .children || []) .find (c => {return c .sort == cat .sort}))
+      await this._model .updateCategorySort (cat, after? this._categories .get (after) .sort + 1: 0);
+    await this .updateField (cat._id, 'budgets', budgets);
   }
 }

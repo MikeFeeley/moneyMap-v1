@@ -1,8 +1,9 @@
 class IndexedListView extends Observable {
 
-  constructor (hasHead) {
+  constructor (hasHead, hasIndex) {
     super();
-    this._hasHead = hasHead;
+    this._hasHead  = hasHead;
+    this._hasIndex = hasIndex;
   }
 
   remove() {
@@ -14,7 +15,8 @@ class IndexedListView extends Observable {
 
   addHtml (toHtml) {
     this._html  = $('<div>', {class: '_IndexedListView' + (this._hasHead? 'WithHead': '')}) .appendTo (toHtml);
-    this._index = $('<div>', {class: '_index'})           .appendTo (this._html);
+    if (this._hasIndex)
+      this._index = $('<div>', {class: '_index'})         .appendTo (this._html);
     if (this._hasHead)
       this._head = $('<div>', {class: '_head'})           .appendTo (this._html);
     this._list  = $('<div>', {class: '_list'})            .appendTo (this._html);

@@ -168,6 +168,8 @@ class DateType extends FieldType {
         return v? (v < 9999? v: this._mths [this._month (v) - 1] + '-' + (this._year (v) - 2000)): ''
       case 'MonthY':
         return v? this._months [this._month (v) - 1] + ' ' + this._year (v): '';
+      case 'MYear':
+        return v? this._mths [this._month (v) - 1] + ' ' + this._year (v): '';
       case 'Long':
         return v? this._months [this._month (v) - 1] + ' ' + this._day (v) + ', ' + this._year (v): '';
     }
@@ -476,6 +478,7 @@ var Types = {
   dateMYorYear: new DateType   ('MYorYear'),
   dateM:        new DateType   ('M'),
   dateMonthY:   new DateType   ('MonthY'),
+  dateMYear:    new DateType   ('MYear'),
   dateLong:     new DateType   ('Long'),
   dateMDY:      new DateType   ('MDY'),
   dateFY:       new FiscalYearDateType  ('FY'),

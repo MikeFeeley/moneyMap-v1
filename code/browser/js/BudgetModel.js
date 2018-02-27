@@ -78,8 +78,9 @@ class BudgetModel extends Observable {
     return this._budget ._id;
   }
 
-  getName() {
-    return this._budget .name;
+  getName (id) {
+    let budget = id? this._budgets .find (b => {return b._id == id}): this._budget;
+    return budget .name;
   }
 
   getStartDate() {

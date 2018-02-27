@@ -7,9 +7,13 @@
 
 \f0\fs36 \cf0 ==============\
 BUGS\
+	- zombie sort is separate from children sort\
+		- could sort zombie after child in case of tie, but then reactivate needs to update the sorts\
+		- or could keep the sorts in sync\
 \
 TODO\
 	- reorganize zombies\
+		- add an ability to merge categories easily\
 	- search\
 		- consider going to calendar year ? could require / for FY: 2015 is jan-dec, 2015/6 is FY?\
 	- rethink the category children add-to, subtract-from rules\

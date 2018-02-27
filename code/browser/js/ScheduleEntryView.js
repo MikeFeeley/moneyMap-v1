@@ -17,18 +17,20 @@ class ScheduleEntryView extends ListView {
     var fields = [
       new ScheduleEntryName            ('name',            new ScheduleNameFormat (accounts, categories), '', '', 'Name', categories),
       new ScheduleEntryAccount         ('account',         ViewFormats ('string')),
+      new ScheduleEntryZombie          ('zombie',          ViewFormats ('string')),
+      new ScheduleEntryZombieActive    ('zombieActive',    ViewFormats ('string')),
       new ViewEmpty                    ('scheduleLine',    ViewFormats ('string')),
       new ScheduleEntryTotal           ('total',           ViewFormats ('moneyDC'), hud),
       new ScheduleEntryViewUnallocated ('unallocated',     ViewFormats ('moneyDC')),
       new ViewScalableTextbox          ('start',           startFormat,                  '', '', 'Start'),
       new ViewScalableTextbox          ('end',             endFormat,                    '', '', 'End'),
       new ViewScalableTextbox          ('amount',          ViewFormats ('moneyDC'),      '', '', 'Amount'),
-      new RepeatField                  ('repeat', variance .getBudget()),
+      new RepeatField                  ('repeat',          variance .getBudget()),
       new LimitField                   ('limit',           ViewFormats ('number'),       '', '', 'Yrs'),
       new ViewScalableTextbox          ('notes',           ViewFormats ('string'),       '', '', 'Notes')
     ];
     var lineTypes = {
-      categoryLine: ['name', 'account', 'scheduleLine', 'unallocated', 'total'],
+      categoryLine: ['name', 'account', 'zombie', 'zombieActive', 'scheduleLine', 'unallocated', 'total'],
       scheduleLine: ['start', 'end', 'amount', 'repeat', 'limit', 'notes']
     }
     options .protectRoot = true;
@@ -57,10 +59,10 @@ class ScheduleEntryView extends ListView {
       $('<div>', {text: tl}) .appendTo (tip .children());
     setTimeout (() => {
       let pos;
-      if (ui .calcPosition (target, $('body'), {top: - tip .height() -16, left: 0}) .top >= 16)
+      if (ui .calcPosition (target, $('body'), {top: - tip .height() -16, left: 0}) .top >= 64)
         pos = ui .calcPosition (target, html, {top: - tip .height() -16, left: 0});
       else
-        pos = ui .calcPosition (target, html, {top: 32, left: 0})
+        pos = ui .calcPosition (target, html, {top: 64, left: 0})
       tip .css (pos);
       ui .scrollIntoView (tip);
       tip .addClass ('fader_visible') .one ('transitionend', () => {
@@ -84,20 +86,23 @@ class ScheduleEntryView extends ListView {
   }
 
   showTipNameChange (id) {
-    let now = new Date() .getTime() / (1000 * 60); // no more frequently than once a minute
-    if (! this._lastNameChangeTip || (now - this._lastNameChangeTip) > 1) {
-      this._lastNameChangeTip = now;
-      this._showFieldTip (this._getField (id, 'name'), this._html, [
-        'Change applies to transactions in every year.',
-        'To change only this year, delete and add new category.'
-      ]);
-    }
+    this._showFieldTip (this._getField (id, 'name'), this._html, [
+      'Change also applies to older transactions that use this category',
+      'To change only this year, delete and add new category.'
+    ]);
   }
 
   showTipNoRemove (id) {
     this._showFieldTip (this._getField (id, 'name'), this._html, [
       'Current-year transactions use category (or subcategory).',
       'Recategorize transactions before deleting.'
+    ]);
+  }
+
+  showTipNoRemoveZombie (id) {
+    this._showFieldTip (this._getField (id, 'name'), this._html, [
+      'You can not delete this category.',
+      'It is still in use by a transaction or budget.'
     ]);
   }
 
@@ -162,6 +167,48 @@ class ScheduleEntryViewUnallocated extends ViewLabel {
 class ScheduleEntryAccount extends ViewEmpty {
   set (value) {
     this._html .prev ('._field_name') [value? 'addClass': 'removeClass'] ('_account');
+  }
+}
+
+class ScheduleEntryZombie extends ViewEmpty {
+  set (value) {
+    this._html .prev ('._field_name') [value? 'addClass': 'removeClass'] ('_zombie');
+  }
+}
+
+class ScheduleEntryZombieActive extends ViewLabel {
+  _addHtml (value) {
+    super._addHtml (value);
+    this._label .click (e => {
+      let close    = () => {popup .removeClass ('fader_visible') .one ('transitionend', () => {popup .remove()})};
+      let html     = this._html .offsetParent();
+      let popup    = $('<div>', {class: '_zombieControlPopup fader'}) .appendTo (html);
+      popup .css (ui .calcPosition (this._html, html, {top: 16, left: -250}));
+      let content  = $('<div>') .appendTo (popup);
+      $('<div>', {text: 'Reactive Category for this Budget'}) .appendTo (content);
+      let buttons = $('<div>') .appendTo (content);
+      $('<button>', {text: 'Reactivate'}) .appendTo (buttons)
+        .click (e => {
+          this._view._notifyObservers (ScheduleEntryViewEvent .REACTIVATE_ZOMBIE, {
+            id: this._id,
+            after: this._html .closest ('._tuple') .prev ('._tuple') .data ('id')
+          });
+          ui .ModalStack .delete (modal);
+          close();
+        })
+      $('<button>', {text: 'Cancel'}) .appendTo (buttons)
+        .click (e => {
+          ui .ModalStack .delete (modal);
+          close();
+        })
+      let modal = ui .ModalStack .add (
+        e  => {return e && ! $.contains (popup .get (0), e .target)},
+        () => {close()},
+        true
+      );
+      setTimeout (() => {popup .addClass ('fader_visible')}, 0);
+      e .stopPropagation();
+    })
   }
 }
 
@@ -268,3 +315,6 @@ class LimitField extends ViewScalableTextbox {
   }
 }
 
+const ScheduleEntryViewEvent = Object.create (ListViewEvent, {
+  REACTIVATE_ZOMBIE: {value: 500}
+});

@@ -125,7 +125,7 @@ class Accounts extends Observable {
                   'This category has scheduled budget amounts.',
                   'It was not removed from your budget.'
                 ]);
-              } else if (await schModel .hasTransactions (cat)) {
+              } else if (schModel .hasTransactions (cat)) {
                 this._view .showFieldTip (arg .id, arg .fieldName, [
                   'Current-year transactions use this category.',
                   'It was not removed from your budget.'
@@ -204,7 +204,7 @@ class Accounts extends Observable {
               let cat = categories .get (cid);
               if (cat) {
                 await schModel .update (cid, {account: null});
-                if (! categories .hasType (cat, ScheduleType .NOT_NONE) && ! (await schModel .hasTransactions (cat)))
+                if (! categories .hasType (cat, ScheduleType .NOT_NONE) && ! (schModel .hasTransactions (cat)))
                   await schModel .remove (cid);
               }
             }

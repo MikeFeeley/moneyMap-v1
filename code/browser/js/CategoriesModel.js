@@ -137,8 +137,9 @@ class Categories {
     return this._roots;
   }
 
-  getDescendants (doc) {
-    return ((doc && doc .children) || []) .reduce ((d,c) => {return d .concat (c) .concat (this .getDescendants (c))}, [])
+  getDescendants (doc, includeZombies) {
+    let list = doc? ((doc .children || []) .concat (includeZombies? (doc .zombies || []): [])): [];
+    return list .reduce ((d,c) => {return d .concat (c) .concat (this .getDescendants (c, includeZombies))}, [])
   }
 
   findBestMatch (name, includeZombies) {
@@ -166,4 +167,18 @@ class Categories {
     }
     return roots[0];
   }
+
+  isZombie (cid) {
+    let cat = this .get (cid);
+    return cat && ! cat .budgets .includes (this._budget .getId());
+  }
+
+  hasZombies (list = this._roots) {
+    if (list .find (c => {return c .zombies && c .zombies .length}))
+      return true;
+    else
+      return list .find (c => {return c .children && c .children .length && this .hasZombies (c .children)})
+  }
 }
+
+var sanity = 100;

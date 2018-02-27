@@ -313,7 +313,7 @@ class ListView extends SortedTupleView {
   }
 }
 
-var ListViewEvent = Object.create (SortedTupleViewEvent, {
+const ListViewEvent = Object.create (SortedTupleViewEvent, {
   MOVE:        {value: 400},
   FIELD_CLICK: {value: 401}
 });

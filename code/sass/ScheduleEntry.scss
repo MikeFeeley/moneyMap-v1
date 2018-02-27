@@ -91,6 +91,13 @@ $indent:       24px;
   @include schedule-entry-base();
   z-index: 1000;
   @include adaptive-width($width-narrow, $width-wide);
+  ._field_name._zombie ._content {
+    color: #cc66cc !important;
+  }
+ ._field_zombieActive ._content {
+    color: #e68ae6 !important;
+    font-style: italic;;
+  }
   > ul * {
     font-size: $bFont;
     ._content {
@@ -244,6 +251,16 @@ $indent:       24px;
   }
 }
 
+._ReorganizeScheduleEntry {
+  @include schedule-entry (800px, 800px, 30px, 24px, 15px, 13px);
+  position: relative;
+  > ul > li > ul > li > ul li._list_line_categoryLine,
+  > ul > li > ul > div > li > ul li._list_line_categoryLine,
+  > ul > div > li > ul > li > ul li._list_line_categoryLine {
+    border-top: transparent;
+  }
+}
+
 ._MiniScheduleEntry {
   position: relative;
   @include schedule-entry-base();
@@ -349,5 +366,95 @@ $indent:       24px;
   > ul > li._selectedIndex > ._field ._content {
     font-weight: 400;
     color: #257fb3;
+  }
+}
+
+._IndexedListViewWithHead {
+  > div._reorganizeButton {
+    position: absolute;
+    margin-top:  24px;
+    margin-left: 180px;
+    z-index: 5000;
+    > div {
+      @include icon-button();
+      &:hover {
+        color: #33b1ff;
+        opacity: 1;
+      }
+    }
+  }
+  > div._reorganizeCategoriesPopup {
+    padding: 8px;
+    position: fixed;
+    background: rgba(255,255,255,0)!important;
+    z-index: 6000;
+    top:  118px;
+    left: 208px;
+    > div {
+      @include popup-content();
+      height: calc(100vh - 144px);
+      width: 794px;
+      > div {
+        width: 800px;
+        height: calc(100vh - 144px);
+      }
+      > ._IndexedListView > ._list {
+        margin-left: 0px;
+      }
+    }
+    > div > div > div > div > ._zombieControlPopup {
+      @include popup-container();
+      > div {
+        @include popup-content();
+        @include user-select (none);
+        position: relative;
+        padding: 16px;
+        background: rgba(255,255,255,.80);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        border-radius: 6px;
+        box-shadow: $drop-shadow;
+        color: #555;
+        > div:first-child {
+          font-size: 22px;
+          color: #33b1ff;
+          margin-bottom: 16px;
+        }
+        > form {
+          margin-left: 16px;
+          > div {
+            margin-top: 4px;
+          }
+          > div > label {
+            > input:first-child {
+              margin-right: 8px;
+            }
+            > span {
+              margin-right: 4px;
+            }
+            > * {
+              vertical-align: top;
+            }
+          }
+        }
+        > div:last-child {
+          margin-top: 16px;
+          > button {
+            border:     4px solid #33b1ff;
+            font-size:  16px;
+            font-weight: 500;
+            &:first-child {
+              margin-right: 32px;
+              background: #33b1ff;
+              color:      white;
+            }
+            &:last-child {
+              color:       #33b1ff;
+              background:  white;
+            }
+          }
+        }
+      }
+    }
   }
 }

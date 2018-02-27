@@ -1,13 +1,18 @@
 class IndexedScheduleEntry extends IndexedList {
-  constructor (indexName, listName, accounts, variance) {
+  constructor (indexName, listName, accounts, variance, options = {}) {
     super (
-      new ScheduleEntryIndex (indexName, accounts, variance, listName),
-      new ScheduleEntryList  (listName,  accounts, variance),
-      new BudgetYearGraph    (variance .getBudget())
+      options .noIndex? null: new ScheduleEntryIndex (indexName, accounts, variance, listName),
+      new ScheduleEntryList  (listName,  accounts, variance, options),
+      options .noHeader? null: new BudgetYearGraph    (variance .getBudget()),
     );
-    this .getIndex() ._parent = this;
+    this._accounts = accounts;
+    this._variance = variance;
+    this._options  = options;
+    if (this .getIndex())
+      this .getIndex() ._parent = this;
     this .getList()  ._parent = this;
-    this .getHead()  ._parent = this;
+    if (this .getHead())
+      this .getHead()  ._parent = this;
     this._listName = listName;
     this._view .addObserver (this, this._onViewChange);
   }
@@ -17,7 +22,7 @@ class IndexedScheduleEntry extends IndexedList {
   }
 
   _onViewChange (eventType, arg) {
-    if (eventType == IndexedListViewEvent .SCROLL && this. getIndex() .getWatchScroll()) {
+    if (eventType == IndexedListViewEvent .SCROLL && this .getIndex() && this. getIndex() .getWatchScroll()) {
       var top  = $('.' + this._listName) .parent() .scrollTop();
       var sel  = this .getIndex() .getSelected();
       var selS = (sel &&              $('#' + this._listName + sel .selected)) || [];
@@ -35,15 +40,51 @@ class IndexedScheduleEntry extends IndexedList {
       }
     }
   }
+
+async addHtml (toHtml) {
+  let button;
+  let addPopup = async () => {
+    button .removeClass ('_disabled');
+    let popup   = $('<div>', {class: '_reorganizeCategoriesPopup fader'}) .appendTo (this._view._html);
+    let content = $('<div>') .appendTo (popup);
+    let scheduleEntry = new IndexedScheduleEntry (
+      '_CategoryMenu', '_ReorganizeScheduleEntry',
+      this._accounts, this._variance,
+      {showVariance: false, includeZombies: true, includeZombieActiveYears: true, categoriesOnly: true, noHeader: true, noIndex: true}
+    );
+    await scheduleEntry .addHtml (content);
+    ui .ModalStack .add (
+      e => {
+          return e
+            && ! $.contains (content .get (0), e .target) && content .get (0) != e .target
+            && ! $.contains (this._view._index .get (0), e .target)
+      },
+      e => {popup .removeClass ('fader_visible') .one ('transitionend', () => {
+        scheduleEntry .delete();
+        popup .remove();
+        button .addClass ('_disabled')})
+      },
+      true
+    )
+    setTimeout (() => {popup .addClass ('fader_visible')}, 0);
+  }
+  await super .addHtml (toHtml)
+    if (! this._options .noHeader && this._variance .getBudget() .getCategories() .hasZombies())
+      button = $('<div>', {class: 'lnr-history _disabled'})
+        .appendTo ($('<div>', {class: '_reorganizeButton'}) .prependTo (this._view._html))
+        .click (e => {(async () => {await addPopup()})()});
+  }
 }
 
 class ScheduleEntryList extends ScheduleEntry {
-  constructor (name, accounts, variance) {
-    super (name, accounts, variance, {showVariance: true})
+  constructor (name, accounts, variance, options) {
+    if (options .showVariance === undefined)
+      options .showVariance = true;
+    super (name, accounts, variance, options)
   }
   _onViewChange (eventType, arg) {
     super._onViewChange (eventType, arg);
-    if (eventType == SortedTupleViewEvent .MOVED && this._parent .getIndex(). getSelected() && this._parent .getIndex() .getWatchScroll()) {
+    if (eventType == SortedTupleViewEvent .MOVED && this._parent .getIndex() && this._parent .getIndex() .getSelected() && this._parent .getIndex() .getWatchScroll()) {
       var list = $('.' + this._parent._listName);
       var top  = list .parent() .scrollTop();
       var lis  = list
@@ -68,8 +109,8 @@ class ScheduleEntryIndex extends ScheduleEntry {
     this._watchScroll = true;
   }
 
-  addHtml (toHtml) {
-    super .addHtml     (toHtml);
+  async addHtml (toHtml) {
+    await super .addHtml     (toHtml);
     this  .setSelected (this._view._html .find('li') .find ('li') .data ('id'));
   }
 
@@ -135,13 +176,17 @@ class ViewLink extends ViewLabel {
       var list = this._html .closest ('._IndexedListViewWithHead') .find ('._list');
       this._parent .setSelected    (this._id);
       this._parent .setWatchScroll (false);
-      list .animate ({
-        scrollTop: $('#' + this._parent._listName + this._id) .position() .top + 16
-      }, {
-        complete: () => {
-          this._parent .setWatchScroll (true);
-        }
-      });
+      for (let l of list .toArray()) {
+        let list = $(l);
+        let listName = list .children ('._List') .get(0) .className .split (' ') .slice (-1) [0];
+        list .animate ({
+          scrollTop: $('#' + listName + this._id) .position() .top + 16
+        }, {
+          complete: () => {
+            this._parent .setWatchScroll (true);
+          }
+        });
+      }
       e. preventDefault();
     });
     this._label = $('<div>', {class: '_content'}) .appendTo (anchor);

@@ -106,15 +106,15 @@ class ActualsModel extends Observable {
   getAmount (cat, st = this._budget .getStartDate(), en = this._budget .getEndDate(), skip) {
     let skipAmount = (skip || [])
       .filter (skipEntry        => {return skipEntry [0] == cat._id && skipEntry [1] >= st && skipEntry [1] <= en})
-      .reduce ((sum, skipEntry) => {return sum + skipEntry [2]}, 0)
-    st = Types .date._yearMonth (st);
-    en = Types .date._yearMonth (en < Types .date .monthStart (en)? Types .date .addMonthStart (en, -1): en);
+      .reduce ((sum, skipEntry) => {return sum + skipEntry [2]}, 0);
+    st = st && Types .date._yearMonth (st);
+    en = en && Types .date._yearMonth (en < Types .date .monthStart (en)? Types .date .addMonthStart (en, -1): en);
     let amount;
-    if (st == en)
+    if (st && st == en)
       amount = ((cat .actuals && cat .actuals .get (st)) || 0);
     else
       amount = ((cat .actuals && Array .from (cat .actuals .entries())) || [])
-        .filter (a     => {return a[0] >= st && a[0] <= en})
+        .filter (a     => {return (!st || a[0] >= st) && (!en || a[0] <= en)})
         .reduce ((s,a) => {return s + a[1]}, 0);
     return amount - skipAmount;
   }
@@ -123,12 +123,38 @@ class ActualsModel extends Observable {
     let homonyms = ((cat .parent && cat .parent .children) || []) .concat ((cat .parent && cat .parent .zombies) || [])
       .filter (c => {return c .name == cat .name})
       .map    (h => {return h._id});
-
-    return this._transactionModel .find ({date: {$gte: st, $lte: en}, category: {$in: homonyms}});
+    let query = {category: {$in: homonyms}};
+    if (st || en) {
+      query .date = {}
+      if (st)
+        query .date .$gte = st;
+      if (en)
+        query .date .$lte = en;
+    }
+    return this._transactionModel .find (query);
   }
 
-  async hasTransactions (query) {
-    return this._transactionModel .has (query);
+  hasTransactions (cats, start, end) {
+    return [] .concat (cats) .find (cat => {return this._getActiveMonths (cat) .find (m => {
+      return (! start || m >= start) && (!end || m <= end)
+    })}) != null;
+  }
+
+  _getActiveMonths (cat) {
+    return cat .actuals? Array .from (cat .actuals .keys()) .sort() .map (my => {return Types .date._fromYearMonth (my)}): [];
+  }
+
+  getActivePeriod (cats) {
+    let activeMonths = ([] .concat (cats)) .reduce ((list, cat) => {
+      return list .concat (this._getActiveMonths (cat))
+    }, []) .sort();
+    if (activeMonths .length == 0)
+      return {none: true}
+    else
+      return {
+        start: activeMonths [0],
+        end:   Types .date .monthEnd (activeMonths .slice (-1) [0])
+      }
   }
 
   /**
