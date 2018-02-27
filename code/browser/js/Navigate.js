@@ -1610,7 +1610,7 @@ class Navigate {
   _filterHistoryBySlider (dataset) {
     let first = this._historySliderLeft;
     let last  = this._historySliderRight && this._historySliderRight + 1;
-    if (! first || ! last) {
+    if (first == null || last == null) {
       let cbi = dataset .cols .indexOf (this._budget .getLabel());
       if (cbi < 0)
         cbi = 0;
