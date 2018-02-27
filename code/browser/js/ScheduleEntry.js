@@ -212,10 +212,12 @@ class ScheduleEntry extends List {
           this._view .showTipNoRemove (arg);
           eventType = ListViewEvent .CANCELLED;
         }
-        if (this._options .includeZombies && this._categories .isZombie (target._id) && this._model .hasTransactions (target, null, null)) {
-          this._view .flagTupleError  (arg);
-          this._view .showTipNoRemoveZombie (arg);
-          eventType = ListViewEvent .CANCELLED;
+        if (this._options .includeZombies && this._categories .isZombie (target._id)) {
+          if ((target .budgets && target .budgets .length) || this._model .hasTransactions (target, null, null)) {
+            this._view .flagTupleError  (arg);
+            this._view .showTipNoRemoveZombie (arg);
+            eventType = ListViewEvent .CANCELLED;
+          }
         }
         break;
 
@@ -355,7 +357,7 @@ class ScheduleEntry extends List {
       if (zombieActive == '')
         zombieActive = 'Unused';
     }
-    return {_id: data._id, _sort: data._sort, name: data .name, zombie: isZombie, zombieActive: zombieActive};
+    return {_id: data._id, _sort: data._sort, name: data .name, account: data .account, zombie: isZombie, zombieActive: zombieActive};
   }
 
   async _updateZombieFields (cid) {

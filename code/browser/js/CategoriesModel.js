@@ -76,6 +76,11 @@ class Categories {
         let d = this._index .get (doc._id);
         if (d) {
           this._removeParentLink (d, parent, children);
+          if (parent == 'parent') {
+            let zombieIdx = d .parent .zombies .indexOf (d);
+            if (zombieIdx != -1)
+              d .parent .zombies .splice (zombieIdx, 1);
+          }
           this._index .delete (doc._id);
         }
         break;

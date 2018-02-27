@@ -172,7 +172,7 @@ class ScheduleEntryAccount extends ViewEmpty {
 
 class ScheduleEntryZombie extends ViewEmpty {
   set (value) {
-    this._html .prev ('._field_name') [value? 'addClass': 'removeClass'] ('_zombie');
+    this._html .prevAll ('._field_name') [value? 'addClass': 'removeClass'] ('_zombie');
   }
 }
 
