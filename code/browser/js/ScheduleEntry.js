@@ -346,7 +346,7 @@ class ScheduleEntry extends List {
       let activePeriod = this._categories .getActuals() .getActivePeriod ([cat]. concat (this._categories .getDescendants(cat, true)));
       if (! activePeriod .none) {
         zombieActive = 'Transactions: ' + Types .dateMYear .toString (activePeriod .start);
-        if (activePeriod .end != activePeriod .start)
+        if (Types .date._yearMonth (activePeriod .end) != Types .date._yearMonth (activePeriod .start))
           zombieActive += ' - ' + Types .dateMYear .toString (activePeriod .end)
         zombieActive += '';
       }
