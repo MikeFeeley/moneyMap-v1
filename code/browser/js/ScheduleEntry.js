@@ -351,7 +351,7 @@ class ScheduleEntry extends List {
         zombieActive += '';
       }
       if (cat .budgets .length) {
-        zombieActive += (zombieActive .length? ' and ': '') + 'Budgets: ' +
+        zombieActive += (zombieActive .length? ' and ': '') + 'Budget' + (cat .budgets .length > 1? 's': '') + ': ' +
           cat .budgets .map (bid => {return this._budget .getName (bid)}) .join (', ')
       }
       if (zombieActive == '')
