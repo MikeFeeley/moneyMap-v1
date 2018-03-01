@@ -7,6 +7,7 @@ class ScheduleEntry extends List {
     this._variance   = variance;
     this._categories = this._model .getCategories();
     this._accounts   = accounts;
+    this._actuals    = this._variance .getActuals();
   }
 
   delete() {
@@ -228,6 +229,15 @@ class ScheduleEntry extends List {
 
       case ScheduleEntryViewEvent .REACTIVATE_ZOMBIE:
         await this._reactivateZombie (arg .id, arg .after);
+        break;
+
+      case ScheduleEntryViewEvent .SHOW_TRANSACTIONS:
+        let cat = this._categories .get (arg .id);
+        if (cat) {
+          let activePeriod = this._actuals .getActivePeriod (cat);
+          if (! activePeriod .none)
+            TransactionHUD .showCategory (arg .id, activePeriod, this._accounts, this._variance, arg .html, {top: 30, left: 30})
+        }
         break;
     }
     super._onViewChange  (eventType, arg);

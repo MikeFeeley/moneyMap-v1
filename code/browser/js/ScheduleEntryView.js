@@ -190,7 +190,7 @@ class ScheduleEntryZombieActive extends ViewLabel {
       let popup    = $('<div>', {class: '_zombieControlPopup fader'}) .appendTo (html);
       popup .css (ui .calcPosition (this._html, html, {top: 16, left: -250}));
       let content  = $('<div>') .appendTo (popup);
-      $('<div>', {text: 'Reactive Category for this Budget'}) .appendTo (content);
+      $('<div>', {text: 'Reactive Category'}) .appendTo (content);
       let buttons = $('<div>') .appendTo (content);
       $('<button>', {text: 'Reactivate'}) .appendTo (buttons)
       .click (e => {
@@ -202,13 +202,12 @@ class ScheduleEntryZombieActive extends ViewLabel {
         close();
       });
       let cat = this._categories .get (this._id);
-      console.log(cat);
-      if (false) { // TODO if there are transactions show this button
+      if (this._actuals .hasTransactions (cat, null, null)) {
         $('<button>', {text: 'Show Transactions'}) .appendTo (buttons)
         .click (e => {
-          this._view._notifyObservers (ScheduleEntryViewEvent .REACTIVATE_ZOMBIE, {
-            id: this._id,
-            after: this._html .closest ('._tuple') .prev ('._tuple') .data ('id')
+          this._view._notifyObservers (ScheduleEntryViewEvent .SHOW_TRANSACTIONS, {
+            id:   this._id,
+            html: this._html .closest ('._list') .parent()
           });
           ui .ModalStack .delete (modal);
           close();
@@ -334,5 +333,6 @@ class LimitField extends ViewScalableTextbox {
 }
 
 const ScheduleEntryViewEvent = Object.create (ListViewEvent, {
-  REACTIVATE_ZOMBIE: {value: 500}
+  REACTIVATE_ZOMBIE: {value: 500},
+  SHOW_TRANSACTIONS: {value: 501}
 });
