@@ -1708,7 +1708,7 @@ class Navigate {
     }, toHtml)
   }
 
-  _addHistoryGraph (parentIds, popup, position, view, dataset = this._getHistoryData(parentIds), toHtml, startColor) {
+  _addHistoryGraph (parentIds, popup, position, view, dataset = this._getHistoryData (parentIds), toHtml, startColor) {
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       var updater = this._addUpdater (view, (eventType, model, ids) => {
         if (model == 'SchedulesModel' || model == 'ActualsModel')
@@ -1817,12 +1817,16 @@ class Navigate {
           })}, []),
         detail:  rowData
           .reduce ((s, acc) => {return acc .detail  .map ((d, i) => {
-            let intAmt = ((d && d .intAmt) || 0);
+            let intAmt = ((d && d .intAmt) || 0), addIntAmt=0;
+            if (acc .isLiability) {
+              addIntAmt = intAmt;
+              intAmt    = 0;
+            }
             return {
               ids:    ((s[i] && s[i] .ids)    || []) .concat ((d && d .id) || []),
-              intAmt: ((s[i] && s[i] .intAmt) || 0) + (row .type != AccountType .GROUP || intAmt > 0? intAmt: 0),
+              intAmt: ((s[i] && s[i] .intAmt) || 0) + intAmt,
               infAmt: ((s[i] && s[i] .infAmt) || 0) + ((d && d .infAmt) || 0),
-              addAmt: ((s[i] && s[i] .addAmt) || 0) + ((d && d .addAmt) || 0) + (row .type == AccountType .GROUP && intAmt < 0? intAmt: 0),
+              addAmt: ((s[i] && s[i] .addAmt) || 0) + ((d && d .addAmt) || 0) + addIntAmt,
               subAmt: ((s[i] && s[i] .subAmt) || 0) + ((d && d .subAmt) || 0),
               addCat: ((s[i] && s[i] .addCat) || []) .concat ((d && d. addCat) || []),
               subCat: ((s[i] && s[i] .subCat) || []) .concat ((d && d. subCat) || [])

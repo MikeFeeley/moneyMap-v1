@@ -668,18 +668,16 @@ class Account {
       (c,s,e) => {return (this._budget .getIndividualAmount(c,s,e) .year || {}) .amount || 0},
       (c,s,e) => {return (this._budget .getAmount (c,s,e) .year || {}) .amount || 0}
     )}
-    let getBudget = (cat, start, end) => {
+    let getBudget = (cat, start, end, yearlyProRata) => {
       let yr = getBudgetYear (cat, start, end);
       if (yr && end <= this._budget .getEndDate()) {
         // reduce yearly budget by any yearly actuals before start
         let ds = this._budget .getStartDate();
         let de = Types .date .monthEnd (Types .date .addMonthStart (end, -1));
-        if (this._budget .getCategories() .getType (cat) == ScheduleType .YEAR)
-          yr -= getActual (cat, ds, de, false);
-        yr -= this._actuals .getAmountRecursively (cat, ds, de, false, true);
+        yr -= this._actuals .getAmountRecursively (cat, ds, de, undefined, false, true);  // remove all year actual amounts
         yr = Math .max (0, yr);
       }
-      return getBudgetMonth (cat, start, end) + Math .round (yr / 12);
+      return getBudgetMonth (cat, start, end) + Math .round (yr / yearlyProRata);
     }
 
     /*** getBalance body ***/
@@ -710,8 +708,20 @@ class Account {
         mStart  = Types .date .monthStart (this._balanceDate || Types .date .today());
         balance = 0;
       }
+      let adjustStartForActuals = cat => {
+        if (cat) {
+          let activePeriod = this._actuals .getActivePeriod (cat);
+          if (! activePeriod .none)
+            mStart = Math .min (mStart, activePeriod .start);
+          adjustStartForActuals (cat .parent);
+        }
+      }
+      if (this._balances .length == 0)
+        [addCat, subCat, intCat] .forEach (cat => {adjustStartForActuals (cat)});
 
       // compute balance for every missing month up to current date
+      let budgetEndDate       = this._budget .getEndDate();
+      let monthsLeftInCurYear = Types .date._difMonths (budgetEndDate, curMonthEnd);
       while (mStart <= baseDate) {
         let mEnd = Types .date .monthEnd (mStart);
         let add, sub, int, inf=0;
@@ -725,8 +735,9 @@ class Account {
 
         } else {
           // use plan for current and future periods
-          add = (addCat? getBudget (addCat, mStart, mEnd): 0) + (intCat? getBudget (intCat, mStart, mEnd): 0);
-          sub = subCat? getBudget (subCat, mStart, mEnd): 0;
+          let yearlyProRata = mStart <= budgetEndDate? monthsLeftInCurYear : 12;
+          add = (addCat? getBudget (addCat, mStart, mEnd, yearlyProRata): 0) + (intCat? getBudget (intCat, mStart, mEnd, yearlyProRata): 0);
+          sub = subCat? getBudget (subCat, mStart, mEnd, yearlyProRata): 0;
           let days = Types .date .subDays (mEnd, mStart) + 1;
           int = this._getInterest (balance, mStart, days);
           if (this .balance != null && mEnd == Types .date .monthEnd (this .balanceDate || Types .date .today())) {
@@ -790,10 +801,11 @@ class Account {
     let be       = this._budget .getEndDate();
     let balances = dates .map (d => {return this .getBalance (Types .dateFY .getFYStart (d, bs, be), Types .dateFY .getFYEnd (d, bs , be))});
     return {
-      curBal:  this .balance * (this .creditBalance? 1: -1),
-      liquid:  this .liquid,
-      amounts: balances .map (d => {return d && d .amount}),
-      detail:  balances .map (d => {return d && d .detail})
+      curBal:      this .balance * (this .creditBalance? 1: -1),
+      liquid:      this .liquid,
+      amounts:     balances .map (d => {return d && d .amount}),
+      detail:      balances .map (d => {return d && d .detail}),
+      isLiability: this .type == AccountType .ACCOUNT && this .form == AccountForm .ASSET_LIABILITY && ! this .creditBalance
     }
   }
 

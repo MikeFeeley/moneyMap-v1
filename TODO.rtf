@@ -7,6 +7,14 @@
 
 \f0\fs36 \cf0 ==============\
 BUGS\
+	- networth amounts\
+		- assumption that actuals applied to parent get accounted for fully by averaging over children is not always correct\
+			- if one child's start date is after the transactions start\
+			- if there are non-account children\
+		- negative earnings on an asset account should not reduce contribution when accumulating\
+			- but when adding asset and liability then you do want the liabilities negative earnings to reduce the assets contribution\
+				- this is principal and interest\
+\
 \
 TODO\
 	- reorganize zombies\

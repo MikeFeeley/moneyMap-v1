@@ -18,7 +18,7 @@ class ScheduleEntryView extends ListView {
       new ScheduleEntryName            ('name',            new ScheduleNameFormat (accounts, categories), '', '', 'Name', categories),
       new ScheduleEntryAccount         ('account',         ViewFormats ('string')),
       new ScheduleEntryZombie          ('zombie',          ViewFormats ('string')),
-      new ScheduleEntryZombieActive    ('zombieActive',    ViewFormats ('string')),
+      new ScheduleEntryZombieActive    ('zombieActive',    ViewFormats ('string'), categories, variance .getActuals()),
       new ViewEmpty                    ('scheduleLine',    ViewFormats ('string')),
       new ScheduleEntryTotal           ('total',           ViewFormats ('moneyDC'), hud),
       new ScheduleEntryViewUnallocated ('unallocated',     ViewFormats ('moneyDC')),
@@ -177,6 +177,11 @@ class ScheduleEntryZombie extends ViewEmpty {
 }
 
 class ScheduleEntryZombieActive extends ViewLabel {
+  constructor (name, format, categories, actuals) {
+    super (name, format);
+    this._categories = categories;
+    this._actuals    = actuals;
+  }
   _addHtml (value) {
     super._addHtml (value);
     this._label .click (e => {
@@ -188,6 +193,18 @@ class ScheduleEntryZombieActive extends ViewLabel {
       $('<div>', {text: 'Reactive Category for this Budget'}) .appendTo (content);
       let buttons = $('<div>') .appendTo (content);
       $('<button>', {text: 'Reactivate'}) .appendTo (buttons)
+      .click (e => {
+        this._view._notifyObservers (ScheduleEntryViewEvent .REACTIVATE_ZOMBIE, {
+          id: this._id,
+          after: this._html .closest ('._tuple') .prev ('._tuple') .data ('id')
+        });
+        ui .ModalStack .delete (modal);
+        close();
+      });
+      let cat = this._categories .get (this._id);
+      console.log(cat);
+      if (false) { // TODO if there are transactions show this button
+        $('<button>', {text: 'Show Transactions'}) .appendTo (buttons)
         .click (e => {
           this._view._notifyObservers (ScheduleEntryViewEvent .REACTIVATE_ZOMBIE, {
             id: this._id,
@@ -196,6 +213,7 @@ class ScheduleEntryZombieActive extends ViewLabel {
           ui .ModalStack .delete (modal);
           close();
         })
+      }
       $('<button>', {text: 'Cancel'}) .appendTo (buttons)
         .click (e => {
           ui .ModalStack .delete (modal);
