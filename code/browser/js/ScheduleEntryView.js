@@ -205,9 +205,11 @@ class ScheduleEntryZombieActive extends ViewLabel {
       if (this._actuals .hasTransactions (cat, null, null)) {
         $('<button>', {text: 'Show Transactions'}) .appendTo (buttons)
         .click (e => {
+          let html = this._html .closest ('._ReorganizeScheduleEntry')
           this._view._notifyObservers (ScheduleEntryViewEvent .SHOW_TRANSACTIONS, {
             id:   this._id,
-            html: this._html .closest ('._list') .parent()
+            html: html,
+            position: ui .calcPosition (this._html, html, {top: 24, left: -250})
           });
           ui .ModalStack .delete (modal);
           close();
@@ -223,6 +225,8 @@ class ScheduleEntryZombieActive extends ViewLabel {
         () => {close()},
         true
       );
+      // TODO scroll into view
+      ui .scrollIntoView (popup, true);
       setTimeout (() => {popup .addClass ('fader_visible')}, 0);
       e .stopPropagation();
     })

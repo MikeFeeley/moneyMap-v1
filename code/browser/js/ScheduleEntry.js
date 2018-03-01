@@ -236,7 +236,7 @@ class ScheduleEntry extends List {
         if (cat) {
           let activePeriod = this._actuals .getActivePeriod (cat);
           if (! activePeriod .none)
-            TransactionHUD .showCategory (arg .id, activePeriod, this._accounts, this._variance, arg .html, {top: 30, left: 30})
+            TransactionHUD .showCategory (arg .id, activePeriod, this._accounts, this._variance, arg .html, arg .position);
         }
         break;
     }

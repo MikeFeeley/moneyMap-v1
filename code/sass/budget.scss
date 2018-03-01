@@ -815,6 +815,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
     background-color: $left-background;
   }
   > ._list {
+    position: relative;
     margin-left: $left-width;
     height: 100%;
     overflow-y: scroll;
@@ -822,8 +823,10 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
 }
 
 ._IndexedListViewWithHead {
-  position: absolute;
-  height:   calc(100vh - #{$tab-bar-height});
+  position: fixed;
+  //height:   calc(100vh - #{$tab-bar-height} -500px);
+  height: 500px;
+  top: $tab-bar-height;
   width: 100%;
   overflow: hidden;
   > ._index {
@@ -866,6 +869,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
     }
   }
   > ._list {
+    position: relative;
     margin-top: 72px;
     margin-left: $left-width;
     height: calc(100% - 72px);

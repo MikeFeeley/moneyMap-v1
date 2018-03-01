@@ -12,11 +12,11 @@ var ui = {
    *     (a) if the entire element is shown, if it fits
    *     (b) that as much of the element, including upper left corner is shown, if it does not fit
    */
-  scrollIntoView: (e, includeMargin = false, options = {}) => {
+  scrollIntoView: (e, DEPRICATED = false, options = {}) => {
     options.topBuffer = 20;
     var getScrollParent = node => {
-      if (node === null || node == document)
-        return null;
+      if (node === null || node == document .documentElement)
+        return node;
       else if (window .getComputedStyle (node) .overflowY == 'scroll' && node .scrollHeight > node .clientHeight) {
         return node;
       } else
@@ -25,20 +25,22 @@ var ui = {
     setTimeout (() => {
       // use timeout to ensure that this code doesn't run until after html has reappeared and thus has computed height
       e = e [0];
-      let sp = getScrollParent (e, includeMargin);
+      let sp = getScrollParent (e);
       if (sp) {
 
+        let topOffset = 0;
+        console.log(sp === document .body);
+
         // get scroll area boundaries
-        let maxHeight       = document .documentElement .clientHeight - sp .offsetTop;
+        let maxHeight       = sp .clientHeight;
         let maxWidth        = sp .clientWidth;
         let scrollBottom    = sp .scrollTop  + maxHeight;
         let scrollRight     = sp .scrollLeft + maxWidth;
-        let scrollTopMargin = Number ($('.contents') .css('margin-top') .slice (0, -2));
 
         // get position of e relative to scrollParent
         let calcPosition = e => {
-          let top  = e .offsetTop  + e .clientTop;
-          let left = e .offsetLeft + e .clientLeft;
+          let top  = e .offsetTop;
+          let left = e .offsetLeft;
           if (e != sp && e .offsetParent) {
             let [pt,pl] = calcPosition (e .offsetParent);
             top  += pt;
@@ -47,16 +49,17 @@ var ui = {
           return [top, left]
         }
         let [eTop, eLeft] = calcPosition (e);
-        let eBottom = eTop  + e .offsetHeight;
-        let eRight  = eLeft + e .offsetWidth;
+        let eBottom = eTop  + e .offsetHeight + e .clientTop;
+        let eRight  = eLeft + e .offsetWidth + e .clientLeft;
         if (options .topBuffer)
           eTop -= options .topBuffer;
 
         // calculate scroll delta
         let scrollY = Math .max (sp .offsetTop + sp .clientTop, eBottom - scrollBottom);
-        if (eTop < sp .scrollTop + scrollY + scrollTopMargin)
-          scrollY = eTop - sp .scrollTop - scrollTopMargin;
+        if (eTop < sp .scrollTop + scrollY)
+          scrollY = eTop - sp .scrollTop;
         scrollY -= sp .offsetTop + sp .clientTop;
+
         let scrollX = Math .max (sp .offsetLeft + sp .clientLeft, eRight - scrollRight);
         if (eLeft < sp .scrollLeft + scrollX)
           scrollX = eLeft - sp .scrollLeft;

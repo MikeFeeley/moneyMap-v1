@@ -3,6 +3,7 @@
 body {
   margin: 0px;
   overflow-y: scroll;
+  height: 100vh;
 }
 
 body > div._blockEverything {
@@ -23,7 +24,12 @@ body > div._blockEverything {
   transition: 100ms opacity;
 }
 
-.fader.fader_visible {
+.fader_slow_disolve {
+  opacity: 0;
+  transition: 400ms opacity;
+}
+
+.fader.fader_visible, .fader_slow_disolve.fader_visible {
   opacity: 1;
   transition: 400ms opacity;
 }

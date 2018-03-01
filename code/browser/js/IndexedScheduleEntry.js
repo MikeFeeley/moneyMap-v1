@@ -45,7 +45,7 @@ async addHtml (toHtml) {
   let button;
   let addPopup = async () => {
     button .removeClass ('_disabled');
-    let popup   = $('<div>', {class: '_reorganizeCategoriesPopup fader'}) .appendTo (this._view._html);
+    let popup   = $('<div>', {class: '_reorganizeCategoriesPopup fader_slow_disolve'}) .appendTo (this._view._html);
     let content = $('<div>') .appendTo (popup);
     let scheduleEntry = new IndexedScheduleEntry (
       '_CategoryMenu', '_ReorganizeScheduleEntry',
