@@ -194,3 +194,4 @@ class ViewLink extends ViewLabel {
     this._label = $('<div>', {class: '_content'}) .appendTo (anchor);
   }
 }
+

@@ -208,14 +208,16 @@ var ui = {
 
         setTab (name, addContent, addNow) {
           let t       = tabMap .get (name);
-          let content = t .tab .data ('content');
-          content .empty();
-          content .data({hidden: null, visible: null});
-          if (addNow || ! t .tab .hasClass ('background')) {
-            (async () => {await addContent (content)}) ();
-            addContent = null;
+          if (t) {
+            let content = t .tab .data ('content');
+            content .empty();
+            content .data({hidden: null, visible: null});
+            if (addNow || ! t .tab .hasClass ('background')) {
+              (async () => {await addContent (content)}) ();
+              addContent = null;
+            }
+            tabMap .set (name, {tab: t .tab, addContent: addContent});
           }
-          tabMap .set (name, {tab: t .tab, addContent: addContent});
         },
 
         addTab (name) {
