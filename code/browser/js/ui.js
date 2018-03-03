@@ -7,6 +7,13 @@ const UI_RULE_SLIDE_MS         = 300;
 
 var ui = {
 
+  getScrollParent: node => {
+    if (node === null || node == document .documentElement || window .getComputedStyle (node) .overflowY == 'scroll') {
+      return node;
+    } else
+      return ui .getScrollParent (node.parentNode);
+  },
+
   /**
    * Scroll the minimum amount needed so that either
    *     (a) if the entire element is shown, if it fits
@@ -14,22 +21,13 @@ var ui = {
    */
   scrollIntoView: (e, DEPRICATED = false, options = {}) => {
     options.topBuffer = 20;
-    var getScrollParent = node => {
-      if (node === null || node == document .documentElement)
-        return node;
-      else if (window .getComputedStyle (node) .overflowY == 'scroll' && node .scrollHeight > node .clientHeight) {
-        return node;
-      } else
-        return getScrollParent (node.parentNode);
-    }
     setTimeout (() => {
       // use timeout to ensure that this code doesn't run until after html has reappeared and thus has computed height
       e = e [0];
-      let sp = getScrollParent (e);
+      let sp = ui .getScrollParent (e);
       if (sp) {
 
         let topOffset = 0;
-        console.log(sp === document .body);
 
         // get scroll area boundaries
         let maxHeight       = sp .clientHeight;
@@ -64,6 +62,8 @@ var ui = {
         if (eLeft < sp .scrollLeft + scrollX)
           scrollX = eLeft - sp .scrollLeft;
         scrollX -= sp .offsetLeft + sp .clientLeft;
+
+        // TODO if does not fit, does not scroll top fully into view
 
         // scroll
         if (scrollY != 0 || scrollX != 0)

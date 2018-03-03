@@ -23,16 +23,17 @@ class IndexedScheduleEntry extends IndexedList {
 
   _onViewChange (eventType, arg) {
     if (eventType == IndexedListViewEvent .SCROLL && this .getIndex() && this. getIndex() .getWatchScroll()) {
-      var top  = $('.' + this._listName) .parent() .scrollTop();
-      var sel  = this .getIndex() .getSelected();
-      var selS = (sel &&              $('#' + this._listName + sel .selected)) || [];
-      var selP = (sel && sel .prev && $('#' + this._listName + sel .prev))     || [];
-      if ((selS .length && (selS .position() .top - top < -48)) || (selP .length && selP .position() .top -top >= -48)) {
-        var lis = $('.' + this._listName)
+      let top  = arg .scroll .scrollTop();
+      let sel  = this .getIndex() .getSelected();
+      let selS = (sel &&              $('#' + this._listName + sel .selected)) || [];
+      let selP = (sel && sel .prev && $('#' + this._listName + sel .prev))     || [];
+      let margin = Number (arg .list .css ('margin-top') .slice (0, -2));
+      if ((selS .length && (selS .position() .top - top < -margin)) || (selP .length && selP .position() .top -top >= -margin)) {
+        let lis = $('.' + this._listName)
               .children ('ul') .children ('li._list_line_categoryLine')
               .children ('ul') .children ('li._list_line_categoryLine');
         for (let li of lis) {
-          if ($(li) .position() .top - top >= -48) {
+          if ($(li) .position() .top - top >= -margin) {
             this .getIndex() .setSelected ($(li) .data ('id'));
             break;
           }
@@ -179,7 +180,8 @@ class ViewLink extends ViewLabel {
       for (let l of list .toArray()) {
         let list = $(l);
         let listName = list .children ('._List') .get(0) .className .split (' ') .slice (-1) [0];
-        list .animate ({
+        let listScroll = list .data ('_listScroll');
+        listScroll .animate ({
           scrollTop: $('#' + listName + this._id) .position() .top + 16
         }, {
           complete: () => {

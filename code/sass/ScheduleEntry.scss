@@ -371,9 +371,9 @@ $indent:       24px;
 
 ._IndexedListViewWithHead {
   > div._reorganizeButton {
-    position: absolute;
-    margin-top:  24px;
-    margin-left: 180px;
+    position: fixed;
+    top:  72px;
+    left: 180px;
     z-index: 5000;
     > div {
       @include icon-button();

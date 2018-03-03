@@ -225,7 +225,6 @@ class ScheduleEntryZombieActive extends ViewLabel {
         () => {close()},
         true
       );
-      // TODO scroll into view
       ui .scrollIntoView (popup, true);
       setTimeout (() => {popup .addClass ('fader_visible')}, 0);
       e .stopPropagation();

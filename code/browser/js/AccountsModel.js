@@ -716,8 +716,8 @@ class Account {
           adjustStartForActuals (cat .parent);
         }
       }
-      if (this._balances .length == 0)
-        [addCat, subCat, intCat] .forEach (cat => {adjustStartForActuals (cat)});
+      // if (this._balances .length == 0)
+      //   [addCat, subCat, intCat] .forEach (cat => {adjustStartForActuals (cat)});
 
       // compute balance for every missing month up to current date
       let budgetEndDate       = this._budget .getEndDate();
