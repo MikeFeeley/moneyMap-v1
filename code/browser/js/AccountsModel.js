@@ -643,23 +643,6 @@ class Account {
       (c,s,e) => {return this._actuals .getAmount (c,s,e)},
       (c,s,e) => {return recursive? this._actuals .getAmountRecursively (c,s,e): 0}
     )}
-    let getBalanceFromActual = date => {
-      if (date == this .balanceDate)
-        return this .balance;
-      else {
-        let st, en, sg;
-        if (date < this .balanceDate) {
-          st = Types .date .addDay (date, 1);
-          en = this .balanceDate;
-          sg = -1;
-        } else {
-          st = Types .date .addDay (this .balanceDate, 1);
-          en = date;
-          sg = 1;
-        }
-        return this .balance + sg * ((addCat? getAmount (addCat, st, en): 0) + (subCat? getAmount (subCat, st, en): 0))
-      }
-    }
     let getBudgetMonth = (cat, start, end) => {return getAmount (cat, start, end,
       (c,s,e) => {return (this._budget .getIndividualAmount(c,s,e) .month || {}) .amount || 0},
       (c,s,e) => {return (this._budget .getAmount (c,s,e) .month || {}) .amount || 0}
@@ -716,8 +699,8 @@ class Account {
           adjustStartForActuals (cat .parent);
         }
       }
-      // if (this._balances .length == 0)
-      //   [addCat, subCat, intCat] .forEach (cat => {adjustStartForActuals (cat)});
+      if (this._balances .length == 0)
+        [addCat, subCat, intCat] .forEach (cat => {adjustStartForActuals (cat)});
 
       // compute balance for every missing month up to current date
       let budgetEndDate       = this._budget .getEndDate();
@@ -725,13 +708,19 @@ class Account {
       while (mStart <= baseDate) {
         let mEnd = Types .date .monthEnd (mStart);
         let add, sub, int, inf=0;
+
         if (mEnd < curMonthEnd) {
           // use actuals for prior periods
           int = - (intCat? getActual (intCat, mStart, mEnd): 0);
           add = (addCat? getActual (addCat, mStart, mEnd): 0) - int;
           sub = subCat? getActual (subCat, mStart, mEnd): 0;
-          if (this._balanceHistory .length && mEnd <= this._balanceHistory .slice (-1) [0] .date)
+          if (this .balance != null && mEnd == Types .date .monthEnd (this .balanceDate)) {
+            let actToBal = (addCat? getActual (addCat, mStart, this .balanceDate): 0) + (subCat? getActual (subCat, mStart, this .balanceDate): 0);
+            int = this .balance * sign - (balance + actToBal) + this._getInterest (this .balance * sign, this .balanceDate, Types .date .subDays (mEnd, this .balanceDate));
+          } else  if (this._balanceHistory .length && mEnd <= this._balanceHistory .slice (-1) [0] .date)
             int = getHistoryBalance (mEnd) - balance - add - sub;
+          else
+            int = this._getInterest (balance, mStart, Types .date .subDays (mEnd, mStart) + 1)
 
         } else {
           // use plan for current and future periods
@@ -741,9 +730,12 @@ class Account {
           let days = Types .date .subDays (mEnd, mStart) + 1;
           int = this._getInterest (balance, mStart, days);
           if (this .balance != null && mEnd == Types .date .monthEnd (this .balanceDate || Types .date .today())) {
-            let s = (subCat? getActual (subCat, mStart, mEnd): 0);
-            let stBal = this .balance * sign - (addCat? getActual (addCat, mStart, mEnd): 0) - (subCat? getActual (subCat, mStart, mEnd): 0);
-            int = stBal - balance - add - sub;
+            let curMonthStart = Types .date .monthStart (curMonthEnd);
+            let balDate = this .balanceDate || Types .date .today();
+            let actToBal = (addCat? getActual (addCat, curMonthStart, balDate): 0)
+              - (intCat? getActual (intCat, curMonthStart, balDate): 0)
+              + (subCat? getActual (subCat, curMonthStart, balDate): 0);
+            int = this .balance * sign - (balance + actToBal);
           }
           if (PreferencesInstance .get() .presentValue && mEnd != curMonthEnd)
             inf = - balance * PreferencesInstance .get() .inflation / 3650000  * days;
