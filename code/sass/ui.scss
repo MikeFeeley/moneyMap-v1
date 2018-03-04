@@ -5,6 +5,10 @@ body {
   > .tabbed {
     overflow-y: scroll;
     height: 100vh;
+    > .contents > div > div > div:not(._IndexedListViewWithHead) {
+      position: absolute;
+      width: 100%;
+    }
   }
 }
 

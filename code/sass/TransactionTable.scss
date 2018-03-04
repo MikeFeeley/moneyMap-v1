@@ -633,10 +633,6 @@ body > ._import_status_popup {
   position:   absolute;
   width:      100%;
   clear:      both;
-  > ._AccountBalanceView {
-    &::-webkit-scrollbar { width: 0 !important };
-    overflow-y: scroll;
-  }
   > ._import {
     clear: both;
     margin-left: 10px;
