@@ -240,6 +240,7 @@ class TransactionHUD extends TransactionAndRulesTable {
             let html     = this._html .offsetParent();
             if (html .closest ('body') .length == 0)
               html = $('body');
+            this._title[0] = this._title[0] .split (' ') .slice (0, this._titleLength) .join (' ');
             TransactionHUD .showRefineByField (
               this._title, JSON .parse (JSON .stringify (this._query)), field, selectedText, this._accounts, this._variance, html,
               {top: position .top + 50, left: position .left + 50, right: 'auto'},
