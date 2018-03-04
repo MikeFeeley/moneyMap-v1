@@ -56,7 +56,7 @@ async addHtml (toHtml) {
     await scheduleEntry .addHtml (content);
     let lis = content .closest ('._IndexedListViewWithHead') .find ('._list');
     let mar = Number (lis .css ('margin-top') .slice (0, -2)) + 100;
-    let pos = $('body > .tabbed').scrollTop();
+    let pos = $('body').scrollTop();
     let nms = lis .find ('._List > ul > li, ._List > ul > li > ul > li') .toArray();
     let tid = '_ReorganizeScheduleEntry' + nms .find (n => {return $(n) .position() .top - pos >= -mar}) .id .slice (this._listName .length);
     content .find ('> div > ._list') .scrollTop ($('#' + tid) .position() .top + 16);
@@ -187,7 +187,6 @@ class ViewLink extends ViewLabel {
         let list = $(l);
         let listName = list .children ('._List') .get(0) .className .split (' ') .slice (-1) [0];
         let listScroll = list .data ('_listScroll');
-        // TODO when listScroll is body, animation causes flashing
         listScroll .animate ({
           scrollTop: $('#' + listName + this._id) .position() .top + 16
         }, {

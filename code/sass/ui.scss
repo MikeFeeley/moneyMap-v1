@@ -5,7 +5,7 @@ body {
   > .tabbed {
     overflow-y: scroll;
     height: 100vh;
-    > .contents > div > div > div:not(._IndexedListViewWithHead):not(._profileEdit):not(._preferencesEdit) {
+    > .contents > div > div > div:not(._profileEdit):not(._preferencesEdit) {
       position: absolute;
       width: 100%;
     }
