@@ -54,6 +54,12 @@ async addHtml (toHtml) {
       {showVariance: false, includeZombies: true, includeZombieActiveYears: true, categoriesOnly: true, noHeader: true, noIndex: true}
     );
     await scheduleEntry .addHtml (content);
+    let lis = content .closest ('._IndexedListViewWithHead') .find ('._list');
+    let mar = Number (lis .css ('margin-top') .slice (0, -2)) + 100;
+    let pos = $('body > .tabbed').scrollTop();
+    let nms = lis .find ('._List > ul > li, ._List > ul > li > ul > li') .toArray();
+    let tid = '_ReorganizeScheduleEntry' + nms .find (n => {return $(n) .position() .top - pos >= -mar}) .id .slice (this._listName .length);
+    content .find ('> div > ._list') .scrollTop ($('#' + tid) .position() .top + 16);
     ui .ModalStack .add (
       e => {
           return e
