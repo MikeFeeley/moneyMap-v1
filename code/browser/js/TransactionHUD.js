@@ -6,7 +6,7 @@ class TransactionHUD extends TransactionAndRulesTable {
     this._accounts    = accounts;
     this._variance    = variance;
     this._title       = [] .concat (title);
-    this._titleLength = this._title .length;
+    this._titleLength = this._title[0] .split(' ') .length;
     this._onClose     = onClose;
     this._monthStart  = monthStart || (query .date && query .date .$gte);
     this._monthEnd    = monthEnd   || (query .date && query .date .$lte);
