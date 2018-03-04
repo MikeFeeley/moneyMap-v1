@@ -181,6 +181,7 @@ class ViewLink extends ViewLabel {
         let list = $(l);
         let listName = list .children ('._List') .get(0) .className .split (' ') .slice (-1) [0];
         let listScroll = list .data ('_listScroll');
+        // TODO when listScroll is body, animation causes flashing
         listScroll .animate ({
           scrollTop: $('#' + listName + this._id) .position() .top + 16
         }, {

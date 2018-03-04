@@ -1,13 +1,11 @@
 @import 'lib';
 
-html {
-  overflow: hidden;
-}
-
 body {
   margin: 0px;
-  overflow-y: scroll;
-  height: 100vh;
+  > .tabbed {
+    overflow-y: scroll;
+    height: 100vh;
+  }
 }
 
 body > div._blockEverything {
