@@ -27,6 +27,10 @@ var ui = {
       let sp = ui .getScrollParent (e);
       if (sp) {
 
+        // tabbed is surrogate for body for scrolling entire page (on safari; for firefox and chrome its documentElement)
+        if (sp == $('body > .tabbed') .get(0))
+          sp = document .body;
+
         let topOffset = 0;
 
         // get scroll area boundaries
@@ -55,15 +59,13 @@ var ui = {
         // calculate scroll delta
         let scrollY = Math .max (sp .offsetTop + sp .clientTop, eBottom - scrollBottom);
         if (eTop < sp .scrollTop + scrollY)
-          scrollY = eTop - sp .scrollTop;
+          scrollY = eTop - sp .scrollTop - 30; // not sure where the 30 comes from, but it works (for now on safari)
         scrollY -= sp .offsetTop + sp .clientTop;
 
         let scrollX = Math .max (sp .offsetLeft + sp .clientLeft, eRight - scrollRight);
         if (eLeft < sp .scrollLeft + scrollX)
           scrollX = eLeft - sp .scrollLeft;
         scrollX -= sp .offsetLeft + sp .clientLeft;
-
-        // TODO if does not fit, does not scroll top fully into view
 
         // scroll
         if (scrollY != 0 || scrollX != 0)
