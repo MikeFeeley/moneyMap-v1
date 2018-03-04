@@ -463,11 +463,11 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
       margin-bottom: 140px;
     }
     > div._activityCharts {
-      margin-top:    30px + $tab-bar-height;
+      margin-top:    30px;
       margin-bottom: 100px;
     }
     > div._sliderHeader {
-      margin-top: 20px + $tab-bar-height;
+      margin-top: 20px;
       margin-bottom: 100px;
     }
     > ._budgetYearGraph {
@@ -486,7 +486,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
       > ._graph {
         width: 85%;
       }
-      margin-top: 4px + $tab-bar-height;
+      margin-top: 4px;
       margin-bottom: 32px;
     }
     ._budgetTable > div > table > tbody > tr > td, ._activityTable > div > table > tbody > tr > td {
@@ -772,7 +772,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
 
 $progress-min-width:     900px;
 $progress-sidebar-width: 260px;
-._progressContents {
+._progressContents > ._Navigate {
   @include sidebar-right-main($progress-min-width, $progress-sidebar-width);
   @include sidebar-right-show($progress-min-width, $progress-sidebar-width);
 }

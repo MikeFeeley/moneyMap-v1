@@ -234,7 +234,7 @@ table > tbody > tr > td > ._field > div > ._content {
 }
 
 @mixin sidebar-right-main($min-main-width, $sidebar-width) {
-  @media (min-width: $min-main-width + $sidebar-width) {width: calc(100% - #{$sidebar-width})}
+  @media (min-width: $min-main-width + $sidebar-width) {width: calc(100% - #{$sidebar-width})!important}
 }
 
 @mixin user-select($value) {

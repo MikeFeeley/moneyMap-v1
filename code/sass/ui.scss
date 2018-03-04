@@ -5,7 +5,7 @@ body {
   > .tabbed {
     overflow-y: scroll;
     height: 100vh;
-    > .contents > div > div > div:not(._IndexedListViewWithHead) {
+    > .contents > div > div > div:not(._IndexedListViewWithHead):not(._profileEdit):not(._preferencesEdit) {
       position: absolute;
       width: 100%;
     }
@@ -123,7 +123,7 @@ div._systemStatus {
   width: 940px;
   margin-left: auto;
   margin-right: auto;
-  margin-top: 20px + $tab-bar-height;
+  margin-top: 20px;
   > ._group:not(:first-child) {
     margin-top: 80px;
   }
