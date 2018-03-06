@@ -776,6 +776,7 @@ class Navigate {
    *     groups: [{
    *       name:          name for this group
    *       hasNoParent:   true iff category that roots this group has no parent
+   *       isZombie:      true iff category is zombie
    *       stackPosition: [i,j] where i is stack number and j is position in stack (ordered left to right, bottom to top)
    *       rows: [{
    *         name:     name for this row
@@ -816,6 +817,7 @@ class Navigate {
           (id == this._budget .getIncomeCategory()._id? [0,0]:
             id == this._budget .getWithdrawalsCategory()._id? [0,1]:
               id == this._budget .getExpenseCategory()._id? [1,0]: [1,1]);
+        let cat = this._categories .get (id .split ('_') .slice (-1) [0]);
         return {
           id:            id,
           name:          this._getName (type, id),
@@ -823,7 +825,8 @@ class Navigate {
           note:          this._getNote (type, id, includeMonths, includeYears, altDates),
           rows:          data .data,
           getUpdate:     data .getUpdate,
-          hasNoParent:   this._categories .get (id .split ('_') .slice (-1) [0]) .parent == null
+          hasNoParent:   cat .parent == null,
+          isZombie:      ! cat .budgets .includes (this._budget .getId())
         }
       })));
     let note = groups [0] && groups [0] .note;
@@ -1374,6 +1377,7 @@ class Navigate {
    *       name: name for this group
    *       stackPosition: [i,j] i is stack # and j is position in stack
    *       hasNoParent: true iff category rooting this group has no parent
+   *       isZombie:    true iff category rooting this group is a zombie
    *       rows: [{
    *         name:    name for this row
    *         id:      category id(s) for this row
@@ -1516,11 +1520,13 @@ class Navigate {
         (pid == this._budget .getIncomeCategory()._id? [0,0]:
           pid == this._budget .getWithdrawalsCategory()._id? [0,1]:
             pid == this._budget .getExpenseCategory()._id? [1,0]: [1,1]);
+      let cat = this._budget .getCategories() .get (pid [0]);
       return {
         name:          Array .from (parent .values()) [0],
         stackPosition: stackPosition,
         id:            Array .from (parent .keys()) [0] .split('$'),
-        hasNoParent:   this._budget .getCategories() .get (pid [0]) .parent == null,
+        hasNoParent:   cat .parent == null,
+        isZombie:      ! cat .budgets .includes (this._budget .getId()),
         rows:          Array .from (cats [i] .values())
           .sort ((a,b) => {return a.sort==null? 1: b.sort==null? -1: a.sort<b.sort? -1: 1})
           .map (cat => {

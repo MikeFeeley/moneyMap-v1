@@ -275,12 +275,13 @@ class TransactionHUD extends TransactionAndRulesTable {
     }
     if (this._context && this._context .cat) {
       let cat = this._context .cat;
-      $('<div>', {class:'_nextButton lnr-map'}) .appendTo (buttons) .click (e => {
-        let date = this._query .date && this._query .date .$lte;
-        BudgetProgressHUD .show (cat._id, this._html, {top: 60, left: 30}, this._accounts, this._variance, date);
-        e .stopPropagation();
-        return false;
-      });
+      if (cat .budgets .includes (this._variance .getBudget() .getId()))
+        $('<div>', {class:'_nextButton lnr-map'}) .appendTo (buttons) .click (e => {
+          let date = this._query .date && this._query .date .$lte;
+          BudgetProgressHUD .show (cat._id, this._html, {top: 60, left: 30}, this._accounts, this._variance, date);
+          e .stopPropagation();
+          return false;
+        });
       if (cat .parent)
         $('<div>', {class:'_nextButton lnr-exit-up'}) .appendTo (buttons) .click (e => {
           let dates = this._query .date && {

@@ -496,7 +496,7 @@ class NavigateView extends Observable  {
           });
           return false;
         }
-        let getHUD =  dataset .groups .length == 1 && $('<div>', {class: 'lnr-map'}) .appendTo (icons) .click (() => {iconClick (false)});
+        let getHUD =  dataset .groups .length == 1 && ! dataset .groups [0] .isZombie && $('<div>', {class: 'lnr-map'}) .appendTo (icons) .click (() => {iconClick (false)});
         let goUp   = $('<div>', {class: 'lnr-exit-up'}) .appendTo (icons) .click (() => {iconClick (true)});
         if (data [0] .id .includes ('_')) {
           if (getHUD)
