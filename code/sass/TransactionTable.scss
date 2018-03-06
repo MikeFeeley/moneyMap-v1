@@ -638,6 +638,9 @@ body > ._import_status_popup {
     margin-left: 10px;
     padding-left: 8px;
     padding-top: 8px;
+    &:last-child {
+      margin-bottom: 500px;
+    }
   }
 }
 
