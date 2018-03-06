@@ -23,17 +23,17 @@ class IndexedScheduleEntry extends IndexedList {
 
   _onViewChange (eventType, arg) {
     if (eventType == IndexedListViewEvent .SCROLL && this .getIndex() && this. getIndex() .getWatchScroll()) {
-      let top  = arg .scroll .scrollTop();
-      let sel  = this .getIndex() .getSelected();
-      let selS = (sel &&              $('#' + this._listName + sel .selected)) || [];
-      let selP = (sel && sel .prev && $('#' + this._listName + sel .prev))     || [];
-      let margin = Number (arg .list .css ('margin-top') .slice (0, -2));
-      if ((selS .length && (selS .position() .top - top < -margin)) || (selP .length && selP .position() .top -top >= -margin)) {
+      let scrollTop  = arg .scroll .scrollTop();
+      let sel     = this .getIndex() .getSelected();
+      let selS    = (sel &&              $('#' + this._listName + sel .selected)) || [];
+      let selP    = (sel && sel .prev && $('#' + this._listName + sel .prev))     || [];
+      let listTop = arg.list.position().top;
+      if ((selS .length && (selS .position() .top + listTop < scrollTop)) || (selP .length && selP .position() .top + listTop >= scrollTop)) {
         let lis = $('.' + this._listName)
               .children ('ul') .children ('li._list_line_categoryLine')
               .children ('ul') .children ('li._list_line_categoryLine');
         for (let li of lis) {
-          if ($(li) .position() .top - top >= -margin) {
+          if ($(li) .position() .top + listTop >= scrollTop) {
             this .getIndex() .setSelected ($(li) .data ('id'));
             break;
           }
@@ -55,11 +55,13 @@ async addHtml (toHtml) {
     );
     await scheduleEntry .addHtml (content);
     let lis = content .closest ('._IndexedListViewWithHead') .find ('._list');
-    let mar = Number (lis .css ('margin-top') .slice (0, -2)) + 100;
-    let pos = $('body').scrollTop();
-    let nms = lis .find ('._List > ul > li, ._List > ul > li > ul > li') .toArray();
-    let tid = '_ReorganizeScheduleEntry' + nms .find (n => {return $(n) .position() .top - pos >= -mar}) .id .slice (this._listName .length);
-    content .find ('> div > ._list') .scrollTop ($('#' + tid) .position() .top + 16);
+    let pos = lis .scrollTop();
+    let nms = lis .find ('._List > ul > li > ul > li') .toArray();
+    let tid = '_ReorganizeScheduleEntry' + nms .find (n => {return $(n) .position() .top + 70 >= pos}) .id .slice (this._listName .length);
+    if (pos == 0)
+      content .find ('> div > ._list') .scrollTop (12);
+    else
+      content .find ('> div > ._list') .scrollTop ($('#' + tid) .position() .top + 28);
     ui .ModalStack .add (
       e => {
           return e
@@ -187,13 +189,10 @@ class ViewLink extends ViewLabel {
         let list = $(l);
         let listName = list .children ('._List') .get(0) .className .split (' ') .slice (-1) [0];
         let listScroll = list .data ('_listScroll');
-        listScroll .animate ({
-          scrollTop: $('#' + listName + this._id) .position() .top + 16
-        }, {
-          complete: () => {
-            this._parent .setWatchScroll (true);
-          }
-        });
+        listScroll .animate (
+          {scrollTop: $('#' + listName + this._id) .position() .top + 16},
+          {complete: () => {this._parent .setWatchScroll (true);}}
+        );
       }
       e. preventDefault();
     });

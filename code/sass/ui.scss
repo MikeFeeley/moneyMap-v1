@@ -784,11 +784,9 @@ body > ._preferences_menu_head {
     height: $tab-bar-height;
     background: #33b1ff;
     font-size: 16px;
-    overflow: hidden;
     z-index: 9000;
     div {
       float: left;
-      overflow: hidden;
     }
     > div._login {
       float: right;

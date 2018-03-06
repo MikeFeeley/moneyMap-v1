@@ -10,9 +10,6 @@ class IndexedListView extends Observable {
     if (this._html) {
       this._html .remove();
       this._html = null;
-      if (this._subScroll) {
-        $('body') .css ({overflow: 'scroll'});
-      }
     }
   }
 
@@ -25,8 +22,6 @@ class IndexedListView extends Observable {
     this._list  = $('<div>', {class: '_list'})            .appendTo (this._html);
     this._subScroll  = ui .getScrollParent (this._list .get(0)) == this._list .get (0)
     this._listScroll = this._subScroll? this._list: $(window);
-    if (this._subScroll)
-        $('body') .css ({overflow: 'hidden'});
     this._list .data ('_listScroll', this._subScroll? this._listScroll: $('body'));
     this._listScroll .scroll (e => {
       if (this._html .closest ('.background') .length == 0)

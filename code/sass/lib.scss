@@ -122,10 +122,10 @@ table > tbody > tr > td > ._field > div > ._content {
 }
 
 @mixin adaptive-width($narrow,$wide) {
-  @media (max-width: 1350px) {
+  @media (max-width: 1364px) {
     width: $narrow;
   }
-  @media (min-width: 1350px) {
+  @media (min-width: 1364px) {
     width: $wide;
   }
 }

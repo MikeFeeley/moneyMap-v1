@@ -747,12 +747,15 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
     }
   }
   > ._list {
-    margin-top: 85px;
-    margin-left: $left-width;
+    width:  calc(100vw - #{$left-width});
+    height: calc(100vh - #{$tab-bar-height} - 72px);
+    overflow-y: scroll;
+    position: absolute;
+    top: 72px;
+    left: calc(#{$left-width});
     > ._ScheduleEntry > ul {
-      padding-left: 4px;
+      padding-left: 12px;
     }
-    padding-bottom: 50px;
   }
 }
 
