@@ -7,8 +7,16 @@
 
 \f0\fs36 \cf0 ==============\
 BUGS\
-	- add some padding at bottom of INBOX so that scroll up for picker/hud doesn't pop back down on close.\
+	- tabs should remember their scroll position\
 \
+USABILITY\
+\
+UPCOMING\
+	- csv export / import\
+	- improve config clone (and budget) by moving to server (make it fast and reliable so that its easy to experiment)\
+	- local db option and/or encrypted remote db\
+	- refine starting from nothing, documentation and landing page\
+	- rbc scraping?\
 \
 TODO\
 	- search\
@@ -100,9 +108,6 @@ INTERMITTENT BUGS\
 ==============\
 OTHER THINGS\
 \
-NAVIGATE\
-	- when showing transactions for category make it easy to go up or down one level in category space?\
-\
 \
 THINGS TO LOOK AT NEXT (LATER)\
 \
@@ -180,9 +185,6 @@ NEXT STEPS\
 \
 \
 USABILITY\
-	- searching for transactions (maybe that were mis-allocated) - maybe new "Explore" view or something like that\
-	- salary is a pain in the ass\
-		- maybe allow the definition of functions that can be used in the schedule-entry amount field\
 	- maybe want to have a graph that shows clearly your goals for the year (or next few)\
 		- savings for X (e.g., retirement, a trip, a purchase)\
 		- so that you get gratification from increasing savings\
@@ -190,12 +192,6 @@ USABILITY\
 	- undo is dangerous\
 		- doesn't undo typing in cell (and view stuff)\
 		- undoes models stuff behind the scenes if you don't have the modified stuff in view.\
-	- rule date match \
-		- match just month and day OR match just day\
-		- for example \
-			- something that happens on a specify day each year\
-			- something that happens on a certain day of the month (TFSA cont)\
-	- command-A in field should select the text in the field\
 	- when switching away and back to window, the input field gets selected again\
 		- better behaviour is to leave cursor where it is and don't select it again\
 		- field should only select when it gains focus from another field not when its container gains focus\
@@ -203,10 +199,6 @@ USABILITY\
 	- Need some transaction error checking / reconciliation\
 		- e.g., transfers that don't match up\
 		- reconciling reimbursements\
-	- Need a flexible transaction search option\
-		- for things like\
-			- added a new sub category and now want to re-organize old transactions\
-			- looking for actual behaviour that isn't captured by category\
 	- Something around setting short-term goals \
 		- when for example you're going over budget or a new expense pops up \
 			- e.g., want to do something fun and want to tradeoff a little hardship somewhere else\
@@ -214,7 +206,6 @@ USABILITY\
 				- track it carefully / daily\
 				- see reward\
 	- Split transaction tooltip - should should total amount in tool tip\
-	- Support concurrent updates; events triggered by remote database\
 	- What happens when two rules (e.g., a general one and a more specific one) match the same transaction and the general one is chosen\
 		- can edit the general to exclude this transaction, but then how to do you tell the system to look for other matches?\
 		- if you edit a rule to exclude the current transaction, the [R] goes away and so how you close the rule looks a bit weird \

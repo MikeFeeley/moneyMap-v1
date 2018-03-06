@@ -248,6 +248,8 @@ var ui = {
 
             function click() {
               let prevContent = contents .find ('> :not(.background)');
+              prevContent .data ('_scrollTop', $('body') .scrollTop());
+              let scrollTop = tab .data ('content') .data ('_scrollTop');
               for (let d of [tabs, contents])
                 d .children() .each ((_,c) => {$(c) .addClass ('background')});
               for (let d of [tab, tab .data ('content')])
@@ -260,6 +262,7 @@ var ui = {
                 hidden();
               handleClick();
               pendingClick = null;
+              $('body') .scrollTop (scrollTop || 0);
             }
 
             if (clickable)
