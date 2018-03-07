@@ -14,6 +14,7 @@
  *  ASSET:
  *     disTaxRate           tax rate for withdrawals
  *     liquid               true iff liquid asset / liability
+ *     taxDeferred          true ifff asset is taxDeferred
  *  LIABILITY:
  *     rateType             type of rate calculation (e.g., simple interest or canadian mortgage)
  *     paymentFrequency     regular payment frequency, needed for canadian mortgage interest calculation
@@ -513,9 +514,16 @@ class Account {
       return amount;
   }
 
-  getGrossAmount (cat, amount) {
+  getGrossAmount (cat, start, end, amount) {
     if (this .form == AccountForm .ASSET_LIABILITY && this .creditBalance && this .disTaxRate) {
-     return Math .round (amount / ((1.0 - this .disTaxRate / 10000.0)));
+      let taxRate = this .disTaxRate / 10000.0;
+      let lastMonth = Types .date .addMonthStart (start, -1);
+      if (this .taxDeferred)
+        return Math .round (amount / ((1.0 - taxRate)));
+      else {
+        let bal = (this .creditBalance? -1: 1) * this .getBalance (lastMonth, Types .date .monthEnd (lastMonth)) .amount;
+        return amount + Math .round (this._getInterest (bal, start, Types .date .subDays (end, start) + 1)) * taxRate;
+      }
     }
 }
 
@@ -852,7 +860,6 @@ class Account {
   }
 
   getCategoryName (cid) {
-    console.log(cid, this, this.traCategory);
     let name = this .name;
     if (this .isPrincipalInterestLiabilityAccount()) {
       if (cid == this .intCategory)

@@ -336,7 +336,7 @@ class SchedulesModel extends Observable {
           let account = this._actModel .getAccountsModel() .getAccount (cat .account);
           if (account) {
             am = account .getAmount      (cat, start, end, am);
-            gr = account .getGrossAmount (cat, am);
+            gr = account .getGrossAmount (cat, start, end, am);
           }
         }
         let ds = includeDescendants? ga (cat .children, start, end, yr || getOtherMonths): {amount: 0};

@@ -450,8 +450,12 @@ class Accounts extends Observable {
         account._id, account .traCategory != null, line2, 'Transfers'
       )
       this._view .addField (
+        new ViewCheckbox ('taxDeferred', ['Not Deferred', 'Deferred']),
+        account._id, account .taxDeferred, line2, 'Tax'
+      )
+      this._view .addField (
         new ViewTextbox ('disTaxRate', ViewFormats ('percent2Z'), '', '', 'Rate'),
-        account._id, account .disTaxRate, line2, 'Disbursal Tax Rate'
+        account._id, account .disTaxRate, line2, 'Tax Rate'
       )
       await this._addBalanceHistory (account, this._view .addRight ('Balance History', entry));
 
