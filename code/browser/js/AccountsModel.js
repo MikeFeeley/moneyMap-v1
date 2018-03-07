@@ -755,8 +755,12 @@ class Account {
           if (PreferencesInstance .get() .presentValue && mEnd != curMonthEnd)
             inf = - balance * PreferencesInstance .get() .inflation / 3650000  * days;
         }
-        if (sub && this .disTaxRate)
-          sub /= (1.0 - this .disTaxRate / 10000.0)
+        if (sub && this .disTaxRate) {
+          if (this .taxDeferred)
+            sub /= (1.0 - this .disTaxRate / 10000.0)
+          else
+            sub -= int * this .disTaxRate / 10000.0;
+        }
         balance += add + sub + int + inf;
         this._balances .push ({
           date:    mEnd,
