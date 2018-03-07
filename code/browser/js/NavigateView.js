@@ -1360,11 +1360,12 @@ class NavigateView extends Observable  {
     var table = $('<table>') .appendTo (cur)
     var tfoot = $('<tfoot>') .appendTo (table);
     var tbody = $('<tbody>') .appendTo (table);
-    for (let c of dataset .rows) {
-      var tr = $('<tr>') .appendTo (tbody);
-      $('<td>', {text: c .name})                             .appendTo (tr);
-      $('<td>', {text: Types .moneyD .toString (c .curBal)}) .appendTo (tr);
-    }
+    for (let c of dataset .rows)
+      if (c .curBal) {
+        let tr = $('<tr>') .appendTo (tbody);
+        $('<td>', {text: c .name})                             .appendTo (tr);
+        $('<td>', {text: Types .moneyD .toString (c .curBal)}) .appendTo (tr);
+      }
     var fvs = [
       ['Liquid', Types .moneyD .toString (dataset .rows .filter (r => {return r .liquid}) .reduce ((s,r) => {return s + r .curBal}, 0))],
       ['TOTAL',  Types .moneyD .toString (dataset .rows                                   .reduce ((s,r) => {return s + r .curBal}, 0))]

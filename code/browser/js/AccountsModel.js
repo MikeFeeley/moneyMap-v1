@@ -25,6 +25,7 @@
  *     disCategory          withdrawal if asset or liability (disbursement or loan add-on)
  *     intCategory          expense; only for liabilities (entire payment or just interest part, depending)
  *     incCategory          income category use for income-source accounts
+ *     traCategory          transfer category
  *
  *  BalanceHistory Model
  *     account
@@ -379,7 +380,7 @@ class Account {
 
   _invalidateBalanceCache() {
     this._balances = [];
-    for (let cid of [this .category, this .intCategory, this .disCategory, this .incCategory])
+    for (let cid of [this .category, this .intCategory, this .disCategory, this .incCategory, this .traCategory])
       if (cid)
         this._model._notifyObservers (AccountsModelEvent .CATEGORY_CHANGE, {
           id: cid
@@ -668,6 +669,7 @@ class Account {
     let addCat = this .category    && this._budget .getCategories() .get (this .category);
     let subCat = this .disCategory && this._budget .getCategories() .get (this .disCategory);
     let intCat = this .intCategory && this._budget .getCategories() .get (this .intCategory);
+    let traCat = this .traCategory && this._budget .getCategories() .get (this .traCategory);
     let baseDate = Types .date .monthEnd (endDate);
     if (baseDate != endDate)
       baseDate = Types .date .monthEnd (Types .date .addMonthStart(endDate, -1));
@@ -727,6 +729,11 @@ class Account {
           let yearlyProRata = mStart <= budgetEndDate? monthsLeftInCurYear : 12;
           add = (addCat? getBudget (addCat, mStart, mEnd, yearlyProRata): 0) + (intCat? getBudget (intCat, mStart, mEnd, yearlyProRata): 0);
           sub = subCat? getBudget (subCat, mStart, mEnd, yearlyProRata): 0;
+          let tra = traCat? getBudget (traCat, mStart, mEnd, yearlyProRata): 0;
+          if (tra > 0)
+            add += tra;
+          else
+            sub += tra;
           let days = Types .date .subDays (mEnd, mStart) + 1;
           int = this._getInterest (balance, mStart, days);
           if (this .balance != null && mEnd == Types .date .monthEnd (this .balanceDate || Types .date .today())) {
@@ -825,6 +832,8 @@ class Account {
     } else if (this .creditBalance) {
       if (cat._id == this .category)
         tip += ' Contributions';
+      else if (cat._id == this .traCategory)
+        tip += ' Transfers';
       else {
         tip += ' Withdrawals';
         if (this .disTaxRate)
@@ -843,12 +852,15 @@ class Account {
   }
 
   getCategoryName (cid) {
+    console.log(cid, this, this.traCategory);
     let name = this .name;
     if (this .isPrincipalInterestLiabilityAccount()) {
       if (cid == this .intCategory)
         name += ' Interest'
       else if (cid == this .category)
         name += ' Principal'
+      else if (cid == this .traCategory)
+        name += ' Transfers'
     } else if (this .form == AccountForm .INCOME_SOURCE && cid == this .intCategory)
       name += ' Taxes'
     return name;

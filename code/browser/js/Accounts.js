@@ -49,7 +49,7 @@ class Accounts extends Observable {
               account [fieldName] = arg [fieldName];
               let schModel = this._budget .getSchedulesModel();
               if (fieldName == 'name') {
-                for (let cid of [account .category, account .disCategory, account .intCategory, account .incCategory])
+                for (let cid of [account .category, account .disCategory, account .intCategory, account .incCategory, account .traCategory])
                   if (cid)
                     await schModel .update (cid, {name: account .getCategoryName (cid)})
               }
@@ -91,7 +91,7 @@ class Accounts extends Observable {
      case ViewEvent .UPDATE: {
         if (arg .fieldName == 'balance' && arg .value == null)
           arg .value = 0;
-        if (['category', 'disCategory', 'intCategory', 'incCategory'] .includes (arg .fieldName)) {
+        if (['category', 'disCategory', 'intCategory', 'incCategory', 'traCategory'] .includes (arg .fieldName)) {
           if (!skipNewUndoGroup)
             Model .newUndoGroup();
           let categories = this._budget   .getCategories();
@@ -107,8 +107,10 @@ class Accounts extends Observable {
                 name += ' Interest'
             } else if (account .form == AccountForm .INCOME_SOURCE && arg .fieldName == 'intCategory' && arg .value)
               name += ' Taxes'
-            let type = [['category', 'disCategory', 'intCategory', 'incCategory'] .indexOf (arg .fieldName)];
-            let root = this ._budget ['get' + ['Savings', 'Withdrawals', 'Expense', 'Income'] [type] + 'Category'] ();
+            else if (arg .fieldName == 'traCategory' && arg .value)
+              name += ' Transfers'
+            let type = [['category', 'disCategory', 'intCategory', 'incCategory', 'traCategory'] .indexOf (arg .fieldName)];
+            let root = this ._budget ['get' + ['Savings', 'Withdrawals', 'Expense', 'Income', 'Suspense'] [type] + 'Category'] ();
             let cat  = (root .children || []) .find (c => {return c .name == name});
             if (! cat)
               cat = categories .get ((await schModel .insert ({name: name}, {inside: true, id: root._id})) [0]);
@@ -410,6 +412,7 @@ class Accounts extends Observable {
     this._view .removeField ('rateType',         entry);
     this._view .removeField ('category',         entry);
     this._view .removeField ('disCategory',      entry);
+    this._view .removeField ('traCategory',      entry);
     this._view .removeField ('intCategory',      entry);
     this._view .removeField ('paymentFrequency', entry);
     this._view .removeField ('disTaxRate',       entry);
@@ -441,6 +444,10 @@ class Accounts extends Observable {
       this._view .addField (
         new ViewCheckbox ('disCategory', ['Not Budgeted', 'Budgeted']),
         account._id, account .disCategory != null, line2, 'Disbursals'
+      )
+      this._view .addField (
+        new ViewCheckbox ('traCategory', ['Not Budgeted', 'Budgeted']),
+        account._id, account .traCategory != null, line2, 'Transfers'
       )
       this._view .addField (
         new ViewTextbox ('disTaxRate', ViewFormats ('percent2Z'), '', '', 'Rate'),
