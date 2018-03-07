@@ -271,7 +271,7 @@ class SchedulesModel extends Observable {
           if (c .account) {
             let account = accounts .find (a => {return a._id == c .account});
             if (account) {
-              for (let field of ['category', 'disCategory', 'intCategory', 'incCategory'])
+              for (let field of ['category', 'disCategory', 'intCategory', 'incCategory', 'traCategory'])
                 if (account [field] == c._id)
                   return {id: account._id, update: {[field]: null}}
             }
@@ -341,12 +341,13 @@ class SchedulesModel extends Observable {
         }
         let ds = includeDescendants? ga (cat .children, start, end, yr || getOtherMonths): {amount: 0};
         if (yr) {
-          let amt                = Math [isCredit? 'min': 'max'] (am, ds .amount);
+          let amt = Math [am < 0? 'min': 'max'] (am, ds .amount);
+          if (cat.name=='Home Transfers' && start==20300901) console.log(amt, am, ds.amount);
           rs .amount            += amt;
           if (gr)
             rs .grossAmount = (rs .grossAmount || 0) + gr;
           rs .year               = (rs .year || {amount: 0, allocated: 0, unallocated: 0});
-          rs .year .amount      += Math [isCredit? 'min': 'max'] (am, ds .amount + ((ds .otherMonths && ds .otherMonths) || 0))
+          rs .year .amount      += Math [am < 0? 'min': 'max'] (am, ds .amount + ((ds .otherMonths && ds .otherMonths) || 0))
                                    - (((ds .month && ds .month .amount) || 0) + ((ds .otherMonths && ds .otherMonths) || 0));
           rs .year .allocated   += ds .amount + (ds .otherMonths || 0);
           rs .year .unallocated += am - (ds .amount + (ds .otherMonths || 0));
