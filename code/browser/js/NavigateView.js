@@ -1544,24 +1544,25 @@ class NavigateView extends Observable  {
       }
       var liquid = [];
       var net    = [];
-      for (let row of dataset .rows) {
-        var tr = $('<tr>') .appendTo (tbody);
-        let vs = [row .name] .concat (
-          row .amounts .map (a => {return Types .moneyK .toString (a)})
-        )
-        net = row .amounts .map ((a,i) => {return a + (net [i] || 0)});
-        if (row .liquid)
-          liquid = row .amounts .map ((a,i) => {return a + (liquid [i] || 0)});
-        for (let i=0; i<vs.length; i++) {
-          $('<td>', {html: vs [i]+'&nbsp;', class: dataset .highlight == i - 1? '_highlight': ''}) .appendTo (tr)
-            .click (e => {
-              if (i == 0)
-                addSubTablePopup (e, row);
-              else
-                addPopup (e, row .detail [i-1], vs[i-1] .startsWith ('-'));
-            })
-         }
-      }
+      for (let row of dataset .rows)
+        if (row .amounts .find (a => {return a})) {
+          var tr = $('<tr>') .appendTo (tbody);
+          let vs = [row .name] .concat (
+            row .amounts .map (a => {return Types .moneyK .toString (a)})
+          )
+          net = row .amounts .map ((a,i) => {return a + (net [i] || 0)});
+          if (row .liquid)
+            liquid = row .amounts .map ((a,i) => {return a + (liquid [i] || 0)});
+          for (let i=0; i<vs.length; i++) {
+            $('<td>', {html: vs [i]+'&nbsp;', class: dataset .highlight == i - 1? '_highlight': ''}) .appendTo (tr)
+              .click (e => {
+                if (i == 0)
+                  addSubTablePopup (e, row);
+                else
+                  addPopup (e, row .detail [i-1], vs[i-1] .startsWith ('-'));
+              })
+           }
+        }
       if (showHeadFoot) {
         var vss = [
           ['Liquid'] .concat (liquid .map (a => {return Types .moneyK .toString (a)})),
