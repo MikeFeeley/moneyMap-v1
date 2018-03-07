@@ -209,7 +209,7 @@ class AccountsModel extends Observable {
         let cat = this._budgetModel .getCategories() .get (cid);
         if (cat .account) {
           let a = this._accounts .find (a => {return a._id == cat .account});
-          if (a .category && a .intCategory && [a .category, a .intCategory, a .disCategory] .includes (cid)) {
+          if (a .category && a .intCategory && [a .category, a .intCategory, a .disCategory, a .traCategory] .includes (cid)) {
             acc = a;
             break;
           }
@@ -365,7 +365,7 @@ class Account {
       case 'budget':
       case 'actuals':
         let possibleAffectedCats = getFamily (
-          [this .category, this .intCategory, this .disCategory]
+          [this .category, this .intCategory, this .disCategory, this .traCategory]
             .filter (cid => {return cid})
             .map    (cid => {return this._budget .getCategories() .get (cid)})
         );
