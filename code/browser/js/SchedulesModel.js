@@ -342,7 +342,6 @@ class SchedulesModel extends Observable {
         let ds = includeDescendants? ga (cat .children, start, end, yr || getOtherMonths): {amount: 0};
         if (yr) {
           let amt = Math [am < 0? 'min': 'max'] (am, ds .amount);
-          if (cat.name=='Home Transfers' && start==20300901) console.log(amt, am, ds.amount);
           rs .amount            += amt;
           if (gr)
             rs .grossAmount = (rs .grossAmount || 0) + gr;
