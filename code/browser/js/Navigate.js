@@ -1729,12 +1729,10 @@ class Navigate {
 
   _addHistoryTable (parentIds, date, skipFoot, popup, position, view, dataset = this._getHistoryData (parentIds, date), toHtml) {
     let datasetCopy   = Object .assign ({}, dataset);
-    datasetCopy .cols = datasetCopy .cols .map (c => {return c .slice (-4)})
     if (datasetCopy .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       var updater = this._addUpdater (view, (eventType, model, ids) => {
         dataset .groups   = this._getHistoryData (parentIds, date, date) .groups;
         let ds            = JSON .parse (JSON .stringify (dataset));
-        ds .cols = ds .cols .map (c => {return c .slice (-4)});
         this._filterHistoryBySlider (ds)
         for (let g of ds .groups)
           g .rows = g .rows .filter (r => {return r .amounts .find (a => {return a .value != 0})});
