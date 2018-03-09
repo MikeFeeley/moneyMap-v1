@@ -324,30 +324,30 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
     position: relative;
   }
 
-  table._budgetTable, table._activityTable, table._budgetHistoryTable, table._netWorthTable {
+  table._budgetTable, table._activityTable {
     margin-left: auto;
     margin-right: auto;
   }
 
 
   /* Freeze first column on scroll */
-   div._budgetHistoryTable:not(._popup) > div, div._netWorthTableContainer:not(._popup) {
-     width: calc(100vw - 80px)!important;
-        overflow-x: scroll;
-          > table > * > tr > td:first-child,  > table > * > tr > th:first-child {
-              position:absolute;
-              width: 150px;
-              padding-right: 4px!important;
-          }
-          > table > * > tr._subtotal > td:first-child {
-              background: #aaa;
-          }
-          > table > * > tr:not(._subtotal) > th:first-child, > table > * > tr:not(._subtotal) > td:first-child {
-              background: white;
-          }
-        > table > * > tr > td:nth-child(2),  > table > * > tr > th:nth-child(2) {
-            padding-left: 158px!important;
-        }
+  div._budgetHistoryTable:not(._popup) > div, div._netWorthTableContainer:not(._popup) {
+    width: calc(100vw - 80px)!important;
+    overflow-x: scroll;
+    > table > * > tr > td:first-child,  > table > * > tr > th:first-child {
+      position:absolute;
+      width: 150px;
+      padding-right: 4px!important;
+    }
+    > table > * > tr._subtotal > td:first-child {
+      background: #aaa;
+    }
+    > table > * > tr:not(._subtotal) > th:first-child, > table > * > tr:not(._subtotal) > td:first-child {
+      background: white;
+    }
+    > table > * > tr > td:nth-child(2),  > table > * > tr > th:nth-child(2) {
+      padding-left: 158px!important;
+    }
   }
   div._budgetTable, div._activityTable, div._budgetHistoryTable, div._netWorthTable._popup {
     &._popup {

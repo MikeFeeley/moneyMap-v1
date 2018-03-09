@@ -7,17 +7,18 @@
 
 \f0\fs36 \cf0 ==============\
 BUGS\
-	- changing from one tab to another sequencing of switch and scroll is off \'85 should scroll after the switch\
-	- why mort principal amount when no interest allocation (neg bal?)\
+	- scroll bar messes up perspective table when table is scrolled so that scrollbar tries to hid something not visible\
+	- table update changes headings from 2018/9 to 18/9\
 \
 USABILITY\
 \
 UPCOMING\
-	- csv export / import\
 	- improve config clone (and budget) by moving to server (make it fast and reliable so that its easy to experiment)\
+	- csv export / import\
 	- local db option and/or encrypted remote db\
 	- refine starting from nothing, documentation and landing page\
 	- rbc scraping?\
+	- make all-zero-value lines disappear from graphs? (possible and also retain animated update?)\
 \
 TODO\
 	- search\
@@ -93,6 +94,7 @@ BACKLOGGED BUGS\
 						\
 ==============\
 INTERMITTENT BUGS\
+  pre March 8 2018 \'85\
 	- double scroll bars in Plan\
 	- category is "Reimbursed"  cursor to end an type :Liam and it return: it goes blank.  Re-entering reimb:liam works fine.\
 	- occasionally and update/one returns an error causing a server-disconnect message (nothing in server log), recovers correctly\
