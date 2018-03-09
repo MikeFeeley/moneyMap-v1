@@ -498,12 +498,12 @@ class Account {
       let st  = Types .date .monthStart (Types .date .addMonthStart (end, -1));
       let en  = Types .date .monthEnd   (st);
       let bal = this .getBalance  (st, en);
-      let int = this._getInterest (bal .amount, start, Types .date .subDays (end, start) + 1) * (this .creditBalance? 1: -1);
+      let int = Math .max (0, this._getInterest (bal .amount, start, Types .date .subDays (end, start) + 1) * (this .creditBalance? 1: -1));
       if (cat._id == this .intCategory)
-        return int;
+        return Math .min (amount, int);
       else {
         let pri = this._budget .getAmount (this._budget .getCategories() .get (this .intCategory), start, end, true);
-        amount += (pri .month? pri .month .amount: 0) + (pri .year? pri .year .amount / 12 * (Types .date._difMonths (end, start)): 0);
+        amount += Math .max (0, (pri .month? pri .month .amount: 0) + (pri .year? pri .year .amount / 12 * (Types .date._difMonths (end, start)): 0));
         return Math .max (0, amount - int);
       }
 
