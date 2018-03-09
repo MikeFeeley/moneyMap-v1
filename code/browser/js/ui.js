@@ -260,9 +260,12 @@ var ui = {
                 (async() => {await visible()})();
               if (hidden)
                 hidden();
-              handleClick();
-              pendingClick = null;
-              setTimeout (() => {$('body') .scrollTop (scrollTop || 0)}, 0);
+              setTimeout (() => {
+                handleClick();
+                pendingClick = null;
+                if (!visible)
+                  $('body') .scrollTop (scrollTop || 0)
+                }, 0);
             }
 
             if (clickable)
