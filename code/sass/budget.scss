@@ -509,7 +509,10 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
         }
       }
     }
-    ._netWorthTableContainer > ._netWorthTable > tfoot > tr:last-child > td {padding-bottom: 16px}
+    ._netWorthTableContainer > ._netWorthTable > tfoot > tr:last-child > td,
+    ._budgetTableContainer > ._budgetHistoryTables > ._budgetHistoryTable > div > table._budgetHistoryTable > tfoot > tr:last-child > td {
+      padding-bottom: 16px;
+    }
     ._budgetTable > div > table,
     ._activityTable > div > table,
     ._budgetHistoryTable > div > table,
