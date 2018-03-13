@@ -92,10 +92,12 @@ class AccountBalance extends TuplePresenter {
   }
 
   _addEditableTuple (acc, group) {
-    acc = Object .assign ({}, acc);
-    acc .editable_balance = acc .balance;
-    delete acc .balance;
-    this._addTuple (acc, group);
+    if (acc .balance) {
+      acc = Object .assign ({}, acc);
+      acc .editable_balance = acc .balance;
+      delete acc .balance;
+      this._addTuple (acc, group);
+    }
   }
 
   _updateBalance (aid) {
