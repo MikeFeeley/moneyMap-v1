@@ -2,13 +2,21 @@
 {\fonttbl\f0\fswiss\fcharset0 Helvetica;}
 {\colortbl;\red255\green255\blue255;}
 {\*\expandedcolortbl;;}
-\margl1440\margr1440\vieww26440\viewh19580\viewkind0
+\margl1440\margr1440\vieww26140\viewh19580\viewkind0
 \pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
 
 \f0\fs36 \cf0 ==============\
 BUGS\
-	- scroll bar messes up perspective table when table is scrolled so that scrollbar tries to hid something not visible\
-	- table update changes headings from 2018/9 to 18/9\
+	- activity graph for income has strange negative amounts for other\
+	- position of config/edit popups doesn't take scrolling into account\
+	- add copyBudget\
+	- add space at bottom of history graph for scrollbar\
+	- after recategorizing all transaction away from category; hasTransactions is still true (until refresh)\
+		- need to add transaction count to actuals so that entry can be deleted when count goes to zero\
+		- what happens at server?\
+	- dragging in Accounts from one group to another duplicated the account\
+	- inbox right panel don't show assets with zero balance\
+	- switching away from Progress before its done leaves some things empty \'85 need to disable other tabs until it is done\
 \
 USABILITY\
 \

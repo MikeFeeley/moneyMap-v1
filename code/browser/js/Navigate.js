@@ -418,7 +418,6 @@ class Navigate {
 
   async _getPayees (cat, altDates) {
     const payeeTruncate = /\d|#|\(/;
-    let   sign = this._budget .isCredit (cat)? -1: 1;
     let   st = this._budget .getStartDate();
     let   en = this._budget .getEndDate();
     if (altDates) {
@@ -431,7 +430,7 @@ class Navigate {
         return {
           payee:  (stop && stop .index? tran .payee .slice (0, stop .index): tran .payee) .split (' ') .slice (0,3) .join (' '),
           date:   tran .date,
-          amount: (-(tran .credit || 0) + (tran .debit || 0)) * sign
+          amount: (-(tran .credit || 0) + (tran .debit || 0))
         }
       })
       .sort ((a,b) => {return a .payee < b .payee? -1: a .payee == b .payee? (a .date < b .date? -1: a .date == b .date? 0: 1): 1})
