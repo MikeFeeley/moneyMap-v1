@@ -263,8 +263,7 @@ var ui = {
               setTimeout (() => {
                 handleClick();
                 pendingClick = null;
-                if (!visible)
-                  $('body') .scrollTop (scrollTop || 0)
+                $('body') .scrollTop (scrollTop || 0)
                 }, 0);
             }
 
