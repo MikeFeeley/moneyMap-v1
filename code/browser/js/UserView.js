@@ -247,7 +247,7 @@ class UserView extends View {
   addConfirmDelete (positionTarget, id, type) {
     let popup   = $('<div>', {class: '_popupContainer'}) .appendTo (this._accountEdit .find ('> div'));
     let content = $('<div>', {class: '_addPopup'}) .appendTo (popup);
-    popup .css (ui .calcPosition (positionTarget, this._accountEdit, {top: 40, left: 0}));
+    popup .css (ui .calcPosition (positionTarget, this._accountEdit, {top: -40, left: -180}));
     $('<div>', {text: 'Do you really want to delete this ' + type + '?'}) .appendTo (content);
     $('<div>', {text: 'This action can not be undone.'}) .appendTo (content);
     $('<div>') .appendTo (content)
@@ -277,7 +277,7 @@ class UserView extends View {
   addConfigAddPopup (positionTarget, configs) {
     let popup   = $('<div>', {class: '_popupContainer'}) .appendTo (this._accountEdit .find ('> div'));
     let content = $('<div>', {class: '_addPopup'}) .appendTo (popup);
-    popup .css (ui .calcPosition (positionTarget, this._accountEdit, {top: 40, left: 0}));
+    popup .css (ui .calcPosition (positionTarget, this._accountEdit, {top: -40, left: -180}));
     $('<div>', {text: 'Add New Configuration'}) .appendTo (content);
     $('<form>') .appendTo (content)
       .append ($('<div>') .append ($('<label>')
@@ -326,7 +326,7 @@ class UserView extends View {
   addBudgetAddPopup (positionTarget, budgets) {
     let popup   = $('<div>', {class: '_popupContainer'}) .appendTo (this._accountEdit .find ('> div'));
     let content = $('<div>', {class: '_addPopup'}) .appendTo (popup);
-    popup .css (ui .calcPosition (positionTarget, this._accountEdit, {top: 40, left: 0}));
+    popup .css (ui .calcPosition (positionTarget, this._accountEdit, {top: -40, left: -180}));
     $('<div>', {text: 'Add New Budget'}) .appendTo (content);
     $('<form>') .appendTo (content)
       .append ($('<div>') .append ($('<label>')
