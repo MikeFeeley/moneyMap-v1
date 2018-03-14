@@ -115,7 +115,7 @@ class Model extends Observable {
               this._removeGroupFromModel (doc);
             }
           } else if (this._contains (doc)) {
-            await this._notifyObserversAsync (ModelEvent .INSERT, doc, arg);
+            await this._notifyObserversAsync (ModelEvent .INSERT, doc, arg, source);
             this._ids .add (doc._id);
             await this._addGroupToModel (doc);
           }
