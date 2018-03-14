@@ -60,21 +60,22 @@ class AccountBalanceView extends TupleView {
   }
 
   addTuple (data, tuple, getToHtml) {
-    if (tuple)
+    if (tuple) {
       tuple = $('<div>') .appendTo (tuple);
-    var tuple = super .addTuple (data, tuple, getToHtml);
-    tuple .find ('._field_name, ._field_balance') .on ('click webkitmouseforcedown', e => {
-      let target   = $(e .target) .parent();
-      let html     = target .offsetParent() .parent();
-      this._notifyObservers (AccountBalanceViewEvent .CLICK, {
-        id:       data._id,
-        name:     data .name,
-        toHtml:   html,
-        position: {top: ui .calcPosition (target, html) .top, left: 50},
-        isCat:    data .isCat,
-        altKey:   e .originalEvent .webkitForce > 1 || e .originalEvent .altKey
+      tuple = super .addTuple (data, tuple, getToHtml);
+      tuple .find ('._field_name, ._field_balance') .on ('click webkitmouseforcedown', e => {
+        let target   = $(e .target) .parent();
+        let html     = target .offsetParent() .parent();
+        this._notifyObservers (AccountBalanceViewEvent .CLICK, {
+          id:       data._id,
+          name:     data .name,
+          toHtml:   html,
+          position: {top: ui .calcPosition (target, html) .top, left: 50},
+          isCat:    data .isCat,
+          altKey:   e .originalEvent .webkitForce > 1 || e .originalEvent .altKey
+        });
       });
-    });
+    }
   }
 }
 

@@ -63,10 +63,12 @@ class Accounts extends Observable {
             }
             break;
           case ModelEvent .INSERT:
-            if (acc .type == AccountType .GROUP)
-              this._addSubgroup (acc, source == this);
-            else
-              this._addAccount (acc, source == this);
+            if (source != this) {
+              if (acc .type == AccountType .GROUP)
+                this._addSubgroup (acc, source == this);
+              else
+                this._addAccount (acc, source == this);
+            }
             break;
           case ModelEvent .REMOVE:
             this._view .remove (acc._id, source == this);
