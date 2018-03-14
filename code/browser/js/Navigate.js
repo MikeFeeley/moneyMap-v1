@@ -40,7 +40,7 @@ class Navigate {
     this._progressView .addObserver       (this, this._onViewChange);
   }
 
-  addProgressHtml (toHtml) {
+  async addProgressHtml (toHtml) {
     if (!this._progressView)
       this.prime();
     this._progressView .addHtml (toHtml, () => {

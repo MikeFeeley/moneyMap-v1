@@ -27,7 +27,7 @@ class NavigateView extends Observable  {
     }
   }
 
-  async addHtml (toHtml, buildHtml) {
+  addHtml (toHtml, buildHtml) {
     this._toHtml    = toHtml;
     this._buildHtml = buildHtml;
     this._createHtml();
@@ -46,7 +46,7 @@ class NavigateView extends Observable  {
     }
   }
 
-  async _createHtml () {
+  _createHtml () {
     if (this._toHtml) {
       this._html    = $('<div>', {class: this._name }) .appendTo (this._toHtml);
       this._content = $('<div>', {class: '_list'})  .appendTo (this._html);

@@ -285,15 +285,17 @@ class App {
 
       /* tabs */
       this._tabs .setTab  (this._proT, html => {this._na .addProgressHtml     (html)});
-      this._tabs .setTab  (this._traT, html => {this._it .addHtml             (html)}, true);
-      this._tabs .setTab  (this._actT, html => {this._na .addRealityHtml      (html)});
-      this._tabs .setTab  (this._budT, html => {this._na .addPlanHtml         (html)});
-      this._tabs. setTab  (this._plaT, html => {this._se .addHtml             (html)});
-      this._tabs .setTab  (this._perT, html => {this._na .addPerspectiveHtml  (html)});
-      this._tabs .setTab  (this._weaT, html => {this._na .addNetWorthHtml     (html)});
-      this._tabs .setTab  (this._accT, html => {this._ac .addHtml             (html)});
+      setTimeout (() => { // ensure progress is rendered so that chartJS stuff gets height before any switch to another tab
+        this._tabs .setTab  (this._traT, html => {this._it .addHtml             (html)}, true);
+        this._tabs .setTab  (this._actT, html => {this._na .addRealityHtml      (html)});
+        this._tabs .setTab  (this._budT, html => {this._na .addPlanHtml         (html)});
+        this._tabs. setTab  (this._plaT, html => {this._se .addHtml             (html)});
+        this._tabs .setTab  (this._perT, html => {this._na .addPerspectiveHtml  (html)});
+        this._tabs .setTab  (this._weaT, html => {this._na .addNetWorthHtml     (html)});
+        this._tabs .setTab  (this._accT, html => {this._ac .addHtml             (html)});
 
-      this._user .newConfigurationAccepted();
+        this._user .newConfigurationAccepted();
+      }, 0)
 
    } else if (eventType == UserEvent .LOGOUT) {
      $('body') .empty();
