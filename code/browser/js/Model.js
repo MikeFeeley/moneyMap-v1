@@ -111,7 +111,7 @@ class Model extends Observable {
               await this._notifyObserversAsync (ModelEvent .UPDATE, doc, arg, source);
             } else if (!this._options || !this._options .updateDoesNotRemove) {
               this._ids .delete (doc._id);
-              await this._notifyObserversAsync (ModelEvent .REMOVE, doc, doc._id);
+              await this._notifyObserversAsync (ModelEvent .REMOVE, doc, doc._id, source);
               this._removeGroupFromModel (doc);
             }
           } else if (this._contains (doc)) {
