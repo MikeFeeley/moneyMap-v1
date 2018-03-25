@@ -63,12 +63,10 @@ class Accounts extends Observable {
             }
             break;
           case ModelEvent .INSERT:
-            if (source != this) {
-              if (acc .type == AccountType .GROUP)
-                this._addSubgroup (acc, source == this);
-              else
-                this._addAccount (acc, source == this);
-            }
+            if (acc .type == AccountType .GROUP)
+              this._addSubgroup (acc, source == this);
+            else
+              this._addAccount (acc, source == this);
             break;
           case ModelEvent .REMOVE:
             this._view .remove (acc._id, source == this);
@@ -161,8 +159,8 @@ class Accounts extends Observable {
         let sort = 0, targetSort, updateList = [];
         let siblings = (await (
           arg .groupNum
-            ? this._model .find ({form: GROUP_TO_FORM [arg .groupNum], type: AccountType .GROUP})
-            : this._model .find ({group: arg .subgroupId})
+            ? this._model .find ({form: GROUP_TO_FORM [arg .groupNum], type: AccountType .GROUP}, true)
+            : this._model .find ({group: arg .subgroupId}, true)
         ))
           .sort ((a,b) => {return a .sort < b .sort? -1: a .sort == b .sort? 0: 1});
         for (let account of siblings) {

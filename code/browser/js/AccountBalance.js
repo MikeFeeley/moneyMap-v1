@@ -46,7 +46,12 @@ class AccountBalance extends TuplePresenter {
           delete arg [p];
         }
       }
-    super._onModelChange (eventType, doc, arg);
+      // TODO also handle sort changes
+    if (eventType == ModelEvent .INSERT || (eventType == ModelEvent .UPDATE && arg .group)) {
+      // TODO handle new or moved accounts
+      // console.log('xxx');
+    } else
+      super._onModelChange (eventType, doc, arg);
   }
 
   _onViewChange (eventType, arg) {
