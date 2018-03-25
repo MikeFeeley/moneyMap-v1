@@ -195,9 +195,9 @@ app.use(function(err, req, res, next) {
 var httpServer  = http  .createServer (app);
 var httpsServer = https .createServer (credentials, app);
 
-// httpServer.listen (3000, () => {
-//   console.log ('Listening for http on port ' + 3000)
-// })
-httpsServer.listen (3001, () => {
-  console.log ('Listening for https on port ' + 3001)
-});
+httpServer.listen (3000, () => {
+  console.log ('Listening for http on port ' + 3000)
+})
+// httpsServer.listen (3001, () => {
+//   console.log ('Listening for https on port ' + 3001)
+// });
