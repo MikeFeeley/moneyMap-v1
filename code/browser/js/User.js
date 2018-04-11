@@ -238,9 +238,9 @@ class User extends Observable {
   }
 
   async _tryCookie() {
-    let cookie = document .cookie .split (';') .find (c => {return c .startsWith ('user={')});
+    let cookie = document .cookie .split (';') .find (c => {return c .trim() .startsWith ('user={')});
     if (cookie) {
-      let cv = JSON .parse (cookie .slice (5));
+      let cv = JSON .parse (cookie .trim() .slice (5));
       for (let p in cv)
         this [p] = cv [p];
       this._setModelsForConfig();

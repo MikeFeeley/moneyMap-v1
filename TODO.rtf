@@ -1,4 +1,4 @@
-{\rtf1\ansi\ansicpg1252\cocoartf1561\cocoasubrtf200
+{\rtf1\ansi\ansicpg1252\cocoartf1561\cocoasubrtf400
 {\fonttbl\f0\fswiss\fcharset0 Helvetica;}
 {\colortbl;\red255\green255\blue255;}
 {\*\expandedcolortbl;;}
@@ -7,6 +7,9 @@
 
 \f0\fs36 \cf0 ==============\
 BUGS\
+	- progress bar - this transaction credit is wrong color (should be light green, not red)\
+	- negative amounts in progress bars \'85 smaller trips (april 4)\
+		- over amount in one sub category and unspent amount in another (plus there is an other)\
 	- dragging in Accounts from one group to another duplicated the account\
 	- add copyBudget\
 	- after recategorizing all transaction away from category; hasTransactions is still true (until refresh)\
@@ -29,6 +32,7 @@ BUGS\
 		- but, maybe should at least check for this in dbck\
 		- these are loaded by find; maybe they shouldn't be (causes quite a bit of confusion)\
 			- updates appear to happen locally but are not updated at db; fails silently\
+	- cookie not being saved (at least in https mode)\
 	\
 \
 USABILITY\
@@ -50,6 +54,28 @@ USABILITY\
 		- taxable accounts are assigned to a category\
 	- hard to see pre-tax income (income categories like gov don't how pretax amount, for example)\
 	- see account balance projections when changing schedule for account categories (esp withdrawals)\
+	- set landmark dates (e.g., retirement) that can be entered in a date field for level of indirection\
+	- a nice gui to\
+		- look at actual (recent) spending in a category compared to budget an subcategories spending and adjust budget\
+		- e.g., getting back from a trip you start with all expenses in "Mexico" but then subcategories to hotel, food, gas, car, etc\
+		- IDEA\
+			- show category with total amount and each sub category with actual and budget amounts\
+			- show transactions in each group\
+			- drag/drop transactions among groups to change category\
+			- edit budget amount to change budget\
+			- QUESTIONS\
+				- how do you show / enter budget amount if its a monthly budget \
+					- this  similar to concern with budgetHUD\
+				- this sort of like INBOX processing\
+					- maybe just show the transactions in the parent category plus transactions moved to subcategories this round\
+						- maybe click to show all transactions in sub category\
+	- actual yearly should show payee breakdown on drill\
+	- tension between yearly and monthly\
+		- different types of budgets\
+			(A) ongoing with specific amounts each month\
+			(B) yearly; could happen any time, basically a rough estimate\
+			(C) project / trip; specific amount for a specific duration\
+	- upgrade https key to use SHA-512\
 \
 UPCOMING\
 	- improve config clone (and budget) by moving to server (make it fast and reliable so that its easy to experiment)\
