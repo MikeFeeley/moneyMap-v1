@@ -7,6 +7,7 @@
 
 \f0\fs36 \cf0 ==============\
 BUGS\
+	- right button in actual spending graph showing payee costco, undefined object children in children[0].amounts: Navigate:672\
 	- progress bar - this transaction credit is wrong color (should be light green, not red)\
 	- negative amounts in progress bars \'85 smaller trips (april 4)\
 		- over amount in one sub category and unspent amount in another (plus there is an other)\
@@ -32,7 +33,6 @@ BUGS\
 		- but, maybe should at least check for this in dbck\
 		- these are loaded by find; maybe they shouldn't be (causes quite a bit of confusion)\
 			- updates appear to happen locally but are not updated at db; fails silently\
-	- cookie not being saved (at least in https mode)\
 	\
 \
 USABILITY\

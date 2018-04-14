@@ -669,7 +669,7 @@ class Navigate {
         let payees = await this._getPayees (thisCat, altDates);
         if (id .includes ('payee_')) {
           await processChildren (payees .filter (p => {return p .payee == id}));
-          thisAmounts = children [0] .amounts;
+          thisAmounts = children && children [0]? children [0] .amounts: [];
           children = [];
           realChildren = [];
         } else
