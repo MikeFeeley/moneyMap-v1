@@ -190,7 +190,7 @@ class ScheduleEntryZombieActive extends ViewLabel {
       let popup    = $('<div>', {class: '_zombieControlPopup fader'}) .appendTo (html);
       popup .css (ui .calcPosition (this._html, html, {top: 16, left: -250}));
       let content  = $('<div>') .appendTo (popup);
-      $('<div>', {text: 'Reactive Category'}) .appendTo (content);
+      $('<div>', {text: 'Explore Category'}) .appendTo (content);
       let buttons = $('<div>') .appendTo (content);
       $('<button>', {text: 'Reactivate'}) .appendTo (buttons)
       .click (e => {

@@ -7,7 +7,6 @@
 
 \f0\fs36 \cf0 ==============\
 BUGS\
-	- right button in actual spending graph showing payee costco, undefined object children in children[0].amounts: Navigate:672\
 	- progress bar - this transaction credit is wrong color (should be light green, not red)\
 	- negative amounts in progress bars \'85 smaller trips (april 4)\
 		- over amount in one sub category and unspent amount in another (plus there is an other)\
@@ -76,6 +75,15 @@ USABILITY\
 			(B) yearly; could happen any time, basically a rough estimate\
 			(C) project / trip; specific amount for a specific duration\
 	- upgrade https key to use SHA-512\
+	- combining monthly and yearly\
+		- interest to look at travel where\
+			- when stuff went over, visitors didn't have a budget and so there was this mysterious overage\
+			- Travel has yearly budget and SOME if its children have budgets \'85 what's the point of travel having a budget in this case?\
+			- what if we got rid of idea that children of yearly subtract - have them add like monthly?\
+				- \
+			- what if we made it so that category with budget can not have children with budgets?\
+				- much simpler \'85 \
+			- key example against both of these is fixed assets where you've an overall idea AND some specific purchases in mind\
 \
 UPCOMING\
 	- improve config clone (and budget) by moving to server (make it fast and reliable so that its easy to experiment)\
