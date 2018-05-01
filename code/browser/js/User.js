@@ -347,7 +347,7 @@ class User extends Observable {
    */
   showMenu (toHtml) {
     let html = $('body');
-    this._view .addMenu (html, {top: 48, right: 10}, toHtml, {top: 0, right: 10});
+    this._view .addMenu (html, {top: UI_BANNER_HEIGHT, right: 10}, toHtml, {top: 0, right: 10});
     this._addMenuItem ('Edit Profile', () => {(async () => {await this._addAccountEdit()}) ()});
     if (this._configs .length > 1) {
       let items = this._configs

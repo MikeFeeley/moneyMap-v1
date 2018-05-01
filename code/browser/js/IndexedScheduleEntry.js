@@ -100,7 +100,7 @@ class ScheduleEntryList extends ScheduleEntry {
         .children ('ul') .children ('li._list_line_categoryLine')
         .children ('ul') .children ('li._list_line_categoryLine');
       for (let li of lis) {
-        if ($(li) .position() .top - top >= -48) {
+        if ($(li) .position() .top - top >= -UI_BANNER_HEIGHT) {
           this._parent .getIndex() .setSelected ($(li) .data ('id'));
           break;
         }
