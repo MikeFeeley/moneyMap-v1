@@ -7,34 +7,46 @@
 
 \f0\fs36 \cf0 ==============\
 BUGS\
-	- progress bar - this transaction credit is wrong color (should be light green, not red)\
+\
+EASY\
+	- progress bar - "this transaction credit" is wrong colour (should be light green, not red)\
 	- negative amounts in progress bars \'85 smaller trips (april 4)\
 		- over amount in one sub category and unspent amount in another (plus there is an other)\
-	- dragging in Accounts from one group to another duplicated the account\
-	- add copyBudget\
+	- dragging in Accounts from one group to another duplicated the account FIXED I THINK\
 	- after recategorizing all transaction away from category; hasTransactions is still true (until refresh)\
 		- need to add transaction count to actuals so that entry can be deleted when count goes to zero\
 		- what happens at server?\
+		- after changing category of historic transaction so that category no longer has transactions; still can't delete category until reload\
 	- budgeting suite taxes throws all of the progress stuff off (negative amount for suite taxes?)\
-	- picker clo:c doesn't select\
-	- mortgage balance is off\
-	- search results don't scroll into view and don't attach to current position (window scroll then show up in wrong position)\
-	- search query "in 20xx" or "in mmm" should work, but don't\
+	- picker "clo:c" doesn't select until a is typed (i.e., "clo:ca")\
+	- scrolling\
+		- search results don't scroll into view and don't attach to current position (window scroll then show up in wrong position)\
+		- when scrolling into view in transaction edit, space is not left for input field\
 	- when making a rule not match current transaction, the icon for open rule changes to '+'\
-	- when scrolling into view in transaction edit, space is not left for input field\
 	- in graph tooltip, don't show before-tax amount if it is the same as the after tax amount (downsize)\
 	- reactivating an old budget doesn't add a blank schedule\
-	- allow transfers to liabilities (e.g., payoff mortgage)\
 	- tab in category field of transaction closes picker without picking (and without advancing to next field)\
 		- check other keys as well\
+	- payee "Car2Go" being truncated before 2\
+	- formatting - monthly graph from yearly doughnut, clicking on yearly calendar\
+\
+HARDER\
+	- add copyBudget\
+	- allow transfers to liabilities (e.g., payoff mortgage)\
 	- remove / update don't locate schedules (everything I assume) if _id is ObjectId()\
 		- this might be okay (this only should happen when things are added manually in mongo client)\
 		- but, maybe should at least check for this in dbck\
 		- these are loaded by find; maybe they shouldn't be (causes quite a bit of confusion)\
 			- updates appear to happen locally but are not updated at db; fails silently\
+	- more info and repair for Transaction integrity issues in dbck\
 	\
 \
 USABILITY\
+	- search \
+		- by calendar year as well as FY\
+		- "starting" as synonym for since as well as after\
+		- between X and X / from X to Y / since / until\
+		- search query "in 20xx" or "in mmm" should work, but don't\
 	- clicking in date field, show calendar\
 	- discretionary spending planner\
 		- pick which categories to include and set a total amount available\
@@ -84,6 +96,13 @@ USABILITY\
 			- what if we made it so that category with budget can not have children with budgets?\
 				- much simpler \'85 \
 			- key example against both of these is fixed assets where you've an overall idea AND some specific purchases in mind\
+	- think about kinds of searches for tax filing\
+		- search all categories, not just those on the progress page\
+		- easily switch to calendar year view from any transaction view (or maybe also year graph)\
+			- currently if you start with a year view, there's no way to switch\
+			- also switching by alt-click might not be intuitive (another icon? or tooltip on icon? or title?)\
+	- share budget with another user\
+		- show username (and maybe ip address?) in click on sharing icon\
 \
 UPCOMING\
 	- improve config clone (and budget) by moving to server (make it fast and reliable so that its easy to experiment)\

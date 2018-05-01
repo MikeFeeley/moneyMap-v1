@@ -44,58 +44,58 @@ class BudgetProgressGraph extends Observable {
     var softBlue        = '#80d0ff';
     var lightBlue       = '#e6f5ff';
     this._constraintDatasets  = [
-      ['From Last Month',           'preBudgetedActual',   darkGreen,  darkGreen],
-      ['This Month in Budget',      'curBudgetedActual',   green,      green],
-      ['This Transaction (Credit)', 'thisCreditBudgeted',  lightGreen, green],
-      ['Over in Prior Months',      'preOverActual',       darkRed,    darkRed],
-      ['Over Budget',               'curOverActual',       red,        red],
-      ['This Transaction (Credit)', 'thisCreditOver',      lightRed,   red],
-      ['This Transaction',          'thisBudgeted',        lightGreen, green],
-      ['This Transaction',          'thisOver',            lightRed,   red],
-      ['This Transaction (Credit)', 'thisCreditAvailable', clear,      grey],
-      ['Unused Last Month',         'prevAvailable',       '#f3fff2',  grey],
-      ['Available',                 'curAvailable',        clear,      grey, 'Additional Available this Month', 'Unused Last Month'],
-      ['Actual this Month',         'budgetlessActual',    softBlue,   softBlue]
+      ['From Last Month',                       'preBudgetedActual',   darkGreen,  darkGreen],
+      ['This Month in Budget',                  'curBudgetedActual',   green,      green],
+      ['This Transaction (Credit Over Budget)', 'thisCreditBudgeted',  lightGreen, green],
+      ['Over in Prior Months',                  'preOverActual',       darkRed,    darkRed],
+      ['Over Budget',                           'curOverActual',       red,        red],
+      ['This Transaction (Credit)',             'thisCreditOver',      lightRed,   red],
+      ['This Transaction',                      'thisBudgeted',        lightGreen, green],
+      ['This Transaction (Over Budget)',        'thisOver',            lightRed,   red],
+      ['This Transaction (Credit Available)',   'thisCreditAvailable', clear,      grey],
+      ['Unused Last Month',                     'prevAvailable',       '#f3fff2',  grey],
+      ['Available',                             'curAvailable',        clear,      grey, 'Additional Available this Month', 'Unused Last Month'],
+      ['Actual this Month',                     'budgetlessActual',    softBlue,   softBlue]
     ];
     this._budgetlessDatasets  = [
-      ['From Last Month',           'preBudgetedActual',   darkGreen,  darkGreen],
-      ['This Month in Budget',      'curBudgetedActual',   green,      green],
-      ['This Transaction (Credit)', 'thisCreditBudgeted',  lightBlue,  blue],
-      ['Over in Prior Months',      'preOverActual',       darkRed,    darkRed],
-      ['Over Budget',               'curOverActual',       red,        red],
-      ['This Transaction (Credit)', 'thisCreditOver',      lightBlue,  blue],
-      ['This Transaction',          'thisBudgeted',        lightBlue,  blue],
-      ['This Transaction',          'thisOver',            lightBlue,  blue],
-      ['This Transaction (Credit)', 'thisCreditAvailable', clear,      grey],
-      ['Available',                 'available',           clear,      grey],
-      ['Actual this Month',         'budgetlessActual',    softBlue,   softBlue]
+      ['From Last Month',                       'preBudgetedActual',   darkGreen,  darkGreen],
+      ['This Month in Budget',                  'curBudgetedActual',   green,      green],
+      ['This Transaction (Credit)',             'thisCreditBudgeted',  lightBlue,  blue],
+      ['Over in Prior Months',                  'preOverActual',       darkRed,    darkRed],
+      ['Over Budget',                           'curOverActual',       red,        red],
+      ['This Transaction (Credit Over Budget)', 'thisCreditOver',      lightBlue,  blue],
+      ['This Transaction',                      'thisBudgeted',        lightBlue,  blue],
+      ['This Transaction (Over Budget)',        'thisOver',            lightBlue,  blue],
+      ['This Transaction (Credit Available)',   'thisCreditAvailable', clear,      grey],
+      ['Available',                             'available',           clear,      grey],
+      ['Actual this Month',                     'budgetlessActual',    softBlue,   softBlue]
     ];
     this._constraintYearDatasets  = [
-      ['Prior Months',              'preBudgetedActual',   darkGreen,  darkGreen],
-      ['This Month in Budget',      'curBudgetedActual',   green,      green],
-      ['This Transaction (Credit)', 'thisCreditBudgeted',  lightGreen, green],
-      ['Over in Prior Months',      'preOverActual',       darkRed,    darkRed],
-      ['Over Budget',               'curOverActual',       red,        red],
-      ['This Transaction (Credit)', 'thisCreditOver',      lightRed,   red],
-      ['This Transaction',          'thisBudgeted',        lightGreen, green],
-      ['This Transaction',          'thisOver',            lightRed,   red],
-      ['This Transaction (Credit)', 'thisCreditAvailable', clear,      grey],
-      ['Available',                 'available',           clear,      grey],
-      ['Actual this Month',         'budgetlessActual',    softBlue,   softBlue]
+      ['Prior Months',                          'preBudgetedActual',   darkGreen,  darkGreen],
+      ['This Month in Budget',                  'curBudgetedActual',   green,      green],
+      ['This Transaction (Credit)',             'thisCreditBudgeted',  lightGreen, green],
+      ['Over in Prior Months',                  'preOverActual',       darkRed,    darkRed],
+      ['Over Budget',                           'curOverActual',       red,        red],
+      ['This Transaction (Credit Over Budget)', 'thisCreditOver',      lightRed,   red],
+      ['This Transaction',                      'thisBudgeted',        lightGreen, green],
+      ['This Transaction (Over Budget)',        'thisOver',            lightRed,   red],
+      ['This Transaction (Credit Available)',   'thisCreditAvailable', clear,      grey],
+      ['Available',                             'available',           clear,      grey],
+      ['Actual this Month',                     'budgetlessActual',    softBlue,   softBlue]
     ];
     this._goalDatasets  = [
-      ['Prior Months',              'preBudgetedActual',   darkGreen,       darkGreen],
-      ['This Month within Budget',  'curBudgetedActual',   green,           green],
-      ['This Transaction (Credit)', 'thisCreditBudgeted',  lightGreyRed,    greyRed],
-      ['Over in Prior Months',      'preOverActual',       medGreen,        medGreen],
-      ['Over Budget',               'curOverActual',       medLitGreen,     medLitGreen],
-      ['This Transaction (Credit)', 'thisCreditOver',      lightGreyRed,    greyRed],
-      ['This Transaction',          'thisBudgeted',        lightGreen,      green],
-      ['This Transaction',          'thisOver',            lightGreen,      green],
-      ['This Transaction (Credit)', 'thisCreditAvailable', lightGreyRed,    greyRed],
-      ['Under Budget Prior Months', 'prevAvailable',       red,             red],
-      ['Under Budget this Month',   'curAvailable',        lightGreyRed,    greyRed],
-      ['Actual this Month',         'budgetlessActual',    softBlue,        softBlue]
+      ['Prior Months',                          'preBudgetedActual',   darkGreen,       darkGreen],
+      ['This Month within Budget',              'curBudgetedActual',   green,           green],
+      ['This Transaction (Credit)',             'thisCreditBudgeted',  lightGreyRed,    greyRed],
+      ['Over in Prior Months',                  'preOverActual',       medGreen,        medGreen],
+      ['Over Budget',                           'curOverActual',       medLitGreen,     medLitGreen],
+      ['This Transaction (Credit Over Budget)', 'thisCreditOver',      lightGreyRed,    greyRed],
+      ['This Transaction',                      'thisBudgeted',        lightGreen,      green],
+      ['This Transaction (Over Budget)',        'thisOver',            lightGreen,      green],
+      ['This Transaction (Credit Available)',   'thisCreditAvailable', lightGreyRed,    greyRed],
+      ['Under Budget Prior Months',             'prevAvailable',       red,             red],
+      ['Under Budget this Month',               'curAvailable',        lightGreyRed,    greyRed],
+      ['Actual this Month',                     'budgetlessActual',    softBlue,        softBlue]
     ];
   }
 
