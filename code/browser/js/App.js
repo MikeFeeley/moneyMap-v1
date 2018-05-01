@@ -197,7 +197,7 @@ class App {
         this._searchInput = this._searchPopup .find ('input');
         this._searchInput [0] .addEventListener ('keydown', e => {
           if (e .keyCode == 13) {
-            TransactionHUD .search (this._searchInput .val(), this._accModel, this._varModel, $('body'), {top: 100, left: 30});
+            TransactionHUD .search (this._searchInput .val(), this._accModel, this._varModel, $('body'), {top: $('body') .scrollTop() + 100, left: 30});
             close();
           }
           if (e .keyCode == 90 && e .metaKey) {
