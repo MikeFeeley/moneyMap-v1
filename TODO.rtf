@@ -9,15 +9,15 @@
 BUGS\
 \
 EASY\
-	- picker "clo:c" doesn't select until a is typed (i.e., "clo:ca")\
+	- scrolling\
+		- search results don't scroll into view and don't attach to current position (window scroll then show up in wrong position)\
+		- when scrolling into view in transaction edit, space is not left for input field\
+\
 	- after recategorizing all transaction away from category; hasTransactions is still true (until refresh)\
 		- need to add transaction count to actuals so that entry can be deleted when count goes to zero\
 		- what happens at server?\
 		- after changing category of historic transaction so that category no longer has transactions; still can't delete category until reload\
 	- budgeting suite taxes throws all off the progress stuff off (negative amount for suite taxes?)\
-	- scrolling\
-		- search results don't scroll into view and don't attach to current position (window scroll then show up in wrong position)\
-		- when scrolling into view in transaction edit, space is not left for input field\
 	- when making a rule not match current transaction, the icon for open rule changes to '+'\
 	- in graph tooltip, don't show before-tax amount if it is the same as the after tax amount (downsize)\
 	- reactivating an old budget doesn't add a blank schedule\

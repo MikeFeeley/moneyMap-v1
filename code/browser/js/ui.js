@@ -20,7 +20,7 @@ var ui = {
    *     (b) that as much of the element, including upper left corner is shown, if it does not fit
    */
   scrollIntoView: (e, DEPRICATED = false, options = {}) => {
-    options.topBuffer = 20;
+    options.topBuffer = (options .topBuffer || 0) + 16;
     setTimeout (() => {
       // use timeout to ensure that this code doesn't run until after html has reappeared and thus has computed height
       e = e [0];
