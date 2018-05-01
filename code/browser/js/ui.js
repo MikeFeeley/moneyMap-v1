@@ -5,6 +5,8 @@ const UI_FIELD_TIP_DURATION_MS = 5000;
 const UI_FIELD_TIP_FADE_OUT_MS = 1000;
 const UI_RULE_SLIDE_MS         = 300;
 
+var UI_BANNER_HEIGHT; // set by tab constructor
+
 var ui = {
 
   getScrollParent: node => {
@@ -20,7 +22,6 @@ var ui = {
    *     (b) that as much of the element, including upper left corner is shown, if it does not fit
    */
   scrollIntoView: (e, DEPRICATED = false, options = {}) => {
-    options.topBuffer = (options .topBuffer || 0) + 16;
     setTimeout (() => {
       // use timeout to ensure that this code doesn't run until after html has reappeared and thus has computed height
       e = e [0];
@@ -30,6 +31,7 @@ var ui = {
         // tabbed is surrogate for body for scrolling entire page (on safari; for firefox and chrome its documentElement)
         if (sp == $('body > .tabbed') .get(0))
           sp = document .body;
+        let bannerSkip = sp == document .body? UI_BANNER_HEIGHT: 0;
 
         let topOffset = 0;
 
@@ -59,7 +61,7 @@ var ui = {
         // calculate scroll delta
         let scrollY = Math .max (sp .offsetTop + sp .clientTop, eBottom - scrollBottom);
         if (eTop < sp .scrollTop + scrollY)
-          scrollY = eTop - sp .scrollTop - 30; // not sure where the 30 comes from, but it works (for now on safari)
+          scrollY = eTop - sp .scrollTop - bannerSkip;
         scrollY -= sp .offsetTop + sp .clientTop;
 
         let scrollX = Math .max (sp .offsetLeft + sp .clientLeft, eRight - scrollRight);
@@ -182,6 +184,7 @@ var ui = {
       var clickable    = true;
       var pendingClick;
       var tabMap = new Map();
+      UI_BANNER_HEIGHT = $('body > .tabbed > .tabs') .height();
 
       Object.assign (this, {
 
