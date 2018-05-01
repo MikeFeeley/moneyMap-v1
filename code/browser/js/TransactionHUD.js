@@ -461,114 +461,108 @@ class TransactionHUD extends TransactionAndRulesTable {
     }
     let query = {$limit: 100, $sort: {date: -1}};
     if (text && text .length) {
-      let inq = false;
-      let terms = text .split ('"') .reduce ((list, q) => {
-        if (!inq) {
-          let bs = variance .getBudget() .getStartDate();
-          let be = variance .getBudget() .getEndDate();
-          q = q .split (' ') .filter (s => {return s}) .join (' ');
-          for (let tok of ['in', 'before', 'after', 'since', 'this year', 'last year', 'this month', 'last month']) {
-            let pos = q .indexOf (tok);
-            if (pos != -1 && (pos + tok .length == q .length || q [pos + tok .length] == ' ')) {
-              if (['in', 'before', 'after', 'since'] .includes (tok)) {
-                let nts = q .slice (pos + tok .length + 1) .split (' ');
-                if (nts .length) {
-                  let date   = Types .dateMYorYear .fromString (nts[0]);
-                  let endPos = q .slice (pos) .indexOf (nts[0]) + nts[0] .length + pos;
-                  if (!date && nts .length > 1) {
-                    date = Types .dateMYorYear .fromString (nts[0] + '-' + nts[1]);
-                    endPos = q .slice (pos) .indexOf (nts[1]) + nts[1] .length + pos;
-                  }
-                  if (! date) {
-                    let mo = Types .date._mthsLC .indexOf (nts[0]);
-                    if (mo == -1)
-                      mo = Types .date._monthsLC .indexOf (nts[0]);
-                    if (mo != -1) {
-                      mo += 1;
-                      let ty = Types .date._year (Types .date .today());
-                      let tm = Types .date._month (Types .date .today());
-                      date = Types .date._date (mo <= tm? ty: ty - 1, mo, 1);
-                      endPos = q .slice (pos) .indexOf (nts[0]) + nts[0] .length + pos;
-                    }
-                  }
-                  if (! date) {
-                    let str = nts[0] + ' ' + nts [1];
-                    if (str == 'this month')
-                      date = Types .date .today()
-                    else if (str == 'this year')
-                      date = Types .date._year (Types .dateFY .getFYStart (Types .date .today(), bs, be));
-                    else if (str == 'last month')
-                      date = Types .dates .addMonthStart (Types .date .today(), -1);
-                    else if (str == 'last year')
-                      date = Types .date._year (Types .dateFY .getFYStart (Types .date .today(), bs, be)) - 1;
-                    if (date)
-                      endPos = q .slice (pos) .indexOf (nts[0]) + nts[0] .length + nts[1] .length + pos + 1;
-                  }
-                  if (date) {
-                    let st, en;
-                    if (Types .date .isYear (date)) {
-                      st = Types .date._yearStart (date, bs, be);
-                      en = Types .date._yearEnd   (date, bs, be);
-                    } else {
-                      st = Types .date .monthStart (date);
-                      en = Types .date .monthEnd   (date);
-                    }
-                    switch (tok) {
-                      case 'in':
-                        query .date = {$gte: st, $lte: en};
-                        break;
-                      case 'before':
-                        query .date = {$lt: st};
-                        break;
-                      case 'after':
-                        query .date = {$gt: en};
-                        break;
-                      case 'since':
-                        query .date = {$gte: st};
-                        break;
-                    }
-                    q = (pos> 0? q .slice (0, pos - 1): '') + q .slice (endPos);
-                  }
-                }
+      let inQuote = false;
+      let terms = text .toLowerCase() .split ('"') .reduce ((list, str) => {
+        if (! inQuote) {
+          let tokens = str .split (' ');
 
-              } else {
-                let st, en;
-                switch (tok) {
-                  case 'this month': case 'last month':
-                    st = Types .date .monthStart (Types .date .today());
-                    break;
-                  case 'this year': case 'last year':
-                    st = Types .dateFY .getFYStart (Types .date .today(), bs, be)
-                    break;
+          let gobbleDate = (i, gobbleAnd) => {
+            let thisLast, date = {};
+            for (let j = i; j < tokens .length; j++) {
+              if (tokens [j]) {
+                if (! thisLast && ['last', 'this'] .includes (tokens [j])) {
+                  thisLast = tokens[j];
+                } else if (thisLast && ['year', 'budget', 'budget year', 'month'] .includes (tokens [j])) {
+                  switch (tokens [j]) {
+                    case 'year':
+                      date .start = Types .date .addYear (Types .date .getYearStart (Types .date .today()), thisLast == 'last'? -1: 0);
+                      date .end   = Types .date .getYearEnd (date .start);
+                      break;
+                    case 'budget':
+                      const BUDGET_START = variance .getBudget() .getStartDate();
+                      const BUDGET_END   = variance .getBudget() .getEndDate();
+                      date .start = Types .date .addYear (Types .dateFY .getFYStart (Types .date .today(), BUDGET_START, BUDGET_END), thisLast == 'last'? -1: 0);
+                      date .end   = Types .dateFY .getFYEnd (date .start, BUDGET_START, BUDGET_END);
+                      if (j+1 < tokens .length && tokens [j+1] == 'year')
+                        j += 1;
+                      break;
+                    case 'month':
+                      date .start = Types .date .addMonthStart (Types .date .today(), thisLast == 'last'? -1: 0);
+                      date .end   = Types .date .monthEnd      (date .start);
+                      break;
+                  }
+                  for (let k = i; k <=j; k++)
+                    tokens [k] = '';
+                  return date;
+                } else if (gobbleAnd && ['and', '&'] .includes (tokens [j])) {
+                  tokens [j] = '';
+                  gobbleAnd = false;
+                } else {
+                  if (! isNaN (tokens [j])) {
+                    let date = {start: Types .date._date (tokens [j], 1, 1), end: Types .date._date (tokens [j], 12, 31)};
+                    tokens [j] = '';
+                    return date;
+                  } else {
+                    let m0 = Types .date._mthsLC .indexOf (tokens [j]);
+                    let m1 = m0 == -1 && Types .date._monthsLC .indexOf (tokens [j]);
+                    if (m0 != -1 || m1 != -1) {
+                      tokens [j] = '';
+                      let yr = Types .date._year (Types .date .today()) + (thisLast == 'last'? -1: 0);
+                      if (j+1 < tokens .length && ! isNaN (tokens [j+1])) {
+                        yr = Number (tokens [j+1]);
+                        tokens [j+1] = '';
+                      }
+                      let date = {start: Types .date._date (yr, m0 != -1? m0 + 1: m1 + 1, 1)};
+                      date .end = Types .date .monthEnd (date .start);
+                      return date;
+                    }
+                    return undefined;
+                  }
                 }
-                let md = 0;
-                switch (tok) {
-                  case 'last month':
-                    md = -1;
-                    break;
-                  case 'last year':
-                    md = -12;
-                    break;
-                }
-                st = Types .date .addMonthStart (st, md);
-                switch (tok) {
-                  case 'this month': case 'last month':
-                    en = Types .date .monthEnd (st);
-                    break;
-                  case 'this year': case 'last year':
-                    en = Types .dateFY .getFYEnd (st, bs, be);
-                    break;
-                }
-                query .date = {$gte: st, $lte: en};
-                q = (pos> 0? q .slice (0, pos - 1): '') + q .slice (pos + tok .length);
               }
             }
           }
+
+          for (let i = 0; i < tokens .length; i++) {
+            if (tokens [i]) {
+              if (['this', 'last', 'in', 'before', 'after', 'since', 'starting', 'ending', 'until', 'from', 'to', 'between'] .includes (tokens [i])) {
+                let tok = tokens [i];
+                let dt  = gobbleDate (['this', 'last'] .includes (tokens [i])? i: i+1);
+                if (dt) {
+                  tokens [i] = '';
+                  switch (tok) {
+                    case 'in': case 'this': case 'last':
+                      query .date = {$gte: dt .start, $lte: dt .end};
+                      break;
+                    case 'before':
+                      query .date = {$lt: dt .start};
+                      break;
+                    case 'from': case 'since': case 'starting':
+                      query .date = {$gte: dt .start};
+                      break;
+                    case 'after':
+                      query .date = {$gt: dt .end};
+                      break;
+                    case 'to': case 'until': case 'ending':
+                      query .date = {$lte: dt .end};
+                      break;
+                    case 'between':
+                      let dt2 = gobbleDate (i, true);
+                      query .date = {$gte: dt .start};
+                      if (dt2)
+                        query .date .$lte = dt2 .end;
+                      break;
+                  }
+                }
+              }
+            }
+          }
+          str = tokens .filter (t => {return t}) .join (' ');
         }
-        let t = inq? q: q .split (' ') .filter (t => {return t});
-        inq = ! inq;
-        return list .concat (t);
-      }, []) .map (t => {return t .trim() .toLowerCase()});
+        inQuote = ! inQuote;
+        return list .concat (str);
+      }, []) .filter (t => {return t});
+
       if (terms .length) {
         query .$and = terms .map (term => {
           let regex = '.*' + term .replace (/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + '.*';

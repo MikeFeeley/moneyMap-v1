@@ -151,6 +151,9 @@ class DateType extends FieldType {
   getYearStart (d) {
     return this._date (this._year(d), 1, 1);
   }
+  getYearEnd (d) {
+    return this._date (this._year(d), 12, 31);
+  }
   daysInMonth (d) {
     return this._daysInMonth (this._year (d), this._month (d));
   }
