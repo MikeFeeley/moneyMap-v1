@@ -97,8 +97,9 @@ class CategoryPicker {
   }
 
   filter (value) {
+    let id;
     if (value .length)
-      var id = (this._categories .findBestMatch (value .split(':') .map (s => {return s.trim()}), this._includeZombies) || {}) ._id;
+      id = (this._categories .findBestMatch (value .split(':') .map (s => {return s.trim()}), this._includeZombies) || {}) ._id;
     this._show (id);
     if (this._filterTimeout) {
       clearTimeout (this._filterTimeout);

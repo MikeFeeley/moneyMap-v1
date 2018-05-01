@@ -9,16 +9,12 @@
 BUGS\
 \
 EASY\
-	- progress bar - "this transaction credit" is wrong colour (should be light green, not red)\
-	- negative amounts in progress bars \'85 smaller trips (april 4)\
-		- over amount in one sub category and unspent amount in another (plus there is an other)\
-	- dragging in Accounts from one group to another duplicated the account FIXED I THINK\
+	- picker "clo:c" doesn't select until a is typed (i.e., "clo:ca")\
 	- after recategorizing all transaction away from category; hasTransactions is still true (until refresh)\
 		- need to add transaction count to actuals so that entry can be deleted when count goes to zero\
 		- what happens at server?\
 		- after changing category of historic transaction so that category no longer has transactions; still can't delete category until reload\
-	- budgeting suite taxes throws all of the progress stuff off (negative amount for suite taxes?)\
-	- picker "clo:c" doesn't select until a is typed (i.e., "clo:ca")\
+	- budgeting suite taxes throws all off the progress stuff off (negative amount for suite taxes?)\
 	- scrolling\
 		- search results don't scroll into view and don't attach to current position (window scroll then show up in wrong position)\
 		- when scrolling into view in transaction edit, space is not left for input field\
@@ -31,6 +27,8 @@ EASY\
 	- formatting - monthly graph from yearly doughnut, clicking on yearly calendar\
 \
 HARDER\
+	- negative amounts in progress bars \'85 smaller trips (april 4)\
+		- over amount in one sub category and unspent amount in another (plus there is an other)\
 	- add copyBudget\
 	- allow transfers to liabilities (e.g., payoff mortgage)\
 	- remove / update don't locate schedules (everything I assume) if _id is ObjectId()\

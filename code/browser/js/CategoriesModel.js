@@ -148,22 +148,21 @@ class Categories {
   }
 
   findBestMatch (name, includeZombies) {
-    var f = (name, cats) => {
-      if (!cats || !cats.length)
-        return false;
-      for (let c of cats)
-        if (c .name && c.name .toLowerCase() .startsWith (name .toLowerCase()))
-          return c;
-      return f (
-        name,
-        cats
-          .map    (c     => {return (c .children || []) .concat ((includeZombies && c .zombies) || [])})
-          .filter (c     => {return c})
-          .reduce ((a,c) => {return a .concat (c)}, [])
-      );
+    let f = (name, cats) => {
+      if (! cats || ! cats .length)
+        return undefined;
+      let allChildren = [];
+      for (let cat of cats) {
+        let children = (cat .children || []) .concat ((includeZombies && cat .zombies) || []);
+        for (let c of children)
+          if (c .name && c.name .toLowerCase() .startsWith (name .toLowerCase()))
+            return c;
+        allChildren = allChildren .concat (children);
+      }
+      return f (name, allChildren);
     }
-    var roots = this._roots;
-    for (let n of Array.isArray (name)? name: [name]) {
+    let roots = this._roots;
+    for (let n of Array .isArray (name)? name: [name]) {
       let match = f (n, roots);
       if (match)
         roots = [match];
