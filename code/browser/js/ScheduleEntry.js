@@ -409,5 +409,6 @@ class ScheduleEntry extends List {
     if ((cat .parent .children || []) .find (c => {return c .sort == cat .sort}))
       await this._model .updateCategorySort (cat, after? this._categories .get (after) .sort + 1: 0);
     await this .updateField (cat._id, 'budgets', budgets);
+    await this._model .ensureCategoryHasSchedule (cat);
   }
 }

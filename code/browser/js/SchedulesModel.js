@@ -164,6 +164,15 @@ class SchedulesModel extends Observable {
   }
 
   /**
+   * Right now this is only needed when reactivating a zombie category
+   */
+  async ensureCategoryHasSchedule (cat) {
+    if (! cat .schedule)
+      await this._schModel .insert ({category: cat._id, budget: this._budget .getId()});
+    console.log(cat);
+  }
+
+  /**
    *
    */
   async insert (data, pos) {
