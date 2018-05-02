@@ -16,17 +16,21 @@ class ActualsModel extends Observable {
   }
 
   _onModelChange (eventType, tran, update, source) {
-    let updateActuals = (c,m,a) => {
-      c .actuals = (c .actuals || new Map()) .set (m, ((c .actuals && c .actuals .get (m)) || 0) + a);
-      if (m < this._oldsetMonth)
-        this._oldestMonth = m;
+    let updateActuals = (cat, month, deltaAmount, deltaCount) => {
+      if (! cat .actuals)
+        cat .actuals = new Map();
+      let entry = cat .actuals .get (month) || (cat .actuals .set (month, {amount: 0, count: 0}) .get (month));
+      entry .amount += deltaAmount;
+      entry .count  += deltaCount;
+      if (month < this._oldsetMonth)
+        this._oldestMonth = month;
     };
     if (tran .date) {
       let c = this._budget .getCategories() .get (tran .category) || this._nullCat;
       let a = (tran .debit || 0) - (tran .credit || 0);
       let s = eventType == ModelEvent .REMOVE? -1: 1;
       let m = Types .date._yearMonth (tran .date);
-      updateActuals (c, m, a * s);
+      updateActuals (c, m, a * s, s);
     }
     if (eventType == ModelEvent .UPDATE) {
       // remove original amount
@@ -37,7 +41,7 @@ class ActualsModel extends Observable {
         let c = this._budget .getCategories() .get (original .category) || this._nullCat;
         let a = (original .debit || 0) - (original .credit || 0);
         let m = Types .date._yearMonth (original .date);
-        updateActuals (c, m, -a);
+        updateActuals (c, m, -a, -1);
       }
     }
     this._notifyObservers (eventType, tran, update, source);
@@ -46,7 +50,7 @@ class ActualsModel extends Observable {
   _add (data) {
     for (let d of data) {
       let cat = this._budget .getCategories() .get (d .category) || this._nullCat;
-      cat .actuals = (cat .actuals || new Map()) .set (d .month, d .amount);
+      cat .actuals = (cat .actuals || new Map()) .set (d .month, {amount: d .amount, count: d .count});
     }
   }
 
@@ -111,11 +115,11 @@ class ActualsModel extends Observable {
     en = en && Types .date._yearMonth (en < Types .date .monthStart (en)? Types .date .addMonthStart (en, -1): en);
     let amount;
     if (st && st == en)
-      amount = ((cat .actuals && cat .actuals .get (st)) || 0);
+      amount = ((cat .actuals && (cat .actuals .get (st) || {}) .amount) || 0);
     else
       amount = ((cat .actuals && Array .from (cat .actuals .entries())) || [])
         .filter (a     => {return (!st || a[0] >= st) && (!en || a[0] <= en)})
-        .reduce ((s,a) => {return s + a[1]}, 0);
+        .reduce ((s,a) => {return s + a[1] .amount}, 0);
     return amount - skipAmount;
   }
 
@@ -141,7 +145,12 @@ class ActualsModel extends Observable {
   }
 
   _getActiveMonths (cat) {
-    return cat .actuals? Array .from (cat .actuals .keys()) .sort() .map (my => {return Types .date._fromYearMonth (my)}): [];
+    return cat .actuals
+      ? Array .from (cat .actuals .entries())
+        .filter (e     => {return e[1] .count > 0})
+        .sort   ((a,b) => {return a[0] < b[0]? -1: a[0] == b[0]? 0: 1})
+        .map    (e     => {return Types .date._fromYearMonth (e[0])})
+      : [];
   }
 
   getActivePeriod (cats) {
