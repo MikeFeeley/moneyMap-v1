@@ -605,7 +605,7 @@ class NavigateView extends Observable  {
             label: (t, d) => {
               let gross = d .datasets [t .datasetIndex] .gross [t .index];
               return d .datasets [t .datasetIndex] .label + ': ' +Types .moneyDZ .toString (t .yLabel)
-                + (gross? ' --- Before Tax: ' + Types .moneyDZ .toString (gross): '');
+                + (gross && t .yLabel != gross? ' --- Before Tax: ' + Types .moneyDZ .toString (gross): '');
             }
           }
         },
