@@ -149,7 +149,7 @@ var ui = {
     static delete (entry) {
       var index = (ui._modalStack || []) .indexOf (entry);
       if (index >= 0)
-        ui._modalStack .splice (index, 1);
+        ui._modalStack .splice (index, ui._modalStack .length - index);
     }
 
     static clear() {
