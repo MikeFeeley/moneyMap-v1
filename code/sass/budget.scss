@@ -679,7 +679,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
         display: inline-block;
         width:   33%;
       }
-      > ._popup:not(._budgetMonthsGraph):not(._activityMonthsGraph) {
+      > ._popup:not(._budgetMonthsGraph):not(._activityMonthsGraph):not(._budgetHistoryGraph) {
         @include popup-content-absolute-depricated();
         width:  200px;
         height: 200px;
