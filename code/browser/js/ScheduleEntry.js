@@ -8,13 +8,16 @@ class ScheduleEntry extends List {
     this._categories = this._model .getCategories();
     this._accounts   = accounts;
     this._actuals    = this._variance .getActuals();
+    this._actualsObserver = this._actuals .addObserver (this, this._onActualsModelChange);
   }
 
   delete() {
+    this._actuals .deleteObserver (this._actualsObserver);
     this._view .delete();
   }
 
   async _onModelChange (eventType, doc, arg, source) {
+    console.log('omc', eventType, doc, arg, source);
     if (this._categories) {
       var calcDepth = cat => {return cat? calcDepth (cat .parent) + 1: 0}
       var parentChange = arg && (typeof arg .parent != 'undefined' || typeof arg .category != 'undefined');
@@ -82,6 +85,11 @@ class ScheduleEntry extends List {
         this._options .setFocus = false;
       }
     }
+  }
+
+  async _onActualsModelChange (eventType, doc, arg, source) {
+    for (let cid of [doc .category, arg._original_category] .filter (x => {return x}))
+      await this._updateZombieFields (cid);
   }
 
   _setVisibility (id, update) {
