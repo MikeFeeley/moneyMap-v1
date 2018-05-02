@@ -169,7 +169,6 @@ class SchedulesModel extends Observable {
   async ensureCategoryHasSchedule (cat) {
     if (! cat .schedule)
       await this._schModel .insert ({category: cat._id, budget: this._budget .getId()});
-    console.log(cat);
   }
 
   /**
