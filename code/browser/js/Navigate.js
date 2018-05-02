@@ -417,7 +417,7 @@ class Navigate {
   /***** GET BUDGET / ACTUAL INFORMATION *****/
 
   async _getPayees (cat, altDates) {
-    const payeeTruncate = /\d|#|\(/;
+    const payeeTruncate = /\s\d|#|\(/;
     let   st = this._budget .getStartDate();
     let   en = this._budget .getEndDate();
     if (altDates) {
