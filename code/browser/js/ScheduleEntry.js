@@ -17,7 +17,6 @@ class ScheduleEntry extends List {
   }
 
   async _onModelChange (eventType, doc, arg, source) {
-    console.log('omc', eventType, doc, arg, source);
     if (this._categories) {
       var calcDepth = cat => {return cat? calcDepth (cat .parent) + 1: 0}
       var parentChange = arg && (typeof arg .parent != 'undefined' || typeof arg .category != 'undefined');

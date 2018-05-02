@@ -9,12 +9,6 @@
 BUGS\
 \
 EASY\
-	- plan history view does not update when actuals change to remove historic transactions\
-	- after recategorizing all transaction away from category; hasTransactions is still true (until refresh)\
-		- need to add transaction count to actuals so that entry can be deleted when count goes to zero\
-		- what happens at server?\
-		- after changing category of historic transaction so that category no longer has transactions; still can't delete category until reload\
-	- budgeting suite taxes throws all off the progress stuff off (negative amount for suite taxes?)\
 	- when making a rule not match current transaction, the icon for open rule changes to '+'\
 	- in graph tooltip, don't show before-tax amount if it is the same as the after tax amount (downsize)\
 	- reactivating an old budget doesn't add a blank schedule\
@@ -24,6 +18,7 @@ EASY\
 	- formatting - monthly graph from yearly doughnut, clicking on yearly calendar\
 \
 HARDER\
+	- budgeting suite taxes throws all off the progress stuff off (negative amount for suite taxes?)\
 	- negative amounts in progress bars \'85 smaller trips (april 4)\
 		- over amount in one sub category and unspent amount in another (plus there is an other)\
 	- add copyBudget\
