@@ -199,8 +199,8 @@ class ViewCategoryEdit extends ViewTextbox {
       if (this._value === undefined)
         this._value = '';
       this._view._categoryPicker .show (this._value, date, debit, credit, this._html, id => {
-        $(this._html .find ('input') [0]) .focus();
-        $(this._html .find ('input') [0]) .val(' '); // XXX workaround to clear placeholder in Safari 10.1.1
+        if (document .activeElement == document .body)
+          $(this._html .find ('input') [0]) .focus();
         this .set (id)
       }, this._getIsPriorYear (this._html));
       this._isOpen = true;
