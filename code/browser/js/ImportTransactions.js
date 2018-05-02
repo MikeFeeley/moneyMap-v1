@@ -161,30 +161,17 @@ class TransactionAndRulesTable extends TransactionTable {
     this._hasTitle         = title != null;
     this._importRulesModel = parent ._importRulesModel;
     this._openRule;
-    this._importRulesModelObserver = this._importRulesModel .addObserver (this, this._onRulesModelChange);
     this._accounts = parent._accounts;
     this._variance = parent._variance;
     this._parent   = parent;
   }
 
   delete() {
-    this._importRulesModel .deleteObserver (this._importRulesModelObserver);
     super .delete();
-  }
-
-  _onRulesModelChange (event, doc, arg, source) {
-    this .updateRules();
   }
 
   _updateModelData (doc) {
     doc .rules = this._importRulesModel .getMatchingRules (doc) .length > 0;
-  }
-
-  updateRules() {
-    for (let tran of this._view .getTuples()) {
-      this._updateModelData (tran);
-      this._view .updateField (tran._id, 'rules', tran .rules);
-    }
   }
 
   _onViewChange (eventType, arg) {
