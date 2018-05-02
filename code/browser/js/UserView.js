@@ -334,6 +334,11 @@ class UserView extends View {
         .append ($('<span>',  {text: 'Create empty budget'}))
       ))
       .append ($('<div>') .append ($('<label>')
+        .append ($('<input>', {type: 'radio', name: 'how', value: 'copy', prop: {checked: true}}))
+        .append ($('<span>',  {text: 'Copy existing budget'}))
+        .append ($('<select>'))
+      ))
+      .append ($('<div>') .append ($('<label>')
         .append ($('<input>', {type: 'radio', name: 'how', value: 'rollover', prop: {checked: false}}))
         .append ($('<span>',  {text: 'Rollover to next year from budget'}))
         .append ($('<select>'))
@@ -345,6 +350,9 @@ class UserView extends View {
             switch (content .find ('input[name="how"]:checked') .val()) {
               case 'empty':
                 this._notifyObservers (UserViewEvent .BUDGET_EMPTY);
+                break;
+              case 'copy':
+                this._notifyObservers (UserViewEvent .BUDGET_COPY, {from: content .find ('select') .val()})
                 break;
               case 'rollover':
                 this._notifyObservers (UserViewEvent .BUDGET_ROLLOVER, {from: content .find ('select') .val()})
@@ -381,6 +389,7 @@ var UserViewEvent = {
   CONFIG_EMPTY: 4,
   CONFIG_COPY: 5,
   BUDGET_EMPTY: 6,
-  BUDGET_ROLLOVER: 7,
-  DELETE_CONFIRMED: 8
+  BUDGET_COPY: 7,
+  BUDGET_ROLLOVER: 8,
+  DELETE_CONFIRMED: 9
 }

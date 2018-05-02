@@ -272,6 +272,14 @@ class Model extends Observable {
     return _Collection .copyDatabase (from, to);
   }
 
+  static async copyBudget (from) {
+    return _Collection .copyBudget (from);
+  }
+
+  static async removeBudget (id) {
+    return _Collection .removeBudget (id);
+  }
+
   static async login (username, password) {
     return _Collection .login (username, password);
   }
@@ -551,6 +559,14 @@ class _Collection extends Observable {
 
   static async copyDatabase (from, to) {
     return _db .perform (DatabaseOperation .COPY_DATABASE, {from: from, to: to});
+  }
+
+  static async copyBudget (from) {
+    return _db .perform (DatabaseOperation .COPY_BUDGET, {database: _default_database_id, from: from});
+  }
+
+  static async removeBudget (id) {
+    return _db .perform (DatabaseOperation .REMOVE_BUDGET, {database: _default_database_id, id: id});
   }
 
   static async login (username, password) {

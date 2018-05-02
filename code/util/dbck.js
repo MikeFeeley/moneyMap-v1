@@ -29,7 +29,8 @@ async function noScheduleCategories() {
           titlePrinted = true;
           console .log ('\nCategories with No Schedule')
         }
-        console.log ('  ' + buds .get (bud) .name + ' - ' + getPathname (cat));
+        let b = buds .get (bud) || {name: 'No Budget'};
+        console.log ('  ' + b .name + ' - ' + getPathname (cat));
         if (repair) {
           await db .collection ('schedules') .insertOne ({
             _id:      new ObjectID() .toString(),

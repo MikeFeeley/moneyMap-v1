@@ -97,6 +97,113 @@ async function copyDatabase (req, res, next) {
   }
 }
 
+async function copyBudget (req, res, next) {
+  try {
+    let db = await req .dbPromise;
+    let budget = await db .collection ('budgets') .findOne ({_id: req .body .from});
+    if (budget) {
+      budget .name = 'Copy of ' + budget .name;
+      budget._id   = new ObjectID() .toString();
+      let ins = await db .collection ('budgets') .insert (budget);
+      if (ins .result .ok) {
+        budget = ins .ops [0];
+        await db .collection ('categories') .updateMany ({budgets: req .body .from}, {$addToSet: {budgets: budget._id}});
+        let scheds = await db .collection ('schedules') .find ({budget: req .body .from});
+        let promises = []
+        while (await scheds .hasNext()) {
+          sched = await scheds .next();
+          sched._id     = new ObjectID() .toString();
+          sched .budget = budget._id;
+          promises .push (db .collection ('schedules') .insert (sched));
+        }
+        await Promise .all (promises);
+        res.json(budget);
+      }
+    }
+  } catch (e) {
+    console .log ('copyBudget: ', e);
+    next (e);
+  }
+}
+
+async function removeBudget (req, res, next) {
+  try {
+    let db = await req .dbPromise;
+    await db .collection ('budgets') .remove ({_id: req .body .id});
+    let noBudgetCats = (await db .collection ('categories') .find ({budgets: [req .body .id]}) .toArray()) .map (c => {return c._id});
+    await db .collection ('categories') .updateMany ({budgets: req .body .id}, {$pull: {budgets: req .body .id}});
+    await db .collection ('schedules') .remove ({budget: req .body .id});
+    let inUse = (await db .collection ('transactions') .find ({category: {$in: noBudgetCats}}) .toArray())
+      .reduce ((s,t) => {s .add (t .category); return s}, new Set());
+    let cids = Array .from (inUse .keys());
+    console.log('a',cids);
+    while (cids .length) {
+      cids = (await db .collection ('categories') .find ({_id: {$in: cids}}) .toArray())
+        .map    (cat => {return cat .parent})
+        .filter (cid => {return cid});
+      console.log('b',cids);
+      cids .forEach (cid => {inUse .add (cid)})
+    }
+    let deleteCats = noBudgetCats .filter (c => {return ! inUse .has (c)});
+    await db .collection ('categories') .remove ({_id: {$in: deleteCats}});
+    res.json({okay: true});
+  } catch (e) {
+    console .log ('removeBudget: ', e);
+    next (e);
+  }
+}
+
+
+// async function old (req,res,next) {
+//   let am = new Model            ('accounts',     this .getDatabaseName());
+//   let cm = new Model            ('categories',   this .getDatabaseName());
+//   let sm = new Model            ('schedules',    this .getDatabaseName());
+//   let tm = new TransactionModel (this .getDatabaseName());
+//   // remove budget from categories
+//   let catsInBudget = await cm .find ({budgets: id});
+//   if (catsInBudget .length)
+//     await cm .updateList (catsInBudget .map (c => {
+//         c .budgets .splice (c .budgets .indexOf (id), 1);
+//         return {
+//           id:      c._id,
+//           update: {budgets: c .budgets}
+//         }
+//       })
+//     );
+//   // remove schedules
+//   let schedulesInBudget = await sm .find ({budget: id});
+//   if (schedulesInBudget .length)
+//     await sm .removeList (schedulesInBudget .map (s => {return s._id}));
+//   // get categories that are candidates for removal
+//   let removeCandidates = (await cm .find ({budgets: []})) .map (c => {return c._id});
+//   // find which these are used by a transaction
+//   let keep = (await tm .find ({category: {$in: removeCandidates}}))
+//   .reduce ((s,t) => {return s .add (t .category)}, new Set());
+//   // find their ancestors, which must also be kept
+//   let catParent = (await cm .find()) .reduce ((m,c) => {if (c .parent) m .set (c._id, c .parent); return m}, new Map());
+//   let addAncestors = (cid) => {
+//     let pid = catParent .get (cid);
+//     if (pid) {
+//       keep .add    (pid);
+//       addAncestors (pid);
+//     }
+//   }
+//   Array .from (keep .values()) .forEach (cid => {addAncestors (cid)});
+//   // find are used by an account
+//   (await am .find ({$or: [{category: {$in: removeCandidates}}, {disCategory: {$in: removeCandidates}}]}))
+//   .forEach (a => {if (a .category) keep .add (a .catetory); if (a .disCategory) keep .add (a .disCategory)})
+//   // remove all candidate categories that must not be kept
+//   let removeCats = removeCandidates .filter (c => {return ! keep .has (c)});
+//   if (removeCats .length)
+//     await cm .removeList (removeCats);
+//   await this._budgetModel .remove (id);
+//   am .delete();
+//   cm .delete();
+//   sm .delete();
+//   tm .delete();
+//
+// }
+
 
 router.post ('/login', function(req, res, next) {
   async (login) (req, res, next);
@@ -113,5 +220,13 @@ router.post ('/updateUser', function(req, res, next) {
 router.post('/copyDatabase', function(req, res, next) {
   (async () => copyDatabase (req, res, next))();
 });
+
+router.post('/copyBudget', function (req, res, next) {
+  (async () => copyBudget (req, res, next))();
+});
+
+router.post('/removeBudget', function (req, res, next) {
+  (async () => removeBudget (req, res, next))();
+})
 
 module.exports = router;

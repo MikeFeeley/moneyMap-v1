@@ -147,7 +147,7 @@ app.use(function (req, res, next) {
         error: err
       });
     } else if (req .body) {
-      if (req .url .startsWith ('/admin/'))
+      if (req .url .startsWith ('/admin/') && ! ['/admin/copyBudget', '/admin/removeBudget'] .includes (req.url))
         database = 'admin';
       req .dbPromise = getDB (database);
       req._getDB     = getDB;

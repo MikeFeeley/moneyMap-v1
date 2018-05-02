@@ -181,6 +181,10 @@ class User extends Observable {
         await this._createEmptyBudget (true);
         break;
 
+      case UserViewEvent .BUDGET_COPY:
+        await this._createBudgetCopy (arg .from);
+        break;
+
       case UserViewEvent .BUDGET_ROLLOVER:
         await this._createRolloverBudget (arg .from);
         break;
@@ -652,9 +656,21 @@ class User extends Observable {
   }
 
   /**
+   * Add a new budget that is copied from specified budget
+   */
+  async _createBudgetCopy (from) {
+    let newBudget = await Model .copyBudget (from);
+    this._budgets .push (newBudget);
+    await this._onBudgetModelChange (ModelEvent .INSERT, newBudget);
+    this._selectBudget (newBudget._id);
+    this._notifyChange();
+  }
+
+  /**
    * Add a new budget and related categories and schedules to model by rolling specified budget over to new year
    */
   async _createRolloverBudget (from) {
+    // TODO move to server (later)
     let b = Object .assign ({}, this._budgets .find (b => {return b._id == from}));
     b .start = Types .date .addYear (b .start, 1);
     b .end   = Types .date .addYear (b .end,   1);
@@ -797,53 +813,8 @@ class User extends Observable {
    * Delete specified budget and related categories and schedules from model
    */
   async _deleteBudget (id) {
-    let am = new Model            ('accounts',     this .getDatabaseName());
-    let cm = new Model            ('categories',   this .getDatabaseName());
-    let sm = new Model            ('schedules',    this .getDatabaseName());
-    let tm = new TransactionModel (this .getDatabaseName());
-    // remove budget from categories
-    let catsInBudget = await cm .find ({budgets: id});
-    if (catsInBudget .length)
-      await cm .updateList (catsInBudget .map (c => {
-        c .budgets .splice (c .budgets .indexOf (id), 1);
-        return {
-          id:      c._id,
-          update: {budgets: c .budgets}
-        }
-      })
-    );
-    // remove schedules
-    let schedulesInBudget = await sm .find ({budget: id});
-    if (schedulesInBudget .length)
-      await sm .removeList (schedulesInBudget .map (s => {return s._id}));
-    // get categories that are candidates for removal
-    let removeCandidates = (await cm .find ({budgets: []})) .map (c => {return c._id});
-    // find which these are used by a transaction
-    let keep = (await tm .find ({category: {$in: removeCandidates}}))
-      .reduce ((s,t) => {return s .add (t .category)}, new Set());
-    // find their ancestors, which must also be kept
-    let catParent = (await cm .find()) .reduce ((m,c) => {if (c .parent) m .set (c._id, c .parent); return m}, new Map());
-    let addAncestors = (cid) => {
-      let pid = catParent .get (cid);
-      if (pid) {
-        keep .add    (pid);
-        addAncestors (pid);
-      }
-    }
-    Array .from (keep .values()) .forEach (cid => {addAncestors (cid)});
-    // find are used by an account
-    (await am .find ({$or: [{category: {$in: removeCandidates}}, {disCategory: {$in: removeCandidates}}]}))
-      .forEach (a => {if (a .category) keep .add (a .catetory); if (a .disCategory) keep .add (a .disCategory)})
-    // remove all candidate categories that must not be kept
-    let removeCats = removeCandidates .filter (c => {return ! keep .has (c)});
-    if (removeCats .length)
-      await cm .removeList (removeCats);
-    await this._budgetModel .remove (id);
-    am .delete();
-    cm .delete();
-    sm .delete();
-    tm .delete();
-    this._budgets .splice (this._budgets .findIndex (b => {return b._id ==id}), 1);
+    await Model .removeBudget (id);
+    await this._onBudgetModelChange (ModelEvent .REMOVE, {_id: id});
     this._selectBudget (this._budgets [0] ._id);
     this._view .selectTab (this._getBudgetTab (this._bid));
     this._view .setButtonDisabled (this._getBudgetTabs(), this._budgets .length == 1);

@@ -7,22 +7,21 @@
 
 \f0\fs36 \cf0 ==============\
 BUGS\
-\
-EASY\
-	- formatting - monthly graph from yearly doughnut, clicking on yearly calendar\
-\
-HARDER\
-	- budgeting suite taxes throws all off the progress stuff off (negative amount for suite taxes?)\
-	- negative amounts in progress bars \'85 smaller trips (april 4)\
-		- over amount in one sub category and unspent amount in another (plus there is an other)\
 	- add copyBudget\
+\
+MONTH / YEAR ISSUES\
+\
+ACCOUNT / SCHEDULE\
+	- budgeting suite taxes throws all off the progress stuff off (negative amount for suite taxes?)\
 	- allow transfers to liabilities (e.g., payoff mortgage)\
+\
+DB INTEGRITY\
+	- more info and repair for Transaction integrity issues in dbck\
 	- remove / update don't locate schedules (everything I assume) if _id is ObjectId()\
 		- this might be okay (this only should happen when things are added manually in mongo client)\
 		- but, maybe should at least check for this in dbck\
 		- these are loaded by find; maybe they shouldn't be (causes quite a bit of confusion)\
 			- updates appear to happen locally but are not updated at db; fails silently\
-	- more info and repair for Transaction integrity issues in dbck\
 	\
 \
 USABILITY\

@@ -68,6 +68,8 @@ var DatabaseOperation = {
   SIGNUP:            9,
   UPDATE_USER:       10,
   COPY_DATABASE:     11,
+  COPY_BUDGET:       12,
+  REMOVE_BUDGET:     13
 }
 
 DBAdaptorState = {
