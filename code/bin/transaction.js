@@ -286,10 +286,6 @@ function getYearMonth (date) {
   return Math .floor (date / 100);
 }
 
-async function replaceActual (actuals, month, category, amount) {
-  return actuals .replaceOne ({month: month, category: category},{month: month, category: category, amount: amount},{upsert: true})
-}
-
 async function updateActuals (actuals, transactions, start, end) {
   let rm    = await actuals .deleteMany (start? {$and: [{month: {$gte: start}}, {month: {$lte: end}}]}: {});
   let query = start? {$and: [{date: {$gte: start * 100}}, {date: {$lte: end * 100 + 99}}]}: {};
@@ -299,7 +295,10 @@ async function updateActuals (actuals, transactions, start, end) {
     let tran = await trans .next();
     if (tran .date && (tran .debit || tran .credit)) {
       let key = String (getYearMonth (tran .date)) + '$' + (String (tran .category) || '@NULL@');
-      acum .set (key, (acum .get (key) || 0) + tran .debit - tran .credit);
+      let val = acum .get (key) || {amount: 0, count: 0};
+      val .amount += tran .debit - tran .credit;
+      val .count  += 1;
+      acum .set (key, val);
     }
   }
   await rm;
@@ -308,10 +307,7 @@ async function updateActuals (actuals, transactions, start, end) {
     e[0] = e[0] .split ('$');
     if (e[0] == '@NULL@')
       e[0] = null;
-    let m = Number (e[0][0]);
-    let c = e[0][1];
-    let a = e[1];
-    up .push (actuals .insert ({month: m, category: c, amount: a}));
+    up .push (actuals .insert ({month: Number (e[0][0]), category: e[0][1], amount: e[1] .amount, count: e[1] .count}));
   }
   up .forEach (async u => {await u});
 }
