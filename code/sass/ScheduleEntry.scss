@@ -301,6 +301,10 @@ $indent:       24px;
     }
     &._field_total {
       float: right;
+      &._bold {
+        font-weight: 800;
+        color: #aaa;
+      }
     }
     &._field_scheduleLine, &._field_unallocated {
       display: none;

@@ -346,7 +346,7 @@ class ScheduleEntry extends List {
         }
         if (this._options .categoriesOnlyWithParent && ! data .total) {
           if ((cat .children && cat .children .length) || this._categories .getType (cat) != ScheduleType .NONE)
-            data .total = '. . .';
+            data .total = '...';
         }
       }
       if (! this._options .selectCategory || this._options .selectCategory (data)) {

@@ -78,8 +78,8 @@ class BudgetProgressHUD {
     this._addCompare();
     this._addMonth();
     this._addYear();
-    this._addSubCategories();
     this._addSchedule();
+    this._addSubCategories();
     this .update (id);
   }
 

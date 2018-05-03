@@ -150,6 +150,14 @@ class ScheduleEntryTotal extends ViewLabel {
         return false;
       })
   }
+  set (value) {
+    if (value == '...') {
+      this._html .addClass ('_bold');
+    } else {
+      this._html .removeClass ('_bold');
+    }
+    super .set (value);
+  }
 }
 
 class ScheduleEntryViewUnallocated extends ViewLabel {
