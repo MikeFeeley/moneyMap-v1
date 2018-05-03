@@ -344,6 +344,10 @@ class ScheduleEntry extends List {
           data .total          = - data .total;
           data .unallocated    = - data .unallocated;
         }
+        if (this._options .categoriesOnlyWithParent && ! data .total) {
+          if ((cat .children && cat .children .length) || this._categories .getType (cat) != ScheduleType .NONE)
+            data .total = '. . .';
+        }
       }
       if (! this._options .selectCategory || this._options .selectCategory (data)) {
         if (this._options .includeZombies)

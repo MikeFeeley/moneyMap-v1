@@ -1,7 +1,7 @@
 class ScheduleEntryView extends ListView {
 
   constructor (name, options, accounts, variance) {
-    if (options && options .showVariance)
+    if (options && options .showVariance && ! options .categoriesOnlyWithParent)
       var hud = new BudgetProgressHUD (accounts, variance, {noScheduleEntry: true, isNotModal: true});
     var startFormat = new ViewFormat (
       value => {return Types .dateMYorYear .toString   (value)},
@@ -13,6 +13,11 @@ class ScheduleEntryView extends ListView {
       view  => {return Types .dateEndMY .fromString (view, variance .getBudget() .getStartDate())},
       value => {return ''}
     );
+    let totalFormat = new ViewFormat (
+      value => {return isNaN(value)? value: Types .moneyDC .toString   (value)},
+      view  => {return Types .moneyDC .fromString (view)},
+      value => {return ''}
+    )
     let categories = variance .getBudget() .getCategories();
     var fields = [
       new ScheduleEntryName            ('name',            new ScheduleNameFormat (accounts, categories), '', '', 'Name', categories),
@@ -20,7 +25,7 @@ class ScheduleEntryView extends ListView {
       new ScheduleEntryZombie          ('zombie',          ViewFormats ('string')),
       new ScheduleEntryZombieActive    ('zombieActive',    ViewFormats ('string'), categories, variance .getActuals()),
       new ViewEmpty                    ('scheduleLine',    ViewFormats ('string')),
-      new ScheduleEntryTotal           ('total',           ViewFormats ('moneyDC'), hud),
+      new ScheduleEntryTotal           ('total',           totalFormat, hud),
       new ScheduleEntryViewUnallocated ('unallocated',     ViewFormats ('moneyDC')),
       new ViewScalableTextbox          ('start',           startFormat,                  '', '', 'Start'),
       new ViewScalableTextbox          ('end',             endFormat,                    '', '', 'End'),

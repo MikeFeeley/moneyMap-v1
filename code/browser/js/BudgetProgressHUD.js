@@ -180,6 +180,7 @@ class BudgetProgressHUD {
           endDate:                              Types .date .monthEnd   (this._date),
           noInsertInside:                       true,
           noRemoveCategoryWithNonBlankSchedule: true,
+          showVariance:                         true,
           categoriesOnlyWithParent:             [this._id],
           onFieldClick:                         (id, name, html, pos) => {
             if (name != 'name' && id) {
