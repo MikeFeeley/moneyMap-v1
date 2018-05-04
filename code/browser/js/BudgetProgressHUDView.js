@@ -124,16 +124,16 @@ class BudgetProgressHUDView extends View {
             onClick: (e) => {
               let element = chart .getElementAtEvent (e);
               if (element .length > 0) {
-                if (element [0]._datasetIndex == 0) {
+                if (element [0]._datasetIndex != 2) {
                   this._notifyObservers (BudgetProgressHUDViewEvent .GRAPH_CLICK, {
                     name:     'all',
-                    lastYear: true,
+                    lastYear: element [0]._datasetIndex == 0,
                     html:     this._html,
                     position: {top: 50, left: 50},
                     altClick: e .webkitForce > 1 || e .altKey,
                   })
                 }
-                else if (element [0]._datasetIndex == 1)
+                else if (element [0]._datasetIndex == 2)
                     this._notifyObservers (BudgetProgressHUDViewEvent .BODY_CLICK, {
                     html:     this._html,
                     position: {top: 50, left: 50},
