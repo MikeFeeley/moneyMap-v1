@@ -164,12 +164,14 @@ async function checkTransactions() {
   let cats    = (await db .collection ('categories') .find() .toArray()) .reduce ((map, cat) => {return map .set (cat._id, cat)}, new Map());
   let acts    = (await db .collection ('accounts')   .find() .toArray()) .reduce ((set, act) => {return set .add (act._id)}, new Set());
   let printed, catPrinted;
-  let print = s => {
+  let print = (s,t) => {
     if (! printed) {
       console.log ('\nTransaction integrity issues');
       printed = true;
     }
-    console .log ('  ' + s);
+    if (t)
+      t = 'd=' + t.date + ' p=' + t.payee + ' d=' + t.debit + ' c=' + t.credit + ' a=' + t.account + ' c=' + t.category + ' d=' + t.description;
+    console .log ('  ' + s, t || '');
   }
   let path = c => {
     if (c)
@@ -203,9 +205,21 @@ async function checkTransactions() {
   let trans = await db .collection ('transactions') .find();
   while (await trans .hasNext()) {
     let tran = await trans .next();
-    let cat  = cats .get (tran .category);
+    let cat   = cats .get (tran .category);
+    let actOk = acts .has (tran .account);
+    let amt   = (tran .debit || 0) + (tran .credit || 0);
+    let delOk =
+      (! actOk && ! tran .date) ||
+      (! cat   && ! actOk)      ||
+      (! tran .date && amt == 0 && (! cat || !actOk));
+    if (delOk) {
+      print ('Deletable transaction', tran);
+      if (repair)
+        await db .collection ('transactions') .removeOne ({_id: tran._id});
+      continue;
+    }
     if (! cat)
-      print ('Unknown category ' + tran .category + ' (transaction ' + tran .date + ' ' + tran._id + ')');
+      print ('Unknown category', tran);
     else {
       for (let budget of budgets)
         if (tran .date && (tran .debit != 0 || tran .credit != 0) && tran .date >= budget .start && tran .date <= budget .end)
@@ -213,13 +227,28 @@ async function checkTransactions() {
             budget .unaccounted = (budget .unaccounted || new Set()) .add (cat._id)
     }
     if (! acts .has (tran .account))
-      print ('Unknown account ' + tran .account   + ' (transaction ' + tran .date + ' ' + tran._id + ')');
+      print ('Unknown account', tran);
   }
   for (let budget of budgets) {
     for (let cid of budget .unaccounted || []) {
       printCat (budget .name, cid);
       if (repair)
         await addBudgetToPath (budget._id, cid);
+    }
+  }
+}
+
+async function checkForObjectIds() {
+  for (let collectionName of Array .from (await db.collections()) .map (c => {return c.s.name})) {
+    let docs = await db .collection (collectionName) .find ({_id: {$type: 'objectId'}}) .toArray();
+    if (docs .length)
+      console .log ('ObjectIDs totally ' + docs .length + ' found in ' + collectionName);
+    for (let doc of docs) {
+      if (repair) {
+        await db .collection (collectionName) .removeOne ({_id: doc._id});
+        doc._id = doc._id .toString();
+        await db .collection (collectionName) .insert (doc);
+      }
     }
   }
 }
@@ -264,6 +293,7 @@ async function main() {
               await homonymCategories();
               await noScheduleCategories();
               await checkTransactions();
+              await checkForObjectIds();
               if (repair)
                 await db .collection ('actualsMeta') .deleteOne ({type: 'isValid'});
             }

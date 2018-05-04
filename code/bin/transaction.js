@@ -307,7 +307,7 @@ async function updateActuals (actuals, transactions, start, end) {
     e[0] = e[0] .split ('$');
     if (e[0] == '@NULL@')
       e[0] = null;
-    up .push (actuals .insert ({month: Number (e[0][0]), category: e[0][1], amount: e[1] .amount, count: e[1] .count}));
+    up .push (actuals .insert ({_id: new ObjectID() .toString(), month: Number (e[0][0]), category: e[0][1], amount: e[1] .amount, count: e[1] .count}));
   }
   up .forEach (async u => {await u});
 }
@@ -331,7 +331,7 @@ async function getActuals (req, res, next) {
         await updateActuals (actuals, transactions, ble .start, ble .end);
     } else {
       await updateActuals (actuals, transactions);
-      await actualsMeta .insert ({type: 'isValid'});
+      await actualsMeta .insert ({_id: new ObjectID() .toString(), type: 'isValid'});
     }
     res .json (await actuals .find (req .body .query || {}) .toArray());
     (blacklistsCache .get (db .databaseName) || blacklistsCache .set (db .databaseName, new Set()) .get (db .databaseName)) .clear();
