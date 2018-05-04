@@ -334,7 +334,8 @@ class ScheduleEntry extends List {
     skip |= this._options .categoriesOnly && type != 'categoryLine';
     if (! skip) {
       if (type == 'categoryLine' && this._options .showVariance) {
-        var amt               = this._model .getAmount (cat, this._options .startDate, this._options .endDate);
+        var amt = this._model .getAmount (cat, this._options .startDate, this._options .endDate);
+        amt .amount = this._variance .getAmount(cat._id, this._options .endDate || this._budget .getEndDate()) .available;
         var sign              = this._model .isCredit (cat)? -1: 1;
         data .total           = amt .amount;
         data .unallocated     = this._categories .getType (cat) == ScheduleType .YEAR && (amt .year && amt .year .allocated)
