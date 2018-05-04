@@ -865,7 +865,8 @@ class NavigateView extends Observable  {
       datasets = [{
         data:                 data .cats .map (c => {return Math .abs (c .amount)}),
         backgroundColor:      backgroundColors,
-        hoverBackgroundColor: hoverBackgroundColors
+        hoverBackgroundColor: hoverBackgroundColors,
+        colorIndexes:         colorIndexes
       }];
       config .data .labels   = labels;
       config .data .datasets = datasets;
@@ -877,6 +878,16 @@ class NavigateView extends Observable  {
       ]
     }
 
+    this._resetColors();
+    let colorIndexes = data .cats .map (c => {
+      if (c .amount != 0 && ! c .blackout) {
+        this._getColor (1, true);
+        let ci = this._colorIndex;
+        if (c .amount != 0)
+          this._nextColor (true);
+        return ci;
+      }
+    });
     this._resetColors();
     var backgroundColors = data .cats .map (c => {
       if (c .amount != 0 && ! c .blackout) {
@@ -891,7 +902,7 @@ class NavigateView extends Observable  {
     var hoverBackgroundColors = data .cats .map (c => {
       if (c .amount != 0 && ! c .blackout) {
         var c = this._getColor (c .isSecondary? 0.6: 0.9, true);
-          this._nextColor (true);
+        this._nextColor (true);
       } else
         c = 'rgba(128,128,128,0.1)';
       return c;
@@ -926,15 +937,17 @@ class NavigateView extends Observable  {
             direction = position .left > cWidth / 2? -1: 1;
           position .left += 80 * direction + (aWidth - pWidth) / 2;
           position .top  += 40;
+          let element = chart .getElementAtEvent (e);
           if (index != null)
             this._notifyObservers (NavigateViewEvent .BUDGET_CHART_CLICK, {
-              name:      name,
-              id:        data .cats [index] .id,
-              position:  position,
-              html:      container .closest ('div:not(._popup)'),
-              direction: direction,
-              altClick:  e .webkitForce > 1 || e .altKey,
-              view:      this
+              name:       name,
+              id:         data .cats [index] .id,
+              colorIndex: datasets [0] .colorIndexes [element [0]._index],
+              position:   position,
+              html:       container .closest ('div:not(._popup)'),
+              direction:  direction,
+              altClick:   e .webkitForce > 1 || e .altKey,
+              view:       this
             });
           e .stopPropagation();
           return false;

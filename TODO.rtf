@@ -14,35 +14,28 @@ ACCOUNT / SCHEDULE\
 	- budgeting suite taxes throws all off the progress stuff off (negative amount for suite taxes?)\
 	- allow transfers to liabilities (e.g., payoff mortgage)\
 \
-DB INTEGRITY\
-	- more info and repair for Transaction integrity issues in dbck\
-	- remove / update don't locate schedules (everything I assume) if _id is ObjectId()\
-		- this might be okay (this only should happen when things are added manually in mongo client)\
-		- but, maybe should at least check for this in dbck\
-		- these are loaded by find; maybe they shouldn't be (causes quite a bit of confusion)\
-			- updates appear to happen locally but are not updated at db; fails silently\
-\
-BudgetHUD Update\
+CURRENT\
+	- actual yearly should show payee breakdown on drill\
 	- variance amount to right\
 		- isn't really variance\
 		- should show unspent amounts from prior periods?\
-	\
-\
-USABILITY\
+	- add total actual to hud "Compare to Last Year" and change name to something like "Total Amount"\
+		- useful, at least, for categories with both yearly and monthly\
+		- also, maybe, useful for monthly categories because it show what's coming\
+		- redundant for yearly categories (except for last-year comparison)\
 	- consistent icons and drilling\
 		- check transaction drilling\
 		- add icon for transaction drilling\
 		- add hover tool tips (esp for alt click)\
+	\
+\
+USABILITY\
 	- clicking in date field, show calendar\
 	- discretionary spending planner\
 		- pick which categories to include and set a total amount available\
 		- sliders for each category\
 		- show affect on savings and on the target total amount\
 		- click a button and this becomes the plan for (a) rest of this year, (b) next year, (c) year X\
-	- add total actual to hud "Compare to Last Year" and change name to something like "Total Amount"\
-		- useful, at least, for categories with both yearly and monthly\
-		- also, maybe, useful for monthly categories because it show what's coming\
-		- redundant for yearly categories (except for last-year comparison)\
 	- maybe add a third category to progress view: "Monthly and Yearly"?\
 		- problem is that categories that have both you don't really get to see the overall picture easily (e.g., skiing)\
 	- single tax rate table\
@@ -66,7 +59,6 @@ USABILITY\
 				- this sort of like INBOX processing\
 					- maybe just show the transactions in the parent category plus transactions moved to subcategories this round\
 						- maybe click to show all transactions in sub category\
-	- actual yearly should show payee breakdown on drill\
 	- tension between yearly and monthly\
 		- different types of budgets\
 			(A) ongoing with specific amounts each month\

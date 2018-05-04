@@ -214,7 +214,7 @@ class Navigate {
             position .right = 200;
           if (arg .id .startsWith ('leaf_'))
             arg .id = arg .id .split ('_') [1];
-          await this._addMonthsGraph (name, arg .view, [arg .id], true, position, html);
+          await this._addMonthsGraph (name, arg .view, [arg .id], true, position, html, undefined, undefined, undefined, undefined, arg .colorIndex);
         }
       } else
         await this._addYearCategoriesGraph (arg .name, [arg .id], null, arg .view, true, arg .position, arg .direction);
@@ -534,10 +534,11 @@ class Navigate {
         if (id .payee) {
           let realId = id .payee .split ('_') .slice (-1) [0];
           return dates .map (date => {
-            let month = Types .date._yearMonth (date .start);
+            let s = Types .date._yearMonth (date .start);
+            let e = Types .date._yearMonth (date .end);
             return {
               id:    realId,
-              value: (id .amounts .find (a => {return a .month == month}) || {amount: 0}) .amount * (isCredit? -1: 1)
+              value: id .amounts .reduce ((t,a) => {return t + (a .month >= s && a .month <= e? a .amount: 0)}, 0) * (isCredit? -1: 1)
             }
           })
         } else {
