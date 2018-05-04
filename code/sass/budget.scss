@@ -150,6 +150,9 @@ body {
         margin-left: $icon-spacing;
       }
     }
+    > ._compare {
+      margin-bottom: -10px;
+    }
     ._graph_title {
       margin-top: 16px;
       margin-bottom: 4px;

@@ -112,14 +112,14 @@ class BudgetProgressHUD {
 
   _addMonth() {
     this._view .addGroup         ('_month');
-    this._view .addText          ('_month', '_monthTitle', 'Monthly on ' + Types .dateLong .toString (this._date));
+    this._view .addText          ('_month', '_monthTitle', 'Monthly as of ' + Types .dateLong .toString (this._date));
     this._view .addMonthsGraph   ('_month', this._monthsAmount);
     this._view .addProgressGraph ('_month', '_month');
   }
 
   _addCompare() {
     this._view .addGroup        ('_compare');
-    this._view .addCompareGraph ('_compare', 'Compared to Last Year')
+    this._view .addCompareGraph ('_compare')
   }
 
   _updateCompare() {
@@ -247,6 +247,7 @@ class BudgetProgressHUD {
     if (this._id) {
       this._varianceAmount = this._getAmount (this._id);
       let budget           = this._variance .getBudget();
+      let cyS              = budget .getStartDate();
       let cyE              = budget .getEndDate();
       this._monthsAmount   = this._variance .getAmountByMonth (this._id, cyE, true);
       let lyS              = Types .date .addYear (budget .getStartDate(), -1);
@@ -260,9 +261,13 @@ class BudgetProgressHUD {
         .concat ((cat .parent && cat .parent .zombies) || [])
         .filter (c      => {return c .name == cat .name})
         .reduce ((t, c) => {return t + this._variance .getActuals() .getAmountRecursively (c, lyS, lyE)}, 0);
+      let actualAmount = this._variance .getActuals() .getAmountRecursively (cat, cyS, cyE) * creditAdjust;
+      let budgetAmount = budget .getAmount (cat) .amount;
       this._compareAmount  = {
-        lastYear: lastYearAmount                  * creditAdjust,
-        thisYear: budget .getAmount (cat) .amount * creditAdjust
+        lastYear:  lastYearAmount * creditAdjust,
+        actual:    Math .min (actualAmount, budgetAmount),
+        available: Math .max (0, budgetAmount - actualAmount),
+        over:      Math .max (0, actualAmount - budgetAmount)
       }
     }
   }

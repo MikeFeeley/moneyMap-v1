@@ -4,7 +4,7 @@ class BudgetProgressHUDView extends View {
     this._monthsDatasets = [
       ['Last Year', 'priorYear', '#f4f4f4', '#d8d8d8'],
       ['Budget',    'budget',    '#eef6ee', '#acd2ac'],
-      ['Actual',    'actual',    '#e9f2fb', '#93bfec'],
+      ['Activity',  'actual',    '#e9f2fb', '#93bfec'],
     ];
     this._progressGraphs = new Map();
     this._isModal        = isModal;
@@ -78,23 +78,21 @@ class BudgetProgressHUDView extends View {
     this._content .find ('._graph_title.' + name) .text (text);
   }
 
-  addCompareGraph (group, title) {
+  addCompareGraph (group) {
     if (!this._compareGraph) {
       this._compareGraph      = this._content .find ('._group.' + group);
       this._compareGraphGroup = group;
-      this._compareGraphTitle = title;
     }
   }
 
   updateCompareGraph (data) {
-    if (data && data .lastYear > 0 && data .thisYear > 0) {
+    if (data && (data .lastYear > 0 || data .actual > 0 || data .available > 0 || data .over > 0)) {
       if (! this._hasCompareGraph && this._compareGraph && this._compareGraph .length) {
         this._hasCompareGraph = true;
-        this .addText (this._compareGraphGroup, '_monthTitle', this._compareGraphTitle);
-        let canvas = $('<canvas>', {prop: {width: 400, height: 24}, class: '_compareGraph'}) .appendTo (this._compareGraph);
+        let canvas = $('<canvas>', {prop: {width: 400, height: 44}, class: '_compareGraph'}) .appendTo (this._compareGraph);
         let chart  = new Chart (canvas [0] .getContext ('2d'), {
           type: 'horizontalBar',
-          data: {labels: ['']},
+          data: {labels: ['', '','','']},
           options: {
             animation: false,
             elements: {rectangle: {borderWidth: 1}},
@@ -102,16 +100,17 @@ class BudgetProgressHUDView extends View {
             legend: {display: false},
             scales: {
               xAxes: [{
-                display: false, ticks: {min: 0, max: 102}, gridLines: {display: false}
+                stacked: true, display: false, ticks: {min: 0, max: 102}, gridLines: {display: false}
               }],
               yAxes: [{
+                stacked:             true,
                 display:             false,
                 gridLines:           {display: false},
                 barThickness:        10
               }]
             },
             tooltips: {
-              titleSpacing: 0, xPadding: 8, yPadding: 4, backgroundColor: 'rgba(0,0,0,0.6)',
+              titleSpacing: 0, xPadding: 9, yPadding: 4, backgroundColor: 'rgba(0,0,0,0.6)',
               yAlign: 'middle',
               callbacks: {
                 label: (t, d) => {
@@ -146,22 +145,42 @@ class BudgetProgressHUDView extends View {
             }
          }
         });
+        let max = Math .max (data .lastYear, data .actual + data .available + data .over);
+        let pfx = data .lastYear > 0? "This Year's ": "";
+        const lightRed = '#ffeeee';
+        const red = '#ff9999';
         chart .data .datasets = [{
-          label:                "Last Year's Activity",
+          label: "Last Year's Activity",
           backgroundColor:      this._monthsDatasets [0][2],
           hoverBackgroundColor: this._monthsDatasets [0][2],
           borderColor:          this._monthsDatasets [0][3],
           hoverBorderColor:     this._monthsDatasets [0][3],
-          values: [Types .moneyDZ .toString (data .lastYear)],
-          data: [Math .round (data .lastYear * 100.0 / Math .max (data .lastYear, data .thisYear) ,0)]
+          data: [0,Math .round (data .lastYear * 100.0 / max), 0,0],
+          values: ['',Types .moneyDZ .toString (data .lastYear), '','']
         }, {
-          label: "This Year's Budget",
+          label: pfx + "Activity",
+          backgroundColor:      this._monthsDatasets [2][2],
+          hoverBackgroundColor: this._monthsDatasets [2][2],
+          borderColor:          this._monthsDatasets [2][3],
+          hoverBorderColor:     this._monthsDatasets [2][3],
+          data: [0,0, Math .round (data .actual * 100.0 / max),0],
+          values: ['','', Types .moneyDZ .toString (data .actual), '']
+        }, {
+          label: pfx + (data .actual==0? "Budget": "Budget Remaining"),
           backgroundColor:      this._monthsDatasets [1][2],
           hoverBackgroundColor: this._monthsDatasets [1][2],
           borderColor:          this._monthsDatasets [1][3],
           hoverBorderColor:     this._monthsDatasets [1][3],
-          values: [Types .moneyDZ .toString (data .thisYear)],
-          data: [Math .round (data .thisYear * 100.0 / Math .max (data .lastYear, data .thisYear) ,0)]
+          data: [0,0, Math .round (data .available * 100.0 / max)],
+          values: ['','', Types .moneyDZ .toString (data .available),'']
+        }, {
+          label: pfx + 'Over Budget',
+          backgroundColor:      lightRed,
+          hoverBackgroundColor: lightRed,
+          borderColor:          red,
+          hoverBorderColor:     red,
+          data: [0,0, Math .round (data .over * 100.0 / max)],
+          values: ['','', Types .moneyDZ .toString (data .over),'']
         }]
         chart .update();
       }
