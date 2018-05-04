@@ -9,7 +9,7 @@ class TransactionHUD extends TransactionAndRulesTable {
     this._titleLength = this._title[0] .split(' ') .length;
     this._onClose     = onClose;
     this._monthStart  = monthStart || (query .date && query .date .$gte);
-    this._monthEnd    = monthEnd   || (query .date && query .date .$lte);
+    this._monthEnd    = Types .date .monthEnd (this._monthStart);
     this._context     = context;
   }
 
@@ -267,12 +267,9 @@ class TransactionHUD extends TransactionAndRulesTable {
       e .stopPropagation();
       return false;
     })
-    let isMonth = this._query .date && this._query .date .$gte && this._query .date .$lte && Types .date._yearMonth (this._query .date .$gte) == Types .date._yearMonth (this._query .date .$lte)
-    if (isMonth) {
-      $('<div>', {class: '_calendarButton lnr-calendar-full'}) .appendTo (buttons)
-        .on ('click',                e => {this._toggleMonthYear()})
-        .on ('webkitmouseforcedown', e => {this._calendarYear()})
-    }
+    $('<div>', {class: '_calendarButton lnr-calendar-full'}) .appendTo (buttons)
+      .on ('click',                e => {this._toggleMonthYear()})
+      .on ('webkitmouseforcedown', e => {this._calendarYear()})
     if (this._context && this._context .cat) {
       let cat = this._context .cat;
       if (cat .budgets .includes (this._variance .getBudget() .getId()))
