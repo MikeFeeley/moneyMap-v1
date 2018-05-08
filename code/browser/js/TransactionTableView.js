@@ -242,7 +242,8 @@ class ViewCategoryEdit extends ViewTextbox {
         this._open();
       this._view._categoryPicker .filter (super._get())
     });
-    input .closest('tr') .on ('keydown', e  => {
+    let tr = input .closest('tr');
+    (tr .length? tr: input) .on ('keydown', e  => {
       if (e .keyCode == 8 && e .metaKey && this._isOpen)
         this._close();
       switch (e.keyCode) {
