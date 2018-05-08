@@ -96,7 +96,6 @@ class BudgetYearGraph {
       }
     };
     this._setDataset();
-    console.log(this._config.data);
     this._chart = new Chart (canvas .get (0) .getContext ('2d'), this._config);
   }
 
