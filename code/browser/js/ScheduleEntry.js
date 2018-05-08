@@ -87,8 +87,9 @@ class ScheduleEntry extends List {
   }
 
   async _onActualsModelChange (eventType, doc, arg, source) {
-    for (let cid of [doc .category, arg._original_category] .filter (x => {return x}))
-      await this._updateZombieFields (cid);
+    if (arg)
+      for (let cid of [doc .category, arg._original_category] .filter (x => {return x}))
+        await this._updateZombieFields (cid);
   }
 
   _setVisibility (id, update) {
