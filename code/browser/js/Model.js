@@ -380,9 +380,10 @@ class _Collection extends Observable {
     }
 
     let processRemove = async id => {
-      await this._processRemove (this._docs .get (id));
+      let doc = this._docs .get (id);
+      if (doc)
+        await this._processRemove (doc);
     }
-
     if (eventType == DBAdaptorEvent .UPCALL && arg .database == this._database) {
       for (let upcall of arg .upcalls)
         if (upcall .collection == this._name) {
@@ -397,7 +398,7 @@ class _Collection extends Observable {
           if (upcall .insert)
             await this._processInsert (upcall .insert);
 
-          if (upcall .inserList)
+          if (upcall .insertList)
             for (let item of upcall .insertList)
               await this._processInsert (item);
 
@@ -534,11 +535,13 @@ class _Collection extends Observable {
   }
 
   async remove (id, source, isUndo, tid) {
-    var ok  = await _db .perform (DatabaseOperation .REMOVE_ONE, {database: this._database, collection: this._name, id: id});
+    let ok  = await _db .perform (DatabaseOperation .REMOVE_ONE, {database: this._database, collection: this._name, id: id});
     if (ok) {
-      var doc = this._docs .get (id);
-      _Collection._logUndo (this, this .insert, [doc], isUndo, tid);
-      await this._processRemove (doc, source);
+      let doc = this._docs .get (id);
+      if (doc) {
+        _Collection._logUndo (this, this .insert, [doc], isUndo, tid);
+        await this._processRemove (doc, source);
+      }
     }
     return ok;
   }
@@ -549,8 +552,10 @@ class _Collection extends Observable {
     for (let i = 0; i < list .length; i++)
       if (results [i]) {
         var doc = this._docs .get (list [i]);
-        undo .push (doc);
-        await this._processRemove (doc, source);
+        if (doc) {
+          undo .push (doc);
+          await this._processRemove (doc, source);
+        }
       }
       if (undo .length)
         _Collection._logUndo (this, this .insertList, [undo], isUndo, tid);
