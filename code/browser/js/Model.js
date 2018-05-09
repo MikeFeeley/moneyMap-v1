@@ -153,6 +153,7 @@ class Model extends Observable {
     this._options = query && query .$options;
     if (query && query .$options)
       query = Object .keys (query) .reduce ((o,k) => {if (k != '$options') o [k] = query [k]; return o}, {});
+    cacheOnly = cacheOnly || (this._options && this._options .cacheOnly);
     let docs = cacheOnly? this._collection .findFromCache (query): await this._collection .find (query);
     this._query = (this._query && append)? {$or: [this._query, query]}: query;
     if (this._options && this._options .groupBy) {

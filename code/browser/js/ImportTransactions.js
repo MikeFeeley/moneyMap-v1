@@ -382,7 +382,7 @@ class NeedsAttentionTable extends TransactionAndRulesTable {
     let query = {
       date: {$gte: budget .getStartDate(), $lte: budget .getEndDate()},
       $or: [{category: null}, {category: ''}, {description: {$regex: '[?]\s*$'}}],
-      $options: {updateDoesNotRemove: true}
+      $options: {updateDoesNotRemove: true, cacheOnly: true, primeCacheDateRange: true}
     };
     let title = 'Inbox - Attention Required';
     let columns = ['rules', 'date','payee','debit','credit','account','category','description','importTime'];
