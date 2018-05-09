@@ -77,7 +77,8 @@ class Crypto {
         for (let i = 0; i < doc [p] .ct .length; i++)
           ct[i] = doc [p] .ct .charCodeAt (i);
         doc [p] = this._abToS (await crypto .subtle .decrypt (this._getAlgorithm (iv), await this._getKey(), ct));
-      }
+      } else if (doc [p] && typeof (doc [p]) == 'object')
+        await this._decryptDoc (doc [p]);
   }
 
   async encryptRequestData (data) {
