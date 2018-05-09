@@ -279,7 +279,6 @@ class ImportBatchTable extends TransactionAndRulesTable {
   }
 
   _onModelChange (eventType, doc, arg, source) {
-    console.log(doc);
     if (! this._hasNewer && doc .importTime > this._query .importTime) {
       this._hasNewer = true;
       this._updateButtons();

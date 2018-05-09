@@ -86,6 +86,20 @@ class BudgetProgressHUDView extends View {
   }
 
   updateCompareGraph (data) {
+    let updateGraph = () => {
+      let chart = this._compareGraph .find ('._compareGraph') .data ('chart');
+      let max = Math .max (data .lastYear, data .actual + data .available + data .over);
+
+      chart .data .datasets [0] .data   = [0,Math .round (data .lastYear * 100.0 / max), 0,0];
+      chart .data .datasets [0] .values = ['',Types .moneyDZ .toString (data .lastYear), '',''];
+      chart .data .datasets [1] .data   = [0,0, Math .round (data .actual * 100.0 / max),0];
+      chart .data .datasets [1] .values = ['','', Types .moneyDZ .toString (data .actual), ''];
+      chart .data .datasets [2] .data   = [0,0, Math .round (data .available * 100.0 / max)];
+      chart .data .datasets [2] .values = ['','', Types .moneyDZ .toString (data .available),''];
+      chart .data .datasets [3] .data   = [0,0, Math .round (data .over * 100.0 / max)];
+      chart .data .datasets [3] .values = ['','', Types .moneyDZ .toString (data .over),''];
+      chart .update();
+    }
     if (data && (data .lastYear > 0 || data .actual > 0 || data .available > 0 || data .over > 0)) {
       if (! this._hasCompareGraph && this._compareGraph && this._compareGraph .length) {
         this._hasCompareGraph = true;
@@ -94,7 +108,7 @@ class BudgetProgressHUDView extends View {
           type: 'horizontalBar',
           data: {labels: ['', '','','']},
           options: {
-            animation: false,
+            // animation: false,
             elements: {rectangle: {borderWidth: 1}},
             events: ['mousemove', 'mouseout', 'click', 'touchstart', 'touchmove', 'webkitmouseforcedown'],
             legend: {display: false},
@@ -145,7 +159,6 @@ class BudgetProgressHUDView extends View {
             }
          }
         });
-        let max = Math .max (data .lastYear, data .actual + data .available + data .over);
         let pfx = data .lastYear > 0? "This Year's ": "";
         const lightRed = '#ffeeee';
         const red = '#ff9999';
@@ -155,34 +168,29 @@ class BudgetProgressHUDView extends View {
           hoverBackgroundColor: this._monthsDatasets [0][2],
           borderColor:          this._monthsDatasets [0][3],
           hoverBorderColor:     this._monthsDatasets [0][3],
-          data: [0,Math .round (data .lastYear * 100.0 / max), 0,0],
-          values: ['',Types .moneyDZ .toString (data .lastYear), '','']
         }, {
           label: pfx + "Activity",
           backgroundColor:      this._monthsDatasets [2][2],
           hoverBackgroundColor: this._monthsDatasets [2][2],
           borderColor:          this._monthsDatasets [2][3],
           hoverBorderColor:     this._monthsDatasets [2][3],
-          data: [0,0, Math .round (data .actual * 100.0 / max),0],
-          values: ['','', Types .moneyDZ .toString (data .actual), '']
         }, {
           label: pfx + (data .actual==0? "Budget": "Budget Remaining"),
           backgroundColor:      this._monthsDatasets [1][2],
           hoverBackgroundColor: this._monthsDatasets [1][2],
           borderColor:          this._monthsDatasets [1][3],
           hoverBorderColor:     this._monthsDatasets [1][3],
-          data: [0,0, Math .round (data .available * 100.0 / max)],
-          values: ['','', Types .moneyDZ .toString (data .available),'']
         }, {
           label: pfx + 'Over Budget',
           backgroundColor:      lightRed,
           hoverBackgroundColor: lightRed,
           borderColor:          red,
           hoverBorderColor:     red,
-          data: [0,0, Math .round (data .over * 100.0 / max)],
-          values: ['','', Types .moneyDZ .toString (data .over),'']
         }]
-        chart .update();
+        canvas .data ('chart', chart);
+        updateGraph();
+      } else {
+        updateGraph();
       }
     } else {
       if (this._compareGraph)
@@ -203,7 +211,7 @@ class BudgetProgressHUDView extends View {
           type: 'bar',
           data: {labels: data .date .map (d => {return Types .dateM .toString (d .start)})},
           options: {
-            animation: false,
+//            animation: false,
             legend: {display: false},
             elements: {rectangle: {borderWidth: 1, borderSkipped: 'bottom'}},
             events: ['mousemove', 'mouseout', 'click', 'touchstart', 'touchmove', 'webkitmouseforcedown'],
