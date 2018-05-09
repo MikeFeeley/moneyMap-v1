@@ -57,6 +57,10 @@ class ScheduleEntryView extends ListView {
   }
 
   _showFieldTip (field, html, tipText) {
+    if (this._pendingFieldTip) {
+      this._pendingFieldTip();
+      this._pendingFieldTip = undefined;
+    }
     let target = field._html;
     let tip    = $('<div>', {class: '_fieldTip fader'}) .appendTo (html) .append ($('<div>'));
     $('<div>', {text: 'TIP'}) .appendTo (tip .children());
@@ -70,8 +74,17 @@ class ScheduleEntryView extends ListView {
         pos = ui .calcPosition (target, html, {top: 64, left: 0})
       tip .css (pos);
       ui .scrollIntoView (tip);
+      let to, mo;
+      this._pendingFieldTip = () => {
+        if (to)
+          clearTimeout (to);
+        if (mo)
+          ui .ModalStack .delete (mo);
+        tip .remove();
+      };
       tip .addClass ('fader_visible') .one ('transitionend', () => {
-        let to, mo = ui .ModalStack .add (() => {return true}, () => {
+        mo = ui .ModalStack .add (() => {return true}, () => {
+          this._pendingFieldTip = undefined;
           if (mo) {
             mo = null;
             if (to)
@@ -80,6 +93,7 @@ class ScheduleEntryView extends ListView {
           }
         }, true);
         to = setTimeout (() => {
+          this._pendingFieldTip = undefined;
           tip .removeClass ('fader_visible') .one ('transitionend', () => {
             tip .remove();
             if (mo)
