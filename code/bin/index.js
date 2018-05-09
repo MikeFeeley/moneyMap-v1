@@ -7,6 +7,7 @@ router.get('/', function(req, res, next) {
     jss: [
       'ui',
       'util',
+      'Crypto',
       'DBAdaptor',
       'LocalDBAdaptor',
       'RemoteDBAdaptor',
@@ -78,7 +79,7 @@ router.get('/', function(req, res, next) {
       'jquery.mjs.nestedSortable',
       'Chart',
       'papaparse',
-      'nouislider'
+      'nouislider',
     ],
     initScript: "var __DATABASE__ = '" + (req .body .database?  req .body .database: '') + "';"
   });

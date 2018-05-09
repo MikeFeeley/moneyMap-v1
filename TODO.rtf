@@ -7,18 +7,64 @@
 
 \f0\fs36 \cf0 ==============\
 BUGS\
+	BudgetHUD year summary bars not updating on model change\
+	Why no exception handling in RemoteDB.perform?\
+	import transactions upcall does not update inbox view\
+\
+ENCRYPTION\
+	- decrypt\
+	- conversion routine\
+	- what about password change?\
+	- need a local-only password or something like this; stored not in cookie, but local db and never sent to server; for crypto\
+\
+	- per value field (not id fields) allows query etc\
+	- what do you NEED to encrypt?\
+		- text\
+		- amounts\
+		- dates maybe\
+		- account numbers\
+	- issues\
+		- actuals (could keep list of amounts instead of sum)\
+			-  but if we do that, does the actuals cache really buy you anything?\
+				- # of actuals is 1/5 # transactions\
+				- actuals docs are smaller (no payee, description, account and only 1 amount)\
+				- if list amounts then can get rid of count\
+			- check to see average count\
+		- account balance updates\
+			- currently updated at server by transactions, atomically \
+			- if updated at client, then loose atomicity\
+			- but updated at server means you can't encrypt amounts\
+	- idea\
+		- only encrypt text\
+		- issue: is there a way to detect which fields are text without enumerating them?\
+\
+	- what needs to be encrypted?\
+		ALL\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf0 			importRules\
+			taxParameters\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+\cf0 		Only selected fields for\
+			accounts			name, number\
+			transactions		payee, description, imported\
+			categories			name\
+			schedules			notes\
+\
+		\
+		\
+\
+UPCOMING\
+	- csv export / import\
+	- local db option and/or encrypted remote db\
+	- refine starting from nothing, documentation and landing page\
+	- rbc scraping?\
+	- make all-zero-value lines disappear from graphs? (possible and also retain animated update?)\
 \
 MONTH / YEAR ISSUES\
 \
 ACCOUNT / SCHEDULE\
 	- budgeting suite taxes throws all off the progress stuff off (negative amount for suite taxes?)\
 	- allow transfers to liabilities (e.g., payoff mortgage)\
-\
-CURRENT\
-	- consistent icons and drilling\
-		- add icon for transaction drilling\
-		- add hover tool tips (esp for alt click)\
-	\
 \
 USABILITY\
 	- clicking in date field, show calendar\
@@ -72,14 +118,6 @@ USABILITY\
 			- also switching by alt-click might not be intuitive (another icon? or tooltip on icon? or title?)\
 	- share budget with another user\
 		- show username (and maybe ip address?) in click on sharing icon\
-\
-UPCOMING\
-	- improve config clone (and budget) by moving to server (make it fast and reliable so that its easy to experiment)\
-	- csv export / import\
-	- local db option and/or encrypted remote db\
-	- refine starting from nothing, documentation and landing page\
-	- rbc scraping?\
-	- make all-zero-value lines disappear from graphs? (possible and also retain animated update?)\
 \
 TODO\
 	- search\
