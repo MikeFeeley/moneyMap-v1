@@ -383,7 +383,6 @@ class NeedsAttentionTable extends TransactionAndRulesTable {
       $or: [{category: null}, {category: ''}, {description: {$regex: '[?]\s*$'}}],
       $options: {updateDoesNotRemove: true}
     };
-    // XXX updateDoesNotRemove means that updates coming in remotely don't refresh when local rules fix problems
     let title = 'Inbox - Attention Required';
     let columns = ['rules', 'date','payee','debit','credit','account','category','description','importTime'];
     let options = {};

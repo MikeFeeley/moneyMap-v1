@@ -45,11 +45,11 @@ class Model extends Observable {
   /**
    * Returns true iff doc matches most recent find call to model
    */
-  _contains (doc) {
+  _contains (doc, remoteUpdate) {
     if (this._options && this._options .groupBy)
       var docs = this._groups .get (doc [this._options .groupBy])
     for (let d of docs || [doc]) {
-      let containsDoc = (this._options && this._options .updateDoesNotRemove && this._ids .has (d._id)) ||
+      let containsDoc = (! remoteUpdate && this._options && this._options .updateDoesNotRemove && this._ids .has (d._id)) ||
         _query_ismatch (this._query, d) || (this._isObserver && _query_ismatch (this._observerQuery, d));
       if (containsDoc)
         return true;
@@ -101,20 +101,21 @@ class Model extends Observable {
    *    Callbacks are sent to all models.
    */
   async _handleCollectionEvent (eventType, doc, arg, fromModel, source) {
+    let remoteUpdate = source == _COLLECTION_REMOTE_SOURCE;
     switch (eventType) {
       case ModelEvent .UPDATE:
         if (doc) {
           if (this._ids .has (doc._id) || this._isObserver) {
-            if (this._contains (doc) || (this._options && this._options .updateDoesNotRemove)) {
+            if (this._contains (doc, remoteUpdate) || (this._options && this._options .updateDoesNotRemove && ! remoteUpdate)) {
               if (this._options && this._options .groupBy && arg [this._options .groupBy] != null)
                 await this._addGroupToModel (doc);
               await this._notifyObserversAsync (ModelEvent .UPDATE, doc, arg, source);
-            } else if (!this._options || !this._options .updateDoesNotRemove) {
+            } else if (!this._options || !this._options .updateDoesNotRemove || remoteUpdate) {
               this._ids .delete (doc._id);
               await this._notifyObserversAsync (ModelEvent .REMOVE, doc, doc._id, source);
               this._removeGroupFromModel (doc);
             }
-          } else if (this._contains (doc)) {
+          } else if (this._contains (doc, remoteUpdate)) {
             await this._notifyObserversAsync (ModelEvent .INSERT, doc, arg, source);
             this._ids .add (doc._id);
             await this._addGroupToModel (doc);
@@ -310,6 +311,7 @@ var ModelEvent = {
   REMOVE: 2
 }
 
+var _COLLECTION_REMOTE_SOURCE = "_CRS_"
 
 /******************
  * PRIVATE HELPERS
@@ -375,7 +377,7 @@ class _Collection extends Observable {
       let doc  = this._docs .get (item .id);
       if (doc) {
         let orig = Object .keys (item .update) .reduce ((o,f) => {o[f] = doc[f]; return o}, {});
-        this._processUpdate (doc, orig, item .update);
+        this._processUpdate (doc, orig, item .update, _COLLECTION_REMOTE_SOURCE);
       }
     }
 
