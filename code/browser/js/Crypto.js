@@ -2,11 +2,11 @@ class Crypto {
   constructor (password) {
     this._password = password;
     this._rules = new Map();
-    this._rules .set ('importRules',   {allFields: true});
-    this._rules .set ('taxParameters', {allFields: true});
-    this._rules .set ('transactions',  {fields: ['payee', 'description', 'imported']});
-    this._rules .set ('categories',    {fields: ['name']});
-    this._rules .set ('schedules',     {fields: ['notes']});
+    // this._rules .set ('importRules',   {allFields: true});
+    // this._rules .set ('taxParameters', {allFields: true});
+    // this._rules .set ('transactions',  {fields: ['payee', 'description', 'imported']});
+    // this._rules .set ('categories',    {fields: ['name']});
+    // this._rules .set ('schedules',     {fields: ['notes']});
     this._salt       = 'MichaelLindaCaitlinLiamJosephKayMarieSeamus';
     this._iterations = 1000;
     this._hash       = 'SHA-256';
