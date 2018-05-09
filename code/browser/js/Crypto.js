@@ -89,10 +89,8 @@ class Crypto {
           if (data [field])
              await this._encryptDoc (rule, data [field]);
         if (data .list)
-          for (let item of data .list) {
-          console.log(item, item .update || item);
+          for (let item of data .list)
             await this._encryptDoc (rule, item .update || item);
-          }
       }
       return data;
     } catch (e) {

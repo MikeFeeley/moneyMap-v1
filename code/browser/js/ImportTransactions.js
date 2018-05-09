@@ -37,9 +37,7 @@ class ImportTransactions extends Observable {
     await this .getModelData();
     this._lastImport = new ImportBatchTable (this);
     this._attention  = new NeedsAttentionTable (this, async importTime => this._lastImport._setBatchByImportTime (importTime));
-    if (!this._view || ! this._view .addTable) {console.log('DEBUG', this, this._view)}
     await this._view .addTable (this._attention);
-    if (!this._view || ! this._view .addTable) {console.log('DEBUG', this, this._view)}
     await this._view .addTable (this._lastImport);
     toHtml .data ('visible', () => {
       if (! this._lastImport._batch)
@@ -270,13 +268,23 @@ class ImportBatchTable extends TransactionAndRulesTable {
 
   constructor (parent) {
     super ({$options: {updateDoesNotRemove: true}}, '', parent);
-    this._transactionModel = parent._transactionModel;;
+    this._transactionModel = parent._transactionModel;
+    this._model .observe ({importTime: {$gt: (new Date()) .getTime()}});
   }
 
   _onViewChange (eventType, arg) {
     if (eventType == TupleViewEvent .INSERT && ! arg .insert .importTime && this._batch)
       arg .insert .importTime = this._batch;
     super._onViewChange (eventType, arg);
+  }
+
+  _onModelChange (eventType, doc, arg, source) {
+    if (! this._hasNewer && doc .importTime > this._query .importTime) {
+      this._hasNewer = true;
+      this._updateButtons();
+    }
+    if (doc .importTime == this._query .importTime)
+      super._onModelChange (eventType, doc, arg, source);
   }
 
   _setTitle() {
@@ -375,6 +383,7 @@ class NeedsAttentionTable extends TransactionAndRulesTable {
       $or: [{category: null}, {category: ''}, {description: {$regex: '[?]\s*$'}}],
       $options: {updateDoesNotRemove: true}
     };
+    // XXX updateDoesNotRemove means that updates coming in remotely don't refresh when local rules fix problems
     let title = 'Inbox - Attention Required';
     let columns = ['rules', 'date','payee','debit','credit','account','category','description','importTime'];
     let options = {};

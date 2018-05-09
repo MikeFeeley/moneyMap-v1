@@ -161,17 +161,19 @@ class TableView extends TupleView {
 
   removeTuple (id) {
     if (this._table) {
-      var tr = this._getTuple (id);
-      if (this._hasFocus()) {
-        var select = (n => {return n .length? n: tr .prev()}) (tr .next())
-        if (select.length) {
-          this._selectTuple (select);
-          select .find (':input') .filter (':visible') .first() .focus();
-        } else
+      let tr = this._getTuple (id);
+      if (tr) {
+        if (this._hasFocus()) {
+          var select = (n => {return n .length? n: tr .prev()}) (tr .next())
+          if (select.length) {
+            this._selectTuple (select);
+            select .find (':input') .filter (':visible') .first() .focus();
+          } else
           if (this._selectedTuple && tr[0] == this._selectedTuple[0])
             this._clearSelectedTuple();
+        }
+        super .removeTuple (id);
       }
-      super .removeTuple (id);
     }
   }
 
