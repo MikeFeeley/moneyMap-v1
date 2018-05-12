@@ -23,7 +23,8 @@ class RemoteDBAdaptor extends DBAdaptor {
     this._updatePendingOperations (operation, 1);
     await super .perform (operation, data);
     let response, firstTry = true;
-    data = await _Crypto .encryptRequestData (data);
+    if (User_DB_Crypto)
+      data = await User_DB_Crypto .encryptRequestData (data);
     while (response === undefined) {
       try {
         response = await $.ajax ({
@@ -31,7 +32,8 @@ class RemoteDBAdaptor extends DBAdaptor {
           data: JSON .stringify (data)
         });
         this._updatePendingOperations (operation, -1);
-        await _Crypto .decryptResponseData (response);
+        if (User_DB_Crypto)
+          await User_DB_Crypto .decryptResponseData (response);
       } catch (rejection) {
         if (rejection .status !== undefined && rejection .status == 0) {
           if (firstTry)
@@ -77,7 +79,8 @@ class RemoteDBAdaptor extends DBAdaptor {
             setTimeout (() => {this._connect (database)}, 0);
             if (data .upcalls) {
               (async () => {
-                await _Crypto .decryptUpcalls (data);
+                if (User_DB_Crypto)
+                  await User_DB_Crypto .decryptUpcalls (data);
                 this._processUpcall (data);
               })();
             }

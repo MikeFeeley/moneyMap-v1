@@ -1,3 +1,31 @@
+/**
+ * Config model
+ *    user
+ *    name
+ *    curBudget
+ *    type
+ *    keyTest
+ */
+
+const ConfigType = {
+  CLOUD_UNENCRYPTED: 0,
+  CLOUD_ENCRYPTED:   1,
+  LOCAL:             2
+}
+
+const ConfigKeyTest = 'EncryptionKeyIsCorrect';
+
+var User_DB_Crypto;
+
+/**
+ * User model
+ *    username
+ *    password
+ *    accessCap
+ *    name
+ *    curConfiguration
+ */
+
 class User extends Observable {
 
   constructor() {
@@ -115,8 +143,13 @@ class User extends Observable {
           if (arg .remember)
             this._addCookie();
           this._setModelsForConfig();
-          await this._init();
           this._view .removeLogin();
+          try {
+            await this._init();
+          } catch (e) {
+            this .logout();
+            break;
+          }
           this._notifyObservers (UserEvent .NEW_USER);
         }
         break;
@@ -248,7 +281,11 @@ class User extends Observable {
       for (let p in cv)
         this [p] = cv [p];
       this._setModelsForConfig();
-      await this._init();
+      try {
+        await this._init();
+      } catch (e) {
+        return false;
+      }
       if (! this._cid || ! this._bid)
         return false;
       this._hasCookie = true;
@@ -265,6 +302,22 @@ class User extends Observable {
     this._bid     = (this._configs .find (c => {return c._id == this._cid}) || {}) .curBudget;
     if (! this._budgets .find (b => {return b._id == this._bid}))
       this._bid = this._budgets && this._budgets .length > 0 && this._budgets [0]._id;
+    let config = this._configs .find (c => {return c._id == this._cid});
+    if (config .type == ConfigType .CLOUD_ENCRYPTED) {
+      let encryptionPassword = localStorage .getItem ('encryptionPassword_' + this._cid);
+      if (! encryptionPassword) {
+        let verifyPassword = async pwd => {
+          User_DB_Crypto = new Crypto (pwd);
+          let c = await this._configModel .find ({_id: config._id});
+          return c [0] .keyTest == ConfigKeyTest;
+        }
+        encryptionPassword = await this._view .getConfigEncryptionPassword (config .name, verifyPassword);
+        localStorage .setItem ('encryptionPassword_' + this._cid, encryptionPassword);
+      } else {
+        User_DB_Crypto = new Crypto (encryptionPassword);
+      }
+   } else
+      User_DB_Crypto = null;
   }
 
   _deleteCookie() {
@@ -318,10 +371,23 @@ class User extends Observable {
    * Should be call only after the new configuration's model is fully updated
    */
   async _selectConfig (cid) {
+    let old = this._cid;
     this._cid = cid;
     this._updateCookie();
     this._setModelsForConfig();
-    await this._init();
+    try {
+      await this._init();
+    } catch (e) {
+      this._cid = old;
+      this._updateCookie();
+      this._setModelsForConfig();
+      try {
+        await this._init();
+      } catch (e) {
+        this .logout();
+      }
+      return;
+    }
     if (this._onLabelChange)
       this._onLabelChange (this .getLabel());
     await Model .updateUser (this._uid, this._accessCap, {curConfiguration: this._cid});
@@ -414,12 +480,14 @@ class User extends Observable {
     this._view .addLabel    ('Email',            email);
     this._view .addLabel    ('Password',         password);
     this._view .addLabel    ('Name',             name);
-    this._view .addInput    ('Email',            this._username, email);
-    this._view .addInput    ('Old Password',     '', password, 'password');
-    this._view .addInput    ('New Password',     '', password, 'password');
-    this._view .addInput    ('Confirm Password', '', password, 'password');
-    this._view .addInput    ('Name',             this._name, name);
-    this._view .addButton   ('Update Profile',   (async () => {await this._updateAccount()}), update);
+    let em = this._view .addInput    ('Email',            this._username, email);
+    let op = this._view .addInput    ('Old Password',     '', password, 'password');
+    let np = this._view .addInput    ('New Password',     '', password, 'password');
+    let cp = this._view .addInput    ('Confirm Password', '', password, 'password');
+    let nm = this._view .addInput    ('Name',             this._name, name);
+    this._view .addButton   ('Update Profile',   (async () => {
+      await this._updateAccount ([em, op, np, cp, nm] .map (f => {return f.val()}))
+    }), update);
     this._accountEditError = this._view .addLabel ('', update, '_errorMessage');
   }
 

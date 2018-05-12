@@ -2,12 +2,15 @@ class Crypto {
   constructor (password) {
     this._password = password;
     this._rules = new Map();
-    this._rules .set ('importRules',   {allFields: true});
-    this._rules .set ('taxParameters', {allFields: true});
-    this._rules .set ('transactions',  {fields: ['payee', 'description', 'imported']});
-    this._rules .set ('categories',    {fields: ['name']});
-    this._rules .set ('schedules',     {fields: ['notes']});
+    this._rules .set ('importRules',    {allFields: true});
+    this._rules .set ('taxParameters',  {allFields: true});
+    this._rules .set ('transactions',   {fields: ['payee', 'description', 'imported']});
+    this._rules .set ('categories',     {fields: ['name']});
+    this._rules .set ('schedules',      {fields: ['notes']});
+    this._rules .set ('configurations', {fields: ['keyTest']});
     this._salt       = 'MichaelLindaCaitlinLiamJosephKayMarieSeamus';
+    this._sPasswordI = new Uint8Array ([2,8,16,32,64,128,3,9,33,65,129,4,10,34,66,130]);
+    this._sPasswordT = 'ServerPassword';
     this._iterations = 1000;
     this._hash       = 'SHA-256';
   }
@@ -26,6 +29,11 @@ class Crypto {
       iv     = crypto .getRandomValues (ta);
     }
     return {name: 'AES-CBC', iv: iv};
+  }
+
+  async getServerPassword() {
+    let al = this._getAlgorithm (this._sPasswordI);
+    return this._abToS(await crypto .subtle .encrypt (al, await this._getKey(), this._sToAb(this._sPasswordT)));
   }
 
   async _getKey() {
@@ -127,5 +135,4 @@ class Crypto {
   }
 }
 
-var _Crypto = new Crypto ('foobar');
 

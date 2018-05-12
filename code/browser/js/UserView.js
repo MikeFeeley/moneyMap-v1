@@ -245,9 +245,10 @@ class UserView extends View {
   }
 
   addConfirmDelete (positionTarget, id, type) {
-    let popup   = $('<div>', {class: '_popupContainer'}) .appendTo (this._accountEdit .find ('> div'));
+    let parent  = this._accountEdit .find ('> div');
+    let popup   = $('<div>', {class: '_popupContainer'}) .appendTo (parent);
     let content = $('<div>', {class: '_addPopup'}) .appendTo (popup);
-    popup .css (ui .calcPosition (positionTarget, this._accountEdit, {top: -40, left: -180}));
+    popup .css (ui .calcPosition (positionTarget, parent, {top: -40, left: 0}));
     $('<div>', {text: 'Do you really want to delete this ' + type + '?'}) .appendTo (content);
     $('<div>', {text: 'This action can not be undone.'}) .appendTo (content);
     $('<div>') .appendTo (content)
@@ -275,9 +276,10 @@ class UserView extends View {
   }
 
   addConfigAddPopup (positionTarget, configs) {
-    let popup   = $('<div>', {class: '_popupContainer'}) .appendTo (this._accountEdit .find ('> div'));
+    let parent  = this._accountEdit .find ('> div');
+    let popup   = $('<div>', {class: '_popupContainer'}) .appendTo (parent);
     let content = $('<div>', {class: '_addPopup'}) .appendTo (popup);
-    popup .css (ui .calcPosition (positionTarget, this._accountEdit, {top: -40, left: -180}));
+    popup .css (ui .calcPosition (positionTarget, parent, {top: -40, left: 0}));
     $('<div>', {text: 'Add New Configuration'}) .appendTo (content);
     $('<form>') .appendTo (content)
       .append ($('<div>') .append ($('<label>')
@@ -324,9 +326,10 @@ class UserView extends View {
   }
 
   addBudgetAddPopup (positionTarget, budgets) {
-    let popup   = $('<div>', {class: '_popupContainer'}) .appendTo (this._accountEdit .find ('> div'));
+    let parent  = this._accountEdit .find ('> div');
+    let popup   = $('<div>', {class: '_popupContainer'}) .appendTo (parent);
     let content = $('<div>', {class: '_addPopup'}) .appendTo (popup);
-    popup .css (ui .calcPosition (positionTarget, this._accountEdit, {top: -40, left: -180}));
+    popup .css (ui .calcPosition (positionTarget, parent, {top: -40, left: 0}));
     $('<div>', {text: 'Add New Budget'}) .appendTo (content);
     $('<form>') .appendTo (content)
       .append ($('<div>') .append ($('<label>')
@@ -334,7 +337,7 @@ class UserView extends View {
         .append ($('<span>',  {text: 'Create empty budget'}))
       ))
       .append ($('<div>') .append ($('<label>')
-        .append ($('<input>', {type: 'radio', name: 'how', value: 'copy', prop: {checked: true}}))
+        .append ($('<input>', {type: 'radio', name: 'how', value: 'copy', prop: {checked: false}}))
         .append ($('<span>',  {text: 'Copy existing budget'}))
         .append ($('<select>'))
       ))
@@ -379,7 +382,34 @@ class UserView extends View {
     );
     ui .scrollIntoView (popup)
   }
+
+  async getConfigEncryptionPassword (name, isValidPassword) {
+    return new Promise ((resolve, reject) => {
+      let container = $('<div>', {class: '_getConfigEncryptionPassword'}) .appendTo ($('body'));
+      let panel     = $('<div>') .appendTo (container);
+      $('<div>', {text: 'Enter Your Private Cloud Encryption Password for ' + name + ' Configuration'}) .appendTo (panel);
+      let form = $('<form>') .appendTo (panel);
+      let input = $('<input>', {type: 'text', placeholder: 'Password'}) .appendTo (form);
+      let error = $('<span>') .appendTo (form);
+      form .on ('submit', () => {
+        (async () => {
+          let pwd = input .val();
+          if (await isValidPassword (pwd)) {
+            container .remove();
+            resolve (pwd);
+          } else
+            error .text ('Incorrect password');
+        }) ();
+        return false;
+      })
+      let button = $('<button>', {text: 'Cancel'}) .appendTo (panel) .click (() => {
+        container .remove();
+        reject();
+      });
+    });
+  }
 }
+
 
 var UserViewEvent = {
   LOGIN: 0,
