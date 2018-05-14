@@ -7,7 +7,19 @@
 
 \f0\fs36 \cf0 ==============\
 BUGS\
+	- server disconnect when in account edit\
 \
+TODO\
+	- don't switch config/budget when editing / adding etc\
+	- handle type for initial config some how\
+	- handle case where curConfiguration is null\
+		- also consider that encrypted configs may not be switchable to (if password is wrong)\
+		- need to allow for editing even if there's no config\
+\
+	- enter type & password on new config\
+	- server-side encryption of amounts and balances\
+	- move config copy back to client\
+		- ensure that all models are killed (so no notifications) before starting copy\
 \
 ENCRYPTION\
 	- local html5 database\

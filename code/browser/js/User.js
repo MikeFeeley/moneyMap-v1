@@ -13,6 +13,15 @@ const ConfigType = {
   LOCAL:             2
 }
 
+const ConfigDesc = ['Cloud Unencrypted', 'Cloud Encrypted', 'Local'];
+const ConfigExp  = [
+  'Your data is accessible from anywhere and you have no private password to remember.  ' +
+  'We keep your data secure.  It is encrypted in transit to/from the cloud, but is not protected by a local password.',
+  'Your data is accessible from anywhere and encrypted on your computer to ensure absolute privacy, ' +
+  'but since the encryption password is not stored in the cloud, it can not be recovered should you forget it.',
+  'Your data is stored on and never leaves your computer, but is only accessible from that device.'
+]
+
 const ConfigKeyTest = 'EncryptionKeyIsCorrect';
 
 var User_DB_Crypto;
@@ -140,6 +149,7 @@ class User extends Observable {
           this._username   = user .username;
           this._name       = user .name;
           this._cid        = user .curConfiguration;
+          // TODO: allow for null current config
           if (arg .remember)
             this._addCookie();
           this._setModelsForConfig();
@@ -147,6 +157,7 @@ class User extends Observable {
           try {
             await this._init();
           } catch (e) {
+            await Model .updateUser (this._uid, this._accessCap, {curConfiguration: null});
             this .logout();
             break;
           }
@@ -178,7 +189,7 @@ class User extends Observable {
             this._username  = arg .username;
             this._name      = arg .name;
             this._setModelsForConfig();
-            await this._createEmptyConfig ('Default');
+            await this._createEmptyConfig (ConfigType .LOCAL, '', 'Default');
             this._configs = this._sortByName (await this._configModel .find({deleted: null}));
             if (arg .remember)
               this._addCookie();
@@ -193,11 +204,11 @@ class User extends Observable {
           this._view .selectTab (arg .tab);
           let field = arg .tab .find ('._field') .data('field');
           if (field._name .startsWith ('c_')) {
-            await this._selectConfig (field._id);
+            //await this._selectConfig (field._id);
             this._view .selectTab (this._getBudgetTab (this._bid));
           } else
             await this._selectBudget (field._id);
-          this._notifyChange();
+          //this._notifyChange();
         } else
           /* ADD */
           switch (arg .name) {
@@ -223,11 +234,11 @@ class User extends Observable {
         break;
 
       case UserViewEvent .CONFIG_EMPTY:
-        await this._createEmptyConfig();
+        await this._createEmptyConfig (arg .type, arg .encryptionPassword);
         break;
 
       case UserViewEvent .CONFIG_COPY:
-        await this._copyConfig (arg .from);
+        await this._copyConfig (arg .type, arg .encryptionPassword, arg .from);
         break;
 
       case ViewEvent .UPDATE:
@@ -284,6 +295,7 @@ class User extends Observable {
       try {
         await this._init();
       } catch (e) {
+        await Model .updateUser (this._uid, this._accessCap, {curConfiguration: null});
         return false;
       }
       if (! this._cid || ! this._bid)
@@ -497,6 +509,15 @@ class User extends Observable {
   async _addConfig (config, select) {
     let [configTab, configContent] = this._view .addTab (this._configTabs);
     this._view .addField (new ViewScalableTextbox ('c_name', ViewFormats ('string'), '', '', 'Config Name'), config._id, config .name, configTab);
+
+    this._view .addLabel ('Configuration', configContent, '_heading');
+    let configLine = this._view .addLine (configContent, '_line _configTypeLine');
+    this._view .addReadOnlyField (ConfigDesc [config .type || 0], configLine, 'Data Storage');
+    if (config .type == ConfigType .CLOUD_ENCRYPTED) {
+      let ep = localStorage .getItem ('encryptionPassword_' + config._id);
+      this._view .addReadOnlyField (ep || '<unknown>', configLine, 'Private Encryption Password');
+    }
+
     let budgetContentGroup = this._view .addTabContentGroup ('Budgets', configContent);
     let budgetTabs         = this._view .addTabGroup ('budgets', budgetContentGroup);
     this._view .addButton ('Delete Configuration', () => {
@@ -600,8 +621,16 @@ class User extends Observable {
   /**
    * Create a new empty configuration
    */
-  async _createEmptyConfig (name = 'Untitled') {
-    this._cid = (await this._configModel .insert ({user: this._uid, name: name}))._id;
+  async _createEmptyConfig (type, encryptionPassword, name = 'Untitled') {
+    User_DB_Crypto = type == ConfigType .CLOUD_ENCRYPTED && new Crypto (encryptionPassword);
+    this._cid = (await this._configModel .insert ({
+      user:    this._uid,
+      name:    name,
+      type:    type,
+      keyTest: type == ConfigType .CLOUD_ENCRYPTED && ConfigKeyTest
+    }))._id;
+    if (type == ConfigType .CLOUD_ENCRYPTED)
+      localStorage .setItem ('encryptionPassword_' + this._cid, encryptionPassword);
     await Model .updateUser (this._uid, this._accessCap, {curConfiguration: this._cid});
     this._setModelsForConfig();
 
@@ -619,7 +648,7 @@ class User extends Observable {
 
     this._budgets = [];
     await this._createEmptyBudget();
-    await this._selectConfig (this._cid);
+    //await this._selectConfig (this._cid);
     this._notifyChange();
   }
 
@@ -633,7 +662,7 @@ class User extends Observable {
     await Model .updateUser (this._uid, this._accessCap, {curConfiguration: this._cid});
     this._setModelsForConfig();
     // budgets are added at server without INSERT events, so fake them
-    await this._selectConfig (this._cid);
+    //await this._selectConfig (this._cid);
     for (let budget of this._budgets)
       await this._onBudgetModelChange (ModelEvent .INSERT, budget);
     this._selectBudget (this._budgets [0]._id);
@@ -870,7 +899,7 @@ class User extends Observable {
   async _deleteConfig (id) {
     await this._configModel .update (id, {deleted: Types .date .today()});
     this._configs .splice (this._configs .findIndex (c => {return c._id == id}), 1);
-    await this._selectConfig (this._configs[0] ._id);
+    //await this._selectConfig (this._configs[0] ._id);  // TODO select iff deleted current
     this._view .selectTab (this._getConfigTab());
     this._view .selectTab (this._getBudgetTab (this._bid));
     this._view .setButtonDisabled (this._configTabs, this._configs .length == 1);

@@ -149,8 +149,8 @@ class UserView extends View {
     return $('<div>', {class: '_content ' + additionalClass}) .appendTo (g);
   }
 
-  addLine (toGroup) {
-    return $('<div>', {class: '_line'}) .appendTo (toGroup);
+  addLine (toGroup, type = '_line') {
+    return $('<div>', {class: type}) .appendTo (toGroup);
   }
 
   addLabel (text, toLine, type) {
@@ -164,6 +164,14 @@ class UserView extends View {
       $('<div>', {class: '_label', text: label}) .appendTo (toHtml);
     }
     f .addHtml (value, this, toHtml);
+  }
+
+  addReadOnlyField (value, toHtml, label) {
+    if (label) {
+      toHtml = $('<div>', {class: '_labeledField'}) .appendTo (toHtml);
+      $('<div>', {class: '_label', text: label}) .appendTo (toHtml);
+    }
+    $('<div>', {class: '_readOnlyField', text: value}) .appendTo (toHtml);
   }
 
   setLabel (label, text) {
@@ -290,21 +298,49 @@ class UserView extends View {
         .append ($('<input>', {type: 'radio', name: 'how', value: 'copy', prop: {checked: false}}))
         .append ($('<span>',  {text: 'Copy configuration from '}))
         .append ($('<select>'))
-      ))
+      ));
+
+    $('<div>', {text: 'With Data Storage Type'}) .appendTo (content);
+    let tf = $('<form>') .appendTo (content);
+    for (let d of ConfigDesc) {
+      let i = ConfigDesc .indexOf (d);
+      let e = $('<div>', {class: '_dataStorageChoice'}) .appendTo (tf);
+      let l = $('<label>') .appendTo (e)
+        .append ($('<input>', {type: 'radio', name: 'dataStore', value: i, prop: {checked: false}}))
+        .append ($('<span>',  {text: d}));
+      if (i == ConfigType .CLOUD_ENCRYPTED)
+        l .append ($('<input>', {type: 'text', name: 'encryptionPassword', placeholder: 'Encryption Password'}));
+      e .append ($('<div>', {text: ConfigExp [i]}));
+    }
+    let error = $('<div>', {class:'_errorMessage'}) .appendTo (content);
+    tf .on ('submit', () => {return false});
+
     $('<div>') .appendTo (content)
     .append (
       $('<button>', {text: 'Add'})
       .click (() => {
-        switch (content .find ('input[name="how"]:checked') .val()) {
-          case 'empty':
-            this._notifyObservers (UserViewEvent .CONFIG_EMPTY);
-            break;
-          case 'copy':
-            this._notifyObservers (UserViewEvent .CONFIG_COPY, {from: content .find ('select') .val()})
-            break;
+        let ds = content .find ('input[name="dataStore"]:checked') .val(), ep;
+        if (ds == undefined)
+          error .text ('Select a data storage type for the new configuration.');
+        else {
+          ep = ds == ConfigType .CLOUD_ENCRYPTED && content .find ('input[name="encryptionPassword"]') .val();
+          if (ep !== false && ep .length < 6)
+            error .text ('Private encryption password must be a least 6 characters long.');
+          else {
+            let arg = {type: ds, encryptionPassword: ep}
+            switch (content .find ('input[name="how"]:checked') .val()) {
+              case 'empty':
+                this._notifyObservers (UserViewEvent .CONFIG_EMPTY, arg);
+                break;
+              case 'copy':
+                arg .from = content .find ('select') .val();
+                this._notifyObservers (UserViewEvent .CONFIG_COPY, arg);
+                break;
+            }
+            ui .ModalStack .delete (modal);
+            popup .remove();
+          }
         }
-        ui .ModalStack .delete (modal);
-        popup .remove();
       })
     )
     .append (
