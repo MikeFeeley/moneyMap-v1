@@ -166,12 +166,12 @@ class UserView extends View {
     f .addHtml (value, this, toHtml);
   }
 
-  addReadOnlyField (value, toHtml, label) {
+  addReadOnlyField (fieldName, id, value, toHtml, label) {
     if (label) {
       toHtml = $('<div>', {class: '_labeledField'}) .appendTo (toHtml);
       $('<div>', {class: '_label', text: label}) .appendTo (toHtml);
     }
-    $('<div>', {class: '_readOnlyField', text: value}) .appendTo (toHtml);
+    $('<div>', {class: '_readOnlyField _field_' + fieldName + ' _id_' + id, text: value}) .appendTo (toHtml);
   }
 
   setLabel (label, text) {
@@ -359,6 +359,10 @@ class UserView extends View {
       true
     );
     ui .scrollIntoView (popup)
+  }
+
+  updateConfigEncryptionPassword (cid, pwd) {
+    this._accountEdit .find ('._field_encryptionPassword._id_' + cid) .text (pwd);
   }
 
   addBudgetAddPopup (positionTarget, budgets) {

@@ -217,13 +217,29 @@ class App {
     }
   }
 
+  async _disconnect() {
+    await Model .databaseDisconnect();
+    this._deleteModels();
+    if (this._it) {
+      this._it .delete();
+      this._na .delete();
+      this._se .delete();
+      this._ac .delete();
+      this._it = null;
+    }
+  }
+
   async _configurationChange (eventType) {
 
     let handleNameClick = e => {
       this._prefs .showMenu ($(e .target));
     }
-  
-    if (eventType == UserEvent .NEW_USER) {
+
+    if (eventType == UserEvent .DISCONNECT) {
+
+      await this._disconnect();
+
+    } else if (eventType == UserEvent .NEW_USER) {
 
       this._tabs = new ui.Tabs ($('body'), handleNameClick);
       document .documentElement .addEventListener ('keydown', e => {
@@ -250,13 +266,13 @@ class App {
     }
 
     if (eventType == UserEvent .NEW_USER || eventType == UserEvent .NEW_CONFIGURATION) {
+      let prefsWasShowing = this._prefs && this._prefs .isShowing();
+
+      await this._disconnect();
 
       /* models */
-      let prefsWasShowing = this._prefs && this._prefs .isShowing();
-      await Model .databaseDisconnect();
       Model .setDatabase (this._user .getDatabaseName());
       Model .databaseConnect();
-      this._deleteModels();
       this._prefs    = new Preferences();
       this._budModel = new BudgetModel   ();
       this._accModel = new AccountsModel (this._budModel);
@@ -271,12 +287,6 @@ class App {
       await this._prefs    .init (prefsWasShowing);
 
       /* presenters */
-      if (this._it) {
-        this._it .delete();
-        this._na .delete();
-        this._se .delete();
-        this._ac .delete();
-      }
       this._it = new ImportTransactions   (this._accModel, this._varModel);
       this._na = new Navigate             (this._accModel, this._varModel);
       this._na .prime();

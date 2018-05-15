@@ -46,7 +46,7 @@ class Preferences extends Observable {
   }
 
   isShowing() {
-    return this._view .isShowing();
+    return this._view && this._view .isShowing();
   }
 
   /**

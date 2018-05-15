@@ -149,7 +149,6 @@ class User extends Observable {
           this._username   = user .username;
           this._name       = user .name;
           this._cid        = user .curConfiguration;
-          // TODO: allow for null current config
           if (arg .remember)
             this._addCookie();
           this._setModelsForConfig();
@@ -204,11 +203,11 @@ class User extends Observable {
           this._view .selectTab (arg .tab);
           let field = arg .tab .find ('._field') .data('field');
           if (field._name .startsWith ('c_')) {
-            //await this._selectConfig (field._id);
+            await this._selectConfig (field._id);
             this._view .selectTab (this._getBudgetTab (this._bid));
           } else
             await this._selectBudget (field._id);
-          //this._notifyChange();
+          this._notifyApp();
         } else
           /* ADD */
           switch (arg .name) {
@@ -247,7 +246,7 @@ class User extends Observable {
           let update = {}
           update [arg .fieldName .slice (2)] = arg .value;
           await model .update (arg.id, update);
-          this._notifyChange();
+          this._notifyApp();
         }
         break;
 
@@ -418,10 +417,10 @@ class User extends Observable {
     await this._configModel .update (this._cid, {curBudget: this._bid});
   }
 
-  _notifyChange() {
+  async _notifyApp() {
     if (this._onLabelChange)
       this._onLabelChange (this .getLabel());
-    this._notifyObservers (UserEvent .NEW_CONFIGURATION);
+    await this._notifyObserversAsync (UserEvent .NEW_CONFIGURATION);
   }
 
   /**
@@ -438,7 +437,7 @@ class User extends Observable {
           name:   c .name,
           action: e => {
             this._view .removeMenu();
-            (async () => {await this._selectConfig (c._id); this._notifyChange()})();
+            (async () => {await this._selectConfig (c._id); await this._notifyApp()})();
           }
         }})
       this._view .addSubMenu ('Change Configuration', items);
@@ -450,7 +449,7 @@ class User extends Observable {
           name:   b .name,
           action: e => {
             this._view .removeMenu();
-            (async () => {await this._selectBudget (b._id); this._notifyChange()})();
+            (async () => {await this._selectBudget (b._id); await this._notifyApp()})();
           }
         }})
       this._view .addSubMenu ('Change Budget', items);
@@ -469,6 +468,10 @@ class User extends Observable {
     this._budgetModel .addObserver (this, this._onBudgetModelChange);
     this._configModel .observe();
     this._budgetModel .observe();
+  }
+
+  async _disconnectApp() {
+    await this._notifyObserversAsync (UserEvent .DISCONNECT);
   }
 
   /**
@@ -512,10 +515,10 @@ class User extends Observable {
 
     this._view .addLabel ('Configuration', configContent, '_heading');
     let configLine = this._view .addLine (configContent, '_line _configTypeLine');
-    this._view .addReadOnlyField (ConfigDesc [config .type || 0], configLine, 'Data Storage');
+    this._view .addReadOnlyField ('type', config._id, ConfigDesc [config .type || 0], configLine, 'Data Storage');
     if (config .type == ConfigType .CLOUD_ENCRYPTED) {
       let ep = localStorage .getItem ('encryptionPassword_' + config._id);
-      this._view .addReadOnlyField (ep || '<unknown>', configLine, 'Private Encryption Password');
+      this._view .addReadOnlyField ('encryptionPassword', config._id, ep || '<unknown>', configLine, 'Private Encryption Password');
     }
 
     let budgetContentGroup = this._view .addTabContentGroup ('Budgets', configContent);
@@ -528,10 +531,10 @@ class User extends Observable {
     }, this._view .addLine (configContent));
     this._view .setButtonDisabled (this._configTabs, this._configs .filter (c => {return c._id != config._id}) .length == 0);
     let bm = new Model ('budgets', this .getDatabaseName (config._id));
-    this._budgets = this._sortByName (await bm .find ({}));
+    let budgets = this._sortByName (await bm .find ({}));
     bm .delete();
     let [budgetTab, budgetContent] = this._view .addTab (budgetTabs, '_add', true, 'Add');
-    for (let b of this._budgets)
+    for (let b of budgets)
       this._addBudget (b, b._id == this._bid);
     if (select)
       this._view .selectTab (configTab);
@@ -622,6 +625,7 @@ class User extends Observable {
    * Create a new empty configuration
    */
   async _createEmptyConfig (type, encryptionPassword, name = 'Untitled') {
+    await this._disconnectApp();
     User_DB_Crypto = type == ConfigType .CLOUD_ENCRYPTED && new Crypto (encryptionPassword);
     this._cid = (await this._configModel .insert ({
       user:    this._uid,
@@ -629,8 +633,10 @@ class User extends Observable {
       type:    type,
       keyTest: type == ConfigType .CLOUD_ENCRYPTED && ConfigKeyTest
     }))._id;
-    if (type == ConfigType .CLOUD_ENCRYPTED)
+    if (type == ConfigType .CLOUD_ENCRYPTED) {
       localStorage .setItem ('encryptionPassword_' + this._cid, encryptionPassword);
+      this._view .updateConfigEncryptionPassword (this._cid, encryptionPassword);
+    }
     await Model .updateUser (this._uid, this._accessCap, {curConfiguration: this._cid});
     this._setModelsForConfig();
 
@@ -648,25 +654,26 @@ class User extends Observable {
 
     this._budgets = [];
     await this._createEmptyBudget();
-    //await this._selectConfig (this._cid);
-    this._notifyChange();
+    await this._selectConfig (this._cid);
+    await this._notifyApp();
   }
 
   /**
    * Create a new config by copying from specified config
    */
   async _copyConfig (from) {
+    await this._disconnectApp();
     let fromConfig = this._configs .find (c => {return c._id == from});
     this._cid = (await this._configModel .insert ({user: this._uid, name: 'Copy of ' + fromConfig .name}))._id;
     await Model .copyDatabase (this .getDatabaseName (from), this .getDatabaseName (this._cid));
     await Model .updateUser (this._uid, this._accessCap, {curConfiguration: this._cid});
     this._setModelsForConfig();
     // budgets are added at server without INSERT events, so fake them
-    //await this._selectConfig (this._cid);
+    await this._selectConfig (this._cid);
     for (let budget of this._budgets)
       await this._onBudgetModelChange (ModelEvent .INSERT, budget);
     this._selectBudget (this._budgets [0]._id);
-    this._notifyChange();
+    await this._notifyApp();
   }
 
   /**
@@ -676,7 +683,8 @@ class User extends Observable {
    *    default list?  These transactions will not be part of actuals.  There is a related
    *    problem with changing budget dates.
    */
-  async _createEmptyBudget (notifyObservers) {
+  async _createEmptyBudget (notifyApp) {
+    await this._disconnectApp();
     let y  = Types .date._year (Types .date .today());
     let b  = await this._budgetModel .insert({
       name:             this._budgets && this._budgets .length? 'Untitled': 'Default',
@@ -748,26 +756,27 @@ class User extends Observable {
     cm .delete();
     sm .delete();
     this._selectBudget (b._id);
-    if (notifyObservers)
-      this._notifyChange();
+    if (notifyApp)
+      await this._notifyApp();
   }
 
   /**
    * Add a new budget that is copied from specified budget
    */
   async _createBudgetCopy (from) {
+    await this._disconnectApp();
     let newBudget = await Model .copyBudget (from);
     this._budgets .push (newBudget);
     await this._onBudgetModelChange (ModelEvent .INSERT, newBudget);
     this._selectBudget (newBudget._id);
-    this._notifyChange();
+    await this._notifyApp();
   }
 
   /**
    * Add a new budget and related categories and schedules to model by rolling specified budget over to new year
    */
   async _createRolloverBudget (from) {
-    // TODO move to server (later)
+    await this._disconnectApp();
     let b = Object .assign ({}, this._budgets .find (b => {return b._id == from}));
     b .start = Types .date .addYear (b .start, 1);
     b .end   = Types .date .addYear (b .end,   1);
@@ -890,38 +899,41 @@ class User extends Observable {
     cm .delete();
     sm .delete();
     await this._selectBudget (b._id);
-    this._notifyChange();
+    await this._notifyApp();
   }
 
   /**
    * Delete specified configuration
    */
   async _deleteConfig (id) {
+    await this._disconnectApp();
     await this._configModel .update (id, {deleted: Types .date .today()});
     this._configs .splice (this._configs .findIndex (c => {return c._id == id}), 1);
-    //await this._selectConfig (this._configs[0] ._id);  // TODO select iff deleted current
+    await this._selectConfig (this._configs[0] ._id);
     this._view .selectTab (this._getConfigTab());
     this._view .selectTab (this._getBudgetTab (this._bid));
     this._view .setButtonDisabled (this._configTabs, this._configs .length == 1);
-    this._notifyChange();
+    await this._notifyApp();
   }
 
   /**
    * Delete specified budget and related categories and schedules from model
    */
   async _deleteBudget (id) {
+    await this._disconnectApp();
     await Model .removeBudget (id);
     await this._onBudgetModelChange (ModelEvent .REMOVE, {_id: id});
     this._selectBudget (this._budgets [0] ._id);
     this._view .selectTab (this._getBudgetTab (this._bid));
     this._view .setButtonDisabled (this._getBudgetTabs(), this._budgets .length == 1);
-    this._notifyChange();
+    await this._notifyApp();
   }
 }
 
 
 UserEvent = {
   NEW_USER: 0,
-  NEW_CONFIGURATION: 1,
-  LOGOUT: 2
+  DISCONNECT: 1,
+  NEW_CONFIGURATION: 2,
+  LOGOUT: 3
 }

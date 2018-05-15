@@ -7,6 +7,12 @@ class TransactionModel extends Model {
     super ('transactions', database);
   }
 
+  delete() {
+    TransactionModel_queries = [];
+    TransactionModel_database = undefined;
+    super .delete();
+  }
+
   _getQueries() {
     if (TransactionModel_database != this .getDatabase()) {
       TransactionModel_queries  = [];
