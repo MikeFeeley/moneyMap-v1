@@ -252,11 +252,11 @@ class UserView extends View {
     this._accountEdit .removeClass ('background');
   }
 
-  addConfirmDelete (positionTarget, id, type) {
+  addConfirmDelete (positionTarget, id, type, positionOffset = {}) {
     let parent  = this._accountEdit .find ('> div');
     let popup   = $('<div>', {class: '_popupContainer'}) .appendTo (parent);
     let content = $('<div>', {class: '_addPopup'}) .appendTo (popup);
-    popup .css (ui .calcPosition (positionTarget, parent, {top: -40, left: 0}));
+    popup .css (ui .calcPosition (positionTarget, parent, {top: -40 + (positionOffset .top || 0), left: 0 + (positionOffset .left || 0)}));
     $('<div>', {text: 'Do you really want to delete this ' + type + '?'}) .appendTo (content);
     $('<div>', {text: 'This action can not be undone.'}) .appendTo (content);
     $('<div>') .appendTo (content)
@@ -430,6 +430,7 @@ class UserView extends View {
       $('<div>', {text: 'Enter Your Private Cloud Encryption Password for ' + name + ' Configuration'}) .appendTo (panel);
       let form = $('<form>') .appendTo (panel);
       let input = $('<input>', {type: 'text', placeholder: 'Password'}) .appendTo (form);
+      input.focus();
       let error = $('<span>') .appendTo (form);
       form .on ('submit', () => {
         (async () => {
@@ -447,6 +448,20 @@ class UserView extends View {
         reject();
       });
     });
+  }
+
+  addPleaseWait() {
+    let pw = $('<div>', {class: '_pleaseWait'}) .appendTo ($('body'));
+    $('<div>', {text: 'Copy in progress ...'}) .appendTo (pw);
+    pw .on ('keypress', e => {
+      e .preventDefault();
+      e .stopPropagation();
+      return false;
+    })
+  }
+
+  removePleaseWait() {
+    $('body > ._pleaseWait') .remove();
   }
 }
 

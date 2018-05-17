@@ -156,7 +156,6 @@ class User extends Observable {
           try {
             await this._init();
           } catch (e) {
-            await Model .updateUser (this._uid, this._accessCap, {curConfiguration: null});
             this .logout();
             break;
           }
@@ -294,7 +293,6 @@ class User extends Observable {
       try {
         await this._init();
       } catch (e) {
-        await Model .updateUser (this._uid, this._accessCap, {curConfiguration: null});
         return false;
       }
       if (! this._cid || ! this._bid)
@@ -562,7 +560,7 @@ class User extends Observable {
     this._view .addButton ('Delete Budget', () => {
       if (this._budgets .length > 1) {
         let html = this._configTabs .find ('> ._tabGroupContents > ._content._selected > ._contentGroup > ._tabGroup > ._tabGroupContents > ._content._selected');
-        this._view .addConfirmDelete (html, budget._id, 'budget')
+        this._view .addConfirmDelete (html, budget._id, 'budget', {left: -50})
       }
     }, this._view .addLine (budgetContent));
     this._view .setButtonDisabled (budgetTabs, this._budgets .filter (b => {return b._id != budget._id}) .length == 0);
@@ -661,18 +659,62 @@ class User extends Observable {
   /**
    * Create a new config by copying from specified config
    */
-  async _copyConfig (from) {
+  async _copyConfig (type, encryptionPassword, from) {
     await this._disconnectApp();
     let fromConfig = this._configs .find (c => {return c._id == from});
-    this._cid = (await this._configModel .insert ({user: this._uid, name: 'Copy of ' + fromConfig .name}))._id;
-    await Model .copyDatabase (this .getDatabaseName (from), this .getDatabaseName (this._cid));
+    let to = (await this._configModel .insert ({
+      user:    this._uid,
+      name:    'Copy of ' + fromConfig .name,
+      type:    type
+    })) ._id;
+    let ec = localStorage .getItem ('encryptionPassword_' + from);
+    let okayToCopyAtServer =
+      (fromConfig .type != ConfigType .CLOUD_ENCRYPTED && type != ConfigType .CLOUD_ENCRYPTED) ||
+      (fromConfig .type == ConfigType .CLOUD_ENCRYPTED && type == ConfigType .CLOUD_ENCRYPTED && encryptionPassword == ec);
+
+    this._view .addPleaseWait();
+
+    if (okayToCopyAtServer) {
+      await Model .copyDatabase (this .getDatabaseName (from), this .getDatabaseName (to));
+      this._cid = to;
+      this._setModelsForConfig();
+      await this._configModel .find({});
+
+    } else {
+      const tables = [
+        'accounts', 'actuals', 'actualsMeta', 'balanceHistory', 'budgets', 'categories', 'counters',
+        'importRules', 'parameters', 'rateFuture', 'schedules', 'taxParameters', 'transactions'
+      ];
+      this._cid = from;
+      this._setModelsForConfig();
+      let data = await Promise .all (tables .map (async t => {
+        let m = new Model (t, this .getDatabaseName());
+        let d = await m .find();
+        m .delete();
+        return {table: t, data: d};
+      }));
+      User_DB_Crypto = type == ConfigType .CLOUD_ENCRYPTED && new Crypto (encryptionPassword);
+      this._cid = to;
+      this._setModelsForConfig();
+      for (let d of data) {
+        let m = new Model (d .table + '$RAW', this .getDatabaseName());
+        await m .insertList (d .data);
+        m .delete();
+      }
+    }
+
+    if (type == ConfigType .CLOUD_ENCRYPTED) {
+      await this._configModel .update (this._cid, {keyTest: ConfigKeyTest});
+      localStorage .setItem ('encryptionPassword_' + this._cid, encryptionPassword);
+      this._view .updateConfigEncryptionPassword (this._cid, encryptionPassword);
+    }
+
     await Model .updateUser (this._uid, this._accessCap, {curConfiguration: this._cid});
-    this._setModelsForConfig();
-    // budgets are added at server without INSERT events, so fake them
     await this._selectConfig (this._cid);
     for (let budget of this._budgets)
       await this._onBudgetModelChange (ModelEvent .INSERT, budget);
     this._selectBudget (this._budgets [0]._id);
+    this._view .removePleaseWait();
     await this._notifyApp();
   }
 
@@ -776,6 +818,7 @@ class User extends Observable {
    * Add a new budget and related categories and schedules to model by rolling specified budget over to new year
    */
   async _createRolloverBudget (from) {
+    // TODO this could move to server, unclear if necessary / better
     await this._disconnectApp();
     let b = Object .assign ({}, this._budgets .find (b => {return b._id == from}));
     b .start = Types .date .addYear (b .start, 1);
@@ -908,9 +951,10 @@ class User extends Observable {
   async _deleteConfig (id) {
     await this._disconnectApp();
     await this._configModel .update (id, {deleted: Types .date .today()});
-    this._configs .splice (this._configs .findIndex (c => {return c._id == id}), 1);
-    await this._selectConfig (this._configs[0] ._id);
-    this._view .selectTab (this._getConfigTab());
+    let psn = this._configs .findIndex (c => {return c._id == id});
+    this._configs .splice (psn, 1);
+    await this._selectConfig (this._configs [Math .max (0, psn - 1)] ._id);
+    this._view .selectTab (this._getConfigTab (this._cid));
     this._view .selectTab (this._getBudgetTab (this._bid));
     this._view .setButtonDisabled (this._configTabs, this._configs .length == 1);
     await this._notifyApp();
@@ -922,8 +966,10 @@ class User extends Observable {
   async _deleteBudget (id) {
     await this._disconnectApp();
     await Model .removeBudget (id);
+    let psn = this._budgets .findIndex (b => {return b._id == id});
+    this._budgets .splice (psn, 1);
     await this._onBudgetModelChange (ModelEvent .REMOVE, {_id: id});
-    this._selectBudget (this._budgets [0] ._id);
+    this._selectBudget (this._budgets [Math .max (0, psn - 1)] ._id);
     this._view .selectTab (this._getBudgetTab (this._bid));
     this._view .setButtonDisabled (this._getBudgetTabs(), this._budgets .length == 1);
     await this._notifyApp();

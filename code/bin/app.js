@@ -17,8 +17,7 @@ var bodyParser = require ('body-parser');
 app .set ('views', './views');
 app .set ('view engine', 'pug');
 
-app .use (bodyParser.json());
-// app .use (bodyParser.urlencoded ({extended: true}));
+app .use (bodyParser.json({limit: '100mb'}));
 app .use (express.static ('browser'));
 
 var connections = new Map();
@@ -158,6 +157,11 @@ app.use(function (req, res, next) {
           req .url = '/transaction' + req.url;
         else if (req .body .collection == 'accountBalance' && req .url == '/find/get')
           req .url = '/transaction/findAccountBalance';
+      }
+      if (req .body .collection) {
+        let raw = req .body .collection .indexOf ('$RAW');
+        if (raw != -1)
+          req .body .collection = req .body .collection .slice (0, raw);
       }
       next();
     } else {

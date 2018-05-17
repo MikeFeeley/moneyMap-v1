@@ -7,8 +7,12 @@
 
 \f0\fs36 \cf0 ==============\
 BUGS\
+	- collections_database is reset on every access to user database (e.g., updating configurations)\
+		- it should be reset when switching from one config to another\
+		- but, if \
 	- banner wrapping\
 	- server disconnect when in account edit\
+	- enter password should allow choosing another config maybe instead of cancel?\
 \
 TODO\
 	- don't switch config/budget when editing / adding etc\
@@ -21,6 +25,7 @@ TODO\
 	- server-side encryption of amounts and balances\
 	- move config copy back to client\
 		- ensure that all models are killed (so no notifications) before starting copy\
+	- drill into payees in perspective (actual part of it)\
 \
 ENCRYPTION\
 	- local html5 database\

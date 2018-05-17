@@ -321,11 +321,12 @@ var _COLLECTION_REMOTE_SOURCE = "_CRS_"
 
 var _db;
 var _collections = new Map();
-var _collections_database;
 var _default_database_id;
 var _tid;
 var _undoLog;
 var _redoLog;
+
+var COLLECTION_DEBUG = 0;
 
 /**
  * Database collection
@@ -338,6 +339,7 @@ class _Collection extends Observable {
     this._name     = name;
     this._docs     = new Map();
     this._database = database;
+    this._debug    = COLLECTION_DEBUG++;
     if (! _tid) {
       _tid     = 1;
       _undoLog = [];
@@ -355,11 +357,13 @@ class _Collection extends Observable {
   }
 
   static getInstanceForModel (name, database) {
-    if (database != _collections_database) {
-      _collections_database = database;
-      _collections          = new Map();
+    let dbType = database .split ('_') [0];
+    let dbColl = _collections .get (dbType) || (_collections .set (dbType, new Map()) .get (dbType));
+    if (!dbColl || ! dbColl .database || dbColl .database != database) {
+      dbColl = {database: database, collections: new Map()}
+      _collections .set (dbType, dbColl);
     }
-    return _collections .get (name) || _collections .set (name, new _Collection (name, database)) .get (name);
+    return dbColl .collections .get (name) || dbColl .collections .set (name, new _Collection (name, database)) .get (name);
   }
 
   static getDatabaseInstance() {

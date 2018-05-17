@@ -3,7 +3,7 @@ class Crypto {
     this._password = password;
     this._rules = new Map();
     this._rules .set ('importRules',    {allFields: true});
-    this._rules .set ('taxParameters',  {allFields: true});
+    this._rules .set ('taxParameters',  {allButFields: ['_id', 'account']});
     this._rules .set ('transactions',   {fields: ['payee', 'description', 'imported']});
     this._rules .set ('categories',     {fields: ['name']});
     this._rules .set ('schedules',      {fields: ['notes']});
@@ -65,13 +65,19 @@ class Crypto {
     for (let p of Object .keys (doc))
       if (doc [p] && typeof doc [p] == 'object')
         await this._encryptDoc (rule, doc [p])
-      else if (rule .allFields || rule .fields .includes (p)) {
-        let al = this._getAlgorithm();
-        let ct = await crypto .subtle .encrypt (al, await this._getKey(), this._sToAb (doc [p]));
-        doc [p] = {
-          iv: String .fromCharCode .apply (null, new Uint8Array  (al .iv)),
-          ct: String .fromCharCode .apply (null, new Uint8Array (ct))
-        };
+      else {
+        let applies =
+          (rule .allFields    && p != '_id') ||
+          (rule .allButFields && ! rule .allButFields .includes (p)) ||
+          (rule .fields       && rule .fields .includes (p));
+        if (applies) {
+          let al = this._getAlgorithm();
+          let ct = await crypto .subtle .encrypt (al, await this._getKey(), this._sToAb (doc [p]));
+          doc [p] = {
+            iv: String .fromCharCode .apply (null, new Uint8Array  (al .iv)),
+            ct: String .fromCharCode .apply (null, new Uint8Array (ct))
+          };
+        }
       }
   }
 
@@ -85,21 +91,25 @@ class Crypto {
         for (let i = 0; i < doc [p] .ct .length; i++)
           ct[i] = doc [p] .ct .charCodeAt (i);
         doc [p] = this._abToS (await crypto .subtle .decrypt (this._getAlgorithm (iv), await this._getKey(), ct));
+        if (doc [p] && ! isNaN (doc [p]))
+          doc [p] = Number (doc [p]);
       } else if (doc [p] && typeof (doc [p]) == 'object')
         await this._decryptDoc (doc [p]);
   }
 
   async encryptRequestData (data) {
     try {
-      let rule = this._rules .get (data .collection);
-      if (rule) {
-        data = JSON .parse (JSON .stringify (data));
-        for (let field of ['update', 'insert'])
-          if (data [field])
-             await this._encryptDoc (rule, data [field]);
-        if (data .list)
-          for (let item of data .list)
-            await this._encryptDoc (rule, item .update || item);
+      if (data .collection) {
+        let rule = this._rules .get (data .collection .split ('$') [0]); // To remove possible $RAW before checking rules
+        if (rule) {
+          data = JSON .parse (JSON .stringify (data));
+          for (let field of ['update', 'insert'])
+            if (data [field])
+               await this._encryptDoc (rule, data [field]);
+          if (data .list)
+            for (let item of data .list)
+              await this._encryptDoc (rule, item .update || item);
+        }
       }
       return data;
     } catch (e) {

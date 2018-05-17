@@ -136,12 +136,10 @@ async function removeBudget (req, res, next) {
     let inUse = (await db .collection ('transactions') .find ({category: {$in: noBudgetCats}}) .toArray())
       .reduce ((s,t) => {s .add (t .category); return s}, new Set());
     let cids = Array .from (inUse .keys());
-    console.log('a',cids);
     while (cids .length) {
       cids = (await db .collection ('categories') .find ({_id: {$in: cids}}) .toArray())
         .map    (cat => {return cat .parent})
         .filter (cid => {return cid});
-      console.log('b',cids);
       cids .forEach (cid => {inUse .add (cid)})
     }
     let deleteCats = noBudgetCats .filter (c => {return ! inUse .has (c)});
