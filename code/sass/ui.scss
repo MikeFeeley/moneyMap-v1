@@ -641,6 +641,9 @@ div._systemStatus {
     padding: 30px 40px;
     > div {
       margin-top: 10px;
+      > span:first-child {
+        font-weight: 400;
+      }
       > span:nth-child(2) {
         font-weight: 100;
       }
