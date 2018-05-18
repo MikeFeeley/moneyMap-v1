@@ -152,6 +152,7 @@ class User extends Observable {
           this._username   = user .username;
           this._name       = user .name;
           this._cid        = user .curConfiguration;
+          this._remember   = arg .remember;
           if (arg .remember)
             this._addCookie();
           this._setModelsForConfig();
@@ -300,6 +301,7 @@ class User extends Observable {
       }
       if (! this._cid || ! this._bid)
         return false;
+      this._remember = true;
       this._hasCookie = true;
       this._deleteCookie()
       this._notifyObservers (UserEvent .NEW_USER);
@@ -324,7 +326,8 @@ class User extends Observable {
           return c [0] .keyTest == ConfigKeyTest;
         }
         encryptionPassword = await this._view .getConfigEncryptionPassword (config .name, verifyPassword);
-        localStorage .setItem ('encryptionPassword_' + this._cid, encryptionPassword);
+        if (this._remember)
+          localStorage .setItem ('encryptionPassword_' + this._cid, encryptionPassword);
       } else {
         User_DB_Crypto = new Crypto (encryptionPassword);
       }
@@ -346,6 +349,7 @@ class User extends Observable {
     this._uid     = null;
     this._configs = null;
     this._budgets = null;
+    this._remember = false;
     this._notifyObservers (UserEvent .LOGOUT);
   }
 
@@ -635,7 +639,8 @@ class User extends Observable {
       keyTest: type == ConfigType .CLOUD_ENCRYPTED && ConfigKeyTest
     }))._id;
     if (type == ConfigType .CLOUD_ENCRYPTED) {
-      localStorage .setItem ('encryptionPassword_' + this._cid, encryptionPassword);
+      if (this._remember)
+        localStorage .setItem ('encryptionPassword_' + this._cid, encryptionPassword);
       this._view .updateConfigEncryptionPassword (this._cid, encryptionPassword);
     }
     await Model .updateUser (this._uid, this._accessCap, {curConfiguration: this._cid});
@@ -708,7 +713,8 @@ class User extends Observable {
 
     if (type == ConfigType .CLOUD_ENCRYPTED) {
       await this._configModel .update (this._cid, {keyTest: ConfigKeyTest});
-      localStorage .setItem ('encryptionPassword_' + this._cid, encryptionPassword);
+      if (this._remember)
+        localStorage .setItem ('encryptionPassword_' + this._cid, encryptionPassword);
       this._view .updateConfigEncryptionPassword (this._cid, encryptionPassword);
     }
 
