@@ -591,16 +591,38 @@ div._systemStatus {
   }
 }
 
+._advertisement {
+  margin-top: 80px;
+  font-style: italic;
+  color:       #33b1ff;
+  > div {
+    color: #1489cc;
+    font-size: 22px;
+  }
+  > ul {
+    margin-top: 18px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 820px;
+    font-size: 20px;
+    color:  #33b1ff;
+    > li {
+      text-align: left;
+      margin-top: 4px;
+    }
+  }
+ }
+
 ._login_dialogue {
   @include user-select (none);
   margin-left: auto;
   margin-right: auto;
+  text-align: center;
   > ._login_heading {
     padding-top: 20px;
     padding-bottom: 60px;
     font-size: 160px;
     color: #33b1ff;
-    text-align: center;
     > span:nth-child(1) {font-weight: 100; font-style: italic; padding-right: 32px}
     > span:nth-child(2) {font-weight: 600}
   }
@@ -611,7 +633,6 @@ div._systemStatus {
     box-shadow: $drop-shadow;
     border-radius: 6px;
     padding: 30px 40px;
-    text-align:center;
     > div {
       margin-top: 10px;
       > span:nth-child(2) {
@@ -619,11 +640,27 @@ div._systemStatus {
       }
     }
     > div:first-child {
+      text-align:center;
       font-size: 32px;
       font-weight: 200;
       color: #33b1ff;
       padding-bottom: 40px;
     }
+    //> ._labeledField {
+    //  > div {
+    //    color: #aaa;
+    //    font-size: 16px;
+    //  }
+    //  > select {
+    //    -webkit-appearance: none;
+    //    font-size: 18px;
+    //    font-weight: 500;
+    //    border: 0.5px solid #aaa;
+    //    padding: 3px;
+    //    color: #555;
+    //    width: 260px;
+    //  }
+    //}
     > div > input {
       font-size: 20px;
       color: #555;
@@ -797,10 +834,17 @@ body > ._preferences_menu_head {
   }
 }
 
+._user_menu_head {
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .tabbed {
   @include user-select(none);
   > .tabs {
+    overflow-x: hidden;
     position: fixed;
     left: 0px;
     right: 0px;
@@ -815,6 +859,12 @@ body > ._preferences_menu_head {
       float: left;
     }
     > div._login {
+      > div:nth-child(3) {
+        max-width: 300px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
       float: right;
       > ._menu_showing {
         color: #33b1ff;
@@ -886,7 +936,7 @@ body > ._getConfigEncryptionPassword {
     transform: translate(-50%, -50%);
     border-radius: 6px;
     border: 2px solid #80ceff;
-    width: 680px;
+    width: 800px;
     padding: 24px;
     > div:first-child {
       font-size: 22px;
@@ -904,13 +954,34 @@ body > ._getConfigEncryptionPassword {
         color: rgb(230, 46, 46);
       }
     }
-    > button {
+    > ._confirm {
       margin-top: 20px;
-      border:     4px solid #33b1ff;
-      font-size:  16px;
-      font-weight: 500;
-      color:       white;
-      background:  #33b1ff;
+      > button:first-child {
+        border:     4px solid #33b1ff;
+        font-size:  16px;
+        font-weight: 500;
+        color:       white;
+        background:  #33b1ff;
+      }
+      > button:not(:first-child) {
+        margin-left: 32px;
+        border:     4px solid #33b1ff;
+        font-size:  16px;
+        font-weight: 500;
+        color:       #33b1ff;
+        background:  white;
+      }
+      //> label {
+      //  vertical-align: middle;
+      //  margin-left: 32px;
+      //  color: #33b1ff;
+      //  font-size:  20px;
+      //  font-weight: 500;
+      //  > select {
+      //    margin-left: 16px;
+      //    font-size:  16px;
+      //  }
+      //}
     }
   }
 }

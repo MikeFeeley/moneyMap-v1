@@ -7,43 +7,25 @@
 
 \f0\fs36 \cf0 ==============\
 BUGS\
-	- collections_database is reset on every access to user database (e.g., updating configurations)\
-		- it should be reset when switching from one config to another\
-		- but, if \
-	- banner wrapping\
-	- server disconnect when in account edit\
+	- only save encryption password if computer is trusted\
+	- why does budget date range affect what transactions show in inbox / added\
+		- must be fetching transactions base on budget year; is this right?\
+	- create new config, select it, go to INBOX switch budgets \'85 nothing happens\
+		- can't reproduce\
 	- enter password should allow choosing another config maybe instead of cancel?\
+	- signup should allow choosing configuration type / password\
 \
 TODO\
-	- don't switch config/budget when editing / adding etc\
-	- handle type for initial config some how\
-	- handle case where curConfiguration is null\
-		- also consider that encrypted configs may not be switchable to (if password is wrong)\
-		- need to allow for editing even if there's no config\
-\
-	- enter type & password on new config\
 	- server-side encryption of amounts and balances\
-	- move config copy back to client\
-		- ensure that all models are killed (so no notifications) before starting copy\
 	- drill into payees in perspective (actual part of it)\
 \
 ENCRYPTION\
-	- local html5 database\
 	- 3 encryption keys: local (for data stored on local machine), client (client-side db), server (server-side db)\
-		- db-key password for each config stored on local machine (encrypted using local key based on login password?)\
-	- encrypt amounts and balances at server \
-		- server needs to get server-side key somehow\
-	- parameters for configurations\
-		- local\
-		- cloud unencrypted\
-		- cloud encrypted - with specific password\
-	- specify type when creating new config (including when copying)\
-	- popup to enter/store db-key password for config if it isn't found in local database\
-		\
+		- db-key password for each config stored on local machine (encrypted using local key based on login password?)		\
+LOCAL DATABASE\
 \
 UPCOMING\
 	- csv export / import\
-	- local db option and/or encrypted remote db\
 	- refine starting from nothing, documentation and landing page\
 	- rbc scraping?\
 	- make all-zero-value lines disappear from graphs? (possible and also retain animated update?)\

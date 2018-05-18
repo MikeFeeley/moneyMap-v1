@@ -41,6 +41,15 @@ class UserView extends View {
       .click( e => {
         this._convertLoginToSignup();
       })
+    $('<div>', {class: '_advertisement'}) .appendTo (this._login)
+      .append ($('<div>', {html: 'An <b>entirely private</b> way to keep track of your expenses, maintain a budget, and plan for the future.'}))
+      .append ($('<ul>')
+        .append ($('<li>', {text: 'Use on one computer for free (data is stored on your computer).'}))
+        .append ($('<li>', {text: 'Or share across all of your devices for $1 per month (data is stored in the cloud).'}))
+        .append ($('<li>', {text: 'Cloud data is encrypted on your device by a password that only you know.'}))
+        .append ($('<li>', {text: 'Unlike competing services, there are no ads and your data is never shared with anyone, ever.'}))
+        .append ($('<li>', {html: 'Your financial data is <bf>yours</bf>.  You own it.  Period.'}))
+      )
   }
 
   _convertLoginToSignup() {
@@ -276,7 +285,7 @@ class UserView extends View {
       })
     )
     let modal = ui .ModalStack .add (
-      e  => {return e && $.contains (document .body, e .target) && ! $.contains (popup .get (0), e .target)},
+      e  => {return e && ! $.contains (popup .get (0), e .target)},
       () => {popup .remove();},
       true
     );
@@ -308,8 +317,10 @@ class UserView extends View {
       let l = $('<label>') .appendTo (e)
         .append ($('<input>', {type: 'radio', name: 'dataStore', value: i, prop: {checked: false}}))
         .append ($('<span>',  {text: d}));
-      if (i == ConfigType .CLOUD_ENCRYPTED)
-        l .append ($('<input>', {type: 'text', name: 'encryptionPassword', placeholder: 'Encryption Password'}));
+      if (i == ConfigType .CLOUD_ENCRYPTED) {
+        let pw = $('<input>', {type: 'text', name: 'encryptionPassword', placeholder: 'Encryption Password'}) .appendTo (l);
+        $(l .children ('input') [0]) .on ('click', e => {pw .focus()});
+      }
       e .append ($('<div>', {text: ConfigExp [i]}));
     }
     let error = $('<div>', {class:'_errorMessage'}) .appendTo (content);
@@ -354,7 +365,7 @@ class UserView extends View {
       for (let config of configs)
         $('<option>', {value: config._id, text: config .name}) .appendTo (select);
     let modal = ui .ModalStack .add (
-      e  => {return e && $.contains (document .body, e .target) && ! $.contains (popup .get (0), e .target)},
+      e  => {return e && ! $.contains (popup .get (0), e .target)},
       () => {popup .remove();},
       true
     );
@@ -416,7 +427,7 @@ class UserView extends View {
       for (let budget of budgets)
         $('<option>', {value: budget._id, text: budget .name}) .appendTo (select);
     let modal = ui .ModalStack .add (
-      e  => {return e && $.contains (document .body, e .target) && ! $.contains (popup .get (0), e .target)},
+      e  => {return e && ! $.contains (popup .get (0), e .target)},
       () => {popup .remove();},
       true
     );
@@ -427,7 +438,7 @@ class UserView extends View {
     return new Promise ((resolve, reject) => {
       let container = $('<div>', {class: '_getConfigEncryptionPassword'}) .appendTo ($('body'));
       let panel     = $('<div>') .appendTo (container);
-      $('<div>', {text: 'Enter Your Private Cloud Encryption Password for ' + name + ' Configuration'}) .appendTo (panel);
+      $('<div>', {text: 'Enter Private Cloud Encryption Password for ' + name + ' Configuration'}) .appendTo (panel);
       let form = $('<form>') .appendTo (panel);
       let input = $('<input>', {type: 'text', placeholder: 'Password'}) .appendTo (form);
       input.focus();
@@ -442,12 +453,16 @@ class UserView extends View {
             error .text ('Incorrect password');
         }) ();
         return false;
-      })
-      let button = $('<button>', {text: 'Cancel'}) .appendTo (panel) .click (() => {
+      });
+      let confirm = $('<div>', {class: '_confirm'}) .appendTo (panel);
+      $('<button>', {text: 'Cancel'}) .appendTo (confirm) .click (() => {
         container .remove();
         reject();
       });
-    });
+      $('<button>', {text: 'Select a Different Configuration'}) .appendTo (confirm) .click (() => {
+        // TODO popup to select different config
+      });
+     });
   }
 
   addPleaseWait() {

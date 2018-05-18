@@ -17,8 +17,11 @@ const ConfigDesc = ['Cloud Unencrypted', 'Cloud Encrypted', 'Local'];
 const ConfigExp  = [
   'Your data is accessible from anywhere and you have no private password to remember.  ' +
   'We keep your data secure.  It is encrypted in transit to/from the cloud, but is not protected by a local password.',
-  'Your data is accessible from anywhere and encrypted on your computer to ensure absolute privacy, ' +
-  'but since the encryption password is not stored in the cloud, it can not be recovered should you forget it.',
+
+  'Your data is accessible from anywhere and encrypted on your computer to ensure absolute privacy. ' +
+  'You must remember your password.  It is not stored in the cloud.  It can not be recovered.  ' +
+  'If you forget it, your data will be permanently unreadable.',
+
   'Your data is stored on and never leaves your computer, but is only accessible from that device.'
 ]
 
@@ -523,8 +526,8 @@ class User extends Observable {
     let budgetTabs         = this._view .addTabGroup ('budgets', budgetContentGroup);
     this._view .addButton ('Delete Configuration', () => {
       if (this._configs .length > 1) {
-        let html = this._configTabs .find ('> ._tabGroupContents > ._content._selected');
-        this._view .addConfirmDelete (html, config._id, 'configuration')
+        let html = this._configTabs .find ('> ._tabGroupContents > ._content._selected > ._line > button');
+        this._view .addConfirmDelete (html, config._id, 'configuration', {top: -70, left: -70})
       }
     }, this._view .addLine (configContent));
     this._view .setButtonDisabled (this._configTabs, this._configs .filter (c => {return c._id != config._id}) .length == 0);

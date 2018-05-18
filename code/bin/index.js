@@ -80,6 +80,7 @@ router.get('/', function(req, res, next) {
       'Chart',
       'papaparse',
       'nouislider',
+      'storagedb'
     ],
     initScript: "var __DATABASE__ = '" + (req .body .database?  req .body .database: '') + "';"
   });

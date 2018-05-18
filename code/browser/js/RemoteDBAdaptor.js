@@ -51,8 +51,8 @@ class RemoteDBAdaptor extends DBAdaptor {
     return response;
   }
 
-  _connect (database) {
-    let active = () => {return ! this._disconnected && database == _default_database_id};
+  _connect (epoch) {
+    let active = () => {return ! this._disconnected && epoch == RemoteDBAdaptor_epoch};
     if (active()) {
       let timeoutId = setTimeout (() => {
         if (! this._getState() == DBAdaptorState .PERMANENTLY_DOWN && active())
@@ -76,7 +76,7 @@ class RemoteDBAdaptor extends DBAdaptor {
               clearTimeout (RemoteDBAdaptor_serverDisconnectTimeoutId);
               RemoteDBAdaptor_serverDisconnectTimeoutId = null;
             }
-            setTimeout (() => {this._connect (database)}, 0);
+            setTimeout (() => {this._connect (epoch)}, 0);
             if (data .upcalls) {
               (async () => {
                 if (User_DB_Crypto)
@@ -91,7 +91,7 @@ class RemoteDBAdaptor extends DBAdaptor {
             if (this._getState() != DBAdaptorState .PERMANENTLY_DOWN)
               this._setState (DBAdaptorState .DOWN);
             clearTimeout (timeoutId);
-            setTimeout (() => {this._connect (database)}, CLIENT_RETRY_INTERVAL);
+            setTimeout (() => {this._connect (epoch)}, CLIENT_RETRY_INTERVAL);
           }
         }
       })
@@ -101,7 +101,7 @@ class RemoteDBAdaptor extends DBAdaptor {
   connect() {
     this._disconnected = false;
     this._setState (DBAdaptorState .UP);
-    this._connect (_default_database_id);
+    this._connect (RemoteDBAdaptor_epoch++);
   }
 
   async disconnect() {
@@ -122,3 +122,4 @@ class RemoteDBAdaptor extends DBAdaptor {
 }
 
 var RemoteDBAdaptor_serverDisconnectTimeoutId;
+var RemoteDBAdaptor_epoch = 0;
