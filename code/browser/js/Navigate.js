@@ -1231,7 +1231,11 @@ class Navigate {
     for (let root of roots)
       added |= this._addProgressGraph (root, null, false, undefined, labelWidth, true, true, true);
     if (! added)
-      this._progressView .addHelp (['Use "Plan" to start planning a budget.', 'Then you will see your budget progress here.']);
+      this._progressView .addHelp ([
+        'Use "Plan" to start planning a budget; then you will see your budget progress here.',
+        'Or use "Inbox" to start adding transactions to track your spending before you decide on a budget.',
+        '________',
+        'Use CMD + F to search, or click or ALT + click to dig deeper.']);
   }
 
 

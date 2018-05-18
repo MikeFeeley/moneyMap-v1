@@ -15,9 +15,20 @@ BUGS\
 	- enter password should allow choosing another config maybe instead of cancel?\
 	- signup should allow choosing configuration type / password\
 \
+LANDING SCREEN LOGIN BEHAVIOUR\
+	- landing screen is an add with diagrams and explanation and button to start or continue\
+		- only shows if there's no local database or cookie\
+	- store cookie to indicate they've been here before\
+		- if so go to login instead of landing page\
+	- the start button takes you directly to a local budget with no login\
+		- login is only required for sharing option\
+\
 TODO\
 	- server-side encryption of amounts and balances\
 	- drill into payees in perspective (actual part of it)\
+	- help button\
+		- reshow the empty-screen help\
+		- give basic instructions, including %F for search, clicking and alt-clicking etc, and how to get started instructions\
 \
 ENCRYPTION\
 	- 3 encryption keys: local (for data stored on local machine), client (client-side db), server (server-side db)\
