@@ -21,16 +21,17 @@ class Model extends Observable {
     _Collection._resetUndo();
   }
 
-  static addDatabaseObserver (thisArg, observer) {
-    _Collection .addDatabaseObserver (thisArg, observer);
+  static addRemoteDatabaseObserver (thisArg, observer) {
+    _Collection .addRemoteDatabaseObserver (thisArg, observer);
   }
 
   static databaseConnect() {
-    _db .connect();
+    if (_db && _default_database_id && ! _default_database_id .endsWith (Model_LOCAL_COLLECTION))
+      _db .connect();
   }
 
   static async databaseDisconnect() {
-    if (_db)
+    if (_db && _default_database_id && ! _default_database_id .endsWith (Model_LOCAL_COLLECTION))
       _db .disconnect();
   }
 
@@ -282,6 +283,10 @@ class Model extends Observable {
     return _Collection .removeBudget (id);
   }
 
+  static async removeConfiguration (database) {
+    return _Collection .removeConfiguration (database);
+  }
+
   static async login (username, password) {
     return _Collection .login (username, password);
   }
@@ -312,7 +317,8 @@ var ModelEvent = {
   REMOVE: 2
 }
 
-var _COLLECTION_REMOTE_SOURCE = "_CRS_"
+var _COLLECTION_REMOTE_SOURCE = '_CRS_';
+var Model_LOCAL_COLLECTION    = '_LOCAL';
 
 /******************
  * PRIVATE HELPERS
@@ -320,13 +326,13 @@ var _COLLECTION_REMOTE_SOURCE = "_CRS_"
 
 
 var _db;
+var _local_db;
 var _collections = new Map();
 var _default_database_id;
 var _tid;
 var _undoLog;
 var _redoLog;
 
-var COLLECTION_DEBUG = 0;
 
 /**
  * Database collection
@@ -339,7 +345,6 @@ class _Collection extends Observable {
     this._name     = name;
     this._docs     = new Map();
     this._database = database;
-    this._debug    = COLLECTION_DEBUG++;
     if (! _tid) {
       _tid     = 1;
       _undoLog = [];
@@ -353,7 +358,7 @@ class _Collection extends Observable {
         }
       }, false);
      }
-    _Collection .getDatabaseInstance() .addObserver (this, this .onDbChange);
+    _Collection .getDatabaseInstance (database) .addObserver (this, this .onDbChange);
   }
 
   static getInstanceForModel (name, database) {
@@ -366,14 +371,21 @@ class _Collection extends Observable {
     return dbColl .collections .get (name) || dbColl .collections .set (name, new _Collection (name, database)) .get (name);
   }
 
-  static getDatabaseInstance() {
-    if (! _db)
-      _db = new RemoteDBAdaptor();
-    return _db;
+  static getDatabaseInstance (database) {
+    let isLocal = database .endsWith (Model_LOCAL_COLLECTION);
+    if (! _db) {
+      _db       = new RemoteDBAdaptor();
+      _local_db = new LocalDBAdaptor();
+    }
+    return isLocal? _local_db: _db;
   }
 
-  static addDatabaseObserver (thisArg, observer) {
-    _Collection .getDatabaseInstance() .addObserver (thisArg, observer);
+  static addRemoteDatabaseObserver (thisArg, observer) {
+    _Collection .getDatabaseInstance ('') .addObserver (thisArg, observer);
+  }
+
+  _getDB() {
+    return this._database .endsWith (Model_LOCAL_COLLECTION)? _local_db: _db;
   }
 
   async onDbChange (eventType, arg) {
@@ -420,11 +432,11 @@ class _Collection extends Observable {
   }
 
   async has (query) {
-    return _db .perform (DatabaseOperation .HAS, {database: this._database, collection: this._name, query: query});
+    return this._getDB() .perform (DatabaseOperation .HAS, {database: this._database, collection: this._name, query: query});
   }
 
   async find (query) {
-    var docs = await _db .perform (DatabaseOperation .FIND, {database: this._database, collection: this._name, query: query});
+    var docs = await this._getDB() .perform (DatabaseOperation .FIND, {database: this._database, collection: this._name, query: query});
     if (docs)
       for (let doc of docs)
         this._docs .set (doc._id, doc);
@@ -467,7 +479,7 @@ class _Collection extends Observable {
       var orig = {}
       for (let f in update)
         orig [f] = doc [f];
-      var ok  = await _db .perform (DatabaseOperation .UPDATE_ONE, {database: this._database, collection: this._name, id: id, update: update})
+      var ok  = await this._getDB() .perform (DatabaseOperation .UPDATE_ONE, {database: this._database, collection: this._name, id: id, update: update})
       if (ok) {
         let undo = Object .keys (update) .reduce ((o,f) => {o [f] = orig [f] || ''; return o}, {})
         _Collection._logUndo (this, this .update, [id, undo], isUndo, tid);
@@ -490,7 +502,7 @@ class _Collection extends Observable {
       origs .push (orig);
       docs  .push (doc);
     }
-    var ok  = await _db .perform (DatabaseOperation .UPDATE_LIST, {database: this._database, collection: this._name, list: list});
+    var ok  = await this._getDB() .perform (DatabaseOperation .UPDATE_LIST, {database: this._database, collection: this._name, list: list});
     if (ok) {
       var undo = []
       for (let item of list) {
@@ -510,7 +522,7 @@ class _Collection extends Observable {
   }
 
   async insert (insert, source, isUndo, tid) {
-    var result = await _db .perform (DatabaseOperation .INSERT_ONE, {database: this._database, collection: this._name, insert: insert});
+    var result = await this._getDB() .perform (DatabaseOperation .INSERT_ONE, {database: this._database, collection: this._name, insert: insert});
     if (result) {
       _Collection._logUndo (this, this .remove, [result._id], isUndo, tid);
       for (let f of Object .keys (result) .filter (f => {return f .startsWith ('_')}))
@@ -521,7 +533,7 @@ class _Collection extends Observable {
   }
 
   async insertList (list, source, isUndo, tid) {
-    var results = await _db .perform (DatabaseOperation .INSERT_LIST, {database: this._database, collection: this._name, list: list})
+    var results = await this._getDB() .perform (DatabaseOperation .INSERT_LIST, {database: this._database, collection: this._name, list: list})
     var undo    = [];
     for (let i = 0; i < list .length; i++)
       if (results [i]) {
@@ -542,7 +554,7 @@ class _Collection extends Observable {
   }
 
   async remove (id, source, isUndo, tid) {
-    let ok  = await _db .perform (DatabaseOperation .REMOVE_ONE, {database: this._database, collection: this._name, id: id});
+    let ok  = await this._getDB() .perform (DatabaseOperation .REMOVE_ONE, {database: this._database, collection: this._name, id: id});
     if (ok) {
       let doc = this._docs .get (id);
       if (doc) {
@@ -554,7 +566,7 @@ class _Collection extends Observable {
   }
 
   async removeList (list, source, isUndo, tid) {
-    var results = await _db .perform (DatabaseOperation .REMOVE_LIST, {database: this._database, collection: this._name, list: list});
+    var results = await this._getDB() .perform (DatabaseOperation .REMOVE_LIST, {database: this._database, collection: this._name, list: list});
     var undo    = [];
     for (let i = 0; i < list .length; i++)
       if (results [i]) {
@@ -569,6 +581,8 @@ class _Collection extends Observable {
     return results;
   }
 
+  // TODO need to be able to select db (local or remote) based on database name, but can't use this
+
   static async copyDatabase (from, to) {
     return _db .perform (DatabaseOperation .COPY_DATABASE, {from: from, to: to});
   }
@@ -579,6 +593,10 @@ class _Collection extends Observable {
 
   static async removeBudget (id) {
     return _db .perform (DatabaseOperation .REMOVE_BUDGET, {database: _default_database_id, id: id});
+  }
+
+  static async removeConfiguration (database) {
+    return _Collection .getDatabaseInstance (database) .perform (DatabaseOperation .REMOVE_CONFIGURATION, {database: database});
   }
 
   static async login (username, password) {

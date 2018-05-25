@@ -2,6 +2,7 @@ var fs      = require('fs');
 var http    = require('http');
 var https   = require('https');
 var express = require ('express');
+var path    = require ('path');
 var util    = require ('../lib/util.js');
 var router  = express .Router();
 
@@ -132,6 +133,10 @@ function getDB (name) {
   return dbCache .get (name) || dbCache .set (name, db .connect ('mongodb://localhost:27017/' + name)) .get (name);
 }
 
+app .use ('/images', (req, res) => {
+  res .sendFile (path .join (__dirname, '../browser/images', req .url));
+})
+
 app.use ('/', require ('./index'));
 
 app.use(function (req, res, next) {
@@ -146,7 +151,7 @@ app.use(function (req, res, next) {
         error: err
       });
     } else if (req .body) {
-      if (req .url .startsWith ('/admin/') && ! ['/admin/copyBudget', '/admin/removeBudget'] .includes (req.url))
+      if (req .url .startsWith ('/admin/') && ! ['/admin/copyBudget', '/admin/removeBudget', '/admin/removeConfiguration'] .includes (req.url))
         database = 'admin';
       req .dbPromise = getDB (database);
       req._getDB     = getDB;

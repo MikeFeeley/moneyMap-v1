@@ -3,23 +3,25 @@ class RemoteDBAdaptor extends DBAdaptor {
   constructor() {
     super();
     this._urls = [];
-    this._urls [DatabaseOperation .FIND]          = '/find/get';
-    this._urls [DatabaseOperation .HAS]           = '/find/has';
-    this._urls [DatabaseOperation .UPDATE_ONE]    = '/update/one';
-    this._urls [DatabaseOperation .UPDATE_LIST]   = '/update/list';
-    this._urls [DatabaseOperation .INSERT_ONE]    = '/insert/one';
-    this._urls [DatabaseOperation .INSERT_LIST]   = '/insert/list';
-    this._urls [DatabaseOperation .REMOVE_ONE]    = '/remove/one';
-    this._urls [DatabaseOperation .REMOVE_LIST]   = '/remove/list';
-    this._urls [DatabaseOperation .LOGIN]         = '/admin/login';
-    this._urls [DatabaseOperation .SIGNUP]        = '/admin/signup';
-    this._urls [DatabaseOperation .UPDATE_USER]   = '/admin/updateUser';
-    this._urls [DatabaseOperation .COPY_DATABASE] = '/admin/copyDatabase';
-    this._urls [DatabaseOperation .COPY_BUDGET]   = '/admin/copyBudget';
-    this._urls [DatabaseOperation .REMOVE_BUDGET] = '/admin/removeBudget';
+    this._urls [DatabaseOperation .FIND]                 = '/find/get';
+    this._urls [DatabaseOperation .HAS]                  = '/find/has';
+    this._urls [DatabaseOperation .UPDATE_ONE]           = '/update/one';
+    this._urls [DatabaseOperation .UPDATE_LIST]          = '/update/list';
+    this._urls [DatabaseOperation .INSERT_ONE]           = '/insert/one';
+    this._urls [DatabaseOperation .INSERT_LIST]          = '/insert/list';
+    this._urls [DatabaseOperation .REMOVE_ONE]           = '/remove/one';
+    this._urls [DatabaseOperation .REMOVE_LIST]          = '/remove/list';
+    this._urls [DatabaseOperation .LOGIN]                = '/admin/login';
+    this._urls [DatabaseOperation .SIGNUP]               = '/admin/signup';
+    this._urls [DatabaseOperation .UPDATE_USER]          = '/admin/updateUser';
+    this._urls [DatabaseOperation .COPY_DATABASE]        = '/admin/copyDatabase';
+    this._urls [DatabaseOperation .COPY_BUDGET]          = '/admin/copyBudget';
+    this._urls [DatabaseOperation .REMOVE_BUDGET]        = '/admin/removeBudget';
+    this._urls [DatabaseOperation .REMOVE_CONFIGURATION] = '/admin/removeConfiguration';
   }
 
   async perform (operation, data) {
+    //console.log(data);
     this._updatePendingOperations (operation, 1);
     await super .perform (operation, data);
     let response, firstTry = true;
@@ -105,7 +107,7 @@ class RemoteDBAdaptor extends DBAdaptor {
   }
 
   async disconnect() {
-    if (_default_database_id) {
+    if (_default_database_id && ! _default_database_id .endsWith (Model_LOCAL_COLLECTION)) {
       try {
         this._disconnected = true;
         await $.ajax ({url:'/upcall', type: 'POST', contentType: 'application/json', processData: false,

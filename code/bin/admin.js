@@ -151,6 +151,12 @@ async function removeBudget (req, res, next) {
   }
 }
 
+async function removeConfiguration (req, res, next) {
+  if (req .body .database .startsWith ('config_'))
+    await (await req .dbPromise) .dropDatabase();
+  res .json ({okay: true});
+}
+
 router.post ('/login', function(req, res, next) {
   async (login) (req, res, next);
 });
@@ -174,5 +180,10 @@ router.post('/copyBudget', function (req, res, next) {
 router.post('/removeBudget', function (req, res, next) {
   (async () => removeBudget (req, res, next))();
 })
+
+router.post('/removeConfiguration', function (req, res, next) {
+  (async () => removeConfiguration (req, res, next))();
+})
+
 
 module.exports = router;

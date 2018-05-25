@@ -7,21 +7,11 @@
 
 \f0\fs36 \cf0 ==============\
 BUGS\
-	- only save encryption password if computer is trusted\
+	- tab in tran cat field after entering partial string to get a match appears to not always select the category\
+	- change crypto password to just be unencrypted user password \'85 sort encrypted one at server for auth\
 	- why does budget date range affect what transactions show in inbox / added\
 		- must be fetching transactions base on budget year; is this right?\
-	- create new config, select it, go to INBOX switch budgets \'85 nothing happens\
-		- can't reproduce\
-	- enter password should allow choosing another config maybe instead of cancel?\
 	- signup should allow choosing configuration type / password\
-\
-LANDING SCREEN LOGIN BEHAVIOUR\
-	- landing screen is an add with diagrams and explanation and button to start or continue\
-		- only shows if there's no local database or cookie\
-	- store cookie to indicate they've been here before\
-		- if so go to login instead of landing page\
-	- the start button takes you directly to a local budget with no login\
-		- login is only required for sharing option\
 \
 TODO\
 	- server-side encryption of amounts and balances\
@@ -30,10 +20,17 @@ TODO\
 		- reshow the empty-screen help\
 		- give basic instructions, including %F for search, clicking and alt-clicking etc, and how to get started instructions\
 \
-ENCRYPTION\
-	- 3 encryption keys: local (for data stored on local machine), client (client-side db), server (server-side db)\
-		- db-key password for each config stored on local machine (encrypted using local key based on login password?)		\
 LOCAL DATABASE\
+	- merges with remote database\
+	- you don't need an account and don't need to log in\
+		- in this mode you just go straight to app\
+		- cloud storage options are disabled in this mode\
+	- upgrade option or something like that\
+		- requires signup and then you can move configs to cloud\
+\
+FIREFOX\
+	- top bar dropdown menu disappears when it looses hover\
+	- some of the blurred popups don't revert to opaque (e.g., UserEdit add/confirm)\
 \
 UPCOMING\
 	- csv export / import\

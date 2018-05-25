@@ -77,7 +77,7 @@ class Navigate {
   async _getModelValues() {
     await this._actuals .findHistory ();
     if (this._historicBalances === undefined)
-      this._historicBalances = (await this._balances .find()) || null
+      this._historicBalances = (await this._balances .find({})) || null
     if (this._rates === undefined)
       this._rates = (await this._parameters .find ({name: 'rates'})) [0] || {apr: 0, inflation: 0, presentValue: false}
   }
@@ -1343,8 +1343,8 @@ class Navigate {
         return v .amount > 50 && this._categories .getType (v .cat) != ScheduleType .YEAR
       }, v => {return  v .amount}, '_flagGood');
     let update = () => {
-      let endOfLastMonth = Types .date .monthEnd (Types .date .addMonthStart (Types .date .today(), -1))
-      let toLastMonthVar = Array .from (this._variance .getVarianceList ([this._budget .getExpenseCategory()], {end: endOfLastMonth}, true)
+      let endOfLastMonth = Types .date .monthEnd (Types .date .addMonthStart (Types .date .today(), -1));
+        let toLastMonthVar = Array .from (this._variance .getVarianceList ([this._budget .getExpenseCategory()], {end: endOfLastMonth}, true)
         .concat           (this._variance .getVarianceList ([this._budget .getExpenseCategory()], {end: Types .date .today()}, true))
         .filter           (v => {return v .amount < 50})
         .reduce ((m,v) => {
@@ -1786,7 +1786,7 @@ class Navigate {
       .filter (a => {return a .form == AccountForm .ASSET_LIABILITY})
       .sort   ((a,b) => {return a .sort < b .sort? -1: 1});
     let idIndex = accounts .map (a => {return a._id});
-    let balances = (await this._balances .find ({}))
+    let balances = this._historicBalances
       .filter (b => {return idIndex .find (aid => {return idIndex .includes (aid)})})
       .sort   ((a,b) => {return a .date < b .date? -1: a .date == b .date? 0: 1});
     let rows;

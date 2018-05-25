@@ -80,7 +80,7 @@ router.get('/', function(req, res, next) {
       'Chart',
       'papaparse',
       'nouislider',
-      'storagedb'
+      'zangodb.min'
     ],
     initScript: "var __DATABASE__ = '" + (req .body .database?  req .body .database: '') + "';"
   });

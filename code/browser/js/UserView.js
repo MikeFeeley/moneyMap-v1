@@ -5,51 +5,240 @@ class UserView extends View {
     $(window) .resize (e => {this .removeMenu()});
   }
 
-  addLogin (toHtml) {
-    this._login = $('<div>', {class: '_login_dialogue'}) .appendTo (toHtml);
-    $('<div>', {class: '_login_heading'})       .appendTo (this._login)
-      .append ($('<span>', {text: 'money'}))
-      .append ($('<span>', {text: 'Map'}));
-    let body = $('<div>', {class: '_login_body'}) .appendTo (this._login);
-    $('<div>') .appendTo (body)
-      .append ($('<span>', {text: 'Login'}))
-      .append ($('<span>', {text: ' or Signup'}));
-    $('<div>') .appendTo (body)
-      .append ($('<input>',  {type: 'text', id: 'username', placeholder: 'Email'}));
-    $('<div>') .appendTo (body)
-      .append ($('<input>',  {type: 'password', id: 'password', placeholder: 'Password'}));
-    this._loginErr = $('<div>', {class: '_loginError'}) .appendTo (body);
-    $('<label>') .appendTo ($('<div>', {class: '_remember'}) .appendTo(body))
-      .append ($('<input>', {type: 'checkbox', id: 'remember'})
-        .change (e => {
-          let input = e .target;
-          $(input) .closest ('label') .find ('span') [input .checked? 'addClass': 'removeClass'] ('_checked');
+  addLanding (toHtml, isNotNew) {
+    let landing = $('<div>', {class: '_landing'}) .appendTo (toHtml);
+    let banner  = $('<div>', {class: '_landingBanner'}) .appendTo (landing);
+    let main    = $('<div>', {class: '_landingMain'}) .appendTo (landing);
+    let bullets = $('<div>', {class: '_landingBullets'}) .appendTo (landing);
+    let go      = $('<div>', {class: '_landingGo'}) .appendTo (landing);
+    let table   = $('<div>', {class: '_landingTable'}) .appendTo (landing);
+    let privacy = $('<div>', {class: '_landingPrivacy'}) .appendTo (landing);
+
+    $('<div>', {text: 'money'}) .appendTo (banner);
+    $('<div>', {text: 'Map'})   .appendTo (banner);
+
+    $('<div>') .appendTo (main)
+      .append ($('<div>', {text: 'Track, budget, plan.'}))
+      .append ($('<div>', {text: 'Get a hold of your finances.'}))
+      .append ($('<div>', {html: 'Start simple &mdash; gradually unleash your planning power.'}))
+    .append ($('<div>', {text: 'Keep your information private and secure.'}))
+    $('<div>') .appendTo (main)
+      .append ($('<img>', {src: 'images/screen.jpeg'}));
+    $('<ul>') .appendTo (bullets)
+      .append ($('<li>', {html: 'Use, full-featured, on one computer for <b>free</b>.'}))
+      .append ($('<li>', {text: 'Or upgrade to share across all of your devices.'}))
+      .append ($('<li>', {html: 'Data is encrypted <b>on your computer</b> using a password only you know.'}))
+      .append ($('<li>', {html: 'NO ads &mdash; NO data sharing.'}))
+      .append ($('<li>', {text: 'Export your data to Excel or Numbers at anytime.'}));
+    $('<button>', {text: 'Get Started'}) .appendTo (go) .click (e => {
+      this._notifyObservers (UserViewEvent .GET_STARTED);
+    });
+    $('<div>') .appendTo (table)
+      .append ($('<div>', {class: '_landingTableImage'})
+        .append ($('<img>', {src: 'images/rule.jpeg'}))
+      )
+      .append ($('<div>', {class: '_landingTableText'})
+        .append ($('<div>', {text: 'Categorize Your Spending'}))
+        .append ($('<div>', {text:
+          'Import transactions from your bank or enter them directly.  Create rules to automatically assign categories to ' +
+          'transactions.  Create new categories and sub-categories as you go, as you gain new insights into your spending.'}))
+      )
+    $('<div>') .appendTo (table)
+      .append ($('<div>', {class: '_landingTableText'})
+        .append ($('<div>', {text: 'Begin to Track Where Your Money Goes'}))
+        .append ($('<div>', {html:
+          'Once you start categorizing your transactions, <em>money</em><b>Map</b>, lets you see where your money is ' +
+          'going each using graphs and spread-sheet like tables.  Clicking on any category lets you dig deeper to look ' +
+          'at subcategories, to compare spending by where you shop, or to see the individual transactions behind the graph.'}))
+      )
+      .append ($('<div>', {class: '_landingTableImage'})
+        .append ($('<img>', {src: 'images/activity.jpeg'}))
+      )
+    $('<div>') .appendTo (table)
+      .append ($('<div>', {class: '_landingTableImage'})
+        .append ($('<img>', {src: 'images/plan.jpeg'}))
+      )
+      .append ($('<div>', {class: '_landingTableText'})
+        .append ($('<div>', {text: 'Create a Budget'}))
+        .append ($('<div>', {html:
+          'Then, when you are ready, you can start to create a budget by listing spending amounts for categories for ' +
+          'particular months or the entire year.  Each time you add an anticipated expense, can indicate whether this ' +
+          'is something that will continue for the next few years, which then gives you the chance to start planning ahead. ' +
+          'You do the same for your income and savings.'}))
+      )
+    $('<div>') .appendTo (table)
+      .append ($('<div>', {class: '_landingTableText'})
+        .append ($('<div>', {text: 'Track Your Progress'}))
+        .append ($('<div>', {html:
+          'Now you can track your progress each month to see how your actual spending compares to your plan.  You will ' +
+          'know when you are starting to spend too much or when you have a little extra for something else.'}))
+      )
+      .append ($('<div>', {class: '_landingTableImage'})
+        .append ($('<img>', {src: 'images/prog.jpeg'}))
+      )
+    $('<div>') .appendTo (table)
+      .append ($('<div>', {class: '_landingTableImage'})
+        .append ($('<img>', {src: 'images/ma.jpeg'}))
+      )
+      .append ($('<div>', {class: '_landingTableText'})
+        .append ($('<div>', {text: 'Dig Deeper'}))
+        .append ($('<div>', {html:
+          'You can dig deeper into any category or subcategory to look at the entire year month by month, to see ' +
+          'exactly where your money is going and how your spending pattern compares to your budget.' }))
+      )
+    $('<div>') .appendTo (table)
+      .append ($('<div>', {class: '_landingTableText'})
+        .append ($('<div>', {text: 'Adjust and Refine Your Budget'}))
+        .append ($('<div>', {html:
+          'As you learn more about your spending patterns and as unanticipated things happen, you will need to ' +
+          'adjust your budget, which is quick and easy, just a click away from any graph or table.' }))
+    )
+      .append ($('<div>', {class: '_landingTableImage'})
+        .append ($('<img>', {src: 'images/hud.jpeg'}))
+      )
+    $('<div>') .appendTo (table)
+      .append ($('<div>', {class: '_landingTableImage'})
+        .append ($('<img>', {src: 'images/future.jpeg'}))
+      )
+      .append ($('<div>', {class: '_landingTableText'})
+        .append ($('<div>', {html: 'See the Past &mdash; Plan for the Future'}))
+        .append ($('<div>', {html:
+          'The longer you use <em>money</em><b>Map</b> the more you will know.  You will be able to compare current ' +
+          'spending to the past to see long-term trends or changes in lifestyle.  And, ' +
+          'Once you know where you are spending money today, you will be able to start planning future spending by ' +
+          'indicating which of your current expenses will recur and by entering anticipated changes for in future ' +
+          'years.  Now you can plan for buying your first home, having kids, or retirement. ' }))
+      )
+    $('<div>') .appendTo (table)
+      .append ($('<div>', {class: '_landingTableText'})
+        .append ($('<div>', {html: 'Watch Your Money Grow'}))
+        .append ($('<div>', {html:
+          'When you control your spending, you control what you save.  Using your past activity and your future plans, ' +
+          '<em>money</em><b>Map</b> shows you how your savings is growing and how much you will have saved at key ' +
+          'moments in your future.  ' }))
+      )
+    .append ($('<div>', {class: '_landingTableImage'})
+      .append ($('<img>', {src: 'images/wealth.jpeg'}))
+    )
+    $('<div>', {text: 'Privacy and Security of your Financial Data'}) .appendTo (privacy);
+    $('<div>', {html:
+      'When you start using <em>money</em><b>Map</b> your data is stored on your own computer.  No information of ' +
+      'any kind leaves your computer.  You can continue to use it this way as long as you like.  Note that ' +
+      'your data is only accessible on a single computer and web browser (e.g., data created in Firefox can not be accessed '+
+      'from Chrome).  You can, however, export your data to CSV format and then import this data into <em>money</em><b>Map</b> ' +
+      'on another browser or computer.'
+    }) .appendTo (privacy)
+    $('<div>', {text:
+      'If you elect to store your data in the cloud, so that you can access your data from multiple devices, we use several strategies to ensure that your data can only ' +
+      'be accessed by you. '
+    }) .appendTo (privacy)
+   $('<div>', {text:
+      'First all data sent between your browser and the cloud is encrypted while it is in the network.  '
+    }) .appendTo (privacy)
+   $('<div>', {text:
+      'Second, all information other than amounts, balances and transaction dates is encrypted on your ' +
+      'computer using a password that only you know using 128-bit AES-CBC.  This password never leaves your computer and so ' +
+      'no one other than you can decrypt this data. '
+    }) .appendTo (privacy)
+   $('<div>', {text:
+      'Third, we handle amounts and balances differently so that the cloud database ' +
+      'can update balances based on transaction amounts.  These values are encrypted on our cloud server as soon as we receive them using a password generated on your computer from your secret password.  We never store this password and so once your ' +
+      'data is stored in the cloud, only you can decrypt these values.  Dates are stored unencrypted so that we can handle your ' +
+      'transaction searches efficiently.'
+    }) .appendTo (privacy)
+    $('<div>', {text:
+      'Our privacy policy is simple.  Your financial data is your property.  Unlike some competing services, ' +
+      'we will never use your data to generate revenue by providing information about you (or aggregated from your data) to advertisers or anyone else. ' +
+      'We enforce this policy using industry-standard encryption techniques and a password that only you know.'
+    }) .appendTo (privacy)
+    if (isNotNew)
+      this .addLogin (toHtml, false);
+  }
+
+  removeLanding() {
+    this .removeLogin();
+    $('body') .empty();
+  }
+
+  addLogin (toHtml, showMini) {
+    this._login  = $('<div>', {class: '_whiteout'})       .appendTo (toHtml);
+    let popup    = $('<div>', {class: '_popupContainer'}) .appendTo (this._login);
+    let content  = $('<div>', {class: '_loginPopup' + (showMini? ' _miniLogin': '')}) .appendTo (popup);
+    let form;
+
+    let addLoginSignup = (sw) => {
+      let tryLogin = () => {
+        this._notifyObservers (UserViewEvent .LOGIN_CLOUD, {
+          username: form .find ('#email')    .val(),
+          password: form .find ('#password') .val(),
+          remember: form .find ('#remember') [0] .checked
         })
-      )
-      .append ($('<span>',  {text: 'Remember me on this computer'}))
-    $('body')
-      .keypress (e => {
-        if (e .originalEvent .key == 'Enter') {
-          this .loginError ('');
-          let username = this._login .find ('#username') .val();
-          let password = this._login .find ('#password') .val();
-          let remember = this._login .find ('#remember') [0] .checked;
-          this._notifyObservers (UserViewEvent .LOGIN, {username: username, password: password, remember: remember});
-        }
+      }
+      $('<div>', {text: sw? 'Login': 'Welcome Back'}) .appendTo (content);
+      form = $('<form>') .appendTo (content) .submit (() => {return false});
+      $('<input>',  {type: 'text', id: 'email', placeholder: 'Email'}) .appendTo (form);
+      $('<input>',  {type: 'password', id: 'password', placeholder: 'Password'}) .appendTo (form);
+      $('<label>') .appendTo ($('<div>', {class: '_remember'}) .appendTo (form))
+        .append ($('<input>', {type: 'checkbox', id: 'remember'}))
+        .append ($('<span>',  {text: 'Remember me on this computer'}))
+        .find ('input') .click (e => {
+          $(e .target) .parent() .find ('span') [e .target .checked? 'addClass': 'removeClass'] ('_checked');
+        })
+      $('<div>', {class: '_loginError'}) .appendTo (form);
+      let buttons = $('<div>', {class: '_loginButtons'}) .appendTo (form);
+      $('<button>', {text: 'Login'})  .appendTo (buttons) .click (() => {tryLogin()});
+      $('<button>', {text: 'Signup'}) .appendTo (buttons) .click (() => {});
+      $('<button>', {text: 'Cancel'}) .appendTo (buttons) .click (() => {this .removeLogin()});
+    }
+
+    if (showMini) {
+      $('<div>', {text: 'Welcome'}) .appendTo (content);
+      $('<div>', {html: 'New to <em>money</em><b>Map</b>?'}) .appendTo (content);
+      $('<div>', {text: 'Get started by storing your data on this computer without signing up.  Be sure that you ' +
+        'trust this computer to store your financial data.  You can use this local version as long as you like for free. '}) .appendTo (content);
+      $('<div>', {text: 'You can move your data to the cloud at any time if you decide you want to access it on other devices. ' +
+        'You can also export your data to load it into a spreadsheet or another financial tool.'}) .appendTo (content);
+      form = $('<form>') .appendTo (content);
+      $('<label>') .appendTo (form)
+        .append ($('<input>', {type: 'radio', name: 'mode', value: 'local'}))
+        .append ($('<span>', {text: 'Store financial data on this computer'}))
+      $('<label>') .appendTo (form)
+        .append ($('<input>', {type: 'radio', name: 'mode', value: 'cloud'}))
+        .append ($('<span>',  {text: 'Login or signup to use cloud storage'}))
+      form .on ('click', 'input', e=> {
+        let mode = e .originalEvent .currentTarget .value;
+        if (mode == 'cloud') {
+          content .empty();
+          content .removeClass ('_miniLogin');
+          addLoginSignup (true);
+        } else
+          this._notifyObservers (UserViewEvent .LOGIN_LOCAL);
       })
-    body.find ('> div > span:nth-child(2)')
-      .click( e => {
-        this._convertLoginToSignup();
-      })
-    $('<div>', {class: '_advertisement'}) .appendTo (this._login)
-      .append ($('<div>', {html: 'An <b>entirely private</b> way to keep track of your expenses, maintain a budget, and plan for the future.'}))
-      .append ($('<ul>')
-        .append ($('<li>', {text: 'Use on one computer for free (data is stored on your computer).'}))
-        .append ($('<li>', {text: 'Or share across all of your devices for $1 per month (data is stored in the cloud).'}))
-        .append ($('<li>', {text: 'Cloud data is encrypted on your device by a password that only you know.'}))
-        .append ($('<li>', {text: 'Unlike competing services, there are no ads and your data is never shared with anyone, ever.'}))
-        .append ($('<li>', {html: 'Your financial data is <bf>yours</bf>.  You own it.  Period.'}))
-      )
+
+    } else {
+      addLoginSignup (false);
+    }
+
+    this._loginModal = this._menuModalEntry = ui .ModalStack .add (
+      e  => {return e && ! $.contains (popup [0], e .target) && popup [0] != e .target},
+      () => {this .removeLogin()},
+      true
+    );
+  }
+
+  setLoginError (text) {
+    this._login .find ('._loginError') .text (text);
+  }
+
+  removeLogin() {
+    if (this._login) {
+      this._login .remove();
+      this._login = null;
+      if (this._loginModal) {
+        ui .ModalStack .delete (this._loginModal);
+        this._loginModal = null;
+      }
+    }
   }
 
   _convertLoginToSignup() {
@@ -71,16 +260,6 @@ class UserView extends View {
           this._notifyObservers (UserViewEvent .SIGNUP, {username: username, name: name, password: password, confirm: confirm, remember: remember});
         }
       })
-  }
-
-  removeLogin (toHtml) {
-    this._login .remove();
-    $('body') .off ('keypress');
-  }
-
-  loginError (err) {
-    if (err && err .length > 0)
-      this._loginErr .text (err);
   }
 
   addMenu (toHtml, position, menuButton, menuButtonPosition) {
@@ -313,9 +492,11 @@ class UserView extends View {
     let tf = $('<form>') .appendTo (content);
     for (let d of ConfigDesc) {
       let i = ConfigDesc .indexOf (d);
+      if (!this._uid && i != 2)
+        continue;
       let e = $('<div>', {class: '_dataStorageChoice'}) .appendTo (tf);
       let l = $('<label>') .appendTo (e)
-        .append ($('<input>', {type: 'radio', name: 'dataStore', value: i, prop: {checked: false}}))
+        .append ($('<input>', {type: 'radio', name: 'dataStore', value: i, prop: {checked: ! this._uid}}))
         .append ($('<span>',  {text: d}));
       if (i == ConfigType .CLOUD_ENCRYPTED) {
         let pw = $('<input>', {type: 'text', name: 'encryptionPassword', placeholder: 'Encryption Password'}) .appendTo (l);
@@ -482,14 +663,15 @@ class UserView extends View {
 
 
 var UserViewEvent = {
-  LOGIN: 0,
-  SIGNUP_ASK: 1,
-  SIGNUP: 2,
-  TAB_CLICK: 3,
-  CONFIG_EMPTY: 4,
-  CONFIG_COPY: 5,
-  BUDGET_EMPTY: 6,
-  BUDGET_COPY: 7,
-  BUDGET_ROLLOVER: 8,
-  DELETE_CONFIRMED: 9
+  GET_STARTED: 0,
+  LOGIN_LOCAL: 1,
+  LOGIN_CLOUD: 2,
+  SIGNUP: 3,
+  TAB_CLICK: 4,
+  CONFIG_EMPTY: 5,
+  CONFIG_COPY: 6,
+  BUDGET_EMPTY: 7,
+  BUDGET_COPY: 8,
+  BUDGET_ROLLOVER: 9,
+  DELETE_CONFIRMED: 10
 }

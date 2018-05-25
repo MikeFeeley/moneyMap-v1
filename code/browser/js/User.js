@@ -72,7 +72,7 @@ class User extends Observable {
       let tab = this._getConfigTab (doc._id);
       if (eventType == ModelEvent .INSERT && tab .length)
         eventType = ModelEvent .UPDATE;
-      if (eventType == ModelEvent .UPDATE && arg .deleted)
+      else if (eventType == ModelEvent .UPDATE && arg .deleted)
         eventType = ModelEvent .REMOVE;
       switch (eventType) {
         case ModelEvent .INSERT:
@@ -83,7 +83,7 @@ class User extends Observable {
             this._view .removeTab (tab);
           break;
         case ModelEvent .UPDATE:
-          let c = this._configs .find (c => {return c._id == doc._id});
+          let c = this._getConfig (doc._id);
           if (c && arg && arg .name) {
             c .name = arg .name;
             if (this._onLabelChange)
@@ -92,6 +92,17 @@ class User extends Observable {
           break;
       }
     }
+    if (this._configs)
+      switch (eventType) {
+        case ModelEvent .INSERT:
+          this._configs .push (doc);
+          break;
+        case ModelEvent .REMOVE:
+          let p = this._getConfig (doc._id);
+          if (p != -1)
+            this._configs .splice (p, 1);
+          break;
+      }
   }
 
   /**
@@ -118,7 +129,7 @@ class User extends Observable {
                 if (! f .startsWith ('_'))
                   b [f] = doc [f];
             }
-            this._updateCookie();
+            this._saveLoginState();
             if (arg .name) {
               if (this._onLabelChange)
                 this._onLabelChange (this .getLabel())
@@ -137,67 +148,73 @@ class User extends Observable {
    * View Change Handler
    */
   async _onViewChange (eventType, arg) {
-  
+
     switch (eventType) {
-      case UserViewEvent .LOGIN:
-        let login = await Model .login (arg .username, arg .password);
-        if (login .noUser)
-          this._view .loginError ('No user exists with that email');
-        else if (login .badPassword)
-          this._view .loginError ('Incorrect password');
-        else {
-          let user         = login .user;
-          this._uid        = user._id;
-          this._accessCap  = user .accessCap;
-          this._username   = user .username;
-          this._name       = user .name;
-          this._cid        = user .curConfiguration;
-          this._remember   = arg .remember;
-          if (arg .remember)
-            this._addCookie();
-          this._setModelsForConfig();
-          this._view .removeLogin();
-          try {
-            await this._init();
-          } catch (e) {
-            this .logout();
-            break;
-          }
-          this._notifyObservers (UserEvent .NEW_USER);
-        }
+
+      case UserViewEvent .GET_STARTED:
+        await this .start();
         break;
 
-      case UserViewEvent .SIGNUP_ASK:
-        this._view .addSignup();
+      case UserViewEvent .LOGIN_LOCAL:
+        this._view .removeLanding();
+        localStorage .removeItem (UserLocalStorageKey .HAS_LOGGED_IN);
+        this._uid       = null;
+        this._accessCap = null;
+        this._username  = null;
+        this._name      = null;
+        this._setModelsForUser();
+        await this._getConfigs();
+        if (this._configs .length == 0)
+          await this._createEmptyConfig (ConfigType .LOCAL, undefined, 'Local');
+        else
+          this._cid = localStorage .getItem (UserLocalStorageKey .CUR_CONFIGURATION) || 0;
+        this._setModelsForConfig();
+        await this._getConfigs();
+        await this._init();
+        this._notifyObservers (UserEvent .NEW_USER);
         break;
 
-      case UserViewEvent .SIGNUP:
-        if (arg .username .length == 0)
-          this._view .loginError ('Email can not be blank');
-        else if (arg .name .length == 0)
-          this._view .loginError ('Name can not be blank');
-        else if (arg .password .length == 0)
-          this._view .loginError ('Password can not be blank');
-        else if (arg .password != arg .confirm)
-          this._view .loginError ('Passwords do not match');
-        else {
-          arg .username = arg .username .toLowerCase();
-          let signup = await Model .signup ({username: arg .username, password: arg .password, name: arg .name});
-          if (signup .alreadyExists)
-            this._view .loginError ('User already exists with that email');
+      case UserViewEvent .LOGIN_CLOUD:
+        try {
+          let login = await Model .login (arg .username, arg .password);
+          if (login .noUser)
+            this._view .setLoginError ('No user exists with that email');
+          else if (login .badPassword)
+            this._view .setLoginError ('Incorrect password');
           else {
-            this._uid       = signup._id;
-            this._accessCap = signup .accessCap;
-            this._username  = arg .username;
-            this._name      = arg .name;
-            this._setModelsForConfig();
-            await this._createEmptyConfig (ConfigType .LOCAL, '', 'Default');
-            this._configs = this._sortByName (await this._configModel .find({deleted: null}));
+            localStorage .setItem (UserLocalStorageKey .HAS_LOGGED_IN, true);
+            this._view .removeLanding();
+            let user         = login .user;
+            this._uid        = user._id;
+            this._accessCap  = user .accessCap;
+            this._username   = user .username;
+            this._name       = user .name;
+            this._cid        = user .curConfiguration;
+            this._remember   = arg .remember;
             if (arg .remember)
-              this._addCookie();
-            this._view .removeLogin();
+              this._saveLoginState();
+            this._setModelsForUser();
+            await this._getConfigs();
+            if (! this._getConfig (this._cid)) {
+              if (this._configs .length)
+                this._cid = this._configs [0] ._id;
+              else {
+                this .logout();
+                break;
+              }
+            }
+            this._setModelsForConfig();
+            try {
+              await this._init();
+            } catch (e) {
+              this .logout();
+              break;
+            }
             this._notifyObservers (UserEvent .NEW_USER);
           }
+        } catch (e) {
+          console.log (e);
+          throw e;
         }
         break;
 
@@ -245,7 +262,7 @@ class User extends Observable {
 
       case ViewEvent .UPDATE:
         if (arg .id && arg .value) {
-          let model  = arg .fieldName .startsWith ('c_')? this._configModel: this._budgetModel;
+          let model  = arg .fieldName .startsWith ('c_')? this._getConfigModel (this._cid): this._budgetModel;
           let update = {}
           update [arg .fieldName .slice (2)] = arg .value;
           await model .update (arg.id, update);
@@ -267,32 +284,40 @@ class User extends Observable {
   }
 
   newConfigurationAccepted() {
-    if (this._hasCookie) {
-      this._addCookie();
-      this._hasCookie = false;
+    if (this._hasSavedLoginState) {
+      this._saveLoginState();
+      this._hasSavedLoginState = false;
     }
   }
 
-  _addCookie() {
-    const pickle = ['_uid', '_accessCap', '_username', '_name', '_cid'];
-    let   expiry = new Date();
-    expiry .setTime (expiry .getTime() + (1000 * 24 * 60 * 60 * 1000));
-    document .cookie =
-      'user='    + JSON .stringify (pickle .reduce ((o,p) => {o [p] = this [p]; return o}, {})) + '; ' +
-      'expires=' + expiry .toUTCString()
+  _saveLoginState() {
+    if (this._remember) {
+      const pickle = ['_uid', '_accessCap', '_username', '_name', '_cid'];
+      localStorage .setItem (UserLocalStorageKey .LOGIN_STATE, JSON .stringify ({
+        state:  pickle .reduce ((o,p) => {o [p] = this [p]; return o}, {}),
+        expiry: Date .now() + (1000 * 24 * 60 * 60 * 1000)
+      }));
+    }
   }
 
-  _updateCookie() {
-    if (document .cookie .split (';') .find (c => {return c .startsWith ('user={')}))
-      this._addCookie();
+  _getSavedLoginState() {
+    let state = JSON .parse (localStorage .getItem (UserLocalStorageKey .LOGIN_STATE));
+    return state && new Date (state .expiry) >= Date .now() && state .state;
   }
 
-  async _tryCookie() {
-    let cookie = document .cookie .split (';') .find (c => {return c .trim() .startsWith ('user={')});
-    if (cookie) {
-      let cv = JSON .parse (cookie .trim() .slice (5));
-      for (let p in cv)
-        this [p] = cv [p];
+  _deleteSavedLoginState() {
+    localStorage .removeItem (UserLocalStorageKey .LOGIN_STATE);
+  }
+
+  async _trySavedLoginState() {
+    let state = this._getSavedLoginState();
+    if (state) {
+      for (let p in state)
+        this [p] = state [p];
+      this._setModelsForUser();
+      await this._getConfigs();
+      if (! this._getConfig (this._cid))
+        return false;
       this._setModelsForConfig();
       try {
         await this._init();
@@ -302,8 +327,8 @@ class User extends Observable {
       if (! this._cid || ! this._bid)
         return false;
       this._remember = true;
-      this._hasCookie = true;
-      this._deleteCookie()
+      this._hasSavedLoginState = true;
+      this._deleteSavedLoginState();
       this._notifyObservers (UserEvent .NEW_USER);
       return true;
     } else
@@ -311,13 +336,12 @@ class User extends Observable {
   }
 
   async _init() {
-    this._configs = this._sortByName (await this._configModel .find({deleted: null}));
     this._budgets = this._sortByName (await this._budgetModel .find());
-    this._bid     = (this._configs .find (c => {return c._id == this._cid}) || {}) .curBudget;
+    let config = this._getConfig (this._cid);
+    this._bid  = (config || {}) .curBudget;
     if (! this._budgets .find (b => {return b._id == this._bid}))
       this._bid = this._budgets && this._budgets .length > 0 && this._budgets [0]._id;
-    let config = this._configs .find (c => {return c._id == this._cid});
-    if (config .type == ConfigType .CLOUD_ENCRYPTED) {
+    if (config && config .type == ConfigType .CLOUD_ENCRYPTED) {
       let encryptionPassword = localStorage .getItem ('encryptionPassword_' + this._cid);
       if (! encryptionPassword) {
         let verifyPassword = async pwd => {
@@ -335,33 +359,52 @@ class User extends Observable {
       User_DB_Crypto = null;
   }
 
-  _deleteCookie() {
-    document .cookie = 'user=; expires=Thu, 01 Jan 1970 00:00:00 UTC'
+  async land() {
+    if (! (await this._trySavedLoginState ())) {
+      let hasLoggedIn = localStorage .getItem (UserLocalStorageKey .HAS_LOGGED_IN);
+      if (! hasLoggedIn) {
+        this._uid = null;
+        this._setModelsForUser();
+        await this._getConfigs();
+        if (this._configs .length) {
+          let curConfig = localStorage .getItem (UserLocalStorageKey .CUR_CONFIGURATION);
+          this._cid = ((curConfig && this._getConfig (curConfig)) || this._configs [0])._id;
+          this._setModelsForConfig();
+          await this._init();
+          this._notifyObservers (UserEvent .NEW_USER);
+          return;
+        }
+      }
+      this._view .addLanding ($('body'), hasLoggedIn);
+    }
   }
 
-  async login () {
-    if (! (await this._tryCookie ()))
-      this._view .addLogin ($('body'));
+  async start() {
+    this._view .addLogin ($('body'), true);
   }
 
   logout() {
-    this._deleteCookie();
-    this._uid     = null;
-    this._configs = null;
-    this._budgets = null;
-    this._remember = false;
+    this._deleteSavedLoginState();
+    this._uid       = null;
+    this._name      = null;
+    this._accessCap = null;
+    this._configs   = null;
+    this._budgets   = null;
+    this._remember  = false;
     this._notifyObservers (UserEvent .LOGOUT);
   }
 
   getDatabaseName (cid = this._cid) {
-    return 'config_' + cid + '_' + this._accessCap;
+    let config  = this._getConfig (cid) || {};
+    let isLocal = config .type && config .type == ConfigType .LOCAL;
+    return 'config_' + cid + (isLocal? Model_LOCAL_COLLECTION: '_' + this._accessCap);
   }
 
   getLabel (onChange) {
     if (onChange)
       this._onLabelChange = onChange;
     if (this._configs) {
-      let label = this._configs .length == 1? this._name: this._configs .find (c => {return c._id == this._cid}) .name;
+      let label = this._name && this._configs .length == 1? this._name: this._getConfig (this._cid) .name;
       if (this._budgets .length > 1)
         label = this._budgets .find (b => {return b._id == this._bid}) .name + '&nbsp;&nbsp;&nbsp;&nbsp;' + label;
       return label;
@@ -380,7 +423,7 @@ class User extends Observable {
   /**
    * Select a specified configuration by:
    *   (a) setting cid
-   *   (b) updating the cookie
+   *   (b) updating the savedLoginState
    *   (c) changing to the new config's model
    *   (d) initializing configs and budgets lists and setting bid
    *   (e) updating the user model to set its concurrent config
@@ -389,13 +432,13 @@ class User extends Observable {
   async _selectConfig (cid) {
     let old = this._cid;
     this._cid = cid;
-    this._updateCookie();
+    this._saveLoginState();
     this._setModelsForConfig();
     try {
       await this._init();
     } catch (e) {
       this._cid = old;
-      this._updateCookie();
+      this._saveLoginState();
       this._setModelsForConfig();
       try {
         await this._init();
@@ -406,20 +449,23 @@ class User extends Observable {
     }
     if (this._onLabelChange)
       this._onLabelChange (this .getLabel());
-    await Model .updateUser (this._uid, this._accessCap, {curConfiguration: this._cid});
+    if (this._uid)
+      await Model .updateUser (this._uid, this._accessCap, {curConfiguration: this._cid});
+    else
+      localStorage .setItem (UserLocalStorageKey .CUR_CONFIGURATION, this._cid);
   }
 
   /**
    * Select specified budget by:
    *   (a) setting bid
-   *   (b) updating the cookie
+   *   (b) updating the savedLoginState
    *   (c) notifying observer that change has occurred
    *   (d) updating the user model to set its current budget
    */
   async _selectBudget (bid) {
     this._bid = bid;
-    this._updateCookie();
-    await this._configModel .update (this._cid, {curBudget: this._bid});
+    this._saveLoginState();
+    await this._getConfigModel (this._cid) .update (this._cid, {curBudget: this._bid});
   }
 
   async _notifyApp() {
@@ -459,20 +505,53 @@ class User extends Observable {
         }})
       this._view .addSubMenu ('Change Budget', items);
     }
-    this._addMenuItem ('Logout',  () => {this .logout()});
+    if (!this._uid)
+      this._addMenuItem ('Login',  () => {this._view .addLogin(html, false)});
+    if (this._uid)
+      this._addMenuItem ('Logout',  () => {this .logout()});
+  }
+
+  _setModelsForUser() {
+    if (this._configModel) {
+      this._configModel .delete();
+      this._configModel = null;
+    }
+    if (this._uid) {
+      this._configModel = new Model ('configurations', 'user_' + this._uid + '_' + this._accessCap);
+      this._configModel .addObserver (this, this._onConfigModelChange);
+      this._configModel .observe();
+    }
+    if (this._localConfigModel) {
+      this._localConfigModel .delete();
+      this._localConfigModel = null;
+    }
+    this._localConfigModel = new Model ('configurations', 'user' + Model_LOCAL_COLLECTION);
+    this._localConfigModel .addObserver (this, this._onConfigModelChange);
+    this._localConfigModel .observe();
+
   }
 
   _setModelsForConfig() {
-    if (this._configModel)
-      this._configModel .delete();
     if (this._budgetModel)
       this._budgetModel .delete();
-    this._configModel = new Model ('configurations', 'user_' + this._uid + '_' + this._accessCap);
-    this._budgetModel = new Model ('budgets',        this .getDatabaseName());
-    this._configModel .addObserver (this, this._onConfigModelChange);
+    this._budgetModel = new Model ('budgets', this .getDatabaseName());
     this._budgetModel .addObserver (this, this._onBudgetModelChange);
-    this._configModel .observe();
     this._budgetModel .observe();
+  }
+
+  async _getConfigs() {
+    let remoteConfigs = this._configModel? await this._configModel .find({deleted: null}): [];
+    let localConfigs  = await this._localConfigModel .find ({});
+    this._configs = this._sortByName (remoteConfigs .concat (localConfigs));
+  }
+
+  _getConfig (cid) {
+    return this._configs .find (c => {return c._id == cid});
+  }
+
+  _getConfigModel (cid, type) {
+    let isLocal = (cid? ((this._getConfig (cid) || {}) .type): type) == ConfigType .LOCAL;
+    return isLocal? this._localConfigModel: this._configModel;
   }
 
   async _disconnectApp() {
@@ -492,23 +571,25 @@ class User extends Observable {
    * Add Profile edit to the view
    */
   _addUserEdit (ae) {
-    let ag = this._view .addGroup ('Profile', ae);
-    let email    = this._view .addLine (ag);
-    let password = this._view .addLine (ag);
-    let name     = this._view .addLine (ag);
-    let update   = this._view .addLine (ag);
-    this._view .addLabel    ('Email',            email);
-    this._view .addLabel    ('Password',         password);
-    this._view .addLabel    ('Name',             name);
-    let em = this._view .addInput    ('Email',            this._username, email);
-    let op = this._view .addInput    ('Old Password',     '', password, 'password');
-    let np = this._view .addInput    ('New Password',     '', password, 'password');
-    let cp = this._view .addInput    ('Confirm Password', '', password, 'password');
-    let nm = this._view .addInput    ('Name',             this._name, name);
-    this._view .addButton   ('Update Profile',   (async () => {
-      await this._updateAccount ([em, op, np, cp, nm] .map (f => {return f.val()}))
-    }), update);
-    this._accountEditError = this._view .addLabel ('', update, '_errorMessage');
+    if (this._uid) {
+      let ag = this._view .addGroup ('Profile', ae);
+      let email    = this._view .addLine (ag);
+      let password = this._view .addLine (ag);
+      let name     = this._view .addLine (ag);
+      let update   = this._view .addLine (ag);
+      this._view .addLabel    ('Email',            email);
+      this._view .addLabel    ('Password',         password);
+      this._view .addLabel    ('Name',             name);
+      let em = this._view .addInput    ('Email',            this._username, email);
+      let op = this._view .addInput    ('Old Password',     '', password, 'password');
+      let np = this._view .addInput    ('New Password',     '', password, 'password');
+      let cp = this._view .addInput    ('Confirm Password', '', password, 'password');
+      let nm = this._view .addInput    ('Name',             this._name, name);
+      this._view .addButton   ('Update Profile',   (async () => {
+        await this._updateAccount ([em, op, np, cp, nm] .map (f => {return f.val()}))
+      }), update);
+      this._accountEditError = this._view .addLabel ('', update, '_errorMessage');
+      }
   }
 
   /**
@@ -521,7 +602,7 @@ class User extends Observable {
     this._view .addLabel ('Configuration', configContent, '_heading');
     let configLine = this._view .addLine (configContent, '_line _configTypeLine');
     this._view .addReadOnlyField ('type', config._id, ConfigDesc [config .type || 0], configLine, 'Data Storage');
-    if (config .type == ConfigType .CLOUD_ENCRYPTED) {
+    if (config .type && config .type == ConfigType .CLOUD_ENCRYPTED) {
       let ep = localStorage .getItem ('encryptionPassword_' + config._id);
       this._view .addReadOnlyField ('encryptionPassword', config._id, ep || '<unknown>', configLine, 'Private Encryption Password');
     }
@@ -536,6 +617,7 @@ class User extends Observable {
     }, this._view .addLine (configContent));
     this._view .setButtonDisabled (this._configTabs, this._configs .filter (c => {return c._id != config._id}) .length == 0);
     let bm = new Model ('budgets', this .getDatabaseName (config._id));
+
     let budgets = this._sortByName (await bm .find ({}));
     bm .delete();
     let [budgetTab, budgetContent] = this._view .addTab (budgetTabs, '_add', true, 'Add');
@@ -580,7 +662,6 @@ class User extends Observable {
    */
   async _addConfigEdit (ae) {
     let configGroup = this._view .addGroup ('Configurations', ae, '_dark');
-    this._configs = this._sortByName (await this._configModel .find ({deleted: null}));
     this._configTabs = this._view .addTabGroup ('configurations', configGroup);
     this._view .addTab (this._configTabs, '_add', true, 'Add');
     let cid = this._cid;
@@ -621,7 +702,7 @@ class User extends Observable {
       this._name     = name;
       if (this._onLabelChange)
         this._onLabelChange (this .getLabel())
-      this._updateCookie();
+      this._saveLoginState();
       this._view .setLabel (this._accountEditError, 'Profile Updated');
     }
   }
@@ -632,18 +713,21 @@ class User extends Observable {
   async _createEmptyConfig (type, encryptionPassword, name = 'Untitled') {
     await this._disconnectApp();
     User_DB_Crypto = type == ConfigType .CLOUD_ENCRYPTED && new Crypto (encryptionPassword);
-    this._cid = (await this._configModel .insert ({
+    this._cid = (await (this._getConfigModel (undefined, type) .insert ({
       user:    this._uid,
       name:    name,
       type:    type,
       keyTest: type == ConfigType .CLOUD_ENCRYPTED && ConfigKeyTest
-    }))._id;
+    })))._id;
     if (type == ConfigType .CLOUD_ENCRYPTED) {
       if (this._remember)
         localStorage .setItem ('encryptionPassword_' + this._cid, encryptionPassword);
       this._view .updateConfigEncryptionPassword (this._cid, encryptionPassword);
     }
-    await Model .updateUser (this._uid, this._accessCap, {curConfiguration: this._cid});
+    if (this._uid)
+      await Model .updateUser (this._uid, this._accessCap, {curConfiguration: this._cid});
+    else
+      localStorage .setItem (UserLocalStorageKey .CUR_CONFIGURATION, this._cid);
     this._setModelsForConfig();
 
     let pm = new Model ('parameters', this .getDatabaseName());
@@ -669,16 +753,16 @@ class User extends Observable {
    */
   async _copyConfig (type, encryptionPassword, from) {
     await this._disconnectApp();
-    let fromConfig = this._configs .find (c => {return c._id == from});
-    let to = (await this._configModel .insert ({
+    let fromConfig = this._getConfig (from);
+    let to = (await this._getConfigModel (this._cid) .insert ({
       user:    this._uid,
       name:    'Copy of ' + fromConfig .name,
       type:    type
     })) ._id;
     let ec = localStorage .getItem ('encryptionPassword_' + from);
     let okayToCopyAtServer =
-      (fromConfig .type != ConfigType .CLOUD_ENCRYPTED && type != ConfigType .CLOUD_ENCRYPTED) ||
-      (fromConfig .type == ConfigType .CLOUD_ENCRYPTED && type == ConfigType .CLOUD_ENCRYPTED && encryptionPassword == ec);
+      (fromConfig .type && fromConfig .type != ConfigType .CLOUD_ENCRYPTED && type != ConfigType .CLOUD_ENCRYPTED) ||
+      (fromConfig .type && fromConfig .type == ConfigType .CLOUD_ENCRYPTED && type == ConfigType .CLOUD_ENCRYPTED && encryptionPassword == ec);
 
     this._view .addPleaseWait();
 
@@ -686,7 +770,7 @@ class User extends Observable {
       await Model .copyDatabase (this .getDatabaseName (from), this .getDatabaseName (to));
       this._cid = to;
       this._setModelsForConfig();
-      await this._configModel .find({});
+      await this._getConfigModel (this._cid) .find({});
 
     } else {
       const tables = [
@@ -712,13 +796,16 @@ class User extends Observable {
     }
 
     if (type == ConfigType .CLOUD_ENCRYPTED) {
-      await this._configModel .update (this._cid, {keyTest: ConfigKeyTest});
+      await this._getConfigModel (this._cid) .update (this._cid, {keyTest: ConfigKeyTest});
       if (this._remember)
         localStorage .setItem ('encryptionPassword_' + this._cid, encryptionPassword);
       this._view .updateConfigEncryptionPassword (this._cid, encryptionPassword);
     }
 
-    await Model .updateUser (this._uid, this._accessCap, {curConfiguration: this._cid});
+    if (this._uid)
+      await Model .updateUser (this._uid, this._accessCap, {curConfiguration: this._cid});
+    else
+      localStorage .setItem (UserLocalStorageKey .CUR_CONFIGURATION, this._cid);
     await this._selectConfig (this._cid);
     for (let budget of this._budgets)
       await this._onBudgetModelChange (ModelEvent .INSERT, budget);
@@ -959,9 +1046,14 @@ class User extends Observable {
    */
   async _deleteConfig (id) {
     await this._disconnectApp();
-    await this._configModel .update (id, {deleted: Types .date .today()});
-    let psn = this._configs .findIndex (c => {return c._id == id});
-    this._configs .splice (psn, 1);
+    let psn    = this._configs .findIndex (c => {return c._id == id});
+    let config = this._getConfig (id);
+    let model  = this._getConfigModel (id);
+    if (config .type == ConfigType .LOCAL) {
+      await model .remove (id);
+      await Model .removeConfiguration (this .getDatabaseName (id));
+    } else
+      await model .update (id, {deleted: Types .date .today()});
     await this._selectConfig (this._configs [Math .max (0, psn - 1)] ._id);
     this._view .selectTab (this._getConfigTab (this._cid));
     this._view .selectTab (this._getBudgetTab (this._bid));
@@ -986,9 +1078,15 @@ class User extends Observable {
 }
 
 
-UserEvent = {
+var UserEvent = {
   NEW_USER: 0,
   DISCONNECT: 1,
   NEW_CONFIGURATION: 2,
   LOGOUT: 3
+}
+
+var UserLocalStorageKey = {
+  LOGIN_STATE:       'LOGIN_STATE',
+  HAS_LOGGED_IN:     'HAS_LOGGED_IN',
+  CUR_CONFIGURATION: 'CUR_CONFIGURATION'
 }

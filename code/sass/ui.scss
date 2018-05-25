@@ -619,84 +619,191 @@ div._systemStatus {
   }
  }
 
-._login_dialogue {
-  @include user-select (none);
-  margin-left: auto;
-  margin-right: auto;
-  text-align: center;
-  > ._login_heading {
-    padding-top: 20px;
-    padding-bottom: 60px;
-    font-size: 160px;
-    color: #33b1ff;
-    > span:nth-child(1) {font-weight: 100; font-style: italic; padding-right: 32px}
-    > span:nth-child(2) {font-weight: 600}
+body > ._whiteout {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  height: 100vh;
+  width: 100vw;
+  background: rgba(0,0,0,.1);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  @supports not ((backdrop-filter: blur(4px)) or (-webkit-backdrop-filter: blur(4px))) {
+    background: rgba(255,255,255,0.5)!important;
   }
-  > ._login_body {
-    margin-left: auto;
-    margin-right: auto;
-    width: 300px;
-    box-shadow: $drop-shadow;
-    border-radius: 6px;
-    padding: 30px 40px;
-    > div {
-      margin-top: 10px;
-      > span:first-child {
-        font-weight: 400;
+  > ._popupContainer {
+    @include popup-container();
+    position: fixed;
+    top: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    > ._loginPopup {
+      @include popup-content();
+      padding: 28px;
+      > div:first-child {
+        color:  #33b1ff;
+        font-size: 32px;
+        margin-bottom: 16px;
       }
-      > span:nth-child(2) {
-        font-weight: 100;
-      }
-    }
-    > div:first-child {
-      text-align:center;
-      font-size: 32px;
-      font-weight: 200;
-      color: #33b1ff;
-      padding-bottom: 40px;
-    }
-    //> ._labeledField {
-    //  > div {
-    //    color: #aaa;
-    //    font-size: 16px;
-    //  }
-    //  > select {
-    //    -webkit-appearance: none;
-    //    font-size: 18px;
-    //    font-weight: 500;
-    //    border: 0.5px solid #aaa;
-    //    padding: 3px;
-    //    color: #555;
-    //    width: 260px;
-    //  }
-    //}
-    > div > input {
-      font-size: 20px;
-      color: #555;
-    }
-    > ._loginError {
-      font-size: 20px;
-      font-weight: 200;
-      margin-top:    30px;
-      margin-bottom: 30px;
-      color: rgb(200,0,0);
-    }
-    > ._remember {
-      > label > * {
-        vertical-align: top;
-      }
-      > label > input {
-        margin-right: 8px;
-      }
-      > label > span {
+      > div:not(:first-child) {
+        color: #aaa;
         font-size: 16px;
-        font-weight: 100;
-        &._checked       {color: #777}
-        &:not(._checked) {color: #ddd}
+        font-style: italic;
+        margin-bottom: 8px;
+      }
+      &._miniLogin > form {
+        margin-top: 24px;
+        margin-left: 32px;
+        margin-right: 32px;
+        white-space: nowrap;
+        > label {
+          display: block;
+          margin-top: 8px;
+          margin-bottom: 8px;
+          > input {
+            margin-right: 12px;
+            padding-bottom: 10px;
+          }
+          > span {
+            color: #1489cc;
+            font-size: 22px;
+            vertical-align: middle;
+          }
+        }
+      }
+      &:not(._miniLogin) > form {
+        margin-top: 24px;
+        text-align: center;
+        > input {
+          display: block;
+          font-size: 20px;
+          color: #555;
+          margin-bottom: 12px;
+        }
+        > ._loginButtons {
+          margin-top: 24px;
+          > button {
+            border:     4px solid #33b1ff;
+            font-size:  16px;
+            font-weight: 500;
+            &:first-child {
+              color:       white;
+              background:  #33b1ff;
+            }
+            &:not(:first-child) {
+              color:       #33b1ff;
+              background:  white;
+            }
+            &:not(:last-child) {
+              margin-right: 24px;
+            }
+          }
+        }
+        > ._loginError {
+          font-size: 20px;
+          margin-top:    30px;
+          margin-bottom: 30px;
+          color: rgb(200,0,0);
+        }
+        > ._remember {
+          margin-top: 24px;
+          > label > * {
+            vertical-align: top;
+          }
+          > label > input {
+            margin-right: 8px;
+          }
+          > label > span {
+            @include user-select (none);
+            font-size: 16px;
+            font-weight: 100;
+            &._checked       {color: #777}
+            &:not(._checked) {color: #ddd}
+          }
+        }
       }
     }
   }
 }
+
+  //._login_dialogue {
+  //  @include user-select (none);
+  //  margin-left: auto;
+  //  margin-right: auto;
+  //  text-align: center;
+  //  > ._login_heading {
+  //    padding-top: 20px;
+  //    padding-bottom: 60px;
+  //    font-size: 160px;
+  //    color: #33b1ff;
+  //    > span:nth-child(1) {font-weight: 100; font-style: italic; padding-right: 32px}
+  //    > span:nth-child(2) {font-weight: 600}
+  //  }
+  //  > ._login_body {
+  //    margin-left: auto;
+  //    margin-right: auto;
+  //    width: 300px;
+  //    box-shadow: $drop-shadow;
+  //    border-radius: 6px;
+  //    padding: 30px 40px;
+  //    > div {
+  //      margin-top: 10px;
+  //      > span:first-child {
+  //        font-weight: 400;
+  //      }
+  //      > span:nth-child(2) {
+  //        font-weight: 100;
+  //      }
+  //    }
+  //    > div:first-child {
+  //      text-align:center;
+  //      font-size: 32px;
+  //      font-weight: 200;
+  //      color: #33b1ff;
+  //      padding-bottom: 40px;
+  //    }
+  //    //> ._labeledField {
+  //    //  > div {
+  //    //    color: #aaa;
+  //    //    font-size: 16px;
+  //    //  }
+  //    //  > select {
+  //    //    -webkit-appearance: none;
+  //    //    font-size: 18px;
+  //    //    font-weight: 500;
+  //    //    border: 0.5px solid #aaa;
+  //    //    padding: 3px;
+  //    //    color: #555;
+  //    //    width: 260px;
+  //    //  }
+  //    //}
+  //    > div > input {
+  //      font-size: 20px;
+  //      color: #555;
+  //    }
+  //    > ._loginError {
+  //      font-size: 20px;
+  //      font-weight: 200;
+  //      margin-top:    30px;
+  //      margin-bottom: 30px;
+  //      color: rgb(200,0,0);
+  //    }
+  //    > ._remember {
+  //      > label > * {
+  //        vertical-align: top;
+  //      }
+  //      > label > input {
+  //        margin-right: 8px;
+  //      }
+  //      > label > span {
+  //        font-size: 16px;
+  //        font-weight: 100;
+  //        &._checked       {color: #777}
+  //        &:not(._checked) {color: #ddd}
+  //      }
+  //    }
+  //  }
+  //}
 
 ._user_menu_head {
   position:   fixed;
@@ -808,7 +915,7 @@ body > ._preferences_menu_head {
     height: $tab-bar-height - 12px;
     padding-top: 18px;
     font-size: 15px;
-    }
+  }
 }
 
 .tabbed  > .tabs > ._appName {
@@ -954,8 +1061,8 @@ body > ._getConfigEncryptionPassword {
     }
     > form {
       > input {
-      font-size: 18px;
-      color: #888888;
+        font-size: 18px;
+        color: #888888;
       }
       > span {
         margin-left: 20px;
@@ -996,6 +1103,7 @@ body > ._getConfigEncryptionPassword {
 }
 
 body > ._pleaseWait {
+  z-index: 99999999;
   top: 0px;
   left: 0px;
   position: fixed;
@@ -1016,5 +1124,140 @@ body > ._pleaseWait {
     left: 50%;
     transform: translate(-50%, -50%);
     color: #33b1ff;
+  }
+}
+
+body > ._landing {
+  //position: fixed;
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
+  > div {
+    display: flex;
+    flex-direction: column;
+  }
+  > ._landingBanner {
+    margin: 10px;
+    display: flex;
+    flex-direction: row;
+    height: 50px;
+    font-size: 32px;
+    color: #33b1ff;
+    > div:first-child {
+      font-weight: 100;
+      font-style: italic;
+      margin-right: 4px;
+    }
+    > div:last-child {
+      font-weight: 500;
+    }
+  }
+  > ._landingMain {
+    margin-top: -50px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    color: #1489cc;
+    > div {
+      margin: 10px;
+    }
+    > div:first-child {
+      flex-grow: 1;
+      > div:first-child {
+        font-size: 40px;
+        margin-bottom: 32px;
+      }
+      > div:not(:first-child) {
+        font-size: 20px;
+        margin-bottom: 4px;
+        font-weight: 300;
+      }
+    }
+    > div:nth-child(2) {
+      box-shadow: $drop-shadow;
+      > img {width: 500px}
+    }
+  }
+  > ._landingBullets {
+    margin-top: 20px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 710px;
+    color: #8fb38f;
+    font-size: 20px;
+    > ul {
+      list-style-type: none;
+      > li {
+        &:before {
+          content: "\2713";
+          margin-right: 16px;
+          color: #00cc00;
+          font-size: 30px;
+        }
+      }
+    }
+  }
+  > ._landingGo {
+    > button {
+      margin-top: 30px;
+      margin-bottom: 48px;
+      margin-left: auto;
+      margin-right: auto;
+      width: 220px;
+      border: none;
+      background: #33b1ff;
+      color:      white;
+      font-size:  30px;
+      padding: 16px;
+      font-weight: 500;
+    }
+  }
+  > ._landingTable {
+    > div {
+      margin-top: 48px;
+      margin-bottom: 48px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      color: #1489cc;
+      > div {
+        width: 550px;
+      }
+      > div:first-child {
+        margin-right: 20px;
+      }
+      > div:last-child {
+        margin-left: 20px;
+      }
+      > ._landingTableImage {
+        > img {width: 500px}
+      }
+      > ._landingTableText {
+        > div:first-child {
+          font-size: 28px;
+          margin-bottom: 8px;
+        }
+        > div:last-child {
+          color: #33b1ff;
+        }
+      }
+    }
+  }
+  > ._landingPrivacy {
+    margin-top: 48px;
+    margin-bottom: 48px;
+    width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    > div:first-child {
+      color: #666;
+      vertical-align: center;
+      font-size: 28px;
+      margin-bottom: 16px;
+    }
+    > div:not(:first-child) {
+      color: #aaa;
+      margin-bottom: 1em;
+    }
   }
 }

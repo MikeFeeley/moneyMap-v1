@@ -10,13 +10,13 @@ class App {
 
   async start() {
     ui .ModalStack .init();
-    Model .addDatabaseObserver (this, this._onDatabaseChange);
+    Model .addRemoteDatabaseObserver (this, this._onDatabaseChange);
     this._status = $('<div>', {class: '_systemStatus'}) .appendTo ('body');
     this._pending = 0;
     this._isDown = false;
     this._user = new User();
     this._user .addObserver (this, this._configurationChange);
-    this._user .login();
+    this._user .land();
   }
 
   _setPending (transition, delay) {
@@ -265,7 +265,7 @@ class App {
       }), e => {this._user .showMenu ($(e .target))})
     }
 
-    if (eventType == UserEvent .NEW_USER || eventType == UserEvent .NEW_CONFIGURATION) {
+    if ((eventType == UserEvent .NEW_USER || eventType == UserEvent .NEW_CONFIGURATION) && this._tabs) {
       let prefsWasShowing = this._prefs && this._prefs .isShowing();
 
       await this._disconnect();
@@ -309,7 +309,7 @@ class App {
 
    } else if (eventType == UserEvent .LOGOUT) {
      $('body') .empty();
-     (async () => {await this._user .login()}) ();
+     (async () => {await this._user .land()}) ();
    }
   }
 }

@@ -57,8 +57,7 @@ class Preferences extends Observable {
     this._view .addMenu (html, {top: UI_BANNER_HEIGHT,left: 8}, toHtml .parent(), {top: 0, left: 0});
     this._addMenuItem ('About moneyMap', () => {(async () => {await this._addAbout()}) ()}, true);
     this._addMenuItem ('Preferences',    () => {(async () => {await this._addPreferencesEdit()}) ()}, true);
-    this._addMenuItem ('Export to CSV',  () => {(async () => {await this._addExport()}) ()});
-    this._addMenuItem ('Import from CSV',  () => {(async () => {await this._addImport()}) ()});
+    this._addMenuItem ('Show Help for this Page',  () => {(async () => {await this._help()}) ()});
   }
 
   _addMenuItem (name, action, underline) {
@@ -82,6 +81,7 @@ class Preferences extends Observable {
       .append ($('<div>', {html: '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; refreshless.com (noUiSlider)', css: {color: '#ccc'}}))
       .append ($('<div>', {html: '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; github.com/ilikenwf (nestedSortable)', css: {color: '#ccc'}}))
       .append ($('<div>', {html: '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; linearicons.com', css: {color: '#ccc'}}))
+      .append ($('<div>', {html: '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; github.com/erikolson186 (ZangoDB)', css: {color: '#ccc'}}))
       .append ($('<div>', {html: '&nbsp;'}))
       .append ($('<div>', {text: '(c) 2018 Mike Feeley (feeley@cs.ubc.ca)'}))
     about.css ({top: 100, left: 50});
@@ -119,11 +119,7 @@ class Preferences extends Observable {
     );
   }
 
-  async _addExport() {
-
-  }
-
-  async _addImport() {
+  _help() {
 
   }
 }
