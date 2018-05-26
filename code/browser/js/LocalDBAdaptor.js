@@ -99,6 +99,7 @@ class LocalDBAdaptor extends DBAdaptor {
 
   async _removeOne (data) {
     await data._collection .remove ({_id: data .id});
+    return true;
   }
 
   async _removeList (data) {
@@ -134,8 +135,7 @@ class LocalDBAdaptor extends DBAdaptor {
   }
 
   async _removeConfiguration (data) {
-    console.log(data._database);
-    await data._database .dropDatabase();
+    await data._database .drop();
   }
 }
 

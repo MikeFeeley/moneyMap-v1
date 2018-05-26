@@ -68,6 +68,8 @@ class User extends Observable {
    * Config Model Change Handler
    */
   async _onConfigModelChange (eventType, doc, arg) {
+    if (this._configs && eventType == ModelEvent .INSERT)
+      this._configs .push (doc);
     if (this._configTabs) {
       let tab = this._getConfigTab (doc._id);
       if (eventType == ModelEvent .INSERT && tab .length)
@@ -92,17 +94,11 @@ class User extends Observable {
           break;
       }
     }
-    if (this._configs)
-      switch (eventType) {
-        case ModelEvent .INSERT:
-          this._configs .push (doc);
-          break;
-        case ModelEvent .REMOVE:
-          let p = this._getConfig (doc._id);
-          if (p != -1)
-            this._configs .splice (p, 1);
-          break;
-      }
+    if (this._configs && eventType == ModelEvent .REMOVE) {
+      let p = this._configs .findIndex (c => {return c._id == doc._id});
+      if (p != -1)
+        this._configs .splice (p, 1);
+    }
   }
 
   /**
@@ -225,6 +221,7 @@ class User extends Observable {
           if (field._name .startsWith ('c_')) {
             await this._selectConfig (field._id);
             this._view .selectTab (this._getBudgetTab (this._bid));
+            this._setConfigDeleteButtonDisabled();
           } else
             await this._selectBudget (field._id);
           this._notifyApp();
@@ -391,6 +388,7 @@ class User extends Observable {
     this._configs   = null;
     this._budgets   = null;
     this._remember  = false;
+    this._configTabs = null;
     this._notifyObservers (UserEvent .LOGOUT);
   }
 
@@ -592,6 +590,13 @@ class User extends Observable {
       }
   }
 
+  _setConfigDeleteButtonDisabled() {
+    let config   = this._getConfig (this._cid);
+    let disabled = config .type != ConfigType .LOCAL &&
+      this._configs .filter (c => {return c .type != ConfigType .LOCAL}) .length == 1;
+    this._view .setButtonDisabled (this._configTabs, disabled);
+  }
+
   /**
    * Add specified config to view
    */
@@ -610,18 +615,18 @@ class User extends Observable {
     let budgetContentGroup = this._view .addTabContentGroup ('Budgets', configContent);
     let budgetTabs         = this._view .addTabGroup ('budgets', budgetContentGroup);
     this._view .addButton ('Delete Configuration', () => {
-      if (this._configs .length > 1) {
-        let html = this._configTabs .find ('> ._tabGroupContents > ._content._selected > ._line > button');
-        this._view .addConfirmDelete (html, config._id, 'configuration', {top: -70, left: -70})
-      }
+      let html = this._configTabs .find ('> ._tabGroupContents > ._content._selected > ._line > button');
+      this._view .addConfirmDelete (html, config._id, 'configuration', {top: -70, left: -70})
     }, this._view .addLine (configContent));
-    this._view .setButtonDisabled (this._configTabs, this._configs .filter (c => {return c._id != config._id}) .length == 0);
     let bm = new Model ('budgets', this .getDatabaseName (config._id));
 
-    let budgets = this._sortByName (await bm .find ({}));
+    if (select)
+      this._setConfigDeleteButtonDisabled();
+
+    this._budgets = this._sortByName (await bm .find ({}));
     bm .delete();
     let [budgetTab, budgetContent] = this._view .addTab (budgetTabs, '_add', true, 'Add');
-    for (let b of budgets)
+    for (let b of this._budgets)
       this._addBudget (b, b._id == this._bid);
     if (select)
       this._view .selectTab (configTab);
@@ -661,7 +666,7 @@ class User extends Observable {
    * Add Configurations Edit (config and budget) to the view
    */
   async _addConfigEdit (ae) {
-    let configGroup = this._view .addGroup ('Configurations', ae, '_dark');
+    let configGroup  = this._view .addGroup ('Configurations', ae, '_dark');
     this._configTabs = this._view .addTabGroup ('configurations', configGroup);
     this._view .addTab (this._configTabs, '_add', true, 'Add');
     let cid = this._cid;
@@ -672,7 +677,6 @@ class User extends Observable {
     }
     this._cid = cid;
     this._setModelsForConfig();
-
   }
 
   /**
@@ -745,7 +749,8 @@ class User extends Observable {
     this._budgets = [];
     await this._createEmptyBudget();
     await this._selectConfig (this._cid);
-    await this._notifyApp();
+    if (this._configTabs)
+      await this._notifyApp();
   }
 
   /**
@@ -1050,15 +1055,18 @@ class User extends Observable {
     let config = this._getConfig (id);
     let model  = this._getConfigModel (id);
     if (config .type == ConfigType .LOCAL) {
-      await model .remove (id);
       await Model .removeConfiguration (this .getDatabaseName (id));
+      await model .remove (id);
     } else
       await model .update (id, {deleted: Types .date .today()});
-    await this._selectConfig (this._configs [Math .max (0, psn - 1)] ._id);
-    this._view .selectTab (this._getConfigTab (this._cid));
-    this._view .selectTab (this._getBudgetTab (this._bid));
-    this._view .setButtonDisabled (this._configTabs, this._configs .length == 1);
-    await this._notifyApp();
+    if (this._configs .length == 0)
+      this .logout();
+    else {
+      await this._selectConfig (this._configs [Math .max (0, psn - 1)] ._id);
+      this._view .selectTab (this._getConfigTab (this._cid));
+      this._view .selectTab (this._getBudgetTab (this._bid));
+      await this._notifyApp();
+    }
   }
 
   /**

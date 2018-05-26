@@ -21,7 +21,6 @@ class RemoteDBAdaptor extends DBAdaptor {
   }
 
   async perform (operation, data) {
-    //console.log(data);
     this._updatePendingOperations (operation, 1);
     await super .perform (operation, data);
     let response, firstTry = true;

@@ -372,7 +372,8 @@ class UserView extends View {
 
   addButton (text, onClick, toLine) {
     let b = $('<button>', {text: text}) .appendTo (toLine) .click (() => {
-      onClick ((b .closest ('._group') .find ('input') .toArray()) .map (v => {return $(v) .val()}))
+      if (! b .hasClass ('_disabled'))
+        onClick ((b .closest ('._group') .find ('input') .toArray()) .map (v => {return $(v) .val()}))
     });
     return b;
   }
