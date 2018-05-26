@@ -205,9 +205,8 @@ class UserView extends View {
       $('<label>') .appendTo (form)
         .append ($('<input>', {type: 'radio', name: 'mode', value: 'cloud'}))
         .append ($('<span>',  {text: 'Login or signup to use cloud storage'}))
-      form .on ('click', 'input', e=> {
-        let mode = e .originalEvent .currentTarget .value;
-        if (mode == 'cloud') {
+      form .on ('click', 'input', e => {
+        if (e .currentTarget .value == 'cloud') {
           content .empty();
           content .removeClass ('_miniLogin');
           addLoginSignup (true);
@@ -472,7 +471,7 @@ class UserView extends View {
     ui .scrollIntoView (popup);
   }
 
-  addConfigAddPopup (positionTarget, configs) {
+  addConfigAddPopup (positionTarget, configs, isLoggedIn) {
     let parent  = this._accountEdit .find ('> div');
     let popup   = $('<div>', {class: '_popupContainer'}) .appendTo (parent);
     let content = $('<div>', {class: '_addPopup'}) .appendTo (popup);
@@ -493,7 +492,7 @@ class UserView extends View {
     let tf = $('<form>') .appendTo (content);
     for (let d of ConfigDesc) {
       let i = ConfigDesc .indexOf (d);
-      if (!this._uid && i != 2)
+      if (! isLoggedIn && i != 2)
         continue;
       let e = $('<div>', {class: '_dataStorageChoice'}) .appendTo (tf);
       let l = $('<label>') .appendTo (e)

@@ -229,7 +229,7 @@ class User extends Observable {
           /* ADD */
           switch (arg .name) {
             case 'configurations':
-              this._view .addConfigAddPopup (arg .target, this._configs);
+              this._view .addConfigAddPopup (arg .target, this._configs, this._uid != null);
               break;
             case 'budgets':
               this._view .addBudgetAddPopup (arg .target, this._budgets);
