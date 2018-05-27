@@ -137,7 +137,7 @@ class UserView extends View {
     }) .appendTo (privacy)
    $('<div>', {text:
       'Second, all information other than amounts, balances and transaction dates is encrypted on your ' +
-      'computer using a password that only you know using 128-bit AES-CBC.  This password never leaves your computer and so ' +
+      'computer using a password that only you know using 256-bit Advanced Encryption Standard (AES) in Cypher Block Chaining mode (CBC).  This password never leaves your computer and so ' +
       'no one other than you can decrypt this data. '
     }) .appendTo (privacy)
    $('<div>', {text:
@@ -496,7 +496,7 @@ class UserView extends View {
         continue;
       let e = $('<div>', {class: '_dataStorageChoice'}) .appendTo (tf);
       let l = $('<label>') .appendTo (e)
-        .append ($('<input>', {type: 'radio', name: 'dataStore', value: i, prop: {checked: ! this._uid}}))
+        .append ($('<input>', {type: 'radio', name: 'dataStore', value: i, prop: {checked: ! isLoggedIn}}))
         .append ($('<span>',  {text: d}));
       if (i == ConfigType .CLOUD_ENCRYPTED) {
         let pw = $('<input>', {type: 'text', name: 'encryptionPassword', placeholder: 'Encryption Password'}) .appendTo (l);

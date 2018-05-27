@@ -56,7 +56,7 @@ class Crypto {
           "hash":       this._hash
         },
         baseKey,
-        {"name": "AES-CBC", "length": 128},
+        {"name": "AES-CBC", "length": 256},
         true,
         ["encrypt", "decrypt"]
       );

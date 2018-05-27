@@ -70,6 +70,13 @@ class User extends Observable {
   async _onConfigModelChange (eventType, doc, arg) {
     if (this._configs && eventType == ModelEvent .INSERT)
       this._configs .push (doc);
+    if (eventType == ModelEvent .UPDATE && arg) {
+      let c = this._getConfig (doc._id);
+      if (c)
+        for (let f in arg)
+          if (! f .startsWith ('_'))
+            c [f] = doc [f];
+    }
     if (this._configTabs) {
       let tab = this._getConfigTab (doc._id);
       if (eventType == ModelEvent .INSERT && tab .length)
@@ -85,9 +92,7 @@ class User extends Observable {
             this._view .removeTab (tab);
           break;
         case ModelEvent .UPDATE:
-          let c = this._getConfig (doc._id);
-          if (c && arg && arg .name) {
-            c .name = arg .name;
+          if (arg && arg .name) {
             if (this._onLabelChange)
               this._onLabelChange (this .getLabel());
           }
@@ -105,6 +110,13 @@ class User extends Observable {
    * Budget Model Change Handler
    */
   async _onBudgetModelChange (eventType, doc, arg) {
+    if (eventType == ModelEvent .UPDATE && arg) {
+      let b = this._budgets .find (b => {return b._id == doc._id});
+      if (b)
+        for (let f in arg)
+          if (! f .startsWith ('_'))
+            b [f] = doc [f];
+    }
     if (this._configTabs) {
       let tab = this._getBudgetTab (doc._id);
       if (eventType == ModelEvent .INSERT && tab .length)
@@ -118,18 +130,9 @@ class User extends Observable {
             this._view .removeTab (tab);
           break;
         case ModelEvent .UPDATE:
-          if (arg) {
-            let b = this._budgets .find (b => {return b._id == doc._id});
-            if (b) {
-              for (let f in arg)
-                if (! f .startsWith ('_'))
-                  b [f] = doc [f];
-            }
-            this._saveLoginState();
-            if (arg .name) {
-              if (this._onLabelChange)
-                this._onLabelChange (this .getLabel())
-            }
+          if (arg .name) {
+            if (this._onLabelChange)
+              this._onLabelChange (this .getLabel())
           }
           break;
       }
