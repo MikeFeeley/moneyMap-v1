@@ -110,6 +110,7 @@ class User extends Observable {
    * Budget Model Change Handler
    */
   async _onBudgetModelChange (eventType, doc, arg) {
+    console.log('obmc', eventType, doc, arg);
     if (eventType == ModelEvent .UPDATE && arg) {
       let b = this._budgets .find (b => {return b._id == doc._id});
       if (b)
@@ -760,6 +761,7 @@ class User extends Observable {
    * Create a new config by copying from specified config
    */
   async _copyConfig (type, encryptionPassword, from) {
+    this._view .addPleaseWait();
     await this._disconnectApp();
     let fromConfig = this._getConfig (from);
     let to = (await this._getConfigModel (this._cid) .insert ({
@@ -768,11 +770,7 @@ class User extends Observable {
       type:    type
     })) ._id;
     let ec = localStorage .getItem ('encryptionPassword_' + from);
-    let okayToCopyAtServer =
-      (fromConfig .type && fromConfig .type != ConfigType .CLOUD_ENCRYPTED && type != ConfigType .CLOUD_ENCRYPTED) ||
-      (fromConfig .type && fromConfig .type == ConfigType .CLOUD_ENCRYPTED && type == ConfigType .CLOUD_ENCRYPTED && encryptionPassword == ec);
-
-    this._view .addPleaseWait();
+    let okayToCopyAtServer = (fromConfig .type == type) && (type != ConfigType .CLOUD_ENCRYPTED || encryptionPassword == ec);
 
     if (okayToCopyAtServer) {
       await Model .copyDatabase (this .getDatabaseName (from), this .getDatabaseName (to));
@@ -886,7 +884,7 @@ class User extends Observable {
       let sort = 0;
       group .cats = []
       for (let name of group .list) {
-        let cat = await cm .find ({name: name, parent: group .parent, budgets: b._id});
+        let cat = await cm .find ({name: name, parent: group .parent});
         if (cat .length > 0) {
           cat = cat [0];
           await cm .update (cat._id, {budgets: cat .budgets .concat (b._id)});

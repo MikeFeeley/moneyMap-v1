@@ -175,6 +175,92 @@ async function remove (db, id) {
 }
 
 
+
+var blacklistsCache = new Map();
+
+function nextMonth (yyyymm) {
+  let y = Math .floor (yyyymm / 100);
+  let m = yyyymm % 100;
+  m += 1;
+  if (m == 13) {
+    m = 1;
+    y += 1;
+  }
+  return y * 100 + m;
+}
+
+function getYearMonth (date) {
+  return Math .floor (date / 100);
+}
+
+async function updateActuals (actuals, transactions, start, end) {
+  let rm    = await actuals .deleteMany (start? {$and: [{month: {$gte: start}}, {month: {$lte: end}}]}: {});
+  let query = start? {$and: [{date: {$gte: start * 100}}, {date: {$lte: end * 100 + 99}}]}: {};
+  let trans = await transactions .find (query) .sort ({date: 1, category: 1});
+  let acum  = new Map();
+  while (await trans .hasNext()) {
+    let tran = await trans .next();
+    if (tran .date && (tran .debit || tran .credit)) {
+      let key = String (getYearMonth (tran .date)) + '$' + (String (tran .category) || '@NULL@');
+      let val = acum .get (key) || {amount: 0, count: 0};
+      val .amount += tran .debit - tran .credit;
+      val .count  += 1;
+      acum .set (key, val);
+    }
+  }
+  await rm;
+  let up = [];
+  for (let e of acum .entries()) {
+    e[0] = e[0] .split ('$');
+    if (e[0] == '@NULL@')
+      e[0] = null;
+    up .push (actuals .insert ({_id: new ObjectID() .toString(), month: Number (e[0][0]), category: e[0][1], amount: e[1] .amount, count: e[1] .count}));
+  }
+  up .forEach (async u => {await u});
+}
+
+async function getActuals (req, res, next) {
+  try {
+    let db           = await req .dbPromise;
+    let actualsMeta  = db .collection ('actualsMeta');
+    let actuals      = db .collection ('actuals');
+    let transactions = db .collection ('transactions');
+    if (await actualsMeta .findOne ({type: 'isValid'})) {
+      let blacklist = (await actualsMeta .find ({type: 'blacklist'}) .sort ({month: 1}) .toArray()) .reduce ((list,e) => {
+        if (list .length && nextMonth (list [list .length - 1] .end) == e .month)
+          list [list .length - 1] .end = e .month;
+        else
+          list .push ({start: e .month, end: e .month});
+        return list;
+      }, []);
+      await actualsMeta .deleteMany ({type: 'blacklist'});
+      for (let ble of blacklist)
+        await updateActuals (actuals, transactions, ble .start, ble .end);
+    } else {
+      await updateActuals (actuals, transactions);
+      await actualsMeta .insert ({_id: new ObjectID() .toString(), type: 'isValid'});
+    }
+    res .json (await actuals .find (req .body .query || {}) .toArray());
+    (blacklistsCache .get (db .databaseName) || blacklistsCache .set (db .databaseName, new Set()) .get (db .databaseName)) .clear();
+  } catch (e) {
+    console .log (e);
+  }
+}
+
+function addDateToActualsBlacklist (db, date) {
+  if (date) {
+    let m         = getYearMonth (date);
+    let blacklist = blacklistsCache .get (db .databaseName) || blacklistsCache .set (db .databaseName, new Set()) .get (db .databaseName);
+    if (! blacklist .has (m)) {
+      db .collection ('actualsMeta') .updateOne ({type: 'blacklist', month: m}, {type: 'blacklist', month: m}, {upsert: true});
+      blacklist .add (m);
+    }
+  }
+}
+
+
+
+
 async function insertOne (req, res, next) {
   try {
     if (! req .body .insert)
@@ -268,88 +354,6 @@ async function findAccountBalance (req, res, next) {
 }
 
 
-
-var blacklistsCache = new Map();
-
-function nextMonth (yyyymm) {
-  let y = Math .floor (yyyymm / 100);
-  let m = yyyymm % 100;
-  m += 1;
-  if (m == 13) {
-    m = 1;
-    y += 1;
-  }
-  return y * 100 + m;
-}
-
-function getYearMonth (date) {
-  return Math .floor (date / 100);
-}
-
-async function updateActuals (actuals, transactions, start, end) {
-  let rm    = await actuals .deleteMany (start? {$and: [{month: {$gte: start}}, {month: {$lte: end}}]}: {});
-  let query = start? {$and: [{date: {$gte: start * 100}}, {date: {$lte: end * 100 + 99}}]}: {};
-  let trans = await transactions .find (query) .sort ({date: 1, category: 1});
-  let acum  = new Map();
-  while (await trans .hasNext()) {
-    let tran = await trans .next();
-    if (tran .date && (tran .debit || tran .credit)) {
-      let key = String (getYearMonth (tran .date)) + '$' + (String (tran .category) || '@NULL@');
-      let val = acum .get (key) || {amount: 0, count: 0};
-      val .amount += tran .debit - tran .credit;
-      val .count  += 1;
-      acum .set (key, val);
-    }
-  }
-  await rm;
-  let up = [];
-  for (let e of acum .entries()) {
-    e[0] = e[0] .split ('$');
-    if (e[0] == '@NULL@')
-      e[0] = null;
-    up .push (actuals .insert ({_id: new ObjectID() .toString(), month: Number (e[0][0]), category: e[0][1], amount: e[1] .amount, count: e[1] .count}));
-  }
-  up .forEach (async u => {await u});
-}
-
-async function getActuals (req, res, next) {
-  try {
-    let db           = await req .dbPromise;
-    let actualsMeta  = db .collection ('actualsMeta');
-    let actuals      = db .collection ('actuals');
-    let transactions = db .collection ('transactions');
-    if (await actualsMeta .findOne ({type: 'isValid'})) {
-      let blacklist = (await actualsMeta .find ({type: 'blacklist'}) .sort ({month: 1}) .toArray()) .reduce ((list,e) => {
-        if (list .length && nextMonth (list [list .length - 1] .end) == e .month)
-          list [list .length - 1] .end = e .month;
-        else
-          list .push ({start: e .month, end: e .month});
-        return list;
-      }, []);
-      await actualsMeta .deleteMany ({type: 'blacklist'});
-      for (let ble of blacklist)
-        await updateActuals (actuals, transactions, ble .start, ble .end);
-    } else {
-      await updateActuals (actuals, transactions);
-      await actualsMeta .insert ({_id: new ObjectID() .toString(), type: 'isValid'});
-    }
-    res .json (await actuals .find (req .body .query || {}) .toArray());
-    (blacklistsCache .get (db .databaseName) || blacklistsCache .set (db .databaseName, new Set()) .get (db .databaseName)) .clear();
-  } catch (e) {
-    console .log (e);
-  }
-}
-
-function addDateToActualsBlacklist (db, date) {
-  if (date) {
-    let m         = getYearMonth (date);
-    let blacklist = blacklistsCache .get (db .databaseName) || blacklistsCache .set (db .databaseName, new Set()) .get (db .databaseName);
-    if (! blacklist .has (m)) {
-      db .collection ('actualsMeta') .updateOne ({type: 'blacklist', month: m}, {type: 'blacklist', month: m}, {upsert: true});
-      blacklist .add (m);
-    }
-  }
-}
 
 router .post ('/insert/one', function (req, res, next) {
   (async () => {try {await insertOne (req, res, next)} catch (e) {console .log (e)}}) ();

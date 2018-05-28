@@ -6,12 +6,14 @@ class LocalDBAdaptor extends DBAdaptor {
   }
 
   async perform (operation, data) {
-    data._database = this._getDB (data .database);
-    if (data .collection) {
-      let r = data .collection .indexOf ('$RAW');
-      if (r != -1)
-        data .collection = data .collection .slice (0, r);
-      data._collection = data._database .collection (data .collection);
+    if (data .database) {
+      data._database = this._getDB (data .database);
+      if (data .collection) {
+        let r = data .collection .indexOf ('$RAW');
+        if (r != -1)
+          data .collection = data .collection .slice (0, r);
+        data._collection = data._database .collection (data .collection);
+      }
     }
     switch (operation) {
       case DatabaseOperation .FIND:
@@ -30,12 +32,6 @@ class LocalDBAdaptor extends DBAdaptor {
         return await this._removeOne (data);
       case DatabaseOperation .REMOVE_LIST:
         return await this._removeList (data);
-      case DatabaseOperation .LOGIN:
-        return await this._login (data);
-      case DatabaseOperation .SIGNUP:
-        return await this._signup (data);
-      case DatabaseOperation .UPDATE_USER:
-        return await this._updateUser (data);
       case DatabaseOperation .COPY_DATABASE:
         return await this._copyDatabase (data);
       case DatabaseOperation .COPY_BUDGET:
@@ -44,6 +40,8 @@ class LocalDBAdaptor extends DBAdaptor {
         return await this._removeBudget (data);
       case DatabaseOperation .REMOVE_CONFIGURATION:
         return await this._removeConfiguration (data);
+      default:
+        console.log ('Operation not supported for LocalDB', operation);
     }
   }
 
@@ -83,6 +81,14 @@ class LocalDBAdaptor extends DBAdaptor {
   }
 
   async _insertOne (data) {
+    let counters = data._database .collection ('counters');
+    let seqDoc   = await counters .findOne ({_id: data .collection});
+    data .insert._seq = ((seqDoc || {}) .seq || 0) + 1;
+    if (seqDoc)
+      await counters .update ({_id: data .collection}, {$set: {seq: data .insert._seq}});
+    else
+      await counters .insert ({_id: data .collection, seq: data .insert._seq});
+    console.log(data.insert._seq);
     if (! data .insert ._id)
       data .insert._id = this._createObjectID();
     await data._collection .insert (data .insert);
@@ -110,33 +116,68 @@ class LocalDBAdaptor extends DBAdaptor {
     return data .list .map (_ => {return true});
   }
 
-  _login (data) {
-    console.log('login');
+  async _copyDatabase (data) {
+    let fromDB = this._getDB (data .from);
+    let toDB   = this._getDB (data .to);
+    for (let collectionName of Object .keys (LocalDBAdaptor_COLLECTIONS [data .from .split ('_') [0]])) {
+      let fromCollection = await fromDB .collection (collectionName);
+      let toCollection   = await toDB .collection (collectionName);
+      let promises = [];
+      await fromCollection .find() .forEach (doc => {promises .push (toCollection .insert (doc))});
+      await Promise.all (promises);
+    }
   }
 
-  _signup (data) {
-    console.log('signup');
-  }
-
-  _updateUser (data) {
-    console.log('updateUser');
-  }
-
-  _copyDatabase (data) {
-    console.log('copyDatabase');
-  }
-
-  _copyBudget (data) {
-    console.log('copyBudget');
+  async _copyBudget (data) {
+    let budget = await data._database .collection ('budgets') .findOne ({_id: data .from});
+    if (budget) {
+      budget .name = 'Copy of ' + budget .name;
+      budget._id   = this._createObjectID();
+      let ins = await data._database .collection ('budgets') .insert (budget);
+      await data._database .collection ('categories') .update ({budgets: data .from}, {$addToSet: {budgets: budget._id}});
+      let schedules = data._database .collection ('schedules');
+      let promises = [];
+      await schedules .find ({budget: data.from}) .forEach (sch => {
+        sch._id     = this._createObjectID();
+        sch .budget = budget._id;
+        promises .push (schedules .insert (sch));
+      })
+      await Promise .all (promises);
+    }
+    return budget;
   }
 
   async _removeBudget (data) {
-    console.log('removeBudget');
+    let budgets      = data._database .collection ('budgets');
+    let categories   = data._database .collection ('categories');
+    let schedules    = data._database .collection ('schedules');
+    let transactions = data._database .collection ('transactions');
+    await budgets .remove ({_id: data .id});
+    let noBudgetCats = (await categories .find ({budgets: [data .id]}) .toArray()) .map (c => {return c._id});
+    await categories .update ({budgets: data .id}, {$pull: {budgets: data .id}});
+    await schedules  .remove ({budget: data .id});
+    let inUse = (await transactions .find ({category: {$in: noBudgetCats}}) .toArray()) .reduce ((s,t) => {
+      s .add (t .category);
+      return s;
+    }, new Set());
+    let cids = Array .from (inUse .keys());
+    while (cids .length) {
+      cids = (await categories .find ({_id: {$in: cids}}) .toArray())
+        .map    (cat => {return cat .parent})
+        .filter (cid => {return cid});
+      cids .forEach (cid => {inUse .add (cid)})
+    }
+    let deleteCats = noBudgetCats .filter (c => {return ! inUse .has (c)});
+    await categories .remove ({_id: {$in: deleteCats}});
+    console.log('deleteCats', deleteCats);
+    return {okay: true};
   }
 
   async _removeConfiguration (data) {
     await data._database .drop();
   }
+
+  // TODO transaction updates to accounts and actuals
 }
 
 const LocalDBAdaptor_COLLECTIONS = {

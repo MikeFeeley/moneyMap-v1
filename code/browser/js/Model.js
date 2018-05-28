@@ -581,18 +581,16 @@ class _Collection extends Observable {
     return results;
   }
 
-  // TODO need to be able to select db (local or remote) based on database name, but can't use this
-
   static async copyDatabase (from, to) {
-    return _db .perform (DatabaseOperation .COPY_DATABASE, {from: from, to: to});
+    return _Collection .getDatabaseInstance (from) .perform (DatabaseOperation .COPY_DATABASE, {from: from, to: to});
   }
 
   static async copyBudget (from) {
-    return _db .perform (DatabaseOperation .COPY_BUDGET, {database: _default_database_id, from: from});
+    return _Collection .getDatabaseInstance (_default_database_id) .perform (DatabaseOperation .COPY_BUDGET, {database: _default_database_id, from: from});
   }
 
   static async removeBudget (id) {
-    return _db .perform (DatabaseOperation .REMOVE_BUDGET, {database: _default_database_id, id: id});
+    return _Collection .getDatabaseInstance (_default_database_id) .perform (DatabaseOperation .REMOVE_BUDGET, {database: _default_database_id, id: id});
   }
 
   static async removeConfiguration (database) {
