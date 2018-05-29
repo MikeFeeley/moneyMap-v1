@@ -1,7 +1,6 @@
 'use strict';
 
 var express  = require ('express');
-var async    = require ('../lib/async.js');
 var ObjectID = require ('mongodb').ObjectID
 var router   = express .Router();
 

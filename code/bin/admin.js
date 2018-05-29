@@ -1,11 +1,10 @@
 var express  = require ('express');
-var async    = require ('../lib/async.js');
 var ObjectID = require ('mongodb').ObjectID
 var router  = express.Router();
 
-function* login (req, res, next) {
+async function login (req, res, next) {
   try {
-    var u = yield (yield req .dbPromise) .collection ('users') .find ({username: req .body .username}) .toArray();
+    var u = await (await req .dbPromise) .collection ('users') .find ({username: req .body .username}) .toArray();
     if (u .length == 0)
       res .json ({noUser: true})
     else if (u [0] .password != req .body .password)
@@ -18,13 +17,13 @@ function* login (req, res, next) {
   }
 }
 
-function* signup (req, res, next) {
+async function signup (req, res, next) {
   try {
-    var u = yield (yield req .dbPromise) .collection ('users') .find ({username: req .body .username}) .toArray();
+    var u = await (await req .dbPromise) .collection ('users') .find ({username: req .body .username}) .toArray();
     if (u .length != 0)
       res .json ({alreadyExists: true})
     else {
-      var doc = yield (yield req .dbPromise) .collection ('users') .insert ({
+      var doc = await (await req .dbPromise) .collection ('users') .insert ({
         _id:       new ObjectID() .toString(),
         username:  req .body .username,
         password:  req .body .password,
@@ -43,14 +42,14 @@ function* signup (req, res, next) {
   }
 }
 
-function* updateUser (req, res, next) {
+async function updateUser (req, res, next) {
   try {
     if (!req .body .update)
       throw 'Update missing';
     else {
       var query = {_id: req .body .id, accessCap: req .body .accessCap};
       if (req .body .update .password) {
-        var user = yield (yield req .dbPromise) .collection ('users') .find (query) .toArray();
+        var user = await (await req .dbPromise) .collection ('users') .find (query) .toArray();
         if (! user)
           throw 'Invalid user update attempted';
         else user = user [0];
@@ -60,13 +59,13 @@ function* updateUser (req, res, next) {
         }
       }
       if (req .body .update .username) {
-        var u = yield (yield req .dbPromise) .collection ('users') .find ({username: req .body .update .username}) .toArray();
+        var u = await (await req .dbPromise) .collection ('users') .find ({username: req .body .update .username}) .toArray();
         if (u) {
           res .json ({alreadyExists: true});
           return;
         }
       }
-      var result = yield (yield req .dbPromise) .collection ('users') .update (query, {$set: req .body .update});
+      var result = await (await req .dbPromise) .collection ('users') .update (query, {$set: req .body .update});
       if (!result || !result .result .ok)
         throw 'Invalid user update attempted';
       res.json ({ok: true});
@@ -158,31 +157,31 @@ async function removeConfiguration (req, res, next) {
 }
 
 router.post ('/login', function(req, res, next) {
-  async (login) (req, res, next);
+  (async () => {try {await login (req, res, next)} catch (e) {console .log (e)}}) ();
 });
 
 router.post ('/signup', function(req, res, next) {
-  async (signup) (req, res, next);
+  (async () => {try {await signup (req, res, next)} catch (e) {console .log (e)}}) ();
 });
 
 router.post ('/updateUser', function(req, res, next) {
-  async (updateUser) (req, res, next);
+  (async () => {try {await updateUser (req, res, next)} catch (e) {console .log (e)}}) ();
 });
 
 router.post('/copyDatabase', function(req, res, next) {
-  (async () => copyDatabase (req, res, next))();
+  (async () => {try {await copyDatabase (req, res, next)} catch (e) {console .log (e)}}) ();
 });
 
 router.post('/copyBudget', function (req, res, next) {
-  (async () => copyBudget (req, res, next))();
+  (async () => {try {await copyBudget (req, res, next)} catch (e) {console .log (e)}}) ();
 });
 
 router.post('/removeBudget', function (req, res, next) {
-  (async () => removeBudget (req, res, next))();
+  (async () => {try {await removeBudget (req, res, next)} catch (e) {console .log (e)}}) ();
 })
 
 router.post('/removeConfiguration', function (req, res, next) {
-  (async () => removeConfiguration (req, res, next))();
+  (async () => {try {await removeConfiguration (req, res, next)} catch (e) {console .log (e)}}) ();
 })
 
 

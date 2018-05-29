@@ -2,19 +2,18 @@
 
 var express  = require ('express');
 var assert   = require ('assert');
-var async    = require ('../lib/async.js');
 var app      = require ('./app.js');
 var router  = express.Router();
 
-function* remove (req, collection, id) {
-  var db = yield req .dbPromise;
-  yield db .collection (collection) .remove ({_id: id});
+async function remove (req, collection, id) {
+  var db = await req .dbPromise;
+  await db .collection (collection) .remove ({_id: id});
   return true;
 }
 
-function* removeOne (req, res, next) {
+async function removeOne (req, res, next) {
   try {
-    res.json (yield* remove (req, req .body .collection, req .body .id));
+    res.json (await remove (req, req .body .collection, req .body .id));
     app .notifyOtherClients (req .body .database, req .body .sessionId, {collection: req .body .collection, remove: req .body .id});
   } catch (e) {
     console .log ('removeOne: ', e, req.body);
@@ -22,13 +21,13 @@ function* removeOne (req, res, next) {
   }
 }
 
-function* removeList (req, res, next) {
+async function removeList (req, res, next) {
   try {
     if (! req .body .list)
       throw ('No list in body')
     var results = [];
     for (let id of req .body .list)
-      results .push (yield* remove (req, req .body .collection, id))
+      results .push (await remove (req, req .body .collection, id))
     res.json (results);
     app .notifyOtherClients (req .body .database, req .body .sessionId, {collection: req .body .collection, removeList: req .body .list});
   } catch (e) {
@@ -38,11 +37,11 @@ function* removeList (req, res, next) {
 }
 
 router.post ('/one', function(req, res, next) {
-  async (removeOne) (req, res, next);
+  (async () => {try {await removeOne (req, res, next)} catch (e) {console .log (e)}}) ();
 });
 
 router.post ('/list', function(req, res, next) {
-  async (removeList) (req, res, next);
+  (async () => {try {await removeList (req, res, next)} catch (e) {console .log (e)}}) ();
 });
 
 module.exports = router;

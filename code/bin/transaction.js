@@ -1,14 +1,22 @@
 'use strict';
 
 var express  = require ('express');
-var util     = require ('../lib/util.js');
 var app      = require ('./app.js');
 var router   = express.Router();
-var ObjectID = require('mongodb').ObjectID
+var ObjectID = require('mongodb').ObjectID;
+
+
+
+async function newUID (db) {
+  return (
+    await getCollection (db, 'counters')
+    .findOneAndUpdate ({_id: 'transactions'}, {$inc: {uid: 1}}, {upsert: true, returnOriginal: false})
+  ) .value .uid;
+}
 
 async function apply (db, pt, accId) {
-  var accounts     = db .collection ('accounts');
-  var transactions = db .collection ('transactions');
+  var accounts     = getCollection (db, 'accounts');
+  var transactions = getCollection (db, 'transactions');
   var amount       = 0;
   if (pt .update) {
     if (pt .update .account && pt._master) {
@@ -39,7 +47,7 @@ async function apply (db, pt, accId) {
       amount = 0;
   } else if (pt .insert) {
     try {
-      await transactions .insertOne (pt .insert);
+      await transactions .insert (pt .insert);
       amount = (pt .insert .debit || 0) - (pt .insert .credit || 0);
     } catch (e) {
       console .log ('Transaction apply: duplicate insert ignored', e, pt);
@@ -62,7 +70,7 @@ async function apply (db, pt, accId) {
 }
 
 async function findAccountAndRollForward (db, query) {
-  var accounts = db .collection ('accounts');
+  var accounts = getCollection (db, 'accounts');
   for (let acc of await accounts .find (query) .toArray())
     for (let pt of (acc && acc .pendingTransactions) || [])
       await apply (db, pt, acc._id);
@@ -70,8 +78,8 @@ async function findAccountAndRollForward (db, query) {
 }
 
 async function insert (db, tran) {
-  var accounts     = db .collection ('accounts');
-  var transactions = db .collection ('transactions');
+  var accounts     = getCollection (db, 'accounts');
+  var transactions = getCollection (db, 'transactions');
   tran._id = tran._id || new ObjectID() .toString();
   await handleSeq (db, 'transactions', tran);
   addDateToActualsBlacklist (db, tran .date);
@@ -89,8 +97,8 @@ async function insert (db, tran) {
 
 async function update (db, id, update) {
 
-  let accounts     = db .collection ('accounts');
-  let transactions = db .collection ('transactions');
+  let accounts     = getCollection (db, 'accounts');
+  let transactions = getCollection (db, 'transactions');
 
   let tran;
   if (update .debit != null || update .credit != null || update .account != null || update .category !== undefined || update .date != null) {
@@ -140,8 +148,8 @@ async function update (db, id, update) {
 }
 
 async function remove (db, id) {
-  var accounts     = db .collection ('accounts');
-  var transactions = db .collection ('transactions');
+  var accounts     = getCollection (db, 'accounts');
+  var transactions = getCollection (db, 'transactions');
   var tran = await transactions .findOne ({_id: id});
   if (!tran)
     throw 'Remove Transaction not found';
@@ -158,7 +166,6 @@ async function remove (db, id) {
   }
   return (await transactions .deleteOne ({_id: id})) .deletedCount == 1;
 }
-
 
 
 var blacklistsCache = new Map();
@@ -207,9 +214,9 @@ async function updateActuals (actuals, transactions, start, end) {
 async function getActuals (req, res, next) {
   try {
     let db           = await req .dbPromise;
-    let actualsMeta  = db .collection ('actualsMeta');
-    let actuals      = db .collection ('actuals');
-    let transactions = db .collection ('transactions');
+    let actualsMeta  = getCollection (db, 'actualsMeta');
+    let actuals      = getCollection (db, 'actuals');
+    let transactions = getCollection (db, 'transactions');
     if (await actualsMeta .findOne ({type: 'isValid'})) {
       let blacklist = (await actualsMeta .find ({type: 'blacklist'}) .sort ({month: 1}) .toArray()) .reduce ((list,e) => {
         if (list .length && nextMonth (list [list .length - 1] .end) == e .month)
@@ -237,12 +244,20 @@ function addDateToActualsBlacklist (db, date) {
     let m         = getYearMonth (date);
     let blacklist = blacklistsCache .get (db .databaseName) || blacklistsCache .set (db .databaseName, new Set()) .get (db .databaseName);
     if (! blacklist .has (m)) {
-      db .collection ('actualsMeta') .updateOne ({type: 'blacklist', month: m}, {type: 'blacklist', month: m}, {upsert: true});
+      getCollection (db, 'actualsMeta') .updateOne ({type: 'blacklist', month: m}, {type: 'blacklist', month: m}, {upsert: true});
       blacklist .add (m);
     }
   }
 }
 
+
+
+
+
+
+function getCollection (db, name) {
+  return db .collection (name);
+}
 
 async function handleSeq (db, id, insert) {
   if (insert._seq === null)
@@ -251,15 +266,6 @@ async function handleSeq (db, id, insert) {
       .findOneAndUpdate ({_id: id}, {$inc: {seq: 1}}, {upsert: true, returnOriginal: false})
     ) .value .seq;
 }
-
-async function newUID (db) {
-  return (
-    await db .collection ('counters')
-    .findOneAndUpdate ({_id: 'transactions'}, {$inc: {uid: 1}}, {upsert: true, returnOriginal: false})
-  ) .value .uid;
-}
-
-
 
 async function insertOne (req, res, next) {
   try {
@@ -352,8 +358,6 @@ async function findAccountBalance (req, res, next) {
     console .log ('transactions findAccountBalance: ', e, req .body);
   }
 }
-
-
 
 router .post ('/insert/one', function (req, res, next) {
   (async () => {try {await insertOne (req, res, next)} catch (e) {console .log (e)}}) ();
