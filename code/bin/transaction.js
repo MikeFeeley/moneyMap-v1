@@ -6,21 +6,6 @@ var app      = require ('./app.js');
 var router   = express.Router();
 var ObjectID = require('mongodb').ObjectID
 
-async function handleSeq (db, id, insert) {
-  if (insert._seq === null)
-    insert._seq = (
-      await db .collection ('counters')
-        .findOneAndUpdate ({_id: id}, {$inc: {seq: 1}}, {upsert: true, returnOriginal: false})
-    ) .value .seq;
-}
-
-async function newUID (db) {
-  return (
-    await db .collection ('counters')
-      .findOneAndUpdate ({_id:  'transactions'}, {$inc: {uid: 1}}, {upsert: true, returnOriginal: false})
-  ) .value .uid;
-}
-
 async function apply (db, pt, accId) {
   var accounts     = db .collection ('accounts');
   var transactions = db .collection ('transactions');
@@ -258,6 +243,21 @@ function addDateToActualsBlacklist (db, date) {
   }
 }
 
+
+async function handleSeq (db, id, insert) {
+  if (insert._seq === null)
+    insert._seq = (
+      await db .collection ('counters')
+      .findOneAndUpdate ({_id: id}, {$inc: {seq: 1}}, {upsert: true, returnOriginal: false})
+    ) .value .seq;
+}
+
+async function newUID (db) {
+  return (
+    await db .collection ('counters')
+    .findOneAndUpdate ({_id: 'transactions'}, {$inc: {uid: 1}}, {upsert: true, returnOriginal: false})
+  ) .value .uid;
+}
 
 
 

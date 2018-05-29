@@ -81,14 +81,12 @@ class LocalDBAdaptor extends DBAdaptor {
   }
 
   async _insertOne (data) {
-    let counters = data._database .collection ('counters');
-    let seqDoc   = await counters .findOne ({_id: data .collection});
-    data .insert._seq = ((seqDoc || {}) .seq || 0) + 1;
-    if (seqDoc)
-      await counters .update ({_id: data .collection}, {$set: {seq: data .insert._seq}});
-    else
-      await counters .insert ({_id: data .collection, seq: data .insert._seq});
-    console.log(data.insert._seq);
+    if (data .database .startsWith ('config_')) {
+      let counters = data._database .collection ('counters');
+      data .insert._seq = (await counters .update (
+        {_id: data .collection}, {$inc: {seq: 1}}, undefined, {upsert: {_id: data .collection, seq: 1}}
+      )) [0] .seq;
+    }
     if (! data .insert ._id)
       data .insert._id = this._createObjectID();
     await data._collection .insert (data .insert);

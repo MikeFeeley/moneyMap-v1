@@ -110,7 +110,6 @@ class User extends Observable {
    * Budget Model Change Handler
    */
   async _onBudgetModelChange (eventType, doc, arg) {
-    console.log('obmc', eventType, doc, arg);
     if (eventType == ModelEvent .UPDATE && arg) {
       let b = this._budgets .find (b => {return b._id == doc._id});
       if (b)
@@ -166,8 +165,13 @@ class User extends Observable {
         await this._getConfigs();
         if (this._configs .length == 0)
           await this._createEmptyConfig (ConfigType .LOCAL, undefined, 'Local');
-        else
+        else {
           this._cid = localStorage .getItem (UserLocalStorageKey .CUR_CONFIGURATION) || 0;
+          if (! this._cid || ! this._getConfig (this._cid)) {
+            this._cid = this._configs [0]._id;
+            localStorage .setItem (UserLocalStorageKey .CUR_CONFIGURATION, this._cid);
+          }
+        }
         this._setModelsForConfig();
         await this._getConfigs();
         await this._init();
@@ -368,8 +372,11 @@ class User extends Observable {
         this._setModelsForUser();
         await this._getConfigs();
         if (this._configs .length) {
-          let curConfig = localStorage .getItem (UserLocalStorageKey .CUR_CONFIGURATION);
-          this._cid = ((curConfig && this._getConfig (curConfig)) || this._configs [0])._id;
+          this._cid = localStorage .getItem (UserLocalStorageKey .CUR_CONFIGURATION);
+          if (! this._cid || ! this._getConfig (this._cid)) {
+            this._cid = this._configs [0]._id;
+            localStorage .setItem (UserLocalStorageKey .CUR_CONFIGURATION, this._cid);
+          }
           this._setModelsForConfig();
           await this._init();
           this._notifyObservers (UserEvent .NEW_USER);
@@ -1064,9 +1071,11 @@ class User extends Observable {
       this .logout();
     else {
       await this._selectConfig (this._configs [Math .max (0, psn - 1)] ._id);
-      this._view .selectTab (this._getConfigTab (this._cid));
-      this._view .selectTab (this._getBudgetTab (this._bid));
       await this._notifyApp();
+      if (this._configTabs) {
+        this._view .selectTab (this._getConfigTab (this._cid));
+        this._view .selectTab (this._getBudgetTab (this._bid));
+      }
     }
   }
 

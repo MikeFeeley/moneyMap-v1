@@ -8,26 +8,24 @@
 \f0\fs36 \cf0 ==============\
 BUGS\
 	- tab in tran cat field after entering partial string to get a match appears to not always select the category\
-	- change crypto password to just be unencrypted user password \'85 sort encrypted one at server for auth\
 	- why does budget date range affect what transactions show in inbox / added\
 		- must be fetching transactions base on budget year; is this right?\
+		- an optimization so that you don't have to search all transactions for needs attention\
 	- signup should allow choosing configuration type / password\
 \
 TODO\
+	- signup\
 	- server-side encryption of amounts and balances\
+	- possibly change no-encrypt to just be server-side encrypt\
 	- drill into payees in perspective (actual part of it)\
 	- help button\
 		- reshow the empty-screen help\
 		- give basic instructions, including %F for search, clicking and alt-clicking etc, and how to get started instructions\
 	- cache javascript in localStorage\
+	- csv export / import\
 \
 LOCAL DATABASE\
-	- merges with remote database\
-	- you don't need an account and don't need to log in\
-		- in this mode you just go straight to app\
-		- cloud storage options are disabled in this mode\
-	- upgrade option or something like that\
-		- requires signup and then you can move configs to cloud\
+\
 \
 FIREFOX\
 	- top bar dropdown menu disappears when it looses hover\
@@ -38,8 +36,6 @@ CHROME\
 	- default budget not saving for local configs\
 \
 UPCOMING\
-	- csv export / import\
-	- refine starting from nothing, documentation and landing page\
 	- rbc scraping?\
 	- make all-zero-value lines disappear from graphs? (possible and also retain animated update?)\
 \
