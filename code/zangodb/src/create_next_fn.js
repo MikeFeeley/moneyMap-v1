@@ -190,7 +190,7 @@ const createGetIDBReqFn = ({ pred, clauses, pipeline }) => {
 };
 
 const createGetIDBCurFn = (config) => {
-    let idb_cur, idb_req;
+    let idb_cur, idb_req, idb_store;
 
     const getIDBReq = createGetIDBReqFn(config);
 
@@ -211,6 +211,7 @@ const createGetIDBCurFn = (config) => {
 
     let getCur = (cb) => {
         openConn(config, (error, store) => {
+            idb_store = store;
             if (error) { return cb(error); }
 
             idb_req = getIDBReq(store);
@@ -223,7 +224,7 @@ const createGetIDBCurFn = (config) => {
         });
     };
 
-    return cb => getCur(error => cb(error, idb_cur));
+    return cb => getCur(error => cb(error, idb_cur, idb_store));
 };
 
 const addPipelineStages = ({ pipeline }, next) => {
@@ -291,9 +292,9 @@ const createNextFn = (config) => {
     const getIDBCur = createGetIDBCurFn(config);
 
     const next = (cb) => {
-        getIDBCur((error, idb_cur) => {
-            if (!idb_cur) { cb(error); }
-            else { cb(null, idb_cur.value, idb_cur); }
+        getIDBCur((error, idb_cur, store) => {
+            if (!idb_cur) { cb(error, undefined, undefined, store); }
+            else { cb(null, idb_cur.value, idb_cur, store); }
         });
     };
 

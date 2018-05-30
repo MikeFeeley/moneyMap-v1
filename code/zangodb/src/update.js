@@ -97,7 +97,14 @@ ops.$pullAll = (path_pieces, values) => (doc) => {
 
         const hasValue = (value1) => {
             for (let value2 of values) {
-                if (equal(value1, value2)) { return true; }
+                if (equal(value1, value2))
+                  return true;
+                else if (typeof value1 == 'object' && typeof value2 == 'object' && ! Array .isArray (value1) && ! Array .isArray (value2)) {
+                  for (let p of Object .keys (value2))
+                    if (! equal (value1 [p], value2 [p]))
+                      return false;
+                  return true;
+                }
             }
         };
 
@@ -141,16 +148,30 @@ const build = (steps, field, value) => {
     }
 };
 
-module.exports = (cur, spec, cb) => {
+module.exports = (cur, spec, cb, op) => {
     const steps = [];
 
     for (let field in spec) { build(steps, field, spec[field]); }
 
     if (!steps.length) { return cb(null); }
 
-    (function iterate() {
-        cur._next((error, doc, idb_cur) => {
-            if (!doc) { return cb(error); }
+    let orig = [];
+    let docs = [];
+
+    (function iterate (e, first) {
+        cur._next((error, doc, idb_cur, source) => {
+
+            if (first && ! doc && op && op .upsert  ) {
+              const idb_ins_req      = source .add (op .upsert);
+              idb_ins_req .onsuccess = () => cb (null, [op .upsert]);
+              idb_ins_req .onerror   = e  => db (getIDBError (e));
+              return;
+            }
+
+            if (!doc) { return cb(error, docs, orig); }
+
+            orig .push (JSON .parse (JSON .stringify (doc)));
+            docs .push (doc);
 
             for (let fn of steps) { fn(doc); }
 
@@ -159,5 +180,5 @@ module.exports = (cur, spec, cb) => {
             idb_req.onsuccess = iterate;
             idb_req.onerror = e => cb(getIDBError(e));
         });
-    })();
+    }) (undefined, true);
 };

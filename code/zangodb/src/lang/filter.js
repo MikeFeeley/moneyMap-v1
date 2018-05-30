@@ -2,6 +2,7 @@ const {
     isObject,
     equal,
     unknownOp
+    , hashify
 } = require('../util.js');
 
 const MISSING = require('./missing_symbol.js'),
@@ -127,6 +128,9 @@ class Equal extends Operator {
     run(fields) {
         const value = fields.get(this.path);
         if (value === MISSING) { return false; }
+
+        if (Array .isArray (value) && value .map (v => {return hashify (v)}) .includes (hashify (this .value)))
+          return true;
 
         return equal(value, this.value);
     }
@@ -443,6 +447,14 @@ const buildClause = (parent_args, path, params) => {
         }
 
         op_keys.delete('$nin');
+    }
+
+    if (op_keys.has('$not')) {
+      const op = build(params.$enot);
+
+      if (op) { new_args.push(new NotEqual(path, op)); }
+
+      op_keys.delete('$not');
     }
 
     if (op_keys.has('$elemMatch')) {

@@ -5,18 +5,21 @@ const deepMerge = require('deepmerge'),
 const toPathPieces = path => path.split('.');
 
 const _exists = (obj, path_pieces) => {
-    for (var i = 0; i < path_pieces.length - 1; i++) {
+    for (var i = 0; i < path_pieces.length; i++) {
         const piece = path_pieces[i];
-        if (!obj.hasOwnProperty(piece)) { return; }
 
-        obj = obj[piece];
+        if (Array .isArray (obj)) {
+          if (! obj .find (e => e .hasOwnProperty (piece)))
+            return;
+        } else
+          if (!obj.hasOwnProperty(piece)) { return; }
 
-        if (!isObject(obj)) { return; }
+        if (i < path_pieces .length -1) {
+          obj = obj[piece];
+          if (!isObject(obj)) { return; }
+        }
     }
-
-    if (obj.hasOwnProperty(path_pieces[i])) {
-        return obj;
-    }
+    return obj;
 };
 
 const exists = (obj, path_pieces) => {

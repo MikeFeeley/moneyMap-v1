@@ -163,15 +163,15 @@ class Collection {
         return deferred.promise;
     }
 
-    _modify(fn, expr, cb) {
+    _modify(fn, expr, cb, returnOrig) {
         const deferred = Q.defer();
         const cur = new Cursor(this, 'readwrite');
 
         cur.filter(expr);
 
-        fn(cur, (error) => {
+        fn(cur, (error, docs, orig) => {
             if (error) { deferred.reject(error); }
-            else { deferred.resolve(); }
+            else { deferred.resolve (returnOrig? orig: docs); }
         });
 
         deferred.promise.nodeify(cb);
@@ -195,10 +195,10 @@ class Collection {
      *     if (error) { throw error; }
      * });
      */
-    update(expr, spec, cb) {
-        const fn = (cur, cb) => update(cur, spec, cb);
+    update(expr, spec, cb, op) {
+        const fn = (cur, cb) => update(cur, spec, cb, op);
 
-        return this._modify(fn, expr, cb);
+        return this._modify(fn, expr, cb, op && op .returnOriginal);
     }
 
     /**

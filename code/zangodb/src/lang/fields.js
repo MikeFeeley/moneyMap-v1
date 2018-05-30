@@ -13,7 +13,7 @@ class Fields {
         let value = MISSING;
 
         get(this._doc, path.pieces, (obj, field) => {
-            value = obj[field];
+            value = Array .isArray (obj)? obj .map (e => e [field]) : obj[field];
         });
 
         return value;
