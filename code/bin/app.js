@@ -160,8 +160,8 @@ app.use(function (req, res, next) {
       else if (! req .url .startsWith ('/transaction/')) {
         if (req .body .collection == 'transactions' && ! req .url .startsWith ('/find/'))
           req .url = '/transaction' + req.url;
-        else if (req .body .collection == 'accountBalance' && req .url == '/find/get')
-          req .url = '/transaction/findAccountBalance';
+        else if (req .body .collection == 'account' && req .url == '/find/get')
+          req .url = '/transaction/findAccount';
       }
       if (req .body .collection) {
         let raw = req .body .collection .indexOf ('$RAW');

@@ -90,7 +90,7 @@ async function removeList (req, res, next) {
   }
 }
 
-async function findAccountBalance (req, res, next) {
+async function findAccount (req, res, next) {
   try {
     res .json (await tranMeta .findAccountAndRollForward (await req .dbPromise, req .body .query));
   } catch (e) {
@@ -130,8 +130,8 @@ router .post ('/remove/list', function (req, res, next) {
   (async () => {try {await removeList (req, res, next)} catch (e) {console .log (e)}}) ();
 })
 
-router .post ('/findAccountBalance', function (req, res, next) {
-  (async () => {try {await findAccountBalance (req, res, next)} catch (e) {console .log (e)}}) ();
+router .post ('/findAccount', function (req, res, next) {
+  (async () => {try {await findAccount (req, res, next)} catch (e) {console .log (e)}}) ();
 })
 
 router .post ('/actuals', (req, res, next) => {

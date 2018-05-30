@@ -66,7 +66,7 @@ class LocalDBAdaptor extends DBAdaptor {
   async _find (data) {
     if (data .collection == 'actuals')
       return await TransactionDBMeta_getActuals (data._database, data .query);
-    else if (data .collection == 'accountBalance')
+    else if (data .collection == 'accounts')
       return await TransactionDBMeta_findAccountAndRollForward (data._database, data .query);
     else
       return await data._collection .find (data .query) .toArray();
@@ -207,14 +207,14 @@ class LocalDBAdaptor extends DBAdaptor {
 
     let handleOptions = (query, update, options) => {
       if (options && options .upsert)
-        options = {upsert: Object .assign ({_id: query._id || this._createObjectID()}, update .$inc || update .$set || update)};
-      else
-        options = undefined;
+        options .upsert = Object .assign ({_id: query._id || this._createObjectID()}, update .$inc || update .$set || update);
       return options;
     }
 
-    col .findOneAndUpdate = async (query, update, options) => {
+    col .findOneAndUpdate = async (query, update, options = {}) => {
       options = handleOptions (query, update, options);
+      if (! options .returnOriginal)
+        options .returnOriginal = false;
       let res = await col .update (query, update, undefined, options);
       return res && res [0] && {value: res [0]}
     };

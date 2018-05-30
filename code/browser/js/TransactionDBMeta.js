@@ -73,7 +73,6 @@ async function TransactionDBMeta_apply (db, pt, accId) {
       $inc:  {balance: amount * (creditBalance? -1: 1)},
       $pull: {pendingTransactions: {uid: pt .uid}}
     });
-    console.log('upt', accId);
   }
 }
 
