@@ -902,6 +902,8 @@ class Navigate {
   async _addMonthsGraph (name, view, ids, popup, position, toHtml, includeMonths=true, includeYears=true, addCats=[], dates=null, startColor=0, viewUpdater) {
     var type    = name .startsWith ('_budget')? NavigateValueType .BUDGET_YR_AVE_ACT: NavigateValueType .ACTUALS_BUD;
     var dataset = await this._getMonthsData (type, dates, ids, includeMonths, includeYears, addCats);
+    if (! dataset .groups .find (g => g .rows .find (r => r .amounts .find (a => a .value != 0))))
+      return;
     if (!ids || ids .length > 1) {
       let dt = dates && [] .concat (dates);
       let start = dt && dt [0] .start;

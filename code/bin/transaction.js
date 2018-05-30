@@ -1,277 +1,16 @@
 'use strict';
 
-var express  = require ('express');
-var app      = require ('./app.js');
-var router   = express.Router();
-var ObjectID = require('mongodb').ObjectID;
-
-
-
-async function newUID (db) {
-  return (
-    await getCollection (db, 'counters')
-    .findOneAndUpdate ({_id: 'transactions'}, {$inc: {uid: 1}}, {upsert: true, returnOriginal: false})
-  ) .value .uid;
-}
-
-async function apply (db, pt, accId) {
-  var accounts     = getCollection (db, 'accounts');
-  var transactions = getCollection (db, 'transactions');
-  var amount       = 0;
-  if (pt .update) {
-    if (pt .update .account && pt._master) {
-      if (pt .update .account != accId) {
-        var tpt = {
-          uid:    pt .uid,
-          _id:    pt._id,
-          update: {account: pt .update .account}
-        }
-        await accounts .updateOne ({_id: tpt .update .account, pendingTransactions: {$not: {$elemMatch: {uid: tpt .uid}}}}, {$push: {pendingTransactions: tpt}});
-        await apply               (db, tpt, tpt .update. account);
-      } else
-        delete pt .update .account;
-    }
-    if (Object .keys (pt .update) .length) {
-      var prev = (await transactions .findOneAndUpdate ({_id: pt._id}, {$set: pt .update})) .value;
-      if (pt .update .debit != null)
-        amount += pt .update .debit - (prev .debit || 0);
-      if (pt .update .credit != null)
-        amount -= pt .update .credit - (prev .credit || 0);
-      if (pt .update .account) {
-        if (pt._master)
-          amount = - ((prev .debit || 0) - (prev .credit || 0));
-        else if (prev .account != accId)
-          amount = ((prev .debit || 0) - (prev .credit || 0));
-      }
-    } else
-      amount = 0;
-  } else if (pt .insert) {
-    try {
-      await transactions .insert (pt .insert);
-      amount = (pt .insert .debit || 0) - (pt .insert .credit || 0);
-    } catch (e) {
-      console .log ('Transaction apply: duplicate insert ignored', e, pt);
-    }
-  } else if (pt .remove) {
-    try {
-      var prev = (await transactions .findOneAndDelete ({_id: pt._id})) .value;
-      amount = -((prev .debit || 0) - (prev .credit || 0));
-    } catch (e) {
-      console .log ('Transaction apply: duplicate remove ignored', e, pt);
-    }
-  }
-  if (accId) {
-    var creditBalance = (await accounts .findOne ({_id: accId})) .creditBalance;
-    await accounts .updateOne ({_id: accId, 'pendingTransactions.uid': pt .uid}, {
-      $inc:  {balance: amount * (creditBalance? -1: 1)},
-      $pull: {pendingTransactions: {uid: pt .uid}}
-    })
-  }
-}
-
-async function findAccountAndRollForward (db, query) {
-  var accounts = getCollection (db, 'accounts');
-  for (let acc of await accounts .find (query) .toArray())
-    for (let pt of (acc && acc .pendingTransactions) || [])
-      await apply (db, pt, acc._id);
-  return await accounts .find (query) .toArray();
-}
-
-async function insert (db, tran) {
-  var accounts     = getCollection (db, 'accounts');
-  var transactions = getCollection (db, 'transactions');
-  tran._id = tran._id || new ObjectID() .toString();
-  await handleSeq (db, 'transactions', tran);
-  addDateToActualsBlacklist (db, tran .date);
-  if (tran .account != null && (tran .debit != null || tran .credit != null)) {
-    var pt = {
-      uid:    await newUID (db),
-      insert: tran
-    }
-    await accounts .updateOne ({_id: tran .account}, {$push: {pendingTransactions: pt}});
-    await apply              (db, pt, tran .account);
-  } else
-    await transactions .insertOne (tran);
-  return tran;
-}
-
-async function update (db, id, update) {
-
-  let accounts     = getCollection (db, 'accounts');
-  let transactions = getCollection (db, 'transactions');
-
-  let tran;
-  if (update .debit != null || update .credit != null || update .account != null || update .category !== undefined || update .date != null) {
-    tran = await transactions .findOne ({_id: id});
-    if (!tran)
-      throw 'Update transaction not found ' + id
-  }
-
-  if (update .debit != null || update .credit != null || update .account != null) {
-
-    if (update .debit != null || update .credit != null)
-      addDateToActualsBlacklist (db, tran .date);
-
-    // update account balance
-    if (tran .account) {
-      let pt = {
-        uid:    await newUID (db),
-        _id:    id,
-        update: update,
-      }
-      pt._master = update .account != null;
-      await accounts .updateOne ({_id: tran .account}, {$push: {pendingTransactions: pt}});
-      await apply              (db, pt, tran .account);
-      return true;
-    } else if (update .account) {
-      let pt = {
-        uid:     await newUID (db),
-        _master: true,
-        _id:     id,
-        update:  update
-      }
-      await accounts .updateOne ({_id: update .account}, {$push: {pendingTransactions: pt}});
-      await apply               (db, pt);
-    }
-
-
-  } else if (update .category !== undefined)
-    addDateToActualsBlacklist (db, tran .date);
-
-  else if (update .date != null) {
-    addDateToActualsBlacklist (db, update .date);
-    addDateToActualsBlacklist (db, tran   .date);
-  }
-
-  await transactions .updateOne ({_id: id}, {$set: update});
-  return true;
-}
-
-async function remove (db, id) {
-  var accounts     = getCollection (db, 'accounts');
-  var transactions = getCollection (db, 'transactions');
-  var tran = await transactions .findOne ({_id: id});
-  if (!tran)
-    throw 'Remove Transaction not found';
-  addDateToActualsBlacklist (db, tran .date);
-  if (tran .account) {
-    var pt = {
-      uid:    await newUID (db),
-      _id:    id,
-      remove: true
-    }
-    await accounts .updateOne ({_id: tran .account}, {$push: {pendingTransactions: pt}});
-    await apply               (db, pt, tran .account);
-    return true;
-  }
-  return (await transactions .deleteOne ({_id: id})) .deletedCount == 1;
-}
-
-
-var blacklistsCache = new Map();
-
-function nextMonth (yyyymm) {
-  let y = Math .floor (yyyymm / 100);
-  let m = yyyymm % 100;
-  m += 1;
-  if (m == 13) {
-    m = 1;
-    y += 1;
-  }
-  return y * 100 + m;
-}
-
-function getYearMonth (date) {
-  return Math .floor (date / 100);
-}
-
-async function updateActuals (actuals, transactions, start, end) {
-  let rm    = await actuals .deleteMany (start? {$and: [{month: {$gte: start}}, {month: {$lte: end}}]}: {});
-  let query = start? {$and: [{date: {$gte: start * 100}}, {date: {$lte: end * 100 + 99}}]}: {};
-  let trans = await transactions .find (query) .sort ({date: 1, category: 1});
-  let acum  = new Map();
-  while (await trans .hasNext()) {
-    let tran = await trans .next();
-    if (tran .date && (tran .debit || tran .credit)) {
-      let key = String (getYearMonth (tran .date)) + '$' + (String (tran .category) || '@NULL@');
-      let val = acum .get (key) || {amount: 0, count: 0};
-      val .amount += tran .debit - tran .credit;
-      val .count  += 1;
-      acum .set (key, val);
-    }
-  }
-  await rm;
-  let up = [];
-  for (let e of acum .entries()) {
-    e[0] = e[0] .split ('$');
-    if (e[0] == '@NULL@')
-      e[0] = null;
-    up .push (actuals .insert ({_id: new ObjectID() .toString(), month: Number (e[0][0]), category: e[0][1], amount: e[1] .amount, count: e[1] .count}));
-  }
-  up .forEach (async u => {await u});
-}
-
-async function getActuals (req, res, next) {
-  try {
-    let db           = await req .dbPromise;
-    let actualsMeta  = getCollection (db, 'actualsMeta');
-    let actuals      = getCollection (db, 'actuals');
-    let transactions = getCollection (db, 'transactions');
-    if (await actualsMeta .findOne ({type: 'isValid'})) {
-      let blacklist = (await actualsMeta .find ({type: 'blacklist'}) .sort ({month: 1}) .toArray()) .reduce ((list,e) => {
-        if (list .length && nextMonth (list [list .length - 1] .end) == e .month)
-          list [list .length - 1] .end = e .month;
-        else
-          list .push ({start: e .month, end: e .month});
-        return list;
-      }, []);
-      await actualsMeta .deleteMany ({type: 'blacklist'});
-      for (let ble of blacklist)
-        await updateActuals (actuals, transactions, ble .start, ble .end);
-    } else {
-      await updateActuals (actuals, transactions);
-      await actualsMeta .insert ({_id: new ObjectID() .toString(), type: 'isValid'});
-    }
-    res .json (await actuals .find (req .body .query || {}) .toArray());
-    (blacklistsCache .get (db .databaseName) || blacklistsCache .set (db .databaseName, new Set()) .get (db .databaseName)) .clear();
-  } catch (e) {
-    console .log (e);
-  }
-}
-
-function addDateToActualsBlacklist (db, date) {
-  if (date) {
-    let m         = getYearMonth (date);
-    let blacklist = blacklistsCache .get (db .databaseName) || blacklistsCache .set (db .databaseName, new Set()) .get (db .databaseName);
-    if (! blacklist .has (m)) {
-      getCollection (db, 'actualsMeta') .updateOne ({type: 'blacklist', month: m}, {type: 'blacklist', month: m}, {upsert: true});
-      blacklist .add (m);
-    }
-  }
-}
-
-
-
-
-
-
-function getCollection (db, name) {
-  return db .collection (name);
-}
-
-async function handleSeq (db, id, insert) {
-  if (insert._seq === null)
-    insert._seq = (
-      await db .collection ('counters')
-      .findOneAndUpdate ({_id: id}, {$inc: {seq: 1}}, {upsert: true, returnOriginal: false})
-    ) .value .seq;
-}
+const express  = require ('express');
+const app      = require ('./app');
+const router   = express.Router();
+const ObjectID = require('mongodb').ObjectID;
+const tranMeta = require ('../lib/TransactionDBMeta');
 
 async function insertOne (req, res, next) {
   try {
     if (! req .body .insert)
       throw 'Missing insert';
-    var tran = await insert (await req .dbPromise, req .body .insert);
+    var tran = await tranMeta .insert (await req .dbPromise, req .body .insert);
     res .json ({_id: tran._id, _seq: tran._seq});
     app .notifyOtherClients (req .body .database, req .body .sessionId, {collection: req .body .collection, insert: tran});
   } catch (e) {
@@ -286,7 +25,7 @@ async function insertList (req, res, next) {
       throw 'Missing list';
     var trans = [];
     for (let tran of req .body .list)
-      trans .push (await insert (await req .dbPromise, tran));
+      trans .push (await tranMeta .insert (await req .dbPromise, tran));
     res .json (trans);
     app .notifyOtherClients (req .body .database, req .body .sessionId, {collection: req .body .collection, insertList: trans});
   } catch (e) {
@@ -299,7 +38,7 @@ async function updateOne (req, res, next) {
   try {
     if (! req .body .id || ! req .body .update)
       throw 'Missing id or update';
-    await update (await req .dbPromise, req .body .id, req .body .update);
+    await tranMeta .update (await req .dbPromise, req .body .id, req .body .update);
     res .json (true);
     app .notifyOtherClients (req .body .database, req .body .sessionId, {collection: req .body .collection, id: req .body .id, update: req .body .update});
   } catch (e) {
@@ -315,7 +54,7 @@ async function updateList (req, res, next) {
     for (let item of req .body .list) {
       if (! item .id || ! item .update)
         throw 'Missing id or update';
-      await update (await req .dbPromise, item .id, item .update);
+      await tranMeta .update (await req .dbPromise, item .id, item .update);
     }
     res .json (true);
     app .notifyOtherClients (req .body .database, req .body .sessionId, {collection: req .body .collection, updateList: req .body .list});
@@ -329,7 +68,7 @@ async function removeOne (req, res, next) {
   try {
     if (! req .body .id)
       throw 'Missing id';
-    res .json (await remove (await req .dbPromise, req .body .id));
+    res .json (await tranMeta .remove (await req .dbPromise, req .body .id));
     app .notifyOtherClients (req .body .database, req .body .sessionId, {collection: req .body .collection, remove: req .body .id});
   } catch (e) {
     console .log ('transactions removeOne: ', e, req .body);
@@ -342,7 +81,7 @@ async function removeList (req, res, next) {
       throw 'Missing list';
     var results = []
     for (let id of req .body .list) {
-      results .push (await remove (await req .dbPromise, id));
+      results .push (await tranMeta .remove (await req .dbPromise, id));
     }
     res .json (results);
     app .notifyOtherClients (req .body .database, req .body .sessionId, {collection: req .body .collection, removeList: req .body .list});
@@ -353,9 +92,17 @@ async function removeList (req, res, next) {
 
 async function findAccountBalance (req, res, next) {
   try {
-    res .json (await findAccountAndRollForward (await req .dbPromise, req .body .query));
+    res .json (await tranMeta .findAccountAndRollForward (await req .dbPromise, req .body .query));
   } catch (e) {
     console .log ('transactions findAccountBalance: ', e, req .body);
+  }
+}
+
+async function getActuals (req, res, next) {
+  try {
+    res .json (await tranMeta .getActuals (await req .dbPromise, req .body .query));
+  } catch (e) {
+    console .log ('transactions getActuals: ', e, req .body);
   }
 }
 

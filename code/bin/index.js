@@ -9,6 +9,7 @@ router.get('/', function(req, res, next) {
       'util',
       'Crypto',
       'DBAdaptor',
+      'TransactionDBMeta',
       'LocalDBAdaptor',
       'RemoteDBAdaptor',
       'Model',

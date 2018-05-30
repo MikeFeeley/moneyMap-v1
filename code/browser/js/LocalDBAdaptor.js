@@ -3,6 +3,9 @@ class LocalDBAdaptor extends DBAdaptor {
   constructor() {
     super();
     this._dbCache = new Map();
+    TransactionDBMeta_setGetCollectionFunction ((d, n)             => this._getCollectionWithPolyfill (d, n));
+    TransactionDBMeta_setGetObjectIDFunction   (()                 => this._createObjectID());
+    TransactionDBMeta_setForEachFunction       (async (cursor, cb) => await cursor. forEach (cb));
   }
 
   async perform (operation, data) {
@@ -15,6 +18,7 @@ class LocalDBAdaptor extends DBAdaptor {
         data._collection = data._database .collection (data .collection);
       }
     }
+    data._isTran = data .collection == 'actuals' || data .collection == 'transactions';
     switch (operation) {
       case DatabaseOperation .FIND:
         return await this._find (data);
@@ -60,7 +64,12 @@ class LocalDBAdaptor extends DBAdaptor {
   }
 
   async _find (data) {
-    return await data._collection .find (data .query) .toArray();
+    if (data .collection == 'actuals')
+      return await TransactionDBMeta_getActuals (data._database, data .query);
+    else if (data .collection == 'accountBalance')
+      return await TransactionDBMeta_findAccountAndRollForward (data._database, data .query);
+    else
+      return await data._collection .find (data .query) .toArray();
   }
 
   async _has (data) {
@@ -68,48 +77,67 @@ class LocalDBAdaptor extends DBAdaptor {
   }
 
   async _updateOne (data) {
-    await data._collection .update ({_id: data .id}, {$set: data .update});
+    if (data._isTran)
+      await TransactionDBMeta_update (data._database, data .id, data .update);
+    else
+      await data._collection .update ({_id: data .id}, {$set: data .update});
     return true;
   }
 
   async _updateList (data) {
     let async = []
     for (let item of data .list)
-      async .push (this._updateOne ({_collection: data._collection, id: item .id, update: item .update}));
+      if (data._isTran)
+        async .push (TransactionDBMeta_update (data._database, item .id, item .update));
+      else
+        async .push (this._updateOne ({_collection: data._collection, id: item .id, update: item .update}));
     await Promise .all (async);
     return data .list .map (_ => {return true});
   }
 
   async _insertOne (data) {
-    if (data .database .startsWith ('config_')) {
-      let counters = data._database .collection ('counters');
-      data .insert._seq = (await counters .update (
-        {_id: data .collection}, {$inc: {seq: 1}}, undefined, {upsert: {_id: data .collection, seq: 1}}
-      )) [0] .seq;
+    if (data._isTran)
+      data .insert = await TransactionDBMeta_insert (data._database, data .insert);
+    else {
+      if (data .database .startsWith ('config_')) {
+        let counters = data._database .collection ('counters');
+        data .insert._seq = (await counters .update (
+          {_id: data .collection}, {$inc: {seq: 1}}, undefined, {upsert: {_id: data .collection, seq: 1}}
+        )) [0] .seq;
+      }
+      if (! data .insert ._id)
+        data .insert._id = this._createObjectID();
+      await data._collection .insert (data .insert);
     }
-    if (! data .insert ._id)
-      data .insert._id = this._createObjectID();
-    await data._collection .insert (data .insert);
     return data .insert;
   }
 
   async _insertList (data) {
     let async = []
     for (let insert of data .list)
-      async .push (this._insertOne ({_collection: data._collection, insert: insert}));
+      if (data._isTran)
+        async .push (TransactionDBMeta_insert (insert));
+      else
+        async .push (this._insertOne ({_collection: data._collection, insert: insert}));
     await Promise .all (async);
     return data .list .map (_ => {return true})
   }
 
   async _removeOne (data) {
-    await data._collection .remove ({_id: data .id});
+    if (data._isTran)
+      await TransactionDBMeta_remove (data._database, data .id);
+    else
+      await data._collection .remove ({_id: data .id});
     return true;
   }
 
   async _removeList (data) {
     let async = [];
     for (let id of data .list)
-      async .push (this._removeOne ({_collection: data._collection, id: id}));
+      if (data._isTran)
+        async .push (TransactionDBMeta_remove (data._database, data .id));
+      else
+        async .push (this._removeOne ({_collection: data._collection, id: id}));
     await Promise .all (async);
     return data .list .map (_ => {return true});
   }
@@ -167,7 +195,6 @@ class LocalDBAdaptor extends DBAdaptor {
     }
     let deleteCats = noBudgetCats .filter (c => {return ! inUse .has (c)});
     await categories .remove ({_id: {$in: deleteCats}});
-    console.log('deleteCats', deleteCats);
     return {okay: true};
   }
 
@@ -175,14 +202,46 @@ class LocalDBAdaptor extends DBAdaptor {
     await data._database .drop();
   }
 
-  // TODO transaction updates to accounts and actuals
+  _getCollectionWithPolyfill (db, name) {
+    let col = db .collection (name);
+
+    let handleOptions = (query, update, options) => {
+      if (options && options .upsert)
+        options = {upsert: Object .assign ({_id: query._id || this._createObjectID()}, update .$inc || update .$set || update)};
+      else
+        options = undefined;
+      return options;
+    }
+
+    col .findOneAndUpdate = async (query, update, options) => {
+      options = handleOptions (query, update, options);
+      let res = await col .update (query, update, undefined, options);
+      return res && res [0] && {value: res [0]}
+    };
+
+    col .updateOne = async (query, update, options) => {
+      options = handleOptions (query, update, options);
+      await col. update (query, update, undefined, options);
+    }
+    col .findOneAndDelete = async query => {
+      let res = await col .remove (query);
+      return res && res [0] && {value: res [0]}
+    }
+    col .deleteOne  = async query => {
+      let res = await col .remove (query);
+      return {deletedCount: (res && res .length) || 0};
+    }
+    col .deleteMany = col .deleteOne;
+
+    return col;
+  }
 }
 
 const LocalDBAdaptor_COLLECTIONS = {
   'config': {
     accounts: ['_id'],
     actuals: ['_id'],
-    actualsMeta: ['_id'],
+    actualsMeta: ['_id', 'type'],
     balanceHistory: ['_id'],
     budgets: ['_id'],
     categories: ['_id'],

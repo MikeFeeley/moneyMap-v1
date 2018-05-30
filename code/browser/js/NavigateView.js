@@ -440,7 +440,7 @@ class NavigateView extends Observable  {
       }
       datasets = [];
       for (let stack of stacks)
-        for (let group of stack)
+        for (let group of stack || [])
           datasets = datasets .concat (group);
       if (data .length >= 1) {
         var height = [[],[]];
