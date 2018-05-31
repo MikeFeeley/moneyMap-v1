@@ -28,11 +28,12 @@ const modifyOp = (path_pieces, update, init) => (doc) => {
 
 const arithOp = (fn) => (path_pieces, value1) => {
     const update = (obj, field) => {
-        const value2 = obj[field];
+        const value2 = obj[field] || 0;
 
         if (typeof value2 === 'number') {
             obj[field] = fn(value1, value2);
         }
+
     };
 
     const init = (obj, field) => obj[field] = 0;
