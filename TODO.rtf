@@ -7,6 +7,9 @@
 
 \f0\fs36 \cf0 ==============\
 BUGS\
+	- account balance changes in transactions not reflected on accounts page\
+	- localdb: new account transaction does not update balance\
+		zangodb $inc non null field should assume a value of 0; doesn't\
 	- improve look for early version of use\
 		- when no actuals or no budget\
 	- improve initial config\

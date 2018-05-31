@@ -68,11 +68,14 @@ async function TransactionDBMeta_apply (db, pt, accId) {
     }
   }
   if (accId) {
-    var creditBalance = (await accounts .findOne ({_id: accId})) .creditBalance;
-    await accounts .updateOne ({_id: accId, 'pendingTransactions.uid': pt .uid}, {
-      $inc:  {balance: amount * (creditBalance? -1: 1)},
-      $pull: {pendingTransactions: {uid: pt .uid}}
-    });
+    let acc = await accounts .findOne ({_id: accId});
+    if (acc) {
+      var creditBalance = acc .creditBalance;
+      await accounts .updateOne ({_id: accId, 'pendingTransactions.uid': pt .uid}, {
+        $inc:  {balance: amount * (creditBalance? -1: 1)},
+        $pull: {pendingTransactions: {uid: pt .uid}}
+      });
+    }
   }
 }
 
