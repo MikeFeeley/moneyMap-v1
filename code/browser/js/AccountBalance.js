@@ -47,9 +47,9 @@ class AccountBalance extends TuplePresenter {
         }
       }
       // TODO also handle sort changes
-    if (eventType == ModelEvent .INSERT || (eventType == ModelEvent .UPDATE && arg .group)) {
-      // TODO handle new or moved accounts
-      // console.log('xxx');
+    console.log(arg);
+    if (eventType == ModelEvent .INSERT || (eventType == ModelEvent .UPDATE && (arg .group || arg .creditBalance))) {
+      setTimeout (() => {this._resetHtml()}, 0);
     } else
       super._onModelChange (eventType, doc, arg);
   }
@@ -168,7 +168,12 @@ class AccountBalance extends TuplePresenter {
     this._addAssetLiability(accounts);
   }
 
-  async addHtml (toHtml) {
+  _resetHtml() {
+    this._view .resetHtml();
+    this._buildHtml();
+  }
+
+  addHtml (toHtml) {
     this._view .addHtml (toHtml, () => {this._buildHtml()});
     this._buildHtml();
   }

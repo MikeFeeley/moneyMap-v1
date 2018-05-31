@@ -195,8 +195,6 @@ class User extends Observable {
             this._name       = user .name;
             this._cid        = user .curConfiguration;
             this._remember   = arg .remember;
-            if (arg .remember)
-              this._saveLoginState();
             this._setModelsForUser();
             await this._getConfigs();
             if (! this._getConfig (this._cid)) {
@@ -207,6 +205,8 @@ class User extends Observable {
                 break;
               }
             }
+            if (arg .remember)
+              this._saveLoginState();
             this._setModelsForConfig();
             try {
               await this._init();

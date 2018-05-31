@@ -213,8 +213,8 @@ class LocalDBAdaptor extends DBAdaptor {
 
     col .findOneAndUpdate = async (query, update, options = {}) => {
       options = handleOptions (query, update, options);
-      if (! options .returnOriginal)
-        options .returnOriginal = false;
+      if (options .returnOriginal === undefined)
+        options .returnOriginal = true;
       let res = await col .update (query, update, undefined, options);
       return res && res [0] && {value: res [0]}
     };
@@ -224,11 +224,11 @@ class LocalDBAdaptor extends DBAdaptor {
       await col. update (query, update, undefined, options);
     }
     col .findOneAndDelete = async query => {
-      let res = await col .remove (query);
+      let res = await col .remove (query, undefined);
       return res && res [0] && {value: res [0]}
     }
     col .deleteOne  = async query => {
-      let res = await col .remove (query);
+      let res = await col .remove (query, undefined);
       return {deletedCount: (res && res .length) || 0};
     }
     col .deleteMany = col .deleteOne;

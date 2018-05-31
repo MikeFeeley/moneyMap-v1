@@ -38,12 +38,10 @@ async function updateList (req, res, next) {
 
 router.post ('/one', function(req, res, next) {
   (async () => {try {await updateOne (req, res, next)} catch (e) {console .log (e)}}) ();
-  async (updateOne) (req, res, next);
 });
 
 router.post ('/list', function(req, res, next) {
   (async () => {try {await updateList (req, res, next)} catch (e) {console .log (e)}}) ();
-  async (updateList) (req, res, next);
 });
 
 module.exports = router;
