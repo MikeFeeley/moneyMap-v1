@@ -46,11 +46,11 @@ class AccountBalance extends TuplePresenter {
           delete arg [p];
         }
       }
-      // TODO also handle sort changes
-    console.log(arg);
-    if (eventType == ModelEvent .INSERT || (eventType == ModelEvent .UPDATE && (arg .group || arg .creditBalance))) {
-      setTimeout (() => {this._resetHtml()}, 0);
-    } else
+    let needRefresh = ! this._view .isVisible() || eventType == ModelEvent .INSERT ||
+      (eventType == ModelEvent .UPDATE && (arg .group !== undefined || arg .creditBalance !== undefined))
+    if (needRefresh)
+      this._resetHtml();
+    else
       super._onModelChange (eventType, doc, arg);
   }
 
@@ -99,7 +99,7 @@ class AccountBalance extends TuplePresenter {
   _addEditableTuple (acc, group) {
     if (acc .balance) {
       acc = Object .assign ({}, acc);
-      acc .editable_balance = acc .balance;
+      acc .editable_balance = acc .balance || 0;
       delete acc .balance;
       this._addTuple (acc, group);
     }

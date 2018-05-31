@@ -179,30 +179,34 @@ class AccountsModel extends Observable {
   async _onTranModelChange (eventType, doc, arg, source) {
     if (doc .account) {
       let acc  = this._accounts .find (a => {return a._id == doc .account});
-      let sign = acc .creditBalance? -1: 1;
-      switch (eventType) {
-        case ModelEvent .UPDATE:
-          if (arg .debit != null)
-            acc .balance += (arg .debit  - (arg._original_debit || 0)) * sign;
-          if (arg .credit != null)
-            acc .balance -= (arg .credit - (arg._original_credit || 0)) * sign;
-          if (arg .account != null) {
-            acc .balance += ((doc .debit || 0) - (doc .credit || 0)) * sign;
-            var pacc = this._accounts .find (a => {return a._id == arg ._original_account});
-            if (pacc) {
-              pacc .balance -= ((doc .debit || 0) - (doc .credit || 0)) * sign;
-              await this._notifyObserversAsync (ModelEvent .UPDATE, pacc, {balance: pacc .balance});
+      if (acc) {
+        let sign = acc .creditBalance? -1: 1;
+        switch (eventType) {
+          case ModelEvent .UPDATE:
+            if (arg .debit != null)
+              acc .balance += (arg .debit  - (arg._original_debit || 0)) * sign;
+            if (arg .credit != null)
+              acc .balance -= (arg .credit - (arg._original_credit || 0)) * sign;
+            if (arg .account != null) {
+              acc .balance += ((doc .debit || 0) - (doc .credit || 0)) * sign;
+              var pacc = this._accounts .find (a => {return a._id == arg ._original_account});
+              if (pacc) {
+                pacc .balance -= ((doc .debit || 0) - (doc .credit || 0)) * sign;
+                await this._notifyObserversAsync (ModelEvent .UPDATE, pacc, {balance: pacc .balance});
+                await this._model._notifyObserversAsync (ModelEvent .UPDATE, pacc, {balance: pacc .balance});
+              }
             }
-          }
-          break;
-        case ModelEvent .INSERT:
-          acc .balance += ((doc .debit || 0) - (doc .credit || 0)) * sign;
-          break;
-        case ModelEvent .REMOVE:
-          acc .balance -= ((doc .debit || 0) - (doc .credit || 0)) * sign;
-          break;
+            break;
+          case ModelEvent .INSERT:
+            acc .balance += ((doc .debit || 0) - (doc .credit || 0)) * sign;
+            break;
+          case ModelEvent .REMOVE:
+            acc .balance -= ((doc .debit || 0) - (doc .credit || 0)) * sign;
+            break;
+        }
+        await this._notifyObserversAsync (ModelEvent .UPDATE, acc, {balance: acc .balance});
+        await this._model._notifyObserversAsync (ModelEvent .UPDATE, acc, {balance: acc .balance});
       }
-      await this._notifyObserversAsync (ModelEvent .UPDATE, acc, {balance: acc .balance});
     }
     let acc = null;
     for (let cid of [doc .category, arg && arg._original_category]) {

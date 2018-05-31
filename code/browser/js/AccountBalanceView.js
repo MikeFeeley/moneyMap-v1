@@ -59,12 +59,16 @@ class AccountBalanceView extends TupleView {
     group [isVisible? 'removeClass': 'addClass'] ('hidden');
   }
 
+  isVisible() {
+    return this._html && ! this._html .closest ('.contents > div > div') .hasClass ('background');
+  }
+
   addTuple (data, tuple, getToHtml) {
     if (tuple) {
       tuple = $('<div>') .appendTo (tuple);
       if (data .name == undefined)
         data .name = '';
-      if (data .balance == undefined)
+      if (data .editable_balance === undefined && data .balance == undefined)
         data .balance = 0;
       tuple = super .addTuple (data, tuple, getToHtml);
       tuple .find ('._field_name, ._field_balance') .on ('click webkitmouseforcedown', e => {
