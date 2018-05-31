@@ -251,7 +251,7 @@ const LocalDBAdaptor_COLLECTIONS = {
     rateFuture: ['_id'],
     schedules: ['_id'],
     taxParameters: ['_id'],
-    transactions: ['_id', 'date']
+    transactions: ['_id', 'date', 'importTime']
   },
   'user': {
     configurations: ['_id']

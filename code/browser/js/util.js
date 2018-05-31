@@ -365,6 +365,15 @@ class TimeType extends DateType {
     }
     return super .toString (this._date (yr, mo, dy)) + (ts? ' at ' + ts: '');
   }
+  toDate (t) {
+    if (!t)
+      return '';
+    var dt = new Date (t);
+    var yr = dt .getFullYear();
+    var mo = dt .getMonth() + 1;
+    var dy = dt .getDate();
+    return Types .date._date (yr, mo, dy);
+  }
 }
 
 class NumberType extends FieldType {

@@ -278,10 +278,16 @@ class ImportBatchTable extends TransactionAndRulesTable {
     super._onViewChange (eventType, arg);
   }
 
-  _onModelChange (eventType, doc, arg, source) {
+  async _onModelChange (eventType, doc, arg, source) {
     if (! this._hasNewer && doc .importTime > this._query .importTime) {
       this._hasNewer = true;
-      this._updateButtons();
+      if (this._batch) {
+        this._hasNewer == this._batch != this._parent._currentImportTime;
+        this._updateButtons();
+      } else {
+        this._setBatch();
+        await this .refresh();
+      }
     }
     if (doc .importTime == this._query .importTime)
       super._onModelChange (eventType, doc, arg, source);
@@ -345,11 +351,9 @@ class ImportBatchTable extends TransactionAndRulesTable {
   }
 
   async addHtml (toHtml) {
-    this._query .date = {$gte: Types .date .addMonthStart (Types .date .today(), -3), $lte: this._variance .getBudget() .getEndDate()};
-    await this._transactionModel .find ({date: this._query .date});
     this._setBatch();
     this._view .addHtml (toHtml);
-    this._view .addButton ('_older_button', 'lnr-chevron-left', this._hasOlder, () => {this._setBatch (true);  (async () => {await this .refresh()}) ()});
+    this._view .addButton ('_older_button', 'lnr-chevron-left',  this._hasOlder, () => {this._setBatch (true);  (async () => {await this .refresh()}) ()});
     this._view .addButton ('_newer_button', 'lnr-chevron-right', this._hasNewer, () => {this._setBatch (false); (async () => {await this .refresh()}) ()});
     await super .addHtml (toHtml);
     this._setTitle();
@@ -379,7 +383,7 @@ class NeedsAttentionTable extends TransactionAndRulesTable {
     let name    = '_ImportTransactionsTable _TransactionAndRulesTable' + (nameSuffix? ' ' + nameSuffix: '');
     let budget  = parent._variance .getBudget();
     let query = {
-      date: {$gte: budget .getStartDate(), $lte: budget .getEndDate()},
+      date: {$gte: Types .date .addMonthStart (budget .getStartDate(), -3)},
       $or: [{category: null}, {category: ''}, {description: {$regex: '[?]\s*$'}}],
       $options: {updateDoesNotRemove: true, cacheOnly: true, primeCacheDateRange: true}
     };

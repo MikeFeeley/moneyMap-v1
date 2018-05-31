@@ -207,7 +207,7 @@ class NeedsAttentionTableView extends ImportedTransactionTableView {
     if (this._selectBatch)
       this._html .find ('tbody') .on ('click', 'td:nth-child(9)', e => {
         let field = $(e .currentTarget) .find ('._field') .data ('field');
-        if (field)
+        if (field && field._value)
           this._selectBatch (field._value);
         e.stopImmediatePropagation();
         return false;
@@ -215,7 +215,18 @@ class NeedsAttentionTableView extends ImportedTransactionTableView {
   }
 
   _getFields (fields) {
-    return super._getFields (fields) .concat (new ViewLabel ('importTime', ViewFormats ('timeShort')));
+    return super._getFields (fields) .concat (new ViewLabel ('importTime',
+      new ViewFormat (
+        (value => {return Types .timeShort .toString   (value)}),
+        (view  => {return Types .timeShort .fromString (view)}),
+        (value => {return Types .timeLongHM .toString (value)})
+      )
+    ));
+
+
+
+
+      //ViewFormats ('timeShort')));
   }
 
   _getHeaders (headers) {

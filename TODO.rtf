@@ -7,27 +7,22 @@
 
 \f0\fs36 \cf0 ==============\
 BUGS\
-	- account balance changes in transactions not reflected on accounts page\
-	- localdb: new account transaction does not update balance\
-		zangodb $inc non null field should assume a value of 0; doesn't\
+	- first transaction entered doesn't update 'Transactions Will Appear Here \'85' need to press right arrow\
 	- improve look for early version of use\
 		- when no actuals or no budget\
 	- improve initial config\
 		- add some accounts\
-	- not sure that account add shows up in rhs of inbox before reload \'85 check this\
-		- it doesn't\
-	- account balance of null should be treated as 0 when adding via a transaction\
-	- tab in tran cat field after entering partial string to get a match appears to not always select the category\
 	- why does budget date range affect what transactions show in inbox / added\
 		- must be fetching transactions base on budget year; is this right?\
 		- an optimization so that you don't have to search all transactions for needs attention\
-	- signup should allow choosing configuration type / password\
 	- alt-click on perspective table header column does not show budgethud as it should\
+\
+ENCRYPTION\
+	- accounts and balance\
+	- possibly change no-encrypt to just be server-side encrypt\
 \
 TODO\
 	- signup\
-	- server-side encryption of amounts and balances\
-	- possibly change no-encrypt to just be server-side encrypt\
 	- drill into payees in perspective (actual part of it)\
 	- help button\
 		- reshow the empty-screen help\
