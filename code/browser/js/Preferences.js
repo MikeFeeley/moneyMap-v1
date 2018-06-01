@@ -57,7 +57,7 @@ class Preferences extends Observable {
     this._view .addMenu (html, {top: UI_BANNER_HEIGHT,left: 8}, toHtml .parent(), {top: 0, left: 0});
     this._addMenuItem ('About moneyMap', () => {(async () => {await this._addAbout()}) ()}, true);
     this._addMenuItem ('Preferences',    () => {(async () => {await this._addPreferencesEdit()}) ()}, true);
-    this._addMenuItem ('Help for  Page', () => {(async () => {await this._help()}) ()});
+    this._addMenuItem ('Help', () => {(async () => {await this._help()}) ()});
   }
 
   _addMenuItem (name, action, underline) {
