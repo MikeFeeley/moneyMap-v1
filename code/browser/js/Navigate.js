@@ -354,14 +354,13 @@ class Navigate {
         }
       } else if (arg .name == '_budgetHistoryTable' && arg .id .length >= 1 && arg .id [0]) {
         if (arg .altClick) {
-          if (arg .date) {
-            if (arg .date .end > this._budget .getStartDate()) {
-              let activeId = arg .id .find (i => {let cat= this._categories .get (i); return cat && cat .budgets .includes (this._budget .getId())});
-              if (activeId)
-                BudgetProgressHUD .show (activeId, arg .html, arg .position, this._accounts, this._variance);
-            } else
-              TransactionHUD .showCategory (arg.id [0], arg .date, this._accounts, this._variance, arg .html, arg .position);
-          }
+          if (! arg .date || arg .date .end > this._budget .getStartDate()) {
+            arg .date == arg .date || {start: this._budget .getStartDate(), end: this._budget .getEndDate()};
+            let activeId = arg .id .find (i => {let cat= this._categories .get (i); return cat && cat .budgets .includes (this._budget .getId())});
+            if (activeId)
+              BudgetProgressHUD .show (activeId, arg .html, arg .position, this._accounts, this._variance);
+          } else
+            TransactionHUD .showCategory (arg.id [0], arg .date, this._accounts, this._variance, arg .html, arg .position);
         } else {
           let ids = [] .concat (arg .id);
           this._addHistoryTable (ids, arg .date, true, true, arg .position, arg .view, this._getHistoryData (ids, arg .date, true), arg .html);
