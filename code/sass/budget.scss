@@ -21,8 +21,10 @@ body {
 
 ._helpPopup {
   @include popup-container();
+  position: fixed;
   > div {
     @include tip-popup();
+    z-index: 99999;
     display: inline-block;
     border-radius: 6px;
     width: 800px;

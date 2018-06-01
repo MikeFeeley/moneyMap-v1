@@ -35,6 +35,20 @@ class Observable {
   }
 }
 
+const Help = Object .freeze ({
+  registry: new Map(),
+
+  add: (name, cb) => {
+    Help .registry .set (name, cb);
+  },
+
+  show: (name, modal = true) => {
+    let cb = Help .registry .get (name);
+    if (cb)
+      cb(modal);
+  }
+});
+
 class FieldType {
   constructor (format) {
     this._format = format;
@@ -528,3 +542,4 @@ if (typeof exports !== 'undefined') {
   exports .SERVER_HEART_BEAT_INTERVAL  = SERVER_HEART_BEAT_INTERVAL;
   exports .SERVER_DISCONNECT_THRESHOLD = SERVER_DISCONNECT_THRESHOLD;
 }
+

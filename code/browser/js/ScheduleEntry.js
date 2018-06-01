@@ -287,29 +287,35 @@ class ScheduleEntry extends List {
           hasSchedule = true;
           break;
         }
-      if (! hasSchedule)
-        this._view .addHelpTable (
-          ['A budget plan consists of a hierarchical list of named categories.  ' +
-          'You classify transactions by associating them with one of these categories.',
-          'You assign a budget amount to a category by giving it (or one of its desendants) a schedule.  ' +
-          'Each schedule is a list of budget amounts for a particular year, month, or range of months.  ' +
-          'A category can have full-year, or monthly schedules, but not both.  ',
-          "A category's budget is the aggregation of its descendants.  " +
-          'If a category has a yearly schedule, then its descendants allocate that yearly budget.  ' +
-          'If a category has a monthly schedule, then its descendants add to its budget.',
-          'Get started ...'
-          ],
-          [
-            ['Add sibling category or schedule',  'CMD + ENTER'],
-            ['Add child category',                'CMD + ALT + ENTER'],
-            ['Delete',                            'CMD + DELETE'],
-            ['Enter schedule',                    'TAB the Start field'],
-            ['Budget for whole year',             'Enter a year number for Start'],
-            ['Budget for single month',           'Enter month-year (e.g., Aug-19) and leave End date blank'],
-            ['Budget for range of months',        'Enter values in Start and End fields'],
-            ['Budget starting at month',          'Enter ... for End field'],
-            ['Repeat budget in future years',     'Click Repeat and optionally limit the number of years'],
-          ]);
+      const showHelp = () => this._view .addHelpTable (
+        ['A budget plan consists of a hierarchical list of named categories.  ' +
+        'You classify transactions by associating them with one of these categories.',
+        'You assign a budget amount to a category by giving it (or one of its desendants) a schedule.  ' +
+        'Each schedule is a list of budget amounts for a particular year, month, or range of months.  ' +
+        'A category can have full-year, or monthly schedules, but not both.  ',
+        "A category's budget is the aggregation of its descendants.  " +
+        'If a category has a yearly schedule, then its descendants allocate that yearly budget.  ' +
+        'If a category has a monthly schedule, then its descendants add to its budget.',
+        'Get started ...'
+        ],
+        [
+          ['Add sibling category or schedule',  'CMD + ENTER'],
+          ['Add child category',                'CMD + ALT + ENTER'],
+          ['Delete',                            'CMD + DELETE'],
+          ['Enter schedule',                    'TAB the Start field'],
+          ['Budget for whole year',             'Enter a year number for Start'],
+          ['Budget for single month',           'Enter month-year (e.g., Aug-19) and leave End date blank'],
+          ['Budget for range of months',        'Enter values in Start and End fields'],
+          ['Budget starting at month',          'Enter ... for End field'],
+          ['Repeat budget in future years',     'Click Repeat and optionally limit the number of years'],
+        ]);
+      Help .add ('Plan', showHelp);
+      const conditionallyShowHelp = () => {
+        if (! hasSchedule)
+          showHelp();
+      }
+      conditionallyShowHelp();
+      toHtml .closest ('.contents > div > div') .data ('visible', conditionallyShowHelp);
     }
   }
 

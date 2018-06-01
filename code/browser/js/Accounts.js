@@ -538,20 +538,26 @@ class Accounts extends Observable {
                 await this._addAccount (account);
               }
           }
-        }
+      }
+      const showHelp = () => this._view .addHelpTable (
+        ['There are three types of accounts: '+
+          'Cash-Flow accounts for bank accounts whose transactions you track, '+
+          'Asset and Liability that determine your net worth shown on the Wealth page, and '+
+          'Income Source accounts project your after-tax income.',
+        'Within each type, accounts are organized into groups.', 'Get started ...'],
+        [
+          ['Add account to group', 'CMD + ALT + ENTER'],
+          ['Add group',            'CMD + ENTER'],
+          ['Delete',               'CMD + DELETE']
+          ]
+      );
+      Help .add ('Accounts', showHelp);
+      const conditionallyShowHelp = () => {
         if (! hasAccount)
-          this._view .addHelpTable (
-            ['There are three types of accounts: '+
-              'Cash-Flow accounts for bank accounts whose transactions you track, '+
-              'Asset and Liability that determine your net worth shown on the Wealth page, and '+
-              'Income Source accounts project your after-tax income.',
-            'Within each type, accounts are organized into groups.', 'Get started ...'],
-            [
-              ['Add account to group', 'CMD + ALT + ENTER'],
-              ['Add group',            'CMD + ENTER'],
-              ['Delete',               'CMD + DELETE']
-              ]
-          );
+          showHelp();
+      }
+      conditionallyShowHelp();
+      toHtml .data ('visible', conditionallyShowHelp);
     }
     await build();
   }

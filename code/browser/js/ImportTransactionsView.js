@@ -58,10 +58,10 @@ class ImportTransactionsView extends View {
     });
   }
 
-  addHelpTable (descData, tableData, top=220, left=40) {
+  addHelpTable (descData, tableData, top=100, left=50) {
     let popup = $('<div>', {class: '_helpPopup'})
-    .appendTo (this._html)
-    .css ({top: top, left: left});
+      .appendTo ($('body'))
+      .css ({top: top, left: left});
     let help = $('<div>') .appendTo (popup);
     $('<div>', {text: 'TIP'}) .appendTo (help);
     for (let desc of descData)

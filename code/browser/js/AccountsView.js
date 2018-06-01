@@ -152,9 +152,9 @@ class AccountsView extends View {
     return entry;
   }
 
-  addHelpTable (descData, tableData, top=60, left=0) {
+  addHelpTable (descData, tableData, top=100, left=50) {
     let popup = $('<div>', {class: '_helpPopup'})
-      .appendTo (this._html)
+      .appendTo ($('body'))
       .css ({top: top, left: left});
     let help = $('<div>') .appendTo (popup);
     $('<div>', {text: 'TIP'}) .appendTo (help);

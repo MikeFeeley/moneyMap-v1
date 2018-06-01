@@ -125,10 +125,10 @@ class ScheduleEntryView extends ListView {
     ]);
   }
 
-  addHelpTable (descData, tableData, top=60, left=60) {
+  addHelpTable (descData, tableData, top=130, left=220) {
     let popup = $('<div>', {class: '_helpPopup'})
-    .appendTo (this._html)
-    .css ({top: top, left: left});
+      .appendTo ($('body'))
+      .css ({top: top, left: left});
     let help = $('<div>') .appendTo (popup);
     $('<div>', {text: 'TIP'}) .appendTo (help);
     for (let desc of descData)

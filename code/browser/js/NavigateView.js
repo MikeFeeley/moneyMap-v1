@@ -52,6 +52,7 @@ class NavigateView extends Observable  {
       this._budgetYearGraph .delete();
       this._budgetYearGraph = null;
     }
+    this._helpShowing = false;
   }
 
   _createHtml () {
@@ -92,11 +93,22 @@ class NavigateView extends Observable  {
     return content;
   }
 
-  addHelp (text) {
-    let help = $('<div>') .appendTo ($('<div>', {class: '_helpInline'}) .appendTo (this._content));
-    $('<div>', {text: 'TIP'}) .appendTo (help);
-    for (let t of text)
-      $('<div>', {text: t}) .appendTo (help);
+  addHelp (text, modal) {
+    if (!this._helpShowing) {
+      let help = $('<div>') .appendTo ($('<div>', {class: modal? '_helpPopup': '_helpInline'}) .appendTo (modal? $('body'): this._content));
+      $('<div>', {text: 'TIP'}) .appendTo (help);
+      for (let t of text)
+        $('<div>', {text: t}) .appendTo (help);
+      this._helpShowing = true;
+      if (modal) {
+        help .parent() .css ({top: 100, left: 50});
+        ui .ModalStack .add (
+          e  => {return e && ! $.contains (help, e .target)},
+          () => {help .remove(); this._helpShowing = false},
+          true
+        );
+      }
+    }
   }
 
   addContainer (name='', toHtml = this._content) {

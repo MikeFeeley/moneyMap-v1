@@ -1233,13 +1233,19 @@ class Navigate {
     let added      = false;
     for (let root of roots)
       added |= this._addProgressGraph (root, null, false, undefined, labelWidth, true, true, true);
-    if (! added)
-      this._progressView .addHelp ([
+    const showHelp = modal => this._progressView .addHelp (
+      [
         'Use "Inbox" to start adding transactions to track your spending.',
         'Use "Plan" to start planning a budget.',
         '________',
-        'Use CMD + F to search, or click or ALT + click to dig deeper.']);
-  }
+        'Use CMD + F to search, or click or ALT + click to dig deeper.'
+      ],
+      modal
+    );
+    Help .add ('Progress', showHelp);
+    if (! added)
+      showHelp (false);
+   }
 
 
 
