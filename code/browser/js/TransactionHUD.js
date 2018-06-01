@@ -384,36 +384,36 @@ class TransactionHUD extends TransactionAndRulesTable {
   }
 
   static showCategory (id, dates, accounts, variance, toHtml, position, includeMonths=true, includeYears=true, addCats=[]) {
-    let ids         = id .split ('_');
-    let selectPayee = id .includes ('payee_') && id .split ('_') .slice (-2) [0];
-    let isOther     = id .includes ('other_');
+    const budget      = variance .getBudget();
+    const categories  = budget .getCategories();
+    const ids         = id .split ('_');
+    const selectPayee = id .includes ('payee_') && id .split ('_') .slice (-2) [0];
+    const isOther     = id .includes ('other_');
     id = ids .slice (-1) [0];
-    var getFamily = (cats) => {
-      var family = [];
+    const getFamily = (cats) => {
+      const family = [];
       for (let cat of cats || []) {
-        var type = categories .getType (cat);
+        const type = categories .getType (cat);
         if ((type == ScheduleType .MONTH && includeMonths) || (type == ScheduleType .YEAR && includeYears) || type == ScheduleType .NONE)
           family .push (cat ._id);
-        if (!isOther)
-          for (let id of getFamily ((cat .children || []) .concat (cat .zombies || [])))
+        for (let id of getFamily ((cat .children || []) .concat (cat .zombies || [])))
+          if (! isOther || categories .getType (categories .get (id)) == ScheduleType .NONE)
             family .push (id);
-          }
+      }
       return family;
     }
-    let budget     = variance .getBudget();
-    let categories = budget .getCategories();
-    let cat        = categories .get (id) || {};
-    let qualifier  = includeMonths && !includeYears? ' (Monthly)': includeYears && !includeMonths? ' (Anytime)': '';
+    const cat        = categories .get (id) || {};
+    const qualifier  = includeMonths && !includeYears? ' (Monthly)': includeYears && !includeMonths? ' (Anytime)': '';
     dates = dates || {start: budget .getStartDate(), end: budget .getEndDate()};
-    var title      = [(isOther? 'Other ': '') + cat .name + qualifier, ''];
+    const title      = [(isOther? 'Other ': '') + cat .name + qualifier, ''];
     if (selectPayee)
       title [1] = 'Where Payee starts with "' + selectPayee + '"';
-    let p = cat .parent || {children: [cat]};
-    let cats = (p .children || []) .concat (p .zombies || [])
+    const p = cat .parent || {children: [cat]};
+    const cats = (p .children || []) .concat (p .zombies || [])
       .filter (s => {return s .name == cat .name})
       .map    (s => {return getFamily ([s])})
       .reduce ((l,i) => {return l .concat (i)}, [])
-    let query = {
+    const query = {
       category: {$in: cats .concat (addCats)},
       date:     dates && {$gte: dates .start, $lte: dates .end},
       $options: {updateDoesNotRemove: true}
