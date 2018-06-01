@@ -900,7 +900,11 @@ class Navigate {
   async _addMonthsGraph (name, view, ids, popup, position, toHtml, includeMonths=true, includeYears=true, addCats=[], dates=null, startColor=0, viewUpdater) {
     var type    = name .startsWith ('_budget')? NavigateValueType .BUDGET_YR_AVE_ACT: NavigateValueType .ACTUALS_BUD;
     var dataset = await this._getMonthsData (type, dates, ids, includeMonths, includeYears, addCats);
-    const nothingToShow = ! dataset .groups .find (g => g .rows .find (r => r .amounts .find (a => ! a .id .startsWith ('budget_') && a .value != 0)));
+    const nothingToShow = ! dataset .groups .find (g =>
+      g .rows .find (r =>
+        r .amounts .find (a =>
+          (Array.isArray (a .id) || ! a .id .startsWith ('budget_')) && a .value != 0
+     )));
     if (nothingToShow)
       return;
     if (!ids || ids .length > 1) {
