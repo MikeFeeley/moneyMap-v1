@@ -47,7 +47,7 @@ class Navigate {
       this._clearUpdatersForView (this._progressView);
       this._addProgressSidebar()
       this._addProgressGraphs();
-    })
+    });
   }
 
   async addPlanHtml (toHtml) {
@@ -67,7 +67,6 @@ class Navigate {
     this._realityView .addObserver       (this, this._onViewChange);
     this._realityView .addHtml           (toHtml, async () => {
       this._clearUpdatersForView          (this._realityView);
-      // this._realityView .addHeading       ('Activity this Budget Year');
       await this._addYearCategoriesGraphs ('_activityChart', this._realityView);
       await this._addMonthsGraph          ('_activityMonthsGraph', this._realityView);
       await this._addMonthsTable          ('_activityTable', this._realityView);
@@ -902,7 +901,8 @@ class Navigate {
   async _addMonthsGraph (name, view, ids, popup, position, toHtml, includeMonths=true, includeYears=true, addCats=[], dates=null, startColor=0, viewUpdater) {
     var type    = name .startsWith ('_budget')? NavigateValueType .BUDGET_YR_AVE_ACT: NavigateValueType .ACTUALS_BUD;
     var dataset = await this._getMonthsData (type, dates, ids, includeMonths, includeYears, addCats);
-    if (! dataset .groups .find (g => g .rows .find (r => r .amounts .find (a => a .value != 0))))
+    const nothingToShow = ! dataset .groups .find (g => g .rows .find (r => r .amounts .find (a => ! a .id .startsWith ('budget_') && a .value != 0)));
+    if (nothingToShow)
       return;
     if (!ids || ids .length > 1) {
       let dt = dates && [] .concat (dates);
@@ -1049,9 +1049,10 @@ class Navigate {
           if (update .length)
             updateView (update);
         })
-        var updateView = view .addDoughnut (data, name, popup, position, direction, () => {
-          this._deleteUpdater (view, updater);
-        });
+        if (!! data .cats .find (c => c .amount != 0 && ! c .blackout))
+          var updateView = view .addDoughnut (data, name, popup, position, direction, () => {
+            this._deleteUpdater (view, updater);
+          });
       }
     }
   }
@@ -1234,8 +1235,8 @@ class Navigate {
       added |= this._addProgressGraph (root, null, false, undefined, labelWidth, true, true, true);
     if (! added)
       this._progressView .addHelp ([
-        'Use "Plan" to start planning a budget; then you will see your budget progress here.',
-        'Or use "Inbox" to start adding transactions to track your spending before you decide on a budget.',
+        'Use "Inbox" to start adding transactions to track your spending.',
+        'Use "Plan" to start planning a budget.',
         '________',
         'Use CMD + F to search, or click or ALT + click to dig deeper.']);
   }
