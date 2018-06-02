@@ -52,7 +52,7 @@ class LocalDBAdaptor extends DBAdaptor {
   _createDB (name) {
     let collections = LocalDBAdaptor_COLLECTIONS [name .split ('_') [0]];
     assert (collections);
-    return new zango .Db (name, collections);
+    return new zango .Db (name, 1, collections);
   }
 
   _createObjectID() {
@@ -251,7 +251,7 @@ const LocalDBAdaptor_COLLECTIONS = {
     rateFuture: ['_id'],
     schedules: ['_id'],
     taxParameters: ['_id'],
-    transactions: ['_id', 'date', 'importTime']
+    transactions: ['_id', 'date', 'importTime', 'category', 'account']
   },
   'user': {
     configurations: ['_id']

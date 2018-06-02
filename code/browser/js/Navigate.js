@@ -92,11 +92,11 @@ class Navigate {
     let rv = this._perspectiveView .addSubHeading   ('', '', sc);
     this._historySliderLeft  = undefined;
     this._historySliderRight = undefined;
-    let ds = this._getHistoryData                   ();
+    let ds = await this._getHistoryData             ();
     this._addHistorySlider (
       this._perspectiveView, ds, sc, lv, rv,
-      this._addHistoryGraph (undefined, undefined, undefined, this._perspectiveView, ds, undefined),
-      this._addHistoryTable (undefined, undefined, undefined, undefined, undefined, this._perspectiveView, ds, undefined)
+      await this._addHistoryGraph (undefined, undefined, undefined, this._perspectiveView, ds, undefined),
+      await this._addHistoryTable (undefined, undefined, undefined, undefined, undefined, this._perspectiveView, ds, undefined)
     );
   }
 
@@ -261,7 +261,7 @@ class Navigate {
             }
           }
         } else {
-          this._addHistoryGraph (arg .id, true, arg .position, arg .view, this._getHistoryData (arg .id, undefined, true), arg .html, arg .colorIndex);
+          await this._addHistoryGraph (arg .id, true, arg .position, arg .view, await this._getHistoryData (arg .id, undefined, true), arg .html, arg .colorIndex);
         }
       } else if (arg .name == '_budgetHistoryGraph_months') {
         let name = (arg .date .start < this._budget .getStartDate()? '_activity': '_budget') + 'MonthsGraph';
@@ -282,7 +282,7 @@ class Navigate {
 
     } else if (eventType == NavigateViewEvent .BUDGET_GRAPH_GET_HISTORY) {
       await this._actuals .findHistory();
-      this._addHistoryGraph (arg .id, true, arg .position, arg .view, this._getHistoryData (arg .id, undefined, true), arg .html, arg .colorIndex);
+      await this._addHistoryGraph (arg .id, true, arg .position, arg .view, await this._getHistoryData (arg .id, undefined, true), arg .html, arg .colorIndex);
 
     } else if (eventType == NavigateViewEvent .BUDGET_GRAPH_TITLE_CLICK && arg .id) {
       /* Graph Title */
@@ -299,7 +299,7 @@ class Navigate {
             })
             .filter (l => {return l})
             .reduce ((s,l) => {return l .reduce ((s,i) => {return s .add (i)}, s)}, new Set()))
-          this._addHistoryGraph (ids, true, arg .position, arg .view, this._getHistoryData(ids, undefined, true), arg .html);
+          await this._addHistoryGraph (ids, true, arg .position, arg .view, await this._getHistoryData(ids, undefined, true), arg .html);
         } else {
           /* Budget HUD */
           if (Array .isArray (arg .id))
@@ -361,7 +361,7 @@ class Navigate {
             TransactionHUD .showCategory (arg.id [0], arg .date, this._accounts, this._variance, arg .html, arg .position);
         } else {
           let ids = [] .concat (arg .id);
-          this._addHistoryTable (ids, arg .date, true, true, arg .position, arg .view, this._getHistoryData (ids, arg .date, true), arg .html);
+          await this._addHistoryTable (ids, arg .date, true, true, arg .position, arg .view, await this._getHistoryData (ids, arg .date, true), arg .html);
         }
       }
 
@@ -1404,21 +1404,19 @@ class Navigate {
    *     }]
    *   }
    */
-  _getHistoryData (parentIds, date, filter) {
-    // TODO payees
-    var defaultParents  = [this._budget .getWithdrawalsCategory(), this._budget .getIncomeCategory(), this._budget .getSavingsCategory(), this._budget .getExpenseCategory()];
-    parentIds           = (parentIds || (defaultParents .map (p => {return p._id}))) .filter (pid => ! pid .includes ('other_'));
+  async _getHistoryData (parentIds, date, filter) {
+    const defaultParents  = [this._budget .getWithdrawalsCategory(), this._budget .getIncomeCategory(), this._budget .getSavingsCategory(), this._budget .getExpenseCategory()];
+    parentIds           = (parentIds || (defaultParents .map (p => {return p._id}))) .filter (pid => ! pid .includes ('_'));
     // get historic amounts
-    var historicYears = this._actuals .getHistoricYears();
-    var historicAmounts = [];
-    for (let year of historicYears) {
-      historicAmounts .push (parentIds .map (pid => {
-        pid = pid .split ('_') .slice (-1) [0];
+    const historicYears = this._actuals .getHistoricYears();
+    let historicAmounts = [];
+    for (const year of historicYears) {
+      historicAmounts .push (Promise .all (parentIds .map (async pid => {
         const parent   = this._categories .get  (pid);
         const isCredit = this._budget .isCredit (parent);
         const isGoal   = this._budget .isGoal   (parent);
         const children = (parent .children || []) .concat (parent .zombies || []);
-        const amounts = Array .from (children .reduce ((m,c) => {
+        const amounts  = Array .from (children .reduce ((m,c) => {
           let a = this._actuals .getAmountRecursively (c, year .start, year .end) * (isCredit? -1: 1);
           let e = m .get (c .name);
           if (e) {
@@ -1434,7 +1432,7 @@ class Navigate {
             })
           }
           return m;
-        }, new Map()) .values())
+        }, new Map()) .values());
         let parentAmount = this._actuals .getAmountRecursively (parent, year .start, year .end) * (isCredit? -1: 1);
         let otherAmount  = parentAmount - amounts .reduce ((t,a) => {return t + a .amount}, 0);
         if (otherAmount != 0)
@@ -1450,8 +1448,9 @@ class Navigate {
           name:    parent .name,
           amounts: amounts
         }
-      }))
+      })))
     }
+    historicAmounts = await Promise .all (historicAmounts);
     // compute future budgets
     let budgets = [];
     for (let y = 0; y < PreferencesInstance .get() .futureYears; y++)
@@ -1590,9 +1589,9 @@ class Navigate {
       dates:     budgets .map (b => {return {start: b .start, end: b .end}}),
       highlight: historicYears .length,
       groups:    groups,
-      getUpdate: eventIds => {
+      getUpdate: async eventIds => {
         let update  = [];
-        let newData = this._getHistoryData (parentIds, date, filter);
+        let newData = await this._getHistoryData (parentIds, date, filter);
         for (let g of newData .groups) {
           if (eventIds .includes (g .id))
             update .push ({update: {id: g .id, name: g .name}});
@@ -1734,31 +1733,35 @@ class Navigate {
     }, toHtml)
   }
 
-  _addHistoryGraph (parentIds, popup, position, view, dataset = this._getHistoryData (parentIds), toHtml, startColor) {
+  async _addHistoryGraph (parentIds, popup, position, view, dataset, toHtml, startColor) {
+    if (! dataset)
+      dataset = await this._getHistoryData (parentIds, date);
     if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
-      var updater = this._addUpdater (view, (eventType, model, ids) => {
+      const updater = this._addUpdater (view, async (eventType, model, ids) => {
         if (model == 'SchedulesModel' || model == 'ActualsModel')
-          updateView (dataset .getUpdate (ids));
+          updateView (await dataset .getUpdate (ids));
       });
-      var updateView = view .addHistoryGraph (dataset, popup, position, () => {
+      const updateView = view .addHistoryGraph (dataset, popup, position, () => {
         this._deleteUpdater (view, updater);
       }, toHtml, dataset .groups .length == 1 && dataset .groups [0] .rows .length == 1? startColor: 0);
       return updateView;
     }
   }
 
-  _addHistoryTable (parentIds, date, skipFoot, popup, position, view, dataset = this._getHistoryData (parentIds, date), toHtml) {
-    let datasetCopy   = Object .assign ({}, dataset);
+  async _addHistoryTable (parentIds, date, skipFoot, popup, position, view, dataset, toHtml) {
+    if (! dataset)
+      dataset = await this._getHistoryData (parentIds, date);
+    const datasetCopy   = Object .assign ({}, dataset);
     if (datasetCopy .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
-      var updater = this._addUpdater (view, (eventType, model, ids) => {
-        dataset .groups   = this._getHistoryData (parentIds, date, date) .groups;
+      const updater = this._addUpdater (view, async (eventType, model, ids) => {
+        dataset .groups   = await this._getHistoryData (parentIds, date, date) .groups;
         let ds            = JSON .parse (JSON .stringify (dataset));
         this._filterHistoryBySlider (ds)
-        for (let g of ds .groups)
+        for (const g of ds .groups)
           g .rows = g .rows .filter (r => {return r .amounts .find (a => {return a .value != 0})});
         updateView ([{replace: ds}])
       });
-      var updateView = view .addHistoryTable (datasetCopy, datasetCopy .cols .length == 1, skipFoot, popup, position, () => {
+      const updateView = view .addHistoryTable (datasetCopy, datasetCopy .cols .length == 1, skipFoot, popup, position, () => {
         this._deleteUpdater (view, updater);
       }, toHtml);
       return updateView;
