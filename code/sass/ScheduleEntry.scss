@@ -59,13 +59,20 @@ $indent:       24px;
         opacity: 0;
       }
     }
-    ._field_notes ._content {
-      @include adaptive-width(75px,200px);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      color: #8a8;
-      font-style: italic;
+    ._field_notes {
+      ._content {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: #8a8;
+        font-style: italic;
+      }
+      &._wide ._content {
+        @include adaptive-width(200px,325px);
+      }
+      &:not(._wide) ._content {
+        @include adaptive-width(75px,200px);
+      }
     }
     div._field_total {
       vertical-align: top;

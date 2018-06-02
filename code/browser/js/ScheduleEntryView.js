@@ -32,7 +32,7 @@ class ScheduleEntryView extends ListView {
       new ViewScalableTextbox          ('amount',          ViewFormats ('moneyDC'),      '', '', 'Amount'),
       new RepeatField                  ('repeat',          variance .getBudget()),
       new LimitField                   ('limit',           ViewFormats ('number'),       '', '', 'Yrs'),
-      new ViewScalableTextbox          ('notes',           ViewFormats ('string'),       '', '', 'Notes')
+      new ViewElasticTextbox           ('notes',           ViewFormats ('string'),       '', '', 'Notes')
     ];
     var lineTypes = {
       categoryLine: ['name', 'account', 'zombie', 'zombieActive', 'scheduleLine', 'unallocated', 'total'],
@@ -359,6 +359,19 @@ class LimitField extends ViewScalableTextbox {
   _set (value) {
     super._set (value);
     this._repeat._setWithLimit (value);
+  }
+}
+
+class ViewElasticTextbox extends ViewScalableTextbox {
+  constructor (name, format, prefix, suffix, placeholder) {
+    super (name, format, prefix, suffix, placeholder)
+  }
+  _addHtml() {
+    super._addHtml();
+    setTimeout (() => {
+      if (! this._html .closest ('._field_scheduleLine') .siblings ('._field_unallocated') .find ('._content') .text())
+        this._html .addClass ('_wide');
+     }, 0);
   }
 }
 
