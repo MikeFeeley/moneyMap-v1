@@ -389,6 +389,7 @@ class TransactionHUD extends TransactionAndRulesTable {
     const ids         = id .split ('_');
     const selectPayee = id .includes ('payee_') && id .split ('_') .slice (-2) [0];
     const isOther     = id .includes ('other_');
+    const isCurrent   = dates .end >= budget .getStartDate();
     id = ids .slice (-1) [0];
     const getFamily = (cats) => {
       const family = [];
@@ -397,7 +398,7 @@ class TransactionHUD extends TransactionAndRulesTable {
         if ((type == ScheduleType .MONTH && includeMonths) || (type == ScheduleType .YEAR && includeYears) || type == ScheduleType .NONE)
           family .push (cat ._id);
         for (const id of getFamily ((cat .children || []) .concat (cat .zombies || [])))
-          if (! isOther || categories .getType (categories .get (id)) == ScheduleType .NONE)
+          if (! isOther || (isCurrent && ! categories .hasType (categories .get (id), ScheduleType .NOT_NONE)))
             family .push (id);
       }
       return family;

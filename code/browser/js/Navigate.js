@@ -261,8 +261,7 @@ class Navigate {
             }
           }
         } else {
-          let ids = [] .concat (arg .id) .filter (i => {return ! i .startsWith ('other_')});
-          this._addHistoryGraph (ids, true, arg .position, arg .view, this._getHistoryData (ids, undefined, true), arg .html, arg .colorIndex);
+          this._addHistoryGraph (arg .id, true, arg .position, arg .view, this._getHistoryData (arg .id, undefined, true), arg .html, arg .colorIndex);
         }
       } else if (arg .name == '_budgetHistoryGraph_months') {
         let name = (arg .date .start < this._budget .getStartDate()? '_activity': '_budget') + 'MonthsGraph';
@@ -282,9 +281,8 @@ class Navigate {
       await this._addMonthsGraph (name, arg .view, arg .id, true, arg .position, arg .html, true, true, [], dates, undefined, arg .update);
 
     } else if (eventType == NavigateViewEvent .BUDGET_GRAPH_GET_HISTORY) {
-      let ids = [] .concat (arg .id) .filter (i => {return ! i .startsWith ('other_')});
       await this._actuals .findHistory();
-      this._addHistoryGraph (ids, true, arg .position, arg .view, this._getHistoryData (ids, undefined, true), arg .html, arg .colorIndex);
+      this._addHistoryGraph (arg .id, true, arg .position, arg .view, this._getHistoryData (arg .id, undefined, true), arg .html, arg .colorIndex);
 
     } else if (eventType == NavigateViewEvent .BUDGET_GRAPH_TITLE_CLICK && arg .id) {
       /* Graph Title */
@@ -470,8 +468,11 @@ class Navigate {
         if (id .includes ('payee_'))
           return []
         else {
-          let cat    = this._categories .get (id .split ('_') .slice (-1) [0]);
-          let result = id .includes ('other_')? []: (cat .children || []) .concat (cat .zombies || []) .map (c => {return c._id});
+          const cat = this._categories .get (id .split ('_') .slice (-1) [0]);
+          let children = (cat .children || []) .concat (cat .zombies || []);
+          if (id .includes ('other_'))
+            children = children .filter (c => ! this._categories .hasType (c, ScheduleType .NOT_NONE));
+          let result = children .map (c=> c._id);
           if (type == NavigateValueType .ACTUALS_BUD)
             result = ['budget_' + id] .concat (result);
           return result;
@@ -1404,17 +1405,20 @@ class Navigate {
    *   }
    */
   _getHistoryData (parentIds, date, filter) {
+    // TODO payees
     var defaultParents  = [this._budget .getWithdrawalsCategory(), this._budget .getIncomeCategory(), this._budget .getSavingsCategory(), this._budget .getExpenseCategory()];
-    parentIds           = parentIds || (defaultParents .map (p => {return p._id}));
-    var parents         = parentIds .map (pid => {return this._categories .get (pid)});
+    parentIds           = (parentIds || (defaultParents .map (p => {return p._id}))) .filter (pid => ! pid .includes ('other_'));
     // get historic amounts
     var historicYears = this._actuals .getHistoricYears();
     var historicAmounts = [];
     for (let year of historicYears) {
-      historicAmounts .push (parents .map (parent => {
-        let isCredit = this._budget .isCredit (parent);
-        let isGoal   = this._budget .isGoal   (parent);
-        let amounts = Array .from ((parent .children || []) .concat (parent .zombies || []) .reduce ((m,c) => {
+      historicAmounts .push (parentIds .map (pid => {
+        pid = pid .split ('_') .slice (-1) [0];
+        const parent   = this._categories .get  (pid);
+        const isCredit = this._budget .isCredit (parent);
+        const isGoal   = this._budget .isGoal   (parent);
+        const children = (parent .children || []) .concat (parent .zombies || []);
+        const amounts = Array .from (children .reduce ((m,c) => {
           let a = this._actuals .getAmountRecursively (c, year .start, year .end) * (isCredit? -1: 1);
           let e = m .get (c .name);
           if (e) {
