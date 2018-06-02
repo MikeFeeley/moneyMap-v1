@@ -631,6 +631,7 @@ body > ._whiteout {
   @supports not ((backdrop-filter: blur(4px)) or (-webkit-backdrop-filter: blur(4px))) {
     background: rgba(255,255,255,0.5)!important;
   }
+  z-index: 10000;
   > ._popupContainer {
     @include popup-container();
     position: fixed;
