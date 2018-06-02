@@ -369,8 +369,8 @@ class ViewElasticTextbox extends ViewScalableTextbox {
   _addHtml() {
     super._addHtml();
     setTimeout (() => {
-      if (! this._html .closest ('._field_scheduleLine') .siblings ('._field_unallocated') .find ('._content') .text())
-        this._html .addClass ('_wide');
+      if (this._html .closest ('._field_scheduleLine') .siblings ('._field_unallocated') .find ('._content') .text())
+        this._html .addClass ('_narrow');
      }, 0);
   }
 }
