@@ -554,6 +554,10 @@ class User extends Observable {
     this._configs = this._sortByName (remoteConfigs .concat (localConfigs));
   }
 
+  async _getBudgets() {
+    this._budgets = this._sortByName (await this._budgetModel .find());
+  }
+
   _getConfig (cid) {
     return this._configs .find (c => {return c._id == cid});
   }
@@ -598,7 +602,7 @@ class User extends Observable {
         await this._updateAccount ([em, op, np, cp, nm] .map (f => {return f.val()}))
       }), update);
       this._accountEditError = this._view .addLabel ('', update, '_errorMessage');
-      }
+    }
   }
 
   _setConfigDeleteButtonDisabled() {
@@ -688,6 +692,7 @@ class User extends Observable {
     }
     this._cid = cid;
     this._setModelsForConfig();
+    this._getBudgets();
   }
 
   /**
@@ -842,7 +847,7 @@ class User extends Observable {
       start:            Types .date._date (y,  1,  1),
       end:              Types .date._date (y, 12, 31),
     });
-    this._budgets = this._sortByName (await this._budgetModel .find());
+    this._getBudgets();
     let cm = new Model ('categories', this .getDatabaseName());
     let sm = new Model ('schedules',  this .getDatabaseName());
     let roots = [
@@ -935,7 +940,7 @@ class User extends Observable {
     b .name  = BudgetModel .getLabelForDates (b .start, b .end);
     b._id    = undefined;
     b = await this._budgetModel .insert (b);
-    this._budgets = this._sortByName (await this._budgetModel .find())
+    this._getBudgets();
     let cm = new Model ('categories', this .getDatabaseName());
     let sm = new Model ('schedules',  this .getDatabaseName());
     let fc = (await cm .find ({budgets: from})) .reduce ((m,c) => {m .set (c._id, c); return m}, new Map());
