@@ -229,7 +229,7 @@ class App {
     }
   }
 
-  async _configurationChange (eventType) {
+  async _configurationChange (eventType, arg) {
 
     let handleNameClick = e => {
       this._prefs .showMenu ($(e .target));
@@ -248,13 +248,13 @@ class App {
           e .preventDefault();
         }
         }, true);
-      this._proT = this._tabs .addTab  ('Progress');
+      this._proT = this._tabs .addTab  ('Progress', ! arg .hasActivity && ! arg .hasBudget);
       this._traT = this._tabs .addTab  ('Inbox');
-      this._actT = this._tabs .addTab  ('Activity');
-      this._budT = this._tabs .addTab  ('Budget');
+      this._actT = this._tabs .addTab  ('Activity', ! arg .hasActivity);
+      this._budT = this._tabs .addTab  ('Budget', ! arg .hasBudget);
       this._plaT = this._tabs. addTab  ('Plan');
-      this._perT = this._tabs .addTab  ('Perspective');
-      this._weaT = this._tabs .addTab  ('Wealth');
+      this._perT = this._tabs .addTab  ('Perspective', ! arg .hasBudget);
+      this._weaT = this._tabs .addTab  ('Wealth', ! arg .hasAssets);
       this._accT = this._tabs .addTab  ('Accounts');
       this._waitingOnNetwork  = this._tabs .addIconTool ('lnr-cloud _status');
       this._waitingOnNetwork  .css ({display: 'none'});
@@ -263,6 +263,20 @@ class App {
       let tl = this._tabs .addTool (this._user .getLabel (l => {
         this._tabs .changeToolName (tl, l);
       }), e => {this._user .showMenu ($(e .target))})
+    } else if (eventType == UserEvent .STATUS_CHANGE) {
+      for (const p of Object .keys (arg))
+        if (arg [p])
+          switch (p) {
+            case 'hasActivity':
+              this._tabs .unhide ([this._proT, this._actT]);
+              break;
+            case 'hasBudget':
+              this._tabs .unhide ([this._proT, this._budT, this._perT]);
+              break;
+            case 'hasAssets':
+              this._tabs .unhide([this._weaT]);
+              break;
+          }
     }
 
     if ((eventType == UserEvent .NEW_USER || eventType == UserEvent .NEW_CONFIGURATION) && this._tabs) {

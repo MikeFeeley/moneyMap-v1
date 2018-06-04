@@ -1024,6 +1024,9 @@ body > ._preferences_menu_head {
     > div:not(._nonTab).background                     {color: #80ceff}
     > div._login, > div:not(._nonTab):not(.background) {color: white}
   }
+  > .tabs > div._hiddenTab   {
+    display: none;
+  }
   > .contents {
     margin-top: $tab-bar-height;
     > div {

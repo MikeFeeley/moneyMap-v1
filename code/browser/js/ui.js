@@ -225,7 +225,12 @@ var ui = {
           }
         },
 
-        addTab (name) {
+        unhide (tabNames) {
+          for (const name of tabNames)
+            tabMap .get (name) .tab .removeClass ('_hiddenTab') .addClass ('background');
+        },
+
+        addTab (name, hide) {
 
           function handleClick() {
 
@@ -245,6 +250,10 @@ var ui = {
 
           var content = $('<div>')                                                                .appendTo (contents);
           var tab     = $('<div>', {data: {content: content}}) .append ($('<div>', {text: name})) .appendTo (tabs);
+          if (hide) {
+            tab .addClass ('_hiddenTab');
+            content .addClass ('background');
+          }
           tabMap .set (name, {tab: tab});
 
           tab .on ('click', e => {
@@ -276,7 +285,7 @@ var ui = {
               pendingClick = click;
           });
 
-          if (tabs .children() .length > 3)
+          if (tabs .children('div:not(._nonTab):not(._hiddenTab)') .length > 1)
             for (let d of [tab, content])
               d .addClass ('background');
           else

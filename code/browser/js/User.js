@@ -137,6 +137,31 @@ class User extends Observable {
           break;
       }
     }
+    const config = this._getConfig();
+  }
+
+  async _onSchedulesModelChange (e, d, a) {
+    if ( e == ModelEvent .UPDATE && a .amount) {
+      this._updateConfigStatus ({hasBudget: true});
+      this._schedModel .delete();
+      this._schedModel = null;
+    }
+  }
+
+  async _onTranModelChange (e, d, a) {
+    if ( e == ModelEvent .INSERT) {
+      this._updateConfigStatus ({hasActivity: true});
+      this._tranModel .delete();
+      this._tranModel = null;
+    }
+  }
+
+  async _onAccountsModelChange (e, d, a) {
+    if (e == ModelEvent .INSERT && d .type == AccountType .ACCOUNT && d .form == AccountForm .ASSET_LIABILITY) {
+      this._updateConfigStatus ({hasAssets: true});
+      this._accountsModel .delete();
+      this._accountsModel = null;
+    }
   }
 
   _sortByName (collection) {
@@ -173,9 +198,8 @@ class User extends Observable {
           }
         }
         this._setModelsForConfig();
-        await this._getConfigs();
         await this._init();
-        this._notifyObservers (UserEvent .NEW_USER);
+        await this._notifyApp (UserEvent .NEW_USER);
         break;
 
       case UserViewEvent .LOGIN_CLOUD:
@@ -201,7 +225,7 @@ class User extends Observable {
               if (this._configs .length)
                 this._cid = this._configs [0] ._id;
               else {
-                this .logout();
+                await this .logout();
                 break;
               }
             }
@@ -211,10 +235,10 @@ class User extends Observable {
             try {
               await this._init();
             } catch (e) {
-              this .logout();
+              await this .logout();
               break;
             }
-            this._notifyObservers (UserEvent .NEW_USER);
+            await this._notifyApp (UserEvent .NEW_USER);
           }
         } catch (e) {
           console.log (e);
@@ -232,7 +256,7 @@ class User extends Observable {
             this._setConfigDeleteButtonDisabled();
           } else
             await this._selectBudget (field._id);
-          this._notifyApp();
+          await this._notifyApp();
         } else
           /* ADD */
           switch (arg .name) {
@@ -271,7 +295,7 @@ class User extends Observable {
           let update = {}
           update [arg .fieldName .slice (2)] = arg .value;
           await model .update (arg.id, update);
-          this._notifyApp();
+          await this._notifyApp();
         }
         break;
 
@@ -285,6 +309,13 @@ class User extends Observable {
             break;
         }
         break;
+    }
+  }
+
+  async _updateConfigStatus (status) {
+    if (this._cid) {
+      await this._getConfigModel (this._cid) .update (this._cid, status);
+      await this._notifyApp (UserEvent .STATUS_CHANGE);
     }
   }
 
@@ -334,7 +365,7 @@ class User extends Observable {
       this._remember = true;
       this._hasSavedLoginState = true;
       this._deleteSavedLoginState();
-      this._notifyObservers (UserEvent .NEW_USER);
+      await this._notifyApp (UserEvent .NEW_USER);
       return true;
     } else
       return false;
@@ -379,7 +410,7 @@ class User extends Observable {
           }
           this._setModelsForConfig();
           await this._init();
-          this._notifyObservers (UserEvent .NEW_USER);
+          await this._notifyApp (UserEvent .NEW_USER);
           return;
         }
       }
@@ -391,7 +422,7 @@ class User extends Observable {
     this._view .addLogin ($('body'), true);
   }
 
-  logout() {
+  async logout() {
     this._deleteSavedLoginState();
     this._uid       = null;
     this._name      = null;
@@ -400,7 +431,7 @@ class User extends Observable {
     this._budgets   = null;
     this._remember  = false;
     this._configTabs = null;
-    this._notifyObservers (UserEvent .LOGOUT);
+    await this._notifyApp (UserEvent .LOGOUT);
   }
 
   getDatabaseName (cid = this._cid) {
@@ -413,8 +444,8 @@ class User extends Observable {
     if (onChange)
       this._onLabelChange = onChange;
     if (this._configs) {
-      let label = this._name && this._configs .length == 1? this._name: this._getConfig (this._cid) .name;
-      if (this._budgets .length > 1)
+      let label = this._name && this._configs .length == 1? this._name: (this._getConfig (this._cid) || {}) .name || '';
+      if (this._budgets && this._budgets .length > 1)
         label = this._budgets .find (b => {return b._id == this._bid}) .name + '&nbsp;&nbsp;&nbsp;&nbsp;' + label;
       return label;
     } else
@@ -452,7 +483,7 @@ class User extends Observable {
       try {
         await this._init();
       } catch (e) {
-        this .logout();
+        await this .logout();
       }
       return;
     }
@@ -477,10 +508,11 @@ class User extends Observable {
     await this._getConfigModel (this._cid) .update (this._cid, {curBudget: this._bid});
   }
 
-  async _notifyApp() {
+  async _notifyApp (eventType = UserEvent .NEW_CONFIGURATION) {
     if (this._onLabelChange)
       this._onLabelChange (this .getLabel());
-    await this._notifyObserversAsync (UserEvent .NEW_CONFIGURATION);
+    const config = this._getConfig() || {};
+    await this._notifyObserversAsync (eventType, {hasActivity: config .hasActivity, hasBudget: config .hasBudget, hasAssets: config .hasAssets});
   }
 
   /**
@@ -525,6 +557,7 @@ class User extends Observable {
       this._configModel .delete();
       this._configModel = null;
     }
+    this._configs = null;
     if (this._uid) {
       this._configModel = new Model ('configurations', 'user_' + this._uid + '_' + this._accessCap);
       this._configModel .addObserver (this, this._onConfigModelChange);
@@ -540,12 +573,38 @@ class User extends Observable {
 
   }
 
-  _setModelsForConfig() {
+  async _setModelsForConfig() {
     if (this._budgetModel)
       this._budgetModel .delete();
     this._budgetModel = new Model ('budgets', this .getDatabaseName());
     this._budgetModel .addObserver (this, this._onBudgetModelChange);
     this._budgetModel .observe();
+    if (! this._configs)
+      await this._getConfigs();
+    let config = this._getConfig();
+    if (config) {
+      if (! config .hasBudget) {
+        if (this._schedModel)
+          this._schedModel .delete();
+        this._schedModel = new Model ('schedules', this .getDatabaseName());
+        this._schedModel .addObserver (this, this._onSchedulesModelChange);
+        this._schedModel .observe();
+      }
+      if (! config .hasActivity) {
+        if (this._tranModel)
+          this._tranModel .delete();
+        this._tranModel = new TransactionModel (this .getDatabaseName());
+        this._tranModel .addObserver (this, this._onTranModelChange);
+        this._tranModel .observe();
+      }
+      if (! config .hasAssets) {
+        if (this._accountsModel)
+          this._accountsModel .delete();
+        this._accountsModel = new Model ('accounts', this .getDatabaseName());
+        this._accountsModel .addObserver (this, this._onAccountsModelChange);
+        this._accountsModel .observe();
+      }
+    }
   }
 
   async _getConfigs() {
@@ -558,8 +617,8 @@ class User extends Observable {
     this._budgets = this._sortByName (await this._budgetModel .find());
   }
 
-  _getConfig (cid) {
-    return this._configs .find (c => {return c._id == cid});
+  _getConfig (cid = this._cid) {
+    return this._configs && this._configs .find (c => {return c._id == cid});
   }
 
   _getConfigModel (cid, type) {
@@ -568,7 +627,7 @@ class User extends Observable {
   }
 
   async _disconnectApp() {
-    await this._notifyObserversAsync (UserEvent .DISCONNECT);
+    await this._notifyApp(UserEvent .DISCONNECT);
   }
 
   /**
@@ -1073,7 +1132,7 @@ class User extends Observable {
     } else
       await model .update (id, {deleted: Types .date .today()});
     if (this._configs .length == 0)
-      this .logout();
+      await this .logout();
     else {
       await this._selectConfig (this._configs [Math .max (0, psn - 1)] ._id);
       await this._notifyApp();
@@ -1105,7 +1164,8 @@ var UserEvent = {
   NEW_USER: 0,
   DISCONNECT: 1,
   NEW_CONFIGURATION: 2,
-  LOGOUT: 3
+  LOGOUT: 3,
+  STATUS_CHANGE: 4
 }
 
 var UserLocalStorageKey = {
