@@ -579,7 +579,12 @@ class User extends Observable {
           name:   c .name,
           action: e => {
             this._view .removeMenu();
-            (async () => {await this._selectConfig (c._id); await this._notifyApp()})();
+            (async () => {
+              await this._selectConfig (c._id);
+              if (this._configTabs)
+                this._view .selectTab (this._getConfigTab (this._cid));
+              await this._notifyApp()
+            })();
           }
         }})
       this._view .addSubMenu ('Change Configuration', items);
