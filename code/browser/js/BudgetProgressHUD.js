@@ -263,10 +263,15 @@ class BudgetProgressHUD {
         .reduce ((t, c) => {return t + this._variance .getActuals() .getAmountRecursively (c, lyS, lyE)}, 0);
       let actualAmount = this._variance .getActuals() .getAmountRecursively (cat, cyS, cyE) * creditAdjust;
       let budgetAmount = budget .getAmount (cat) .amount;
+      const isBudgetLess = ! ['month', 'year']
+        .find (p => this._varianceAmount [p] && ! this._varianceAmount [p] .isBudgetless);
+      if (isBudgetLess)
+        budgetAmount = actualAmount;
       this._compareAmount  = {
         lastYear:  lastYearAmount * creditAdjust,
         actual:    Math .min (actualAmount, budgetAmount),
         available: Math .max (0, budgetAmount - actualAmount),
+        over:      Math .max (0, actualAmount - budgetAmount),
         over:      Math .max (0, actualAmount - budgetAmount)
       }
     }

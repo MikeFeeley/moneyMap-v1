@@ -253,34 +253,36 @@ class User extends Observable {
           this._view .setLoginError ('You must give your account a name');
         else if (arg .password != arg .confirm)
           this._view .setLoginError ('Passwords do not match');
-        const result = await Model .signup ({
-          username: arg .username,
-          password: arg .password,
-          name:     arg .name
-        });
-        if (result .alreadyExists)
-          this._view .setLoginError ('User with that email already exists');
         else {
-          assert (result .ok);
-          this._view .removeLanding();
-          this._uid       = result._id;
-          this._accessCap = result .accessCap;
-          this._username  = arg .username;
-          this._name      = arg .name;
-          this._setModelsForUser();
-          await this._getConfigs();
-          if (this._configs .length == 0)
-            await this._createEmptyConfig (ConfigType .LOCAL, '', 'Default');
-          if (arg .remember)
-            this._saveLoginState();
-          this._setModelsForConfig();
-          try {
-            await this._init();
-          } catch (e) {
-            await this .logout();
-            break;
+          const result = await Model .signup ({
+            username: arg .username,
+            password: arg .password,
+            name:     arg .name
+          });
+          if (result .alreadyExists)
+            this._view .setLoginError ('User with that email already exists');
+          else {
+            assert (result .ok);
+            this._view .removeLanding();
+            this._uid       = result._id;
+            this._accessCap = result .accessCap;
+            this._username  = arg .username;
+            this._name      = arg .name;
+            this._setModelsForUser();
+            await this._getConfigs();
+            if (this._configs .length == 0)
+              await this._createEmptyConfig (ConfigType .LOCAL, '', 'Default');
+            if (arg .remember)
+              this._saveLoginState();
+            this._setModelsForConfig();
+            try {
+              await this._init();
+            } catch (e) {
+              await this .logout();
+              break;
+            }
+            this._notifyApp (UserEvent .NEW_USER);
           }
-          this._notifyApp (UserEvent .NEW_USER);
         }
         break;
 
@@ -726,7 +728,8 @@ class User extends Observable {
   _setConfigDeleteButtonDisabled() {
     const config   = this._getConfig (this._cid);
     const disabled = this._uid && this._configs .length == 1;
-    this._view .setButtonDisabled (this._configTabs, disabled);
+    if (this._configTabs && this._configTabs .length)
+      this._view .setButtonDisabled (this._configTabs, disabled);
   }
 
   /**
@@ -1184,11 +1187,8 @@ class User extends Observable {
     let psn    = this._configs .findIndex (c => {return c._id == id});
     let config = this._getConfig (id);
     let model  = this._getConfigModel (id);
-    if (config .type == ConfigType .LOCAL) {
-      await Model .removeConfiguration (this .getDatabaseName (id));
-      await model .remove (id);
-    } else
-      await model .update (id, {deleted: Types .date .today()});
+    await Model .removeConfiguration (this .getDatabaseName (id));
+    await model .remove (id);
     if (this._configs .length == 0)
       await this .logout();
     else {

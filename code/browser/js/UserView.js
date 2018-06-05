@@ -201,7 +201,7 @@ class UserView extends View {
       form = $('<form>') .appendTo (content);
       $('<label>') .appendTo (form)
         .append ($('<input>', {type: 'radio', name: 'mode', value: 'local'}))
-        .append ($('<span>', {text: 'Store financial data on this computer'}))
+        .append ($('<span>', {text: 'Use on this computer only'}))
       $('<label>') .appendTo (form)
         .append ($('<input>', {type: 'radio', name: 'mode', value: 'cloud'}))
         .append ($('<span>',  {text: 'Login or sign up to use cloud storage'}))
