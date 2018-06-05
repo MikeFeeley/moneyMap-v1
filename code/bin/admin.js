@@ -157,8 +157,24 @@ async function removeConfiguration (req, res, next) {
 }
 
 async function removeUser (req, res, next) {
-  console.log(req.body);
-  res .json ({okay: true});
+  try {
+    const id        = req .body .id;
+    const accessCap = req .body .accessCap;
+    const adminDB   = await req .dbPromise;
+    const user      = await adminDB .collection ('users') .findOne ({_id: id, accessCap: accessCap});
+    if (! user)
+      res .json ({noUser: true});
+    else {
+      const userDB  = await req._getDB ('user_' + id + '_' + accessCap);
+      for (const config of await userDB .collection ('configurations') .find({}) .toArray())
+        await (await req._getDB ('config_' + config._id + '_' + accessCap)) .dropDatabase();
+      await userDB .dropDatabase();
+      await adminDB .collection ('users') .remove ({_id: id});
+      res .json ({okay: true});
+    }
+  } catch (e) {
+    res .json ({error: e});
+  }
 }
 
 router.post ('/login', function(req, res, next) {

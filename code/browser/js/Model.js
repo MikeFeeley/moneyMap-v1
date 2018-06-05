@@ -299,8 +299,8 @@ class Model extends Observable {
     return _Collection .updateUser (id, accessCap, update, password);
   }
 
-  static async removeUser() {
-    return _Collection .removeUser();
+  static async removeUser (id, accessCap) {
+    return _Collection .removeUser (id, accessCap);
   }
 
   /**
@@ -613,8 +613,8 @@ class _Collection extends Observable {
     return _db .perform (DatabaseOperation .UPDATE_USER, {id: id, accessCap: accessCap, update: update, password: password});
   }
 
-  static async removeUser() {
-    return _db .perform (DatabaseOperation .REMOVE_USER, {});
+  static async removeUser (id, accessCap) {
+    return _db .perform (DatabaseOperation .REMOVE_USER, {id: id, accessCap: accessCap});
   }
 
   static newUndoGroup() {

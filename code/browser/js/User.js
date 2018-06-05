@@ -347,11 +347,14 @@ class User extends Observable {
             await this._deleteBudget (arg .id);
             break;
           case 'profile':
-            await Model .removeUser();
-            this._deleteSavedLoginState();
-            localStorage .removeItem (UserLocalStorageKey .CUR_CONFIGURATION);
-            localStorage .removeItem (UserLocalStorageKey .HAS_LOGGED_IN);
-            this .logout();
+            let result = await Model .removeUser (this._uid, this._accessCap);
+            if (result .okay) {
+              this._deleteSavedLoginState();
+              localStorage .removeItem (UserLocalStorageKey .CUR_CONFIGURATION);
+              localStorage .removeItem (UserLocalStorageKey .HAS_LOGGED_IN);
+              this .logout();
+            } else
+              console .log('failed to removeUser', result);
             break;
         }
         break;
