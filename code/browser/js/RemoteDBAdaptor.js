@@ -18,6 +18,7 @@ class RemoteDBAdaptor extends DBAdaptor {
     this._urls [DatabaseOperation .COPY_BUDGET]          = '/admin/copyBudget';
     this._urls [DatabaseOperation .REMOVE_BUDGET]        = '/admin/removeBudget';
     this._urls [DatabaseOperation .REMOVE_CONFIGURATION] = '/admin/removeConfiguration';
+    this._urls [DatabaseOperation .REMOVE_USER]          = '/admin/removeUser';
   }
 
   async perform (operation, data) {

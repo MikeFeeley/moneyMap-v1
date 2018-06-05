@@ -70,7 +70,8 @@ var DatabaseOperation = {
   COPY_DATABASE:        11,
   COPY_BUDGET:          12,
   REMOVE_BUDGET:        13,
-  REMOVE_CONFIGURATION: 14
+  REMOVE_CONFIGURATION: 14,
+  REMOVE_USER:          15
 }
 
 DBAdaptorState = {

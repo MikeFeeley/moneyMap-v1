@@ -229,6 +229,19 @@ class App {
     }
   }
 
+  _setTabVisibility (status) {
+    let hidden = [];
+    if (! status .hasActivity && ! status .hasBudget)
+      hidden = [this._proT, this._actT, this._budT, this._perT];
+    else if (! status .hasActivity)
+      hidden = [this._actT];
+    else if (! status .hasBudget)
+      hidden = [this._budT, this._perT];
+    if (! status .hasAssets)
+      hidden .push (this._weaT);
+    this._tabs .setHidden (hidden);
+  }
+
   async _configurationChange (eventType, arg) {
 
     let handleNameClick = e => {
@@ -263,21 +276,9 @@ class App {
       let tl = this._tabs .addTool (this._user .getLabel (l => {
         this._tabs .changeToolName (tl, l);
       }), e => {this._user .showMenu ($(e .target))})
-    } else if (eventType == UserEvent .STATUS_CHANGE) {
-      for (const p of Object .keys (arg))
-        if (arg [p])
-          switch (p) {
-            case 'hasActivity':
-              this._tabs .unhide ([this._proT, this._actT]);
-              break;
-            case 'hasBudget':
-              this._tabs .unhide ([this._proT, this._budT, this._perT]);
-              break;
-            case 'hasAssets':
-              this._tabs .unhide([this._weaT]);
-              break;
-          }
-    }
+    } else if (eventType == UserEvent .STATUS_CHANGE)
+      this._setTabVisibility (arg);
+
 
     if ((eventType == UserEvent .NEW_USER || eventType == UserEvent .NEW_CONFIGURATION) && this._tabs) {
       let prefsWasShowing = this._prefs && this._prefs .isShowing();
@@ -317,7 +318,7 @@ class App {
         this._tabs .setTab  (this._perT, html => {this._na .addPerspectiveHtml  (html)});
         this._tabs .setTab  (this._weaT, html => {this._na .addNetWorthHtml     (html)});
         this._tabs .setTab  (this._accT, html => {this._ac .addHtml             (html)});
-
+        this._setTabVisibility (arg);
         this._user .newConfigurationAccepted();
       }, 0)
 

@@ -225,9 +225,22 @@ var ui = {
           }
         },
 
-        unhide (tabNames) {
-          for (const name of tabNames)
-            tabMap .get (name) .tab .removeClass ('_hiddenTab') .addClass ('background');
+        setHidden (tabNames) {
+          const tabs     = Array .from ($('body') .find ('.tabbed > .tabs > div:not(._nonTab)'));
+          const contents = Array .from ($('body') .find ('.tabbed > .contents > div > div'));
+          for (const [name, tab] of Array .from (tabMap .entries()) .map (e => [e[0], e[1] .tab [0]])) {
+            const hide = tabNames .includes (name);
+            tab .classList [hide? 'add': 'remove'] ('_hiddenTab');
+            if (hide) {
+              tab .classList                                        .add ('background');
+              contents [tabs .findIndex (t => t == tab)] .classList .add ('background');
+            }
+          }
+          if (! tabs .find (t => ! t .classList .contains ('_hiddenTab') && ! t .classList .contains ('background'))) {
+            const i = tabs .findIndex (t => ! t .classList .contains ('_hiddenTab'));
+            tabs     [i] .classList .remove ('background');
+            contents [i] .classList .remove ('background');
+          }
         },
 
         addTab (name, hide) {

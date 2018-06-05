@@ -160,7 +160,7 @@ class UserView extends View {
     $('body') .empty();
   }
 
-  addLogin (toHtml, showMini) {
+  addLogin (toHtml, showMini, sayLogin) {
     this._login  = $('<div>', {class: '_whiteout'})       .appendTo (toHtml);
     let popup    = $('<div>', {class: '_popupContainer'}) .appendTo (this._login);
     let content  = $('<div>', {class: '_loginPopup' + (showMini? ' _miniLogin': '')}) .appendTo (popup);
@@ -186,9 +186,9 @@ class UserView extends View {
         })
       $('<div>', {class: '_loginError'}) .appendTo (form);
       let buttons = $('<div>', {class: '_loginButtons'}) .appendTo (form);
-      $('<button>', {text: 'Login'})  .appendTo (buttons) .click (() => {tryLogin()});
-      $('<button>', {text: 'Signup'}) .appendTo (buttons) .click (() => {});
-      $('<button>', {text: 'Cancel'}) .appendTo (buttons) .click (() => {this .removeLogin()});
+      $('<button>', {text: 'Login'})   .appendTo (buttons) .click (() => {tryLogin()});
+      $('<button>', {text: 'Sign Up'}) .appendTo (buttons) .click (() => {this._convertLoginToSignup()});
+      $('<button>', {text: 'Cancel'})  .appendTo (buttons) .click (() => {this .removeLogin()});
     }
 
     if (showMini) {
@@ -204,7 +204,7 @@ class UserView extends View {
         .append ($('<span>', {text: 'Store financial data on this computer'}))
       $('<label>') .appendTo (form)
         .append ($('<input>', {type: 'radio', name: 'mode', value: 'cloud'}))
-        .append ($('<span>',  {text: 'Login or signup to use cloud storage'}))
+        .append ($('<span>',  {text: 'Login or sign up to use cloud storage'}))
       form .on ('click', 'input', e => {
         if (e .currentTarget .value == 'cloud') {
           content .empty();
@@ -215,7 +215,7 @@ class UserView extends View {
       })
 
     } else {
-      addLoginSignup (false);
+      addLoginSignup (sayLogin);
     }
 
     this._loginModal = this._menuModalEntry = ui .ModalStack .add (
@@ -241,24 +241,20 @@ class UserView extends View {
   }
 
   _convertLoginToSignup() {
-    this._login .find ('._login_body > div:first-child > span:nth-child(1)') .text ('Signup');
-    this._login .find ('._login_body > div:first-child > span:nth-child(2)') .remove();
-    $('<div>') .insertAfter (this._login .find ('._login_body div:nth-child(2)'))
-      .append ($('<input>', {type: 'text', id: 'name', placeholder: 'Name'}));
-    $('<div>') .insertAfter (this._login .find ('._login_body div:nth-child(4)'))
-      .append ($('<input>', {type: 'password', id: 'confirm', placeholder: 'Re-Enter Password'}));
-    $('body')
-      .off ('keypress')
-      .on  ('keypress', e => {
-        if (e .originalEvent .key == 'Enter') {
-          this .loginError ('');
-          let username = this._login .find ('#username') .val();
-          let name     = this._login .find ('#name')     .val();
-          let password = this._login .find ('#password') .val();
-          let confirm  = this._login .find ('#confirm')  .val()
-          this._notifyObservers (UserViewEvent .SIGNUP, {username: username, name: name, password: password, confirm: confirm, remember: remember});
-        }
+    this._login .find ('._loginPopup > div') .text ('Sign Up');
+    $('<input>', {type: 'text', id: 'name', placeholder: 'Name'})                     .insertAfter (this._login .find ('#email'));
+    $('<input>', {type: 'password', id: 'confirm', placeholder: 'Re-Enter Password'}) .insertAfter (this._login .find ('#password'));
+    $(this._login .find ('button') [0]) .remove();
+    $(this._login .find ('button') [0]) .text ('Confirm') .off ('click') .click (e => {
+      this._notifyObservers (UserViewEvent .SIGNUP, {
+        username: this._login .find ('#email')    .val() .trim(),
+        password: this._login .find ('#password') .val() .trim(),
+        remember: this._login .find ('#remember') [0] .checked,
+        name:     this._login .find ('#name')     .val() .trim(),
+        confirm:  this._login .find ('#confirm')  .val() .trim()
       })
+    });
+    this .setLoginError ('');
   }
 
   addMenu (toHtml, position, menuButton, menuButtonPosition) {
@@ -440,13 +436,13 @@ class UserView extends View {
     this._accountEdit .removeClass ('background');
   }
 
-  addConfirmDelete (positionTarget, id, type, positionOffset = {}) {
+  addConfirmDelete (positionTarget, id, type, positionOffset = {}, additionalMessage, addClass) {
     let parent  = this._accountEdit .find ('> div');
     let popup   = $('<div>', {class: '_popupContainer'}) .appendTo (parent);
-    let content = $('<div>', {class: '_addPopup'}) .appendTo (popup);
+    let content = $('<div>', {class: '_addPopup ' + (addClass || '')}) .appendTo (popup);
     popup .css (ui .calcPosition (positionTarget, parent, {top: -40 + (positionOffset .top || 0), left: 0 + (positionOffset .left || 0)}));
     $('<div>', {text: 'Do you really want to delete this ' + type + '?'}) .appendTo (content);
-    $('<div>', {text: 'This action can not be undone.'}) .appendTo (content);
+    $('<div>', {text: (additionalMessage || '') + 'This action can not be undone.'}) .appendTo (content);
     $('<div>') .appendTo (content)
     .append (
       $('<button>', {text: 'Delete'})

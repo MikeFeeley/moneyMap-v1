@@ -156,6 +156,11 @@ async function removeConfiguration (req, res, next) {
   res .json ({okay: true});
 }
 
+async function removeUser (req, res, next) {
+  console.log(req.body);
+  res .json ({okay: true});
+}
+
 router.post ('/login', function(req, res, next) {
   (async () => {try {await login (req, res, next)} catch (e) {console .log (e)}}) ();
 });
@@ -182,6 +187,10 @@ router.post('/removeBudget', function (req, res, next) {
 
 router.post('/removeConfiguration', function (req, res, next) {
   (async () => {try {await removeConfiguration (req, res, next)} catch (e) {console .log (e)}}) ();
+})
+
+router.post('/removeUser', function (req, res, next) {
+  (async () => {try {await removeUser (req, res, next)} catch (e) {console .log (e)}}) ();
 })
 
 

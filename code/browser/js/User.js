@@ -246,6 +246,44 @@ class User extends Observable {
         }
         break;
 
+      case UserViewEvent .SIGNUP:
+        if (arg .password .length < 6)
+          this._view .setLoginError ('Password must be 6 characters or more');
+        else if (arg .name .length == 0)
+          this._view .setLoginError ('You must give your account a name');
+        else if (arg .password != arg .confirm)
+          this._view .setLoginError ('Passwords do not match');
+        const result = await Model .signup ({
+          username: arg .username,
+          password: arg .password,
+          name:     arg .name
+        });
+        if (result .alreadyExists)
+          this._view .setLoginError ('User with that email already exists');
+        else {
+          assert (result .ok);
+          this._view .removeLanding();
+          this._uid       = result._id;
+          this._accessCap = result .accessCap;
+          this._username  = arg .username;
+          this._name      = arg .name;
+          this._setModelsForUser();
+          await this._getConfigs();
+          if (this._configs .length == 0)
+            await this._createEmptyConfig (ConfigType .LOCAL, '', 'Default');
+          if (arg .remember)
+            this._saveLoginState();
+          this._setModelsForConfig();
+          try {
+            await this._init();
+          } catch (e) {
+            await this .logout();
+            break;
+          }
+          this._notifyApp (UserEvent .NEW_USER);
+        }
+        break;
+
       case UserViewEvent .TAB_CLICK:
         if (arg .tab) {
           this._view .selectTab (arg .tab);
@@ -303,9 +341,17 @@ class User extends Observable {
         switch (arg .type) {
           case 'configuration':
             await this._deleteConfig (arg .id);
+            this._setConfigDeleteButtonDisabled();
             break;
           case 'budget':
             await this._deleteBudget (arg .id);
+            break;
+          case 'profile':
+            await Model .removeUser();
+            this._deleteSavedLoginState();
+            localStorage .removeItem (UserLocalStorageKey .CUR_CONFIGURATION);
+            localStorage .removeItem (UserLocalStorageKey .HAS_LOGGED_IN);
+            this .logout();
             break;
         }
         break;
@@ -431,6 +477,7 @@ class User extends Observable {
     this._budgets   = null;
     this._remember  = false;
     this._configTabs = null;
+    User_DB_Crypto   = null;
     await this._notifyApp (UserEvent .LOGOUT);
   }
 
@@ -547,7 +594,7 @@ class User extends Observable {
       this._view .addSubMenu ('Change Budget', items);
     }
     if (!this._uid)
-      this._addMenuItem ('Login',  () => {this._view .addLogin(html, false)});
+      this._addMenuItem ('Login',  () => {this._view .addLogin(html, false, true)});
     if (this._uid)
       this._addMenuItem ('Logout',  () => {this .logout()});
   }
@@ -660,14 +707,17 @@ class User extends Observable {
       this._view .addButton   ('Update Profile',   (async () => {
         await this._updateAccount ([em, op, np, cp, nm] .map (f => {return f.val()}))
       }), update);
+      this._view .addButton   ('Delete Profile and All Cloud Data', (async () => {
+        this._view .addConfirmDelete (update .find ('button:nth-child(2)'), 0, 'profile', {top: -70, left: -110},
+          'Doing so deletes everything that we store in the cloud about you, including all of your cloud configurations.  ', '_confirmProfileDelete');
+      }), update);
       this._accountEditError = this._view .addLabel ('', update, '_errorMessage');
     }
   }
 
   _setConfigDeleteButtonDisabled() {
-    let config   = this._getConfig (this._cid);
-    let disabled = config .type != ConfigType .LOCAL &&
-      this._configs .filter (c => {return c .type != ConfigType .LOCAL}) .length == 1;
+    const config   = this._getConfig (this._cid);
+    const disabled = this._uid && this._configs .length == 1;
     this._view .setButtonDisabled (this._configTabs, disabled);
   }
 
@@ -835,7 +885,7 @@ class User extends Observable {
     this._view .addPleaseWait();
     await this._disconnectApp();
     let fromConfig = this._getConfig (from);
-    let to = (await this._getConfigModel (this._cid) .insert ({
+    let to = (await this._getConfigModel (undefined, type) .insert ({
       user:    this._uid,
       name:    'Copy of ' + fromConfig .name,
       type:    type

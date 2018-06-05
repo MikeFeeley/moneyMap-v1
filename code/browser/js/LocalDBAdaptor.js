@@ -118,7 +118,7 @@ class LocalDBAdaptor extends DBAdaptor {
       if (data._isTran)
         async .push (TransactionDBMeta_insert (insert));
       else
-        async .push (this._insertOne ({_collection: data._collection, insert: insert}));
+        async .push (this._insertOne ({_collection: data._collection, database: data .database, insert: insert}));
     await Promise .all (async);
     return data .list .map (_ => {return true})
   }

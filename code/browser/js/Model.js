@@ -299,6 +299,10 @@ class Model extends Observable {
     return _Collection .updateUser (id, accessCap, update, password);
   }
 
+  static async removeUser() {
+    return _Collection .removeUser();
+  }
+
   /**
    * Delete this model from collection; stops callbacks.
    */
@@ -607,6 +611,10 @@ class _Collection extends Observable {
 
   static async updateUser (id, accessCap, update, password) {
     return _db .perform (DatabaseOperation .UPDATE_USER, {id: id, accessCap: accessCap, update: update, password: password});
+  }
+
+  static async removeUser() {
+    return _db .perform (DatabaseOperation .REMOVE_USER, {});
   }
 
   static newUndoGroup() {
