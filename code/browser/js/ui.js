@@ -236,7 +236,7 @@ var ui = {
               contents [tabs .findIndex (t => t == tab)] .classList .add ('background');
             }
           }
-          if (! tabs .find (t => ! t .classList .contains ('_hiddenTab') && ! t .classList .contains ('background'))) {
+          if (! contents .find (c => ! c .classList .contains ('background'))) {
             const i = tabs .findIndex (t => ! t .classList .contains ('_hiddenTab'));
             tabs     [i] .classList .remove ('background');
             contents [i] .classList .remove ('background');
