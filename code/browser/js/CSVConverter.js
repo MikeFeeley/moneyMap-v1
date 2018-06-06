@@ -55,12 +55,17 @@ class CSVConverter {
     }) .click();
   }
 
+  async _import (file) {
+    // TODO
+    console.log('import', file);
+  }
+
   static async export (name) {
     CSVConverter._getInstance()._export (name);
   }
 
-  static async import() {
-
+  static async import (file) {
+    CSVConverter._getInstance()._import (file);
   }
 }
 

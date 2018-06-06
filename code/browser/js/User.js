@@ -329,6 +329,10 @@ class User extends Observable {
         await this._copyConfig (arg .type, arg .encryptionPassword, arg .from);
         break;
 
+      case UserViewEvent .CONFIG_IMPORT:
+        await this._importConfig (arg .from);
+        break;
+
       case ViewEvent .UPDATE:
         if (arg .id && arg .value) {
           let model  = arg .fieldName .startsWith ('c_')? this._getConfigModel (this._cid): this._budgetModel;
@@ -953,6 +957,14 @@ class User extends Observable {
     this._selectBudget (this._budgets [0]._id);
     this._view .removePleaseWait();
     await this._notifyApp();
+  }
+
+  /**
+   *
+   */
+  async _importConfig (filelist) {
+    assert (filelist .length == 1);
+    await CSVConverter .import (filelist [0]);
   }
 
   /**

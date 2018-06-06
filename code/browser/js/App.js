@@ -95,12 +95,12 @@ class App {
             'font-size': '32px',
             height:  '80px',
             'line-height': '80px',
-            width:  '350px',
+            width:  '400px',
             color: 'rgb(255,245,245)',
             'background-color': 'rgba(255, 50, 50 , 0.7)'
           }, {
             complete: () => {
-              this._status .text ('Server Connection Lost');
+              this._status .text ('Cloud Connection Offline');
             },
             duration: 100
           })

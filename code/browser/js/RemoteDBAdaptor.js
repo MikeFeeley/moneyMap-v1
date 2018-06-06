@@ -103,7 +103,7 @@ class RemoteDBAdaptor extends DBAdaptor {
   connect() {
     this._disconnected = false;
     this._setState (DBAdaptorState .UP);
-    this._connect (RemoteDBAdaptor_epoch++);
+    this._connect (++RemoteDBAdaptor_epoch);
   }
 
   async disconnect() {

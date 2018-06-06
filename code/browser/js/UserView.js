@@ -482,6 +482,11 @@ class UserView extends View {
         .append ($('<input>', {type: 'radio', name: 'how', value: 'copy', prop: {checked: false}}))
         .append ($('<span>',  {text: 'Copy configuration from '}))
         .append ($('<select>'))
+      ))
+      .append ($('<div>') .append ($('<label>')
+        .append ($('<input>', {type: 'radio', name: 'how', value: 'import', prop: {checked: false}}))
+        .append ($('<span>',  {text: 'Import configuration from CSV'}))
+        .append ($('<input>', {type: 'file', id: 'file', accept:'.zip'}))
       ));
 
     $('<div>', {text: 'With Data Storage Type'}) .appendTo (content);
@@ -523,6 +528,11 @@ class UserView extends View {
               case 'copy':
                 arg .from = content .find ('select') .val();
                 this._notifyObservers (UserViewEvent .CONFIG_COPY, arg);
+                break;
+              case 'import':
+                // TODO import
+                arg .from = content .find ('#file') [0] .files;
+                this._notifyObservers (UserViewEvent .CONFIG_IMPORT, arg);
                 break;
             }
             ui .ModalStack .delete (modal);
@@ -658,7 +668,7 @@ class UserView extends View {
 }
 
 
-var UserViewEvent = {
+const UserViewEvent = {
   GET_STARTED: 0,
   LOGIN_LOCAL: 1,
   LOGIN_CLOUD: 2,
@@ -666,8 +676,9 @@ var UserViewEvent = {
   TAB_CLICK: 4,
   CONFIG_EMPTY: 5,
   CONFIG_COPY: 6,
-  BUDGET_EMPTY: 7,
-  BUDGET_COPY: 8,
-  BUDGET_ROLLOVER: 9,
-  DELETE_CONFIRMED: 10
+  CONFIG_IMPORT: 7,
+  BUDGET_EMPTY: 8,
+  BUDGET_COPY: 9,
+  BUDGET_ROLLOVER: 10,
+  DELETE_CONFIRMED: 11
 }
