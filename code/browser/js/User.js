@@ -583,8 +583,10 @@ class User extends Observable {
             this._view .removeMenu();
             (async () => {
               await this._selectConfig (c._id);
-              if (this._configTabs)
+              if (this._configTabs) {
                 this._view .selectTab (this._getConfigTab (this._cid));
+                this._view .selectTab (this._getBudgetTab (this._bid));
+              }
               await this._notifyApp()
             })();
           }
