@@ -315,27 +315,27 @@ class Model extends Observable {
 /**
  * Event type for model change callback
  */
-var ModelEvent = {
+const ModelEvent = {
   UPDATE: 0,
   INSERT: 1,
   REMOVE: 2
 }
 
-var _COLLECTION_REMOTE_SOURCE = '_CRS_';
-var Model_LOCAL_COLLECTION    = '_LOCAL';
+const _COLLECTION_REMOTE_SOURCE = '_CRS_';
+const Model_LOCAL_COLLECTION    = '_LOCAL';
 
 /******************
  * PRIVATE HELPERS
  ******************/
 
 
-var _db;
-var _local_db;
-var _collections = new Map();
-var _default_database_id;
-var _tid;
-var _undoLog;
-var _redoLog;
+let _db;
+let _local_db;
+let _collections = new Map();
+let _default_database_id;
+let _tid;
+let _undoLog;
+let _redoLog;
 
 
 /**

@@ -1,5 +1,5 @@
-var TransactionModel_queries = [];
-var TransactionModel_database;
+let TransactionModel_queries = [];
+let TransactionModel_database;
 
 class TransactionModel extends Model {
 

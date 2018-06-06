@@ -13,6 +13,7 @@ router.get('/', function(req, res, next) {
       'LocalDBAdaptor',
       'RemoteDBAdaptor',
       'Model',
+      'CSVConverter',
       'View',
       'Presenter',
       'TaxTables',
@@ -81,7 +82,8 @@ router.get('/', function(req, res, next) {
       'Chart',
       'papaparse',
       'nouislider',
-      'zangodb.min'
+      'zangodb.min',
+      'jszip.min'
     ],
     initScript: "var __DATABASE__ = '" + (req .body .database?  req .body .database: '') + "';"
   });

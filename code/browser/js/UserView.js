@@ -374,7 +374,7 @@ class UserView extends View {
   }
 
   setButtonDisabled (tab, isDisabled) {
-    tab .find ('> ._tabGroupContents > ._content > ._line > button') [isDisabled? 'addClass': 'removeClass'] ('_disabled');
+    $(tab .find ('> ._tabGroupContents > ._content > ._line > button') [0]) [isDisabled? 'addClass': 'removeClass'] ('_disabled');
   }
 
   addTabGroup (name, toHtml) {

@@ -749,15 +749,16 @@ class User extends Observable {
 
     let budgetContentGroup = this._view .addTabContentGroup ('Budgets', configContent);
     let budgetTabs         = this._view .addTabGroup ('budgets', budgetContentGroup);
+    const configTabs       = this._view .addLine (configContent);
     this._view .addButton ('Delete Configuration', () => {
       let html = this._configTabs .find ('> ._tabGroupContents > ._content._selected > ._line > button');
       this._view .addConfirmDelete (html, config._id, 'configuration', {top: -70, left: -70})
-    }, this._view .addLine (configContent));
-    let bm = new Model ('budgets', this .getDatabaseName (config._id));
-
+    }, configTabs);
+    this._view .addButton ('Export Configuration to CSV', () => CSVConverter .export (config .name), configTabs);
     if (select)
       this._setConfigDeleteButtonDisabled();
 
+    let bm = new Model ('budgets', this .getDatabaseName (config._id));
     this._budgets = this._sortByName (await bm .find ({}));
     bm .delete();
     let [budgetTab, budgetContent] = this._view .addTab (budgetTabs, '_add', true, 'Add');

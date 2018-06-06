@@ -1,4 +1,4 @@
-var APP_VERSION = '2.0.0-dev (Mar 6 2018 8caa260)';
+var APP_VERSION = '1.0.0-pre-alpha (Jun 5 2018 8caa260)';
 
 var PreferencesInstance;
 
@@ -82,6 +82,7 @@ class Preferences extends Observable {
       .append ($('<div>', {html: '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; github.com/ilikenwf (nestedSortable)', css: {color: '#ccc'}}))
       .append ($('<div>', {html: '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; linearicons.com', css: {color: '#ccc'}}))
       .append ($('<div>', {html: '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; github.com/erikolson186 (ZangoDB)', css: {color: '#ccc'}}))
+      .append ($('<div>', {html: '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; https://stuk.github.io/ (JSZip)', css: {color: '#ccc'}}))
       .append ($('<div>', {html: '&nbsp;'}))
       .append ($('<div>', {text: '(c) 2018 Mike Feeley (feeley@cs.ubc.ca)'}))
     about.css ({top: 100, left: 50});
