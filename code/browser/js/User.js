@@ -27,7 +27,7 @@ const ConfigExp  = [
 
 const ConfigKeyTest = 'EncryptionKeyIsCorrect';
 
-var User_DB_Crypto;
+let User_DB_Crypto;
 
 /**
  * User model
