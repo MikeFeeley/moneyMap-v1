@@ -202,7 +202,7 @@ class ImportRules extends TuplePresenter {
       this .close();
     }
     var rule  = this._model .get (id);
-    var trans = (await this._model .getTransactionModel() .find ({$or: [{category: null}, {category: ''}]}))
+    var trans = (await this._model .getTransactionModel() .find ({$or: [{category: null}, {category: ''}, {category: {$exists: false}}]}))
       .sort ((a,b) => {return a.date < b.date? -1: a.date == b.date? (a._seq < b.seq? -1: 1): 1});
     this._view .showApplyPopup (id, new ApplyToTable (this._model .getMatchingTransactions (rule, trans), this, (ids) => {
       (async () => {await handleSelect (ids)}) ();

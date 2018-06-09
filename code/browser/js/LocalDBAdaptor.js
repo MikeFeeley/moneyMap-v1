@@ -86,11 +86,16 @@ class LocalDBAdaptor extends DBAdaptor {
 
   async _updateList (data) {
     let async = []
-    for (let item of data .list)
+    for (let item of data .list) {
       if (data._isTran)
         async .push (TransactionDBMeta_update (data._database, item .id, item .update));
       else
         async .push (this._updateOne ({_collection: data._collection, id: item .id, update: item .update}));
+      if (async .length > 2) {
+        await Promise.all(async);
+        async = [];
+      }
+    }
     await Promise .all (async);
     return data .list .map (_ => {return true});
   }
@@ -114,13 +119,21 @@ class LocalDBAdaptor extends DBAdaptor {
 
   async _insertList (data) {
     let async = []
-    for (let insert of data .list)
-      if (data._isTran)
-        async .push (TransactionDBMeta_insert (insert));
-      else
-        async .push (this._insertOne ({_collection: data._collection, database: data .database, insert: insert}));
-    await Promise .all (async);
-    return data .list .map (_ => {return true})
+    for (let insert of data .list) {
+      await data._collection .insert (insert);
+
+      // if (data._isTran)
+      //   async .push (TransactionDBMeta_insert (data._database, insert));
+      // else
+      //   async .push (this._insertOne ({_collection: data._collection, database: data .database, _database: data._database, insert: insert}));
+      // if (async .length > 2) {
+      //   await Promise.all(async);
+      //   async = [];
+      // }
+    }
+
+    // await Promise .all (async);
+    return data .list .map (_ => {return true}) // XXX
   }
 
   async _removeOne (data) {
@@ -133,11 +146,16 @@ class LocalDBAdaptor extends DBAdaptor {
 
   async _removeList (data) {
     let async = [];
-    for (let id of data .list)
+    for (let id of data .list) {
       if (data._isTran)
         async .push (TransactionDBMeta_remove (data._database, data .id));
       else
         async .push (this._removeOne ({_collection: data._collection, id: id}));
+      if (async .length > 2) {
+        await Promise.all(async);
+        async = [];
+      }
+    }
     await Promise .all (async);
     return data .list .map (_ => {return true});
   }
@@ -239,19 +257,19 @@ class LocalDBAdaptor extends DBAdaptor {
 
 const LocalDBAdaptor_COLLECTIONS = {
   'config': {
-    accounts: ['_id'],
-    actuals: ['_id'],
-    actualsMeta: ['_id', 'type'],
+    accounts:       ['_id'],
+    actuals:        ['_id'],
+    actualsMeta:    ['_id', 'type'],
     balanceHistory: ['_id'],
-    budgets: ['_id'],
-    categories: ['_id'],
-    counters: ['_id'],
-    importRules: ['_id'],
-    parameters: ['_id'],
-    rateFuture: ['_id'],
-    schedules: ['_id'],
-    taxParameters: ['_id'],
-    transactions: ['_id', 'date', 'importTime', 'category', 'account']
+    budgets:        ['_id'],
+    categories:     ['_id'],
+    counters:       ['_id'],
+    importRules:    ['_id'],
+    parameters:     ['_id'],
+    rateFuture:     ['_id'],
+    schedules:      ['_id'],
+    taxParameters:  ['_id'],
+    transactions:   ['_id', 'date', 'importTime', 'category', 'account']
   },
   'user': {
     configurations: ['_id']

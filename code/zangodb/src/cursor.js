@@ -39,19 +39,33 @@ class Cursor extends EventEmitter {
     }
 
     _forEach(fn, cb) {
-        this._next((error, doc) => {
-            if (doc) {
-                fn(doc);
+      const nextComplete      = 'zangodb_forEach_next_complete';
+      const nextCompleteEvent = new Event (nextComplete);
+      const dummyElement      = document .createElement ('div');
+      let   doc, error;
 
-                this.emit('data', doc);
-                this._forEach(fn, cb);
-            } else {
-                this.emit('end');
+      const getNext = () => {
+        this._next ((e,d) => {
+          error = e;
+          doc   = d;
+          dummyElement .dispatchEvent (new Event (nextComplete));
+        })
+      };
 
-                cb(error);
-            }
-        });
+      getNext();
+
+      dummyElement .addEventListener (nextComplete, e => {
+        if (doc) {
+          fn (doc);
+          this .emit ('data', doc);
+          getNext();
+        } else {
+          this .emit ('end');
+          cb (error);
+        }
+      });
     }
+
 
     /**
      * Iterate over each document and apply a function.

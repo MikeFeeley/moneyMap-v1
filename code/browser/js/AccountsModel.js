@@ -2,7 +2,7 @@
  * Accounts Model
  *     name
  *     type                 AccountType; GROUP or ACCOUNT
- *     form                 CASH_FLOW, ASSET_LIABILITY, INCOME_SOURCE, TAX_TABLE
+ *     form                 CASH_FLOW, ASSET_LIABILITY, INCOME_SOURCE
  *     sort
  *  ACCOUNT only:
  *     group                account id of group
@@ -118,7 +118,7 @@ class AccountsModel extends Observable {
   }
 
   _balanceCacheConsistencyCheck (modelName, eventType, doc, arg) {
-    for (let account of this._accounts) {
+    for (let account of this._accounts || []) {
       let cc = account._balanceCacheConsistencyCheck (modelName, eventType, doc, arg);
       if (cc)
         this._notifyObservers (cc .eventType, cc .doc, cc .arg);
@@ -142,9 +142,23 @@ class AccountsModel extends Observable {
   }
 
   async _updateModel() {
-    this._accounts = (await this._model .find()) .map (a => {
+    const accounts = await this._model .find();
+
+    // ROBUSTNESS Each form need at least one group
+    const formsWithNoGroup = AccountForms .filter (f => ! accounts .find (a => a .form == f && a .type == AccountType .GROUP));
+    if (formsWithNoGroup .length) {
+      accounts .push (... await this._model .insertList (formsWithNoGroup .map (f => ({
+        name: 'Default Group',
+        type: AccountType .GROUP,
+        form: f,
+        sort: 1
+      }))))
+    }
+
+    this._accounts = accounts .map (a => {
       return new Account (this, a, this._budgetModel, this._actualsModel, this._balanceHistoryForAccount (a), this._rateFutureForAccount (a));
     });
+
     await this._updateBalanceHistoryModel();
     await this._updateRateFutureModel();
     await this._updateTaxParametersModel();
@@ -892,6 +906,8 @@ const AccountForm = {
   ASSET_LIABILITY: 1,
   INCOME_SOURCE:   2
 }
+
+const AccountForms = [AccountForm .CASH_FLOW, AccountForm .ASSET_LIABILITY, AccountForm .INCOME_SOURCE];
 
 const RateType = {
   SIMPLE: 0,

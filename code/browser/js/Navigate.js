@@ -1357,7 +1357,7 @@ class Navigate {
       }, v => {return  v .amount}, '_flagGood');
     let update = () => {
       let endOfLastMonth = Types .date .monthEnd (Types .date .addMonthStart (Types .date .today(), -1));
-        let toLastMonthVar = Array .from (this._variance .getVarianceList ([this._budget .getExpenseCategory()], {end: endOfLastMonth}, true)
+      let toLastMonthVar = Array .from (this._variance .getVarianceList ([this._budget .getExpenseCategory()], {end: endOfLastMonth}, true)
         .concat           (this._variance .getVarianceList ([this._budget .getExpenseCategory()], {end: Types .date .today()}, true))
         .filter           (v => {return v .amount < 50})
         .reduce ((m,v) => {

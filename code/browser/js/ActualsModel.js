@@ -13,6 +13,7 @@ class ActualsModel extends Observable {
   
   delete() {
     this._transactionModel .delete();
+    this._actualsModel     .delete();
   }
 
   _onModelChange (eventType, tran, update, source) {

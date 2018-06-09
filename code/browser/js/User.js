@@ -330,7 +330,7 @@ class User extends Observable {
         break;
 
       case UserViewEvent .CONFIG_IMPORT:
-        await this._importConfig (arg .from);
+        await this._importConfig (arg .from, arg .type, arg .encryptionPassword);
         break;
 
       case ViewEvent .UPDATE:
@@ -503,6 +503,8 @@ class User extends Observable {
       let label = this._name && this._configs .length == 1? this._name: (this._getConfig (this._cid) || {}) .name || '';
       if (this._budgets && this._budgets .length > 1)
         label = this._budgets .find (b => {return b._id == this._bid}) .name + '&nbsp;&nbsp;&nbsp;&nbsp;' + label;
+      if (label == '')
+        label = 'Unnamed';
       return label;
     } else
       return '';
@@ -582,7 +584,7 @@ class User extends Observable {
       let items = this._configs
         .filter (c => {return c._id != this._cid})
         .map (c => {return {
-          name:   c .name,
+          name:   c .name || 'Unnamed',
           action: e => {
             this._view .removeMenu();
             (async () => {
@@ -636,6 +638,21 @@ class User extends Observable {
 
   }
 
+  _deleteConfigModels() {
+    if (this._budgetModel)
+      this._budgetModel .delete();
+    if (this._schedModel)
+      this._schedModel .delete();
+    if (this._tranModel)
+      this._tranModel .delete();
+    if (this._accountsModel)
+      this._accountsModel .delete();
+    this._budgetModel   = null;
+    this._schedModel    = null;
+    this._tranModel     = null;
+    this._accountsModel = null;
+  }
+
   async _setModelsForConfig() {
     if (this._budgetModel)
       this._budgetModel .delete();
@@ -671,7 +688,7 @@ class User extends Observable {
   }
 
   async _getConfigs() {
-    let remoteConfigs = this._configModel? await this._configModel .find({deleted: null}): [];
+    let remoteConfigs = this._configModel? await this._configModel .find({$or: [{deleted: null}, {deleted: {$exists: false}}]}): [];
     let localConfigs  = await this._localConfigModel .find ({});
     this._configs = this._sortByName (remoteConfigs .concat (localConfigs));
   }
@@ -690,7 +707,7 @@ class User extends Observable {
   }
 
   async _disconnectApp() {
-    await this._notifyApp(UserEvent .DISCONNECT);
+    await this._notifyApp (UserEvent .DISCONNECT);
   }
 
   /**
@@ -919,7 +936,7 @@ class User extends Observable {
 
     } else {
       const tables = [
-        'accounts', 'actuals', 'actualsMeta', 'balanceHistory', 'budgets', 'categories', 'counters',
+        'accounts', 'balanceHistory', 'budgets', 'categories', 'counters',
         'importRules', 'parameters', 'rateFuture', 'schedules', 'taxParameters', 'transactions'
       ];
       this._cid = from;
@@ -962,9 +979,34 @@ class User extends Observable {
   /**
    *
    */
-  async _importConfig (filelist) {
+  async _importConfig (filelist, type, encryptionPassword) {
     assert (filelist .length == 1);
-    await CSVConverter .import (filelist [0]);
+    await this._disconnectApp();
+    this._deleteConfigModels();
+    User_DB_Crypto = type == ConfigType .CLOUD_ENCRYPTED && new Crypto (encryptionPassword);
+    this._cid = (await (this._getConfigModel (undefined, type) .insert ({
+      user:    this._uid,
+      name:    name,
+      type:    type,
+      keyTest: type == ConfigType .CLOUD_ENCRYPTED && ConfigKeyTest
+    })))._id;
+    if (type == ConfigType .CLOUD_ENCRYPTED) {
+      if (this._remember)
+        localStorage .setItem ('encryptionPassword_' + this._cid, encryptionPassword);
+      this._view .updateConfigEncryptionPassword (this._cid, encryptionPassword);
+    }
+    if (this._uid)
+      await Model .updateUser (this._uid, this._accessCap, {curConfiguration: this._cid});
+    else
+      localStorage .setItem (UserLocalStorageKey .CUR_CONFIGURATION, this._cid);
+    await this._setModelsForConfig();
+
+    await CSVConverter .import (filelist [0], this._getConfigModel (this._cid), this._cid, this .getDatabaseName());
+    console.log('done');
+
+    await this._selectConfig (this._cid);
+    if (this._configTabs)
+      await this._notifyApp();
   }
 
   /**
@@ -993,7 +1035,7 @@ class User extends Observable {
       ['Suspense',    false, false]
     ]
     let rootCats = await Promise .all (roots .map (async (root, index) => {
-      let cat = await cm .find ({name: root[0], parent: null})
+      let cat = await cm .find ({name: root[0], $or: [{parent: null}, {parent: {$exists: false}}]});
       if (cat .length > 0) {
         cat = cat [0];
         await cm .update (cat._id, {budgets: cat .budgets .concat (b._id)})

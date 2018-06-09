@@ -207,7 +207,7 @@ class Model extends Observable {
 
   get (id) {
     var doc = this._collection .get (id);
-    return Object .keys (doc) .reduce ((o,f) => {o[f] = doc[f]; return o}, {});
+    return doc && Object .keys (doc) .reduce ((o,f) => {o[f] = doc[f]; return o}, {});
   }
 
   /**
@@ -336,7 +336,6 @@ let _default_database_id;
 let _tid;
 let _undoLog;
 let _redoLog;
-
 
 /**
  * Database collection

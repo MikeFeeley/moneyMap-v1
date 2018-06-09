@@ -486,7 +486,9 @@ class UserView extends View {
       .append ($('<div>') .append ($('<label>')
         .append ($('<input>', {type: 'radio', name: 'how', value: 'import', prop: {checked: false}}))
         .append ($('<span>',  {text: 'Import configuration from CSV'}))
-        .append ($('<input>', {type: 'file', id: 'file', accept:'.zip'}))
+        .append ($('<input>', {type: 'file', id: 'file', accept:'.zip'}) .click (e => {
+          $(e .currentTarget) .closest ('label') .click();
+        }))
       ));
 
     $('<div>', {text: 'With Data Storage Type'}) .appendTo (content);
@@ -514,11 +516,11 @@ class UserView extends View {
       .click (() => {
         let ds = content .find ('input[name="dataStore"]:checked') .val(), ep;
         if (ds == undefined)
-          error .text ('Select a data storage type for the new configuration.');
+          error .text ('Select a data storage type for the new configuration');
         else {
           ep = ds == ConfigType .CLOUD_ENCRYPTED && content .find ('input[name="encryptionPassword"]') .val();
           if (ep !== false && ep .length < 6)
-            error .text ('Private encryption password must be a least 6 characters long.');
+            error .text ('Private encryption password must be a least 6 characters long');
           else {
             let arg = {type: ds, encryptionPassword: ep}
             switch (content .find ('input[name="how"]:checked') .val()) {
@@ -532,7 +534,11 @@ class UserView extends View {
               case 'import':
                 // TODO import
                 arg .from = content .find ('#file') [0] .files;
-                this._notifyObservers (UserViewEvent .CONFIG_IMPORT, arg);
+                if (arg .from .length != 1) {
+                  error .text ('Select a file to import');
+                  return;
+                } else
+                  this._notifyObservers (UserViewEvent .CONFIG_IMPORT, arg);
                 break;
             }
             ui .ModalStack .delete (modal);
@@ -647,7 +653,7 @@ class UserView extends View {
         reject();
       });
       $('<button>', {text: 'Select a Different Configuration'}) .appendTo (confirm) .click (() => {
-        // TODO popup to select different config
+        // TODO popup to select different config ??? still needed?
       });
      });
   }

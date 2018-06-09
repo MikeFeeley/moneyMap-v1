@@ -79,6 +79,10 @@ class SchedulesModel extends Observable {
       var schs  = this._schModel .find (schQuery);
       cats      = await cats;
       schs      = await schs;
+
+      // ROBUSTNESS: Check that budget roots really exist
+      cats .push (... await this._budget .checkRoots (this._catModel));
+
       for (let cat of cats) {
         cat._id    = this._joinMI (this._catModel, cat._id);
         cat.parent = this._joinMI (this._catModel, cat.parent);

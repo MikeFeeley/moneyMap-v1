@@ -521,7 +521,7 @@ class Accounts extends Observable {
 
   async addHtml (toHtml) {
     let build = async () => {
-      this._defaultRate = (await this._paramModel .find ({name: 'rates'})) [0] .apr;
+      this._defaultRate = ((await this._paramModel .find ({name: 'rates'})) [0] || {}) .apr || 0;
       await this._view .addHtml (toHtml, build);
       this._group = [];
       let hasAccount;

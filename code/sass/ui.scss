@@ -587,6 +587,7 @@ div._systemStatus {
          }
       }
       > ._errorMessage {
+        text-align: center;
         margin-top: 16px;
         margin-bottom: 16px;
         color: rgb(230, 46, 46);
@@ -1151,12 +1152,21 @@ body > ._pleaseWait {
   position: fixed;
   height: 100vh;
   width: 100vw;
-  background: rgba(0,0,0,.1);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  @supports not ((backdrop-filter: blur(4px)) or (-webkit-backdrop-filter: blur(4px))) {
-    background: rgba(255,255,255,0.5)!important;
+
+  background: rgba(0,0,0,0.1);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  @supports not ((backdrop-filter: blur(25px)) or (-webkit-backdrop-filter: blur(25px))) {
+    background: rgba(255,255,255,0.94)!important;
   }
+
+  //background: rgba(0,0,0,.1);
+  //backdrop-filter: blur(4px);
+  //-webkit-backdrop-filter: blur(4px);
+  //@supports not ((backdrop-filter: blur(4px)) or (-webkit-backdrop-filter: blur(4px))) {
+  //  background: rgba(255,255,255,0.5)!important;
+  //}
+
   > div {
     font-size: 48px;
     display: inline-block;
