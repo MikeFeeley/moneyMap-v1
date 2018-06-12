@@ -1,6 +1,5 @@
 var TransactionDBMeta_getCollection;
 var TransactionDBMeta_getObjectID;
-var TransactionDBMeta_forEach;
 
 function TransactionDBMeta_setGetCollectionFunction (f) {
   TransactionDBMeta_getCollection = f;
@@ -8,10 +7,6 @@ function TransactionDBMeta_setGetCollectionFunction (f) {
 
 function TransactionDBMeta_setGetObjectIDFunction (f) {
   TransactionDBMeta_getObjectID = f;
-}
-
-function TransactionDBMeta_setForEachFunction (f) {
-  TransactionDBMeta_forEach = f;
 }
 
 async function TransactionDBMeta_newUID (db) {
@@ -207,7 +202,9 @@ async function TransactionDBMeta_updateActuals (actuals, transactions, start, en
   let rm    = actuals .deleteMany (start? {$and: [{month: {$gte: start}}, {month: {$lte: end}}]}: {});
   let query = start? {$and: [{date: {$gte: start * 100}}, {date: {$lte: end * 100 + 99}}]}: {};
   let acum  = new Map();
-  await TransactionDBMeta_forEach (transactions .find (query) .sort ({date: 1, category: 1}), tran => {
+  const cursor = transactions .find (query);
+  while (await cursor .hasNext()) {
+    const tran = await cursor .next();
     if (tran .date && (tran .debit || tran .credit)) {
       let key = String (TransactionDBMeta_getYearMonth (tran .date)) + '$' + (String (tran .category) || '@NULL@');
       let val = acum .get (key) || {amount: 0, count: 0};
@@ -215,7 +212,7 @@ async function TransactionDBMeta_updateActuals (actuals, transactions, start, en
       val .count  += 1;
       acum .set (key, val);
     }
-  });
+  }
   await rm;
   let up = [];
   for (let e of acum .entries()) {
@@ -271,5 +268,4 @@ if (typeof exports !== 'undefined') {
   exports .getActuals                = TransactionDBMeta_getActuals;
   exports .setGetCollectionFunction  = TransactionDBMeta_setGetCollectionFunction;
   exports .setGetObjectIDFunction    = TransactionDBMeta_setGetObjectIDFunction;
-  exports .setForEachFunction        = TransactionDBMeta_setForEachFunction;
 }

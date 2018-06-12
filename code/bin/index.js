@@ -8,6 +8,7 @@ router.get('/', function(req, res, next) {
       'ui',
       'util',
       'Crypto',
+      'LocalDB',
       'DBAdaptor',
       'TransactionDBMeta',
       'LocalDBAdaptor',

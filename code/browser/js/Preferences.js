@@ -81,7 +81,6 @@ class Preferences extends Observable {
       .append ($('<div>', {html: '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; refreshless.com (noUiSlider)', css: {color: '#ccc'}}))
       .append ($('<div>', {html: '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; github.com/ilikenwf (nestedSortable)', css: {color: '#ccc'}}))
       .append ($('<div>', {html: '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; linearicons.com', css: {color: '#ccc'}}))
-      .append ($('<div>', {html: '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; github.com/erikolson186 (ZangoDB)', css: {color: '#ccc'}}))
       .append ($('<div>', {html: '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; https://stuk.github.io/ (JSZip)', css: {color: '#ccc'}}))
       .append ($('<div>', {html: '&nbsp;'}))
       .append ($('<div>', {text: '(c) 2018 Mike Feeley (feeley@cs.ubc.ca)'}))

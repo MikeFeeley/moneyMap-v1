@@ -51,7 +51,7 @@ class Model extends Observable {
       var docs = this._groups .get (doc [this._options .groupBy])
     for (let d of docs || [doc]) {
       let containsDoc = (! remoteUpdate && this._options && this._options .updateDoesNotRemove && this._ids .has (d._id)) ||
-        _query_ismatch (this._query, d) || (this._isObserver && _query_ismatch (this._observerQuery, d));
+        Model_query_ismatch (this._query, d) || (this._isObserver && Model_query_ismatch (this._observerQuery, d));
       if (containsDoc)
         return true;
     }
@@ -447,11 +447,11 @@ class _Collection extends Observable {
   }
 
   findFromCache (query) {
-    return Array .from (this._docs .values()) .filter (d => {return _query_ismatch (query,d)})
+    return Array .from (this._docs .values()) .filter (d => {return Model_query_ismatch (query,d)})
   }
 
   hasFromCache (query) {
-    return Array .from (this._docs .values()) .find (d => {return _query_ismatch (query,d)}) != null;
+    return Array .from (this._docs .values()) .find (d => {return Model_query_ismatch (query,d)}) != null;
   }
 
   refine (ismatch) {
@@ -648,13 +648,19 @@ class _Collection extends Observable {
   }
 }
 
-function _query_ismatch (query, doc) {
+function Model_query_ismatch (query, doc) {
   function matchField (field, op, val) {
     if (typeof doc [field] == 'undefined')
       return (op == '$eq' && ! val) || (op == '$ne' && val) || (op == '$notregex');
     switch (op) {
       case '$eq':
-        return Array .isArray (doc [field])? doc [field] .includes (val) : doc [field] == val;
+        if (Array .isArray (doc [field])) {
+          if (Array .isArray (val))
+            return doc [field] .length == val .length && ! doc [field] .find (df => ! val .includes (df));
+          else
+            return doc [field] .includes (val);
+        } else
+          return doc [field] == val;
       case '$gt':
         return doc [field] >  val;
       case '$gte':
@@ -675,6 +681,8 @@ function _query_ismatch (query, doc) {
         return doc [field] && doc [field] .match (new RegExp (val, 'i'));
       case '$notregex':
         return ! doc [field] || ! doc [field] .match (new RegExp (val));
+      case '$elemMatch':
+        return Array .isArray (doc [field]) && ! doc [field] .find (e => ! Model_query_ismatch (val, e));
     }
   }
   if (!query)
@@ -684,21 +692,21 @@ function _query_ismatch (query, doc) {
     let v = query [k];
     switch (k) {
       case '$and':
-        match = !v.length || (_query_ismatch (v[0], doc) && _query_ismatch ({'$and': v.slice(1)},doc));
+        match = !v.length || (Model_query_ismatch (v[0], doc) && Model_query_ismatch ({'$and': v.slice(1)},doc));
         break;
       case '$or':
-        match = !v.length || (_query_ismatch (v[0], doc) || (v.length > 1 && _query_ismatch ({'$or': v.slice(1)},doc)));
+        match = !v.length || (Model_query_ismatch (v[0], doc) || (v.length > 1 && Model_query_ismatch ({'$or': v.slice(1)},doc)));
         break;
       case '$not':
-        match = !v.length || (!_query_ismatch (v[0], doc));
+        match = !v.length || (!Model_query_ismatch (v[0], doc));
         break;
       case '$nor':
-        match = !v.length || (!_query_ismatch (v[0], doc) && _query_ismatch ({'$nor': v.slice(1)},doc));
+        match = !v.length || (!Model_query_ismatch (v[0], doc) && Model_query_ismatch ({'$nor': v.slice(1)},doc));
         break;
       case '$limit': case '$sort':
         break;
       default:
-        if (typeof v == 'object' && v != null) {
+        if (typeof v == 'object' && v != null && ! Array .isArray (v)) {
           for (let vk in v)
             if (! matchField (k, vk, v[vk])) {
               match = false;
