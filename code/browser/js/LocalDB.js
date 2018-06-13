@@ -97,13 +97,15 @@ class LocalTransaction {
   async delete (objectStoreName, query, options = {}) {
     const objectStore   = this._transaction .objectStore (objectStoreName);
     if (! options .returnOriginal) {
-      const [_, keyRange] = this._extractKeyRange (objectStore, query, false);
+      const keyRanges = this._extractKeyRanges (objectStore, query, false);
       if (Object .keys (query || {}) .length == 0)
-        return new Promise ((resolve, reject) => {
-          const request      = keyRange? objectStore .delete (keyRange): objectStore .clear();
-          request .onsuccess = () => resolve (true);
-          request .onerror   = () => reject  (request .error);
-        })
+        return Promise .all (keyRanges .map (([index, keyRange]) =>
+          new Promise ((resolve, reject) => {
+              const request      = keyRange? objectStore .delete (keyRange): objectStore .clear();
+              request .onsuccess = () => resolve (true);
+              request .onerror   = () => reject  (request .error);
+          })
+        ));
     }
     const cursor   = this .findCursor (objectStoreName, query);
     const promises = [];
@@ -173,15 +175,18 @@ class LocalTransaction {
   }
 
   findArray (objectStoreName, query, count) {
+    const oq = query;
     query = query && JSON .parse (JSON .stringify (query));
-    return new Promise ((resolve, reject) => {
-      const objectStore       = this._transaction .objectStore (objectStoreName);
-      const [index, keyRange] = this._extractKeyRange (objectStore, query);
-      const needFilter        = query &&  Object .keys (query) .length > 0;
-      const request           = index? index .getAll (keyRange, needFilter? 0: count): objectStore .getAll (keyRange, needFilter? 0: count);
-      request .onsuccess      = () => resolve (needFilter? request .result .filter (r => Model_query_ismatch (query, r)): request .result);
-      request .onerror        = () => reject  (request .error);
-    });
+    const objectStore = this._transaction .objectStore (objectStoreName);
+    const keyRanges   = this._extractKeyRanges (objectStore, query);
+    const needFilter  = query &&  Object .keys (query) .length > 0;
+    return Promise .all (keyRanges .map (([index, keyRange]) => {
+      return new Promise ((resolve, reject) => {
+        const request      = index? index .getAll (keyRange, needFilter? 0: count): objectStore .getAll (keyRange, needFilter? 0: count);
+        request .onsuccess = () => resolve (needFilter? request .result .filter (r => Model_query_ismatch (query, r)): request .result);
+        request .onerror   = () => reject  (request .error);
+      })
+    })) .then (results => results .reduce ((result, r) => result .concat (r)));
   }
 
   findOne (objectStoreName, query) {
@@ -193,20 +198,27 @@ class LocalTransaction {
   }
 
   findCursor (objectStoreName, query) {
-    query                   = query && JSON .parse (JSON .stringify (query));
-    const objectStore       = this._transaction .objectStore (objectStoreName);
-    const [index, keyRange] = this._extractKeyRange (objectStore, query);
-    const needFilter        = query && Object .keys (query) .length > 0;
-    let   request, current, cursorAdvanced;
+    query              = query && JSON .parse (JSON .stringify (query));
+    const objectStore  = this._transaction .objectStore (objectStoreName);
+    const keyRanges    = this._extractKeyRanges (objectStore, query);
+    const needFilter   = query && Object .keys (query) .length > 0;
+    let   request, current, cursorAdvanced, keyRangeCursor = 0;
 
     const getNext = () =>
       new Promise ((resolve, reject) => {
+        const [index, keyRange] = keyRanges [keyRangeCursor];
         if (! request)
           request = index? index .openCursor (keyRange): objectStore .openCursor (keyRange);
         else
           request .result .continue();
         request .onsuccess = () => {
-          if (request .result && needFilter && ! Model_query_ismatch (query, request .result .value))
+          if (! request .result && keyRangeCursor < keyRanges .length - 1) {
+            keyRangeCursor += 1;
+            request = null;
+            getNext()
+              .then  (result => resolve (result))
+              .catch (error  => reject  (error));
+          } else if (request .result && needFilter && ! Model_query_ismatch (query, request .result .value))
             request .result .continue();
           else
             resolve (request .result);
@@ -236,33 +248,53 @@ class LocalTransaction {
     return this._complete;
   }
 
-  _extractKeyRange (objectStore, query, useIndex = true) {
-    const queryProperties = Object .keys (query || {});
-    for (let property of queryProperties)
-      if (objectStore .keyPath == property) {
-        const keyRange = this._selectorToKeyRange (query [property]);
-        delete query [property];
-        return [undefined, keyRange];
-      }
-    if (useIndex) {
-      const indexes       = [... objectStore .indexNames] .map (indexName => objectStore .index (indexName));
-      const indexKeyPaths = indexes .map (index => index .keyPath);
-      for (let property of queryProperties) {
-        const i = indexKeyPaths .findIndex (indexKeyPath => indexKeyPath == property);
-        if (i != -1) {
+  _extractKeyRanges (objectStore, query, useIndex = true) {
+    const indexes       = useIndex? [... objectStore .indexNames] .map (indexName => objectStore .index (indexName)): [];
+    const indexKeyPaths = indexes .map (index => index .keyPath);
+    const extractKeyRange = query => {
+      const queryProperties = Object .keys (query || {});
+      for (let property of queryProperties)
+        if (objectStore .keyPath == property) {
           const keyRange = this._selectorToKeyRange (query [property]);
-          delete query [property];
-          return [indexes [i], keyRange];
+          if (keyRange) {
+            delete query [property];
+            return Array .isArray (keyRange)? keyRange .map (k => [undefined, k]) : [[undefined, keyRange]];
+          }
+        }
+      if (useIndex) {
+        for (let property of queryProperties) {
+          const i = indexKeyPaths .findIndex (indexKeyPath => indexKeyPath == property);
+          if (i != -1) {
+            const keyRange = this._selectorToKeyRange (query [property]);
+            if (keyRange) {
+              delete query [property];
+              return [[indexes [i], keyRange]];
+            }
+          }
         }
       }
-    }
-    if (queryProperties .includes ('$and'))
-      for (const subQuery of query ['$and']) {
-        const subResult = this._extractKeyRange (objectStore, subQuery, useIndex);
-        if (subResult)
-          return subResult;
+      if (queryProperties .includes ('$and'))
+        for (const subQuery of query .$and) {
+          const subResult = extractKeyRange (subQuery);
+          if (subResult .length)
+            return subResult;
+        }
+      if (queryProperties .includes ('$or')) {
+        const canUseKeyRange = ! query .$or .find (subQuery =>
+          Object .keys (subQuery) .find (p => p != objectStore .keyPath && ! indexKeyPaths .includes (p))
+        );
+        if (canUseKeyRange) {
+          const result = query .$or .map (subQuery => extractKeyRange (subQuery));
+          query .$or = query .$or .filter (subQuery => Object .keys (subQuery) > 0);
+          if (query .$or .length == 0)
+            delete query .$or;
+          return result .reduce ((a,e) => a .concat(e));
+        }
       }
-    return [undefined, undefined];
+      return [];
+    }
+    const result = extractKeyRange (query);
+    return result .length? result: [[undefined, undefined]];
   }
 
   _selectorToKeyRange (sel) {
@@ -270,7 +302,7 @@ class LocalTransaction {
       sel = {$eq: sel};
     let keyRange;
     for (let op of Object .keys (sel)) {
-      if (typeof sel [op] != 'object')
+      if (typeof sel [op] != 'object' || Array .isArray (sel [op]))
         switch (op) {
           case '$eq':
             if (! keyRange) {
@@ -311,6 +343,12 @@ class LocalTransaction {
               delete sel [op];
             } else if (keyRange .lower && ! keyRange .upper) {
               keyRange = IDBKeyRange .bound (keyRange .lower, sel [op], keyRange .lowerOpen, false);
+              delete sel [op];
+            }
+            break;
+          case '$in':
+            if (! keyRange && Array .isArray (sel [op]) && sel [op] .length > 0) {
+              keyRange = sel [op] .map (v => IDBKeyRange .only (v));
               delete sel [op];
             }
             break;
@@ -390,7 +428,7 @@ class LocalDBTest {
       await t .insert ('foo', {_id: 5, value: 5, name: 'c', blah: [4]});
       await t .insert ('foo', {_id: 6, value: 6, name: 'c', blah: [4,6]});
 
-      let result;
+      let result, c;
 
       result = await t .update ('foo', {_id: 4}, {$set: {name: 'updated'}, $inc: {counter: 5}}, {returnOriginal: false});
       assert(Array.isArray (result) && result .length == 1 && result[0] .value .counter == 5);
@@ -447,10 +485,45 @@ class LocalDBTest {
       result = await t .findOneAndUpdate ('foo', {_id: 1002}, {$pull: {px: 1}}, {upsert: true, returnOriginal: false});
       assert(result.value && result.value._id==1002 && Array.isArray (result.value.px) && result.value.px.length==0);
 
+      result = await t .findArray ('foo', {_id: {$in: [3,5]}});
+      assert(result && result .length == 2 && result[0]._id == 3 && result[1]._id == 5);
+      result = await t .findArray ('foo', {$or: [{_id: 3}, {_id: 5}]});
+      assert(result && result .length == 2 && result[0]._id == 3 && result[1]._id == 5);
+      result = await t .findArray ('foo', {$or: [{_id: 3}, {_id: 5}, {name: 'b'}]});
+      assert(result.length==2);
+      result = await t .findArray ('foo', {$or: [{_id: 3}, {_id: 5}, {name: 'a'}]});
+      assert(result.length==4);
+
+      result = [];
+      c = t .findCursor ('foo', {$or: [{_id: 1}, {_id: 3}]});
+      while (await c .hasNext())
+        result.push(await c .next());
+      assert(result.length == 2);
+      result = [];
+      c = t .findCursor ('foo', {$or: [{_id: 1}, {_id: 99}]});
+      while (await c .hasNext())
+        result.push(await c .next());
+      assert(result.length == 1);
+      result = [];
+      c = t .findCursor ('foo', {$or: [{_id: 1}, {name: 'c'}]});
+      while (await c .hasNext())
+        result.push(await c .next());
+      assert(result.length == 2);
+
+      await t .delete ('foo', {_id: {$in: [1,5,9]}});
+      result = await t .findArray('foo');
+      assert(result.length == 8);
+      await t .delete ('foo', {$or: [{_id: 3},{_id: 6}]});
+      result = await t .findArray('foo');
+      assert(result.length == 6);
+
       const cur = t .findCursor ('foo');
       while (await cur .hasNext())
         console.log (await cur .next());
+
       await t .hasCommitted();
+
+      console.log('All tests pass.');
 
     } catch (e) {
       console.log (e);

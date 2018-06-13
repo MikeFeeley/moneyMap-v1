@@ -166,14 +166,17 @@ class Model extends Observable {
           .reduce ((a,e) => {if (a .length == 0 || a [a .length - 1] != e) a .push (e); return a}, [])
       docs = docs
         .filter (d => {return ! d [this._options .groupBy]})
-      query = {};
-      query [this._options .groupBy] = {$in: groups};
-      let groupDocs = cacheOnly? this._collection .findFromCache (query): (await this._collection .find (query));
-      docs = docs .concat (groupDocs);
-      this._groups = groups .reduce ((map,group) => {
-        map .set (group, groupDocs .filter (d => {return d [this._options .groupBy] == group}));
-        return map;
-      }, new Map());
+      if (groups .length > 0) {
+        query = {};
+        query [this._options .groupBy] = {$in: groups};
+        let groupDocs = cacheOnly? this._collection .findFromCache (query): (await this._collection .find (query));
+        docs = docs .concat (groupDocs);
+        this._groups = groups .reduce ((map,group) => {
+          map .set (group, groupDocs .filter (d => {return d [this._options .groupBy] == group}));
+          return map;
+        }, new Map());
+      } else
+        this._groups = new Map();
     }
     if (docs) {
       let ids = docs .reduce ((set, doc) => {set .add (doc._id); return set}, new Set());

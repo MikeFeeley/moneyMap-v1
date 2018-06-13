@@ -921,9 +921,13 @@ class User extends Observable {
     await this._disconnectApp();
     let fromConfig = this._getConfig (from);
     let to = (await this._getConfigModel (undefined, type) .insert ({
-      user:    this._uid,
-      name:    'Copy of ' + fromConfig .name,
-      type:    type
+      user:        this._uid,
+      name:        'Copy of ' + fromConfig .name,
+      type:        type,
+      curBudget:   fromConfig .curBudget,
+      hasActivity: fromConfig .hasActivity,
+      hasBudget:   fromConfig .hasBudget,
+      hasAssets:   fromConfig .hasAssets
     })) ._id;
     let ec = localStorage .getItem ('encryptionPassword_' + from);
     let okayToCopyAtServer = (fromConfig .type == type) && (type != ConfigType .CLOUD_ENCRYPTED || encryptionPassword == ec);
@@ -971,7 +975,7 @@ class User extends Observable {
     await this._selectConfig (this._cid);
     for (let budget of this._budgets)
       await this._onBudgetModelChange (ModelEvent .INSERT, budget);
-    this._selectBudget (this._budgets [0]._id);
+    this._selectBudget (this._getConfig() .curBudget || this._budgets [0]._id);
     this._view .removePleaseWait();
     await this._notifyApp();
   }
