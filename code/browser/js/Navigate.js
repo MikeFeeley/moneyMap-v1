@@ -422,7 +422,7 @@ class Navigate {
     }
     return (await this._actuals .getTransactions (cat, st, en))
       .map (tran => {
-        let stop = tran .payee .match (payeeTruncate);
+        let stop = tran .payee && tran .payee .match (payeeTruncate);
         return {
           payee:  (stop && stop .index? tran .payee .slice (0, stop .index): tran .payee) .split (' ') .slice (0,3) .join (' '),
           date:   tran .date,

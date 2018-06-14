@@ -314,7 +314,9 @@ class ScheduleEntry extends List {
         if (! hasSchedule)
           showHelp();
       }
-      conditionallyShowHelp();
+      console.log(this._options)
+      if (! this._options .includeZombies)
+        conditionallyShowHelp();
       toHtml .closest ('.contents > div > div') .data ('visible', conditionallyShowHelp);
     }
   }

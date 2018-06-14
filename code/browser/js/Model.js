@@ -653,6 +653,20 @@ class _Collection extends Observable {
 
 function Model_query_ismatch (query, doc) {
   function matchField (field, op, val) {
+    const dotPos = field .indexOf ('.');
+    if (dotPos != -1) {
+      const subField = field .slice (0, dotPos);
+      const subDoc   = doc [subField];
+      if (! subDoc)
+        return false;
+      else {
+        const fieldSuffix = field .slice (dotPos + 1);
+        if (Array .isArray (subDoc))
+          return Model_query_ismatch ({[subField]: {$elemMatch: {[fieldSuffix]: {[op]: val}}}}, doc);
+        else
+          return Model_query_ismatch ({[fieldSuffix]: {[op]: val}}, subDoc);
+      }
+    }
     if (typeof doc [field] == 'undefined')
       return (op == '$eq' && ! val) || (op == '$ne' && val) || (op == '$notregex');
     switch (op) {
@@ -685,7 +699,7 @@ function Model_query_ismatch (query, doc) {
       case '$notregex':
         return ! doc [field] || ! doc [field] .match (new RegExp (val));
       case '$elemMatch':
-        return Array .isArray (doc [field]) && ! doc [field] .find (e => ! Model_query_ismatch (val, e));
+        return Array .isArray (doc [field]) && doc [field] .find (e => Model_query_ismatch (val, e));
     }
   }
   if (!query)
@@ -710,11 +724,12 @@ function Model_query_ismatch (query, doc) {
         break;
       default:
         if (typeof v == 'object' && v != null && ! Array .isArray (v)) {
-          for (let vk in v)
+          for (let vk in v) {
             if (! matchField (k, vk, v[vk])) {
               match = false;
               break;
             }
+          }
         } else
           match = matchField (k, '$eq', v);
     }

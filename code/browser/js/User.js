@@ -1062,14 +1062,14 @@ class User extends Observable {
       suspenseCategory:    rootCats [4]._id
     });
     let defaultCategories = [
-      {parent: rootCats [0]._id, list: [
+      {parent: rootCats [0], list: [
         'Food', 'Alcohol', 'Housing', 'Utilities', 'Household', 'Children', 'Health & Personal', 'Transportation', 'Subscriptions',
         'Gifts', 'Recreation', 'Travel', 'Furniture & Equipment', 'Home Improvement'
       ]},
-      {parent: rootCats [2]._id, list: [
+      {parent: rootCats [2], list: [
         'Salary', 'Other Income'
       ]},
-      {parent: rootCats [4]._id, list: [
+      {parent: rootCats [4], list: [
         'Transfer', 'Reimbursed'
       ]}
     ]
@@ -1077,12 +1077,12 @@ class User extends Observable {
       let sort = 0;
       group .cats = []
       for (let name of group .list) {
-        let cat = await cm .find ({name: name, parent: group .parent});
+        let cat = await cm .find ({name: name, parent: group .parent._id});
         if (cat .length > 0) {
           cat = cat [0];
           await cm .update (cat._id, {budgets: cat .budgets .concat (b._id)});
         } else
-          cat = await cm .insert ({name: name, parent: group .parent, sort: sort++, budgets: [b._id]})
+          cat = await cm .insert ({name: name, parent: group .parent._id, sort: sort++, budgets: [b._id]})
         group .cats .push (cat);
       }
     }

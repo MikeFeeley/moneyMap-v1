@@ -14,24 +14,30 @@ class LocalDB {
           let store;
           if (upgrade .delete)
             db .deleteObjectStore (upgrade .delete);
-          else {
-            if (upgrade .create)
-              store = db .createObjectStore (upgrade .create, {keyPath: upgrade .key || '_id', autoIncrement: upgrade .autoIncrement})
-            else if (upgrade .update)
-              store = e .target .transaction .objectStore (upgrade .update);
-            if (store) {
-              for (let index of upgrade .createIndexes|| []) {
-                const simple = typeof index == 'string';
-                store .createIndex (simple? index: index .name, simple? index: index .property, simple? undefined: index .options)
-              }
-              for (let index of upgrade .deleteIndexes || [])
-                store .deleteIndex (index);
+          if (upgrade .create)
+            store = db .createObjectStore (upgrade .create, {keyPath: upgrade .key || '_id', autoIncrement: upgrade .autoIncrement})
+          if (upgrade .update)
+            store = e .target .transaction .objectStore (upgrade .update);
+          if (store) {
+            for (let index of upgrade .createIndexes|| []) {
+              const simple = typeof index == 'string';
+              store .createIndex (simple? index: index .name, simple? index: index .property, simple? undefined: index .options)
             }
+            for (let index of upgrade .deleteIndexes || [])
+              store .deleteIndex (index);
           }
         }
       }
     })
     this._db = await this._db;
+  }
+
+  getDB() {
+     return this._db;
+  }
+
+  getName() {
+     return this._name;
   }
 
   getObjectStoreNames() {
@@ -48,15 +54,15 @@ class LocalDB {
   }
 
   transactionReadWrite (stores) {
-    return new LocalTransaction (this._db, stores, 'readwrite');
+    return new LocalTransaction (this, stores, 'readwrite');
   }
 
   transactionReadOnly (stores) {
-    return new LocalTransaction (this._db, stores, 'readonly');
+    return new LocalTransaction (this, stores, 'readonly');
   }
 
   transactionReadWriteFlush (stores) {
-    return new LocalTransaction (this._db, stores, 'readwriteflush');
+    return new LocalTransaction (this, stores, 'readwriteflush');
   }
 
   close() {
@@ -65,8 +71,9 @@ class LocalDB {
 }
 
 class LocalTransaction {
-  constructor (db, stores, mode) {
-    this._transaction = db .transaction (stores, mode);
+  constructor (localDB, stores, mode) {
+    this._localDB     = localDB;
+    this._transaction = this._localDB .getDB() .transaction (stores, mode);
     this._complete    = new Promise ((resolve, reject) => {
       this._transaction .oncomplete = e => resolve (e);
       this._transaction .onabort    = e => reject  (e);
@@ -74,8 +81,12 @@ class LocalTransaction {
     })
   }
 
+  getDatabaseName() {
+    return this._localDB .getName();
+  }
+
   findOneAndDelete (objectStoreName, query) {
-    return this .delete (objectStoreName, query, {returnOriginal: true, oneOnly: true}) .then (result => result && result .length == 1 && result [0]);
+    return this .delete (objectStoreName, query, {returnOriginal: true, onlyOne: true}) .then (result => result && result .length == 1 && result [0]);
   }
 
   findOneAndUpdate (objectStoreName, query, update, options = {}) {
@@ -83,6 +94,19 @@ class LocalTransaction {
       options .returnOriginal = true;
     options .onlyOne = true;
     return this .update (objectStoreName, query, update, options) .then (result => result && result .length == 1 && result [0]);
+  }
+
+  updateOne (objectStoreName, query, update, options = {}) {
+    options .onlyOne = true;
+    return this .update (objectStoreName, query, update, options);
+  }
+
+  deleteOne (objectStoreName, query) {
+    return this .delete (objectStoreName, query, {onlyOne: true});
+  }
+
+  deleteMany (objectStoreName, query) {
+    return this .delete (objectStoreName, query);
   }
 
   insert (objectStoreName, value) {
@@ -97,7 +121,7 @@ class LocalTransaction {
   async delete (objectStoreName, query, options = {}) {
     const objectStore   = this._transaction .objectStore (objectStoreName);
     if (! options .returnOriginal) {
-      const keyRanges = this._extractKeyRanges (objectStore, query, false);
+      const keyRanges = this._extractKeyRanges (objectStore, query, false, options .onlyOne);
       if (Object .keys (query || {}) .length == 0)
         return Promise .all (keyRanges .map (([index, keyRange]) =>
           new Promise ((resolve, reject) => {
@@ -117,7 +141,7 @@ class LocalTransaction {
           request .onsuccess = () => {resolve (options .returnOriginal? {value: object}: true)};
           request .onerror   = () => {reject  (request .error)};
         }));
-        if (options .oneOnly)
+        if (options .onlyOne)
           break;
       }
     }
@@ -175,7 +199,6 @@ class LocalTransaction {
   }
 
   findArray (objectStoreName, query, count) {
-    const oq = query;
     query = query && JSON .parse (JSON .stringify (query));
     const objectStore = this._transaction .objectStore (objectStoreName);
     const keyRanges   = this._extractKeyRanges (objectStore, query);
@@ -195,6 +218,10 @@ class LocalTransaction {
         .then  (result => resolve  (result && result [0]))
         .catch (error => reject(error))
     })
+  }
+
+  find (ObjectStoreName, query) {
+    return this .findCursor (ObjectStoreName, query);
   }
 
   findCursor (objectStoreName, query) {
@@ -248,14 +275,14 @@ class LocalTransaction {
     return this._complete;
   }
 
-  _extractKeyRanges (objectStore, query, useIndex = true) {
+  _extractKeyRanges (objectStore, query, useIndex = true, onlyOneRange) {
     const indexes       = useIndex? [... objectStore .indexNames] .map (indexName => objectStore .index (indexName)): [];
     const indexKeyPaths = indexes .map (index => index .keyPath);
     const extractKeyRange = query => {
       const queryProperties = Object .keys (query || {});
       for (let property of queryProperties)
         if (objectStore .keyPath == property) {
-          const keyRange = this._selectorToKeyRange (query [property]);
+          const keyRange = this._selectorToKeyRange (query [property], onlyOneRange);
           if (keyRange) {
             delete query [property];
             return Array .isArray (keyRange)? keyRange .map (k => [undefined, k]) : [[undefined, keyRange]];
@@ -265,10 +292,10 @@ class LocalTransaction {
         for (let property of queryProperties) {
           const i = indexKeyPaths .findIndex (indexKeyPath => indexKeyPath == property);
           if (i != -1) {
-            const keyRange = this._selectorToKeyRange (query [property]);
+            const keyRange = this._selectorToKeyRange (query [property], onlyOneRange);
             if (keyRange) {
               delete query [property];
-              return [[indexes [i], keyRange]];
+              return Array .isArray (keyRange)? keyRange .map (k => [indexes [i], k]): [[indexes [i], keyRange]];
             }
           }
         }
@@ -280,7 +307,7 @@ class LocalTransaction {
             return subResult;
         }
       if (queryProperties .includes ('$or')) {
-        const canUseKeyRange = ! query .$or .find (subQuery =>
+        const canUseKeyRange = ! onlyOneRange && ! query .$or .find (subQuery =>
           Object .keys (subQuery) .find (p => p != objectStore .keyPath && ! indexKeyPaths .includes (p))
         );
         if (canUseKeyRange) {
@@ -297,7 +324,7 @@ class LocalTransaction {
     return result .length? result: [[undefined, undefined]];
   }
 
-  _selectorToKeyRange (sel) {
+  _selectorToKeyRange (sel, onlyOneRange) {
     if (! sel || typeof sel != 'object')
       sel = {$eq: sel};
     let keyRange;
@@ -347,7 +374,7 @@ class LocalTransaction {
             }
             break;
           case '$in':
-            if (! keyRange && Array .isArray (sel [op]) && sel [op] .length > 0) {
+            if (! onlyOneRange && ! keyRange && Array .isArray (sel [op]) && sel [op] .length > 0) {
               keyRange = sel [op] .map (v => IDBKeyRange .only (v));
               delete sel [op];
             }
@@ -375,15 +402,21 @@ class LocalTransaction {
             for (const part of Object .keys (update .$push))
               object [part] = (object [part] ||[]) .concat (update .$push [part])
             break;
+          case '$addToSet':
+            for (const part of Object .keys (update .$addToSet))
+              if (! object [part] || ! object [part] .includes (update .$addToSet [part]))
+                object [part] = (object [part] ||[]) .concat (update .$addToSet [part])
+            break;
           case '$pull':
             for (const part of Object .keys (update .$pull)) {
               if (! object [part])
                 object [part] = [];
-              else {
-                const i = (object [part] || []) .indexOf (update .$pull [part]);
-                if (i != -1)
-                  object [part] .splice (i, 1);
-              }
+              else
+                object [part] = object [part] .filter (objectPartElement =>
+                  typeof objectPartElement == 'object'
+                    ? ! Model_query_ismatch (update .$pull [part], objectPartElement)
+                    : update .$pull [part] != objectPartElement
+                )
             }
             break;
           default:
@@ -442,8 +475,10 @@ class LocalDBTest {
       assert(Array.isArray (result) && result .length == 1 && Array .isArray (result[0] .value .list) && result[0] .value .list .length == 2 && result[0] .value .list .includes (3) && result[0] .value .list .includes (7));
       result = await t .findArray ('foo', {list: 3});
       assert(result .length == 1 && result[0] ._id == 4);
+
       result = await t .update ('foo', {_id: 4}, {$set: {name: 'updated'}, $pull: {list: 9}}, {returnOriginal: false});
       assert(Array.isArray (result) && result .length == 1 && Array .isArray (result[0] .value .list) && result[0] .value .list .length == 2 && result[0] .value .list .includes (3) && result[0] .value .list .includes (7));
+
       result = await t .update ('foo', {_id: 4}, {$set: {name: 'updated'}, $pull: {list: 7}}, {returnOriginal: false});
       assert(Array.isArray (result) && result .length == 1 && Array .isArray (result[0] .value .list) && result[0] .value .list .length == 1 && result[0] .value .list .includes (3));
       result = await t .findArray ('foo', {list: null});
@@ -510,16 +545,65 @@ class LocalDBTest {
         result.push(await c .next());
       assert(result.length == 2);
 
-      await t .delete ('foo', {_id: {$in: [1,5,9]}});
+      result = await t .delete ('foo', {_id: {$in: [1,5,9]}});
       result = await t .findArray('foo');
       assert(result.length == 8);
       await t .delete ('foo', {$or: [{_id: 3},{_id: 6}]});
       result = await t .findArray('foo');
       assert(result.length == 6);
 
-      const cur = t .findCursor ('foo');
-      while (await cur .hasNext())
-        console.log (await cur .next());
+      result = await t .deleteOne ('foo',{_id: {$in: [1,1000,1001]}});
+      result = await t .findArray ('foo');
+      assert(result.length == 5);
+
+      result = await t .findArray ('foo', {value: {$in: [2,4]}});
+      assert(result.length==2);
+
+      result = await t .update ('foo', {_id: 4}, {$addToSet: {blah: 3}}, {returnOriginal: false});
+      assert(result[0].value.blah.length == 4);
+      result = await t .update ('foo', {_id: 4}, {$addToSet: {blah: 5}}, {returnOriginal: false});
+      assert(result[0].value.blah.length == 5);
+
+      await t .insert ('foo', {_id: 200, pt: [1,2,3,4]});
+      await t .insert ('foo', {_id: 201, pt: [1,2,4]});
+      await t .insert ('foo', {_id: 202, pt: [1,2,3,4]});
+
+      await t .insert ('foo', {_id: 300, foo: [{bar: 1}, {bar: 2}, {bar: 3}]});
+      await t .insert ('foo', {_id: 301, foo: [{bar: 3}, {bar: 4}, {bar: 5}]});
+      result = await t.findArray ('foo', {foo: {$elemMatch: {bar: 3}}});
+      assert(result.length == 2);
+      result = await t.findArray ('foo', {foo: {$elemMatch: {bar: {$gt: 1}}}});
+      assert(result.length == 2);
+      result = await t.findArray ('foo', {foo: {$elemMatch: {bar: {$gt: 4}}}});
+      assert(result.length == 1);
+      result = await t.findArray ('foo', {foo: {$elemMatch: {bar: {$gt: 6}}}});
+      assert(result.length == 0);
+      result = await t .findArray ('foo', {'foo.bar': 3});
+      assert (result.length == 2);
+      result = await t .findArray ('foo', {'foo.bar': {$gt: 1}});
+      assert (result.length == 2);
+      result = await t .findArray ('foo', {'foo.bar': {$gt: 4}});
+      assert (result.length == 1);
+      result = await t .findArray ('foo', {'foo.bar': {$gt: 6}});
+      assert (result.length == 0);
+      await t.insert ('foo', {_id: 400, foo: {bar: 1, bat: 2}});
+      await t.insert ('foo', {_id: 401, foo: {bar: 1, bat: 3}});
+      result = await t.findArray('foo', {'foo.bar': 1});
+      assert (result.length==3);
+      result = await t.findArray('foo', {'foo.bat': 2});
+      assert (result.length==1);
+      result = await t.findArray('foo', {'foo.bar': 6});
+      assert (result.length==0);
+
+      await t.insert ('foo', {_id: 500, foo: [{bar: 1, bat: 2}, {bar: 2, bat: 3}, {bar: 1}, {bat: 3}]})
+      result = await t .update('foo', {_id: 500}, {$pull: {foo: {bar: 1}}}, {returnOriginal: false});
+      assert(result[0].value.foo.length==2);
+      result = await t .update('foo', {_id: 500}, {$pull: {foo: {bar: 2, bat: 3}}}, {returnOriginal: false});
+      assert(result[0].value.foo.length==1);
+
+      // const cur = t .findCursor ('foo');
+      // while (await cur .hasNext())
+      //   console.log (await cur .next());
 
       await t .hasCommitted();
 
