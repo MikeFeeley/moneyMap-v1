@@ -252,6 +252,7 @@ class App {
     if (eventType == UserEvent .DISCONNECT) {
 
       await this._disconnect();
+      this._tabs .clear();
 
     } else if (eventType == UserEvent .NEW_USER) {
 

@@ -93,7 +93,7 @@ async function TransactionDBMeta_insert (dbTran, tran) {
     await dbTran .updateOne     ('accounts', {_id: tran .account}, {$push: {pendingTransactions: pt}});
     await TransactionDBMeta_apply (dbTran, pt, tran .account);
   } else
-    await dbTran .insert('transactions', tran);
+    await dbTran .insert ('transactions', tran);
   return tran;
 }
 

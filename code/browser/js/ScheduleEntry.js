@@ -314,7 +314,6 @@ class ScheduleEntry extends List {
         if (! hasSchedule)
           showHelp();
       }
-      console.log(this._options)
       if (! this._options .includeZombies)
         conditionallyShowHelp();
       toHtml .closest ('.contents > div > div') .data ('visible', conditionallyShowHelp);

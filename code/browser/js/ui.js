@@ -225,6 +225,11 @@ var ui = {
           }
         },
 
+        clear() {
+          for (const [name, tab] of tabMap)
+            tabMap .set (name, {tab: tab .tab});
+        },
+
         setHidden (tabNames) {
           const tabs     = Array .from ($('body') .find ('.tabbed > .tabs > div:not(._nonTab)'));
           const contents = Array .from ($('body') .find ('.tabbed > .contents > div > div'));

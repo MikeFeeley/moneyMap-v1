@@ -10,15 +10,16 @@ class LocalDBAdaptor extends DBAdaptor {
   }
 
   async perform (operation, data) {
+    let raw;
     if (data .database) {
       data._db = await this._getDB (data .database, 1);
       if (data .collection) {
-        let r = data .collection .indexOf ('$RAW');
-        if (r != -1)
-          data .collection = data .collection .slice (0, r);
+        let raw = data .collection .indexOf ('$RAW');
+        if (raw != -1)
+          data .collection = data .collection .slice (0, raw);
       }
     }
-    data._isTran = data .collection == 'actuals' || data .collection == 'transactions';
+    data._isTran = raw == -1 && (data .collection == 'actuals' || data .collection == 'transactions');
     switch (operation) {
       case DatabaseOperation .FIND:
         return this._find (data);
