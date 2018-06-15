@@ -67,7 +67,7 @@ class User extends Observable {
   /**
    * Config Model Change Handler
    */
-  async _onConfigModelChange (eventType, doc, arg) {
+  async _onConfigModelChange (eventType, doc, arg, source) {
     if (this._configs && eventType == ModelEvent .INSERT)
       this._configs .push (doc);
     if (eventType == ModelEvent .UPDATE && arg) {
@@ -96,6 +96,11 @@ class User extends Observable {
             if (this._onLabelChange)
               this._onLabelChange (this .getLabel());
           }
+          if (source != this._view)
+            Object .entries (arg)
+              .forEach (([fieldName, value]) =>
+                ! fieldName .startsWith ('_') && this._view .updateField (doc._id, 'c_' + fieldName, value)
+              );
           break;
       }
     }
@@ -109,7 +114,7 @@ class User extends Observable {
   /**
    * Budget Model Change Handler
    */
-  async _onBudgetModelChange (eventType, doc, arg) {
+  async _onBudgetModelChange (eventType, doc, arg, source) {
     if (eventType == ModelEvent .UPDATE && arg) {
       let b = this._budgets .find (b => {return b._id == doc._id});
       if (b)
@@ -134,6 +139,11 @@ class User extends Observable {
             if (this._onLabelChange)
               this._onLabelChange (this .getLabel())
           }
+          if (source != this._view)
+            Object .entries (arg)
+              .forEach (([fieldName, value]) =>
+                ! fieldName .startsWith ('_') && this._view .updateField (doc._id, 'b_' + fieldName, value)
+              );
           break;
       }
     }
@@ -149,11 +159,9 @@ class User extends Observable {
   }
 
   async _onTranModelChange (e, d, a) {
-    if ( e == ModelEvent .INSERT) {
-      this._updateConfigStatus ({hasActivity: true});
-      this._tranModel .delete();
-      this._tranModel = null;
-    }
+    this._updateConfigStatus ({hasActivity: true});
+    this._tranModel .delete();
+    this._tranModel = null;
   }
 
   async _onAccountsModelChange (e, d, a) {
@@ -338,7 +346,7 @@ class User extends Observable {
           let model  = arg .fieldName .startsWith ('c_')? this._getConfigModel (this._cid): this._budgetModel;
           let update = {}
           update [arg .fieldName .slice (2)] = arg .value;
-          await model .update (arg.id, update);
+          await model .update (arg.id, update, this._view);
           await this._notifyApp();
         }
         break;
@@ -1005,12 +1013,24 @@ class User extends Observable {
       localStorage .setItem (UserLocalStorageKey .CUR_CONFIGURATION, this._cid);
     await this._setModelsForConfig();
 
-    await CSVConverter .import (filelist [0], this._getConfigModel (this._cid), this._cid, this .getDatabaseName());
-    console.log('done');
+    const has = await CSVConverter .import (filelist [0], this._getConfigModel (this._cid), this._cid, this .getDatabaseName());
 
+    if (this._uid)
+      await Model .updateUser (this._uid, this._accessCap, {curConfiguration: this._cid});
+    else
+      localStorage .setItem (UserLocalStorageKey .CUR_CONFIGURATION, this._cid);
+
+    if (Object .values (has) .find (v => v))
+      await this._getConfigModel (undefined, type) .update (this._cid, has);
+    await this._getConfigs();
+    const config = this._getConfig();
+    await this._onConfigModelChange (ModelEvent .UPDATE, config, {name: config .name});
     await this._selectConfig (this._cid);
-    if (this._configTabs)
-      await this._notifyApp();
+    for (let budget of this._budgets)
+      await this._onBudgetModelChange (ModelEvent .INSERT, budget);
+    this._selectBudget (this._getConfig() .curBudget || this._budgets [0]._id);
+    this._view .removePleaseWait();
+    await this._notifyApp();
   }
 
   /**

@@ -155,7 +155,7 @@ class LocalTransaction {
       let object = await this .findOne (objectStoreName, query);
       let original;
       if (options .returnOriginal)
-        original = JSON .parse (JSON .stringify (object));
+        original = JSON .parse (JSON .stringify (object || {}));
       if (object)
         object = this._applyUpdate (object, update, objectStore .keyPath);
       else if (options .upsert)
@@ -411,13 +411,13 @@ class LocalTransaction {
             for (const part of Object .keys (update .$pull)) {
               if (! object [part])
                 object [part] = [];
-              else
+              else if (Array .isArray (object [part]))
                 object [part] = object [part] .filter (objectPartElement =>
                   typeof objectPartElement == 'object'
                     ? ! Model_query_ismatch (update .$pull [part], objectPartElement)
                     : update .$pull [part] != objectPartElement
                 )
-            }
+              }
             break;
           default:
             console .log ('unsupported update property', updateProperty);

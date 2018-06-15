@@ -323,6 +323,7 @@ class UserView extends View {
       this._accountEdit .remove();
     this._accountEdit = $('<div>')                          .appendTo (this._tabbedContents);
     let content       = $('<div>', {class: '_profileEdit'}) .appendTo (this._accountEdit);
+    this._fieldHtml   = new Map();
     return content;
   }
 
@@ -340,13 +341,18 @@ class UserView extends View {
     return $('<div>', {text: text, class: type}) .appendTo (toLine);
   }
 
+  _getFieldHtml (id, name) {
+    return this._fieldHtml .get (id + '$' + name);
+  }
+
   addField (field, id, value, toHtml, label) {
     let f = field .newInstance (id);
     if (label) {
-      toHtml = $('<div>', {class: '_labeledField'}) .appendTo (toHtml);
+      toHtml = $('<div>', {class: '_labeledField ' + '_id_' + id}) .appendTo (toHtml);
       $('<div>', {class: '_label', text: label}) .appendTo (toHtml);
     }
-    f .addHtml (value, this, toHtml);
+    const fh = f .addHtml (value, this, toHtml);
+    this._fieldHtml .set (id + '$' + field._name, fh);
   }
 
   addReadOnlyField (fieldName, id, value, toHtml, label) {
@@ -354,7 +360,8 @@ class UserView extends View {
       toHtml = $('<div>', {class: '_labeledField'}) .appendTo (toHtml);
       $('<div>', {class: '_label', text: label}) .appendTo (toHtml);
     }
-    $('<div>', {class: '_readOnlyField _field_' + fieldName + ' _id_' + id, text: value}) .appendTo (toHtml);
+    const fh = $('<div>', {class: '_readOnlyField _field_' + fieldName + ' _id_' + id, text: value}) .appendTo (toHtml);
+    this._fieldHtml .set (id + '$' + fieldName, fh);
   }
 
   setLabel (label, text) {
@@ -532,7 +539,6 @@ class UserView extends View {
                 this._notifyObservers (UserViewEvent .CONFIG_COPY, arg);
                 break;
               case 'import':
-                // TODO import
                 arg .from = content .find ('#file') [0] .files;
                 if (arg .from .length != 1) {
                   error .text ('Select a file to import');

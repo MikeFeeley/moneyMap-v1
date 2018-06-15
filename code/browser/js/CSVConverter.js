@@ -1,6 +1,6 @@
 class CSVConverter {
   constructor () {
-    this._tables = ['accounts', 'balanceHistory', 'budgets', 'categories', 'importRules', 'parameters', 'rateFuture', 'schedules', 'taxParameters', 'transactions'];
+    this._tables = ['accounts', 'balanceHistory', 'budgets', 'categories', 'counters', 'importRules', 'parameters', 'rateFuture', 'schedules', 'taxParameters', 'transactions'];
   }
 
   static _getInstance() {
@@ -8,7 +8,7 @@ class CSVConverter {
   }
 
   _sanitize (val) {
-    if (! val)
+    if (val === undefined)
       return '';
     else if (typeof val == 'string')
       return '"' + val .replace (/"/g, '""') + '"';
@@ -16,8 +16,10 @@ class CSVConverter {
       return val;
     else if (Array .isArray (val)) {
       return '"[' + (val .map (v => '"' + this._sanitize (v) + '"') .join (',')) + ']"';
-    } else
-      return this._sanitize (JSON .stringify (val));
+    } else {
+      const json = this._sanitize (JSON .stringify (val));
+      return '"JSON$' + json .slice (1, -1) + '$JSON"';
+    }
   }
 
   async _export (name) {
@@ -63,26 +65,48 @@ class CSVConverter {
     const zip      = new JSZip();
     const unzip    = await zip .loadAsync (file);
     const name     = Object .keys (unzip.files) [0] .slice (0, -1);
+    const has      = {}
     await configModel .update (cid, {name: name});
     for (const table of this._tables) {
       let   promises = [];
-      const model    = new Model (table, database);
+      const model    = new Model (table + '$RAW', database);
       const contents = (await unzip .file (name + '/' + table + '.csv') .async ('string')) .split ('\n');
       const header   = Papa .parse (contents .splice (0,1) [0]) .data [0];
+      const docs     = [];
       for (const line of contents) {
-        const csv = Papa .parse (line) .data [0];
-        const doc = header .reduce ((o, f, i) => Object .assign (o, {[f]: csv [i]}), {});
-        promises .push (model .insert (doc));
-        if (promises .length > 200) {
-          await Promise .all (promises);
-          promises = [];
-        }
+        const lineCSV = Papa .parse (line) .data [0];
+        docs .push (header .reduce ((doc, field, column) => {
+          let value = lineCSV [column];
+          if (value) {
+            if (! isNaN (value))
+              value = Number (value);
+            else if (value .startsWith ('[') && value .endsWith (']'))
+              value = JSON .parse (value);
+            else if (value .startsWith ('JSON$') && value .endsWith ('$JSON'))
+              try {value = JSON .parse (value .slice (5, -5))} catch (e) {}
+          }
+          return Object .assign (doc, {[field]: value});
+        }, {}));
       }
-      await Promise .all (promises);
+      switch (table) {
+        case 'accounts':
+          if (docs .find (doc => doc .type == AccountType .ACCOUNT && doc .form == AccountForm .ASSET_LIABILITY))
+            has .hasAssets = true;
+          break;
+        case 'schedules':
+          if (docs .find (doc => doc .amount != 0))
+            has .hasBudget = true;
+          break;
+        case 'transactions':
+          if (docs .length > 0)
+            has .hasActivity = true;
+          break;
+      }
+      await model .insertList (docs);
       model .delete();
-      console.log(table, 1);
     }
     pleaseWait .remove();
+    return has;
   }
 
   static async export (name) {
@@ -90,7 +114,7 @@ class CSVConverter {
   }
 
   static async import (file, configModel, cid, database) {
-    await CSVConverter._getInstance()._import (file, configModel, cid, database);
+    return await CSVConverter._getInstance()._import (file, configModel, cid, database);
   }
 }
 

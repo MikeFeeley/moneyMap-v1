@@ -14,7 +14,7 @@ class LocalDBAdaptor extends DBAdaptor {
     if (data .database) {
       data._db = await this._getDB (data .database, 1);
       if (data .collection) {
-        let raw = data .collection .indexOf ('$RAW');
+        raw = data .collection .indexOf ('$RAW');
         if (raw != -1)
           data .collection = data .collection .slice (0, raw);
       }
@@ -141,15 +141,18 @@ class LocalDBAdaptor extends DBAdaptor {
       await t .hasCommitted();
     } else {
       const t = data._db .transactionReadWrite ([data .collection] .concat (true || data .list .find (i => i._seq !== undefined && ! i._seq)? 'counters': []));
-      const promises = [];
+      const needSeqCount = data .list .filter (item => item._seq !== undefined && ! item._seq) ;
+      let   seq = needSeqCount &&
+        (await t .findOneAndUpdate (
+          'counters', {_id: data .collection}, {$inc: {seq: needSeqCount}}, {upsert: true, returnOriginal: true}
+        )) .value .seq;
       for (const item of data .list) {
         if (! item._id)
           item._id = LocalDBAdaptor .createObjectID();
         if (item._seq !== undefined && ! item._seq)
-          item._seq = (await t .findOneAndUpdate ('counters', {_id: data .collection}, {$inc: {seq: 1}}, {upsert: true, returnOriginal: false})) .value .seq;
-        promises .push (t .insert (data .collection, item));
+          item._seq = ++ seq;
+        t .insert (data .collection, item);
       }
-      await Promise .all (promises);
       await t .hasCommitted();
     }
     return data .list .map (_ => true);
