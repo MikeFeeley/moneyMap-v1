@@ -22,10 +22,8 @@ const ConfigExp  = [
   'You must remember your password.  It is not stored in the cloud.  It can not be recovered.  ' +
   'If you forget it, your data will be permanently unreadable.',
 
-  'Your data is stored on and never leaves your computer, but is only accessible from that device.'
+  'Your data is stored on and never leaves your computer, but is only accessible when you are on that computer.'
 ]
-
-const ConfigKeyTest = 'EncryptionKeyIsCorrect';
 
 let User_DB_Crypto;
 
@@ -197,7 +195,7 @@ class User extends Observable {
         this._setModelsForUser();
         await this._getConfigs();
         if (this._configs .length == 0)
-          await this._createEmptyConfig (ConfigType .LOCAL, undefined, 'Local');
+          await this._createEmptyConfig (ConfigType .LOCAL, 'Local');
         else {
           this._cid = localStorage .getItem (UserLocalStorageKey .CUR_CONFIGURATION) || 0;
           if (! this._cid || ! this._getConfig (this._cid)) {
@@ -212,7 +210,7 @@ class User extends Observable {
 
       case UserViewEvent .LOGIN_CLOUD:
         try {
-          let login = await Model .login (arg .username, arg .password);
+          let login = await Model .login (arg .username, await new Crypto (arg .password) .getPasswordHash());
           if (login .noUser)
             this._view .setLoginError ('No user exists with that email');
           else if (login .badPassword)
@@ -225,6 +223,7 @@ class User extends Observable {
             this._accessCap  = user .accessCap;
             this._username   = user .username;
             this._name       = user .name;
+            this._password   = arg .password;
             this._cid        = user .curConfiguration;
             this._remember   = arg .remember;
             this._setModelsForUser();
@@ -264,7 +263,7 @@ class User extends Observable {
         else {
           const result = await Model .signup ({
             username: arg .username,
-            password: arg .password,
+            password: await new Crypto (arg .password) .getPasswordHash(),
             name:     arg .name
           });
           if (result .alreadyExists)
@@ -276,10 +275,11 @@ class User extends Observable {
             this._accessCap = result .accessCap;
             this._username  = arg .username;
             this._name      = arg .name;
+            this._password  = arg .password;
             this._setModelsForUser();
             await this._getConfigs();
             if (this._configs .length == 0)
-              await this._createEmptyConfig (ConfigType .LOCAL, '', 'Default');
+              await this._createEmptyConfig (ConfigType .LOCAL, 'Default');
             if (arg .remember)
               this._saveLoginState();
             this._setModelsForConfig();
@@ -330,15 +330,15 @@ class User extends Observable {
         break;
 
       case UserViewEvent .CONFIG_EMPTY:
-        await this._createEmptyConfig (arg .type, arg .encryptionPassword);
+        await this._createEmptyConfig (arg .type);
         break;
 
       case UserViewEvent .CONFIG_COPY:
-        await this._copyConfig (arg .type, arg .encryptionPassword, arg .from);
+        await this._copyConfig (arg .type, arg .from);
         break;
 
       case UserViewEvent .CONFIG_IMPORT:
-        await this._importConfig (arg .from, arg .type, arg .encryptionPassword);
+        await this._importConfig (arg .from, arg .type);
         break;
 
       case ViewEvent .UPDATE:
@@ -391,7 +391,7 @@ class User extends Observable {
 
   _saveLoginState() {
     if (this._remember) {
-      const pickle = ['_uid', '_accessCap', '_username', '_name', '_cid'];
+      const pickle = ['_uid', '_accessCap', '_username', '_password', '_name', '_cid'];
       localStorage .setItem (UserLocalStorageKey .LOGIN_STATE, JSON .stringify ({
         state:  pickle .reduce ((o,p) => {o [p] = this [p]; return o}, {}),
         expiry: Date .now() + (1000 * 24 * 60 * 60 * 1000)
@@ -434,28 +434,25 @@ class User extends Observable {
       return false;
   }
 
+  _setCrypto (type) {
+    if (type === undefined) {
+      const config = this._getConfig (this._cid);
+      type = config && config .type;
+    }
+    if (type == ConfigType .CLOUD_ENCRYPTED) {
+      if (type == ConfigType .CLOUD_ENCRYPTED && (! User_DB_Crypto || User_DB_Crypto .getPassword() != this._password))
+        User_DB_Crypto = new Crypto (this._password);
+    } else
+      User_DB_Crypto = null;
+  }
+
   async _init() {
     this._budgets = this._sortByName (await this._budgetModel .find());
     let config = this._getConfig (this._cid);
     this._bid  = (config || {}) .curBudget;
     if (! this._budgets .find (b => {return b._id == this._bid}))
       this._bid = this._budgets && this._budgets .length > 0 && this._budgets [0]._id;
-    if (config && config .type == ConfigType .CLOUD_ENCRYPTED) {
-      let encryptionPassword = localStorage .getItem ('encryptionPassword_' + this._cid);
-      if (! encryptionPassword) {
-        let verifyPassword = async pwd => {
-          User_DB_Crypto = new Crypto (pwd);
-          let c = await this._configModel .find ({_id: config._id});
-          return c [0] .keyTest == ConfigKeyTest;
-        }
-        encryptionPassword = await this._view .getConfigEncryptionPassword (config .name, verifyPassword);
-        if (this._remember)
-          localStorage .setItem ('encryptionPassword_' + this._cid, encryptionPassword);
-      } else {
-        User_DB_Crypto = new Crypto (encryptionPassword);
-      }
-   } else
-      User_DB_Crypto = null;
+    this._setCrypto();
   }
 
   async land() {
@@ -494,7 +491,7 @@ class User extends Observable {
     this._budgets   = null;
     this._remember  = false;
     this._configTabs = null;
-    User_DB_Crypto   = null;
+    this._setCrypto();
     await this._notifyApp (UserEvent .LOGOUT);
   }
 
@@ -734,19 +731,14 @@ class User extends Observable {
     if (this._uid) {
       let ag = this._view .addGroup ('Profile', ae);
       let email    = this._view .addLine (ag);
-      let password = this._view .addLine (ag);
       let name     = this._view .addLine (ag);
       let update   = this._view .addLine (ag);
-      this._view .addLabel    ('Email',            email);
-      this._view .addLabel    ('Password',         password);
-      this._view .addLabel    ('Name',             name);
-      let em = this._view .addInput    ('Email',            this._username, email);
-      let op = this._view .addInput    ('Old Password',     '', password, 'password');
-      let np = this._view .addInput    ('New Password',     '', password, 'password');
-      let cp = this._view .addInput    ('Confirm Password', '', password, 'password');
-      let nm = this._view .addInput    ('Name',             this._name, name);
-      this._view .addButton   ('Update Profile',   (async () => {
-        await this._updateAccount ([em, op, np, cp, nm] .map (f => {return f.val()}))
+      this._view .addLabel          ('Email', email);
+      this._view .addLabel          ('Name',  name);
+      let em = this._view .addInput ('Email', this._username, email);
+      let nm = this._view .addInput ('Name',  this._name, name);
+      this._view .addButton ('Update Profile',   (async () => {
+        await this._updateAccount ([em, nm] .map (f => {return f.val()}))
       }), update);
       this._view .addButton   ('Delete Profile and All Cloud Data', (async () => {
         this._view .addConfirmDelete (update .find ('button:nth-child(2)'), 0, 'profile', {top: -70, left: -110},
@@ -772,11 +764,8 @@ class User extends Observable {
 
     this._view .addLabel ('Configuration', configContent, '_heading');
     let configLine = this._view .addLine (configContent, '_line _configTypeLine');
+    //this._view .addLabel (ConfigDesc [config .type || 0], configLine);
     this._view .addReadOnlyField ('type', config._id, ConfigDesc [config .type || 0], configLine, 'Data Storage');
-    if (config .type && config .type == ConfigType .CLOUD_ENCRYPTED) {
-      let ep = localStorage .getItem ('encryptionPassword_' + config._id);
-      this._view .addReadOnlyField ('encryptionPassword', config._id, ep || '<unknown>', configLine, 'Private Encryption Password');
-    }
 
     let budgetContentGroup = this._view .addTabContentGroup ('Budgets', configContent);
     let budgetTabs         = this._view .addTabGroup ('budgets', budgetContentGroup);
@@ -851,24 +840,12 @@ class User extends Observable {
    * Update profile model based on user input and "Update Profile" button click
    */
   async _updateAccount (values) {
-    let [email, oldPassword, newPassword, confirmPassword, name] = values;
+    let [email, name] = values;
     email = email .toLowerCase();
     let update   = {username: email == this._username? undefined: email, name: name};
-    let password = undefined;
-    if (newPassword) {
-      if (newPassword != confirmPassword) {
-        this._view .setLabel (this._accountEditError, 'Profile not updated &mdash; New and confirm passwords do not match');
-        return;
-      } else {
-        password         = oldPassword;
-        update .password = newPassword;
-      }
-    }
-    let result = await Model .updateUser (this._uid, this._accessCap, update, password);
-    if (result .passwordMismatch)
-      this._view .setLabel (this._accountEditError, 'Profile not updated &mdash; Old password does not match');
-    else if (result .alreadyExists)
-      this._view .setLabel (this._accountEditError, 'Profile not updated &mdash; Another user with that email already exists');
+    let result = await Model .updateUser (this._uid, this._accessCap, update);
+    if (result .alreadyExists)
+      this._view .setLabel (this._accountEditError, 'Not updated &mdash; Email is used by someone else');
     if (result .ok) {
       this._username = email;
       this._name     = name;
@@ -882,20 +859,14 @@ class User extends Observable {
   /**
    * Create a new empty configuration
    */
-  async _createEmptyConfig (type, encryptionPassword, name = 'Untitled') {
+  async _createEmptyConfig (type, name = 'Untitled') {
     await this._disconnectApp();
-    User_DB_Crypto = type == ConfigType .CLOUD_ENCRYPTED && new Crypto (encryptionPassword);
+    this._setCrypto (type);
     this._cid = (await (this._getConfigModel (undefined, type) .insert ({
       user:    this._uid,
       name:    name,
       type:    type,
-      keyTest: type == ConfigType .CLOUD_ENCRYPTED && ConfigKeyTest
     })))._id;
-    if (type == ConfigType .CLOUD_ENCRYPTED) {
-      if (this._remember)
-        localStorage .setItem ('encryptionPassword_' + this._cid, encryptionPassword);
-      this._view .updateConfigEncryptionPassword (this._cid, encryptionPassword);
-    }
     if (this._uid)
       await Model .updateUser (this._uid, this._accessCap, {curConfiguration: this._cid});
     else
@@ -924,7 +895,7 @@ class User extends Observable {
   /**
    * Create a new config by copying from specified config
    */
-  async _copyConfig (type, encryptionPassword, from) {
+  async _copyConfig (type, from) {
     this._view .addPleaseWait();
     await this._disconnectApp();
     let fromConfig = this._getConfig (from);
@@ -937,8 +908,7 @@ class User extends Observable {
       hasBudget:   fromConfig .hasBudget,
       hasAssets:   fromConfig .hasAssets
     })) ._id;
-    let ec = localStorage .getItem ('encryptionPassword_' + from);
-    let okayToCopyAtServer = (fromConfig .type == type) && (type != ConfigType .CLOUD_ENCRYPTED || encryptionPassword == ec);
+    let okayToCopyAtServer = fromConfig .type == type;
 
     if (okayToCopyAtServer) {
       await Model .copyDatabase (this .getDatabaseName (from), this .getDatabaseName (to));
@@ -959,7 +929,7 @@ class User extends Observable {
         m .delete();
         return {table: t, data: d};
       }));
-      User_DB_Crypto = type == ConfigType .CLOUD_ENCRYPTED && new Crypto (encryptionPassword);
+      this._setCrypto();
       this._cid = to;
       this._setModelsForConfig();
       for (let d of data) {
@@ -967,13 +937,6 @@ class User extends Observable {
         await m .insertList (d .data);
         m .delete();
       }
-    }
-
-    if (type == ConfigType .CLOUD_ENCRYPTED) {
-      await this._getConfigModel (this._cid) .update (this._cid, {keyTest: ConfigKeyTest});
-      if (this._remember)
-        localStorage .setItem ('encryptionPassword_' + this._cid, encryptionPassword);
-      this._view .updateConfigEncryptionPassword (this._cid, encryptionPassword);
     }
 
     if (this._uid)
@@ -991,22 +954,16 @@ class User extends Observable {
   /**
    *
    */
-  async _importConfig (filelist, type, encryptionPassword) {
+  async _importConfig (filelist, type) {
     assert (filelist .length == 1);
     await this._disconnectApp();
     this._deleteConfigModels();
-    User_DB_Crypto = type == ConfigType .CLOUD_ENCRYPTED && new Crypto (encryptionPassword);
+    this._setCrypto (type);
     this._cid = (await (this._getConfigModel (undefined, type) .insert ({
       user:    this._uid,
       name:    name,
       type:    type,
-      keyTest: type == ConfigType .CLOUD_ENCRYPTED && ConfigKeyTest
     })))._id;
-    if (type == ConfigType .CLOUD_ENCRYPTED) {
-      if (this._remember)
-        localStorage .setItem ('encryptionPassword_' + this._cid, encryptionPassword);
-      this._view .updateConfigEncryptionPassword (this._cid, encryptionPassword);
-    }
     if (this._uid)
       await Model .updateUser (this._uid, this._accessCap, {curConfiguration: this._cid});
     else

@@ -508,10 +508,6 @@ class UserView extends View {
       let l = $('<label>') .appendTo (e)
         .append ($('<input>', {type: 'radio', name: 'dataStore', value: i, prop: {checked: ! isLoggedIn}}))
         .append ($('<span>',  {text: d}));
-      if (i == ConfigType .CLOUD_ENCRYPTED) {
-        let pw = $('<input>', {type: 'text', name: 'encryptionPassword', placeholder: 'Encryption Password'}) .appendTo (l);
-        $(l .children ('input') [0]) .on ('click', e => {pw .focus()});
-      }
       e .append ($('<div>', {text: ConfigExp [i]}));
     }
     let error = $('<div>', {class:'_errorMessage'}) .appendTo (content);
@@ -525,31 +521,26 @@ class UserView extends View {
         if (ds == undefined)
           error .text ('Select a data storage type for the new configuration');
         else {
-          ep = ds == ConfigType .CLOUD_ENCRYPTED && content .find ('input[name="encryptionPassword"]') .val();
-          if (ep !== false && ep .length < 6)
-            error .text ('Private encryption password must be a least 6 characters long');
-          else {
-            let arg = {type: ds, encryptionPassword: ep}
-            switch (content .find ('input[name="how"]:checked') .val()) {
-              case 'empty':
-                this._notifyObservers (UserViewEvent .CONFIG_EMPTY, arg);
-                break;
-              case 'copy':
-                arg .from = content .find ('select') .val();
-                this._notifyObservers (UserViewEvent .CONFIG_COPY, arg);
-                break;
-              case 'import':
-                arg .from = content .find ('#file') [0] .files;
-                if (arg .from .length != 1) {
-                  error .text ('Select a file to import');
-                  return;
-                } else
-                  this._notifyObservers (UserViewEvent .CONFIG_IMPORT, arg);
-                break;
-            }
-            ui .ModalStack .delete (modal);
-            popup .remove();
+          let arg = {type: ds}
+          switch (content .find ('input[name="how"]:checked') .val()) {
+            case 'empty':
+              this._notifyObservers (UserViewEvent .CONFIG_EMPTY, arg);
+              break;
+            case 'copy':
+              arg .from = content .find ('select') .val();
+              this._notifyObservers (UserViewEvent .CONFIG_COPY, arg);
+              break;
+            case 'import':
+              arg .from = content .find ('#file') [0] .files;
+              if (arg .from .length != 1) {
+                error .text ('Select a file to import');
+                return;
+              } else
+                this._notifyObservers (UserViewEvent .CONFIG_IMPORT, arg);
+              break;
           }
+          ui .ModalStack .delete (modal);
+          popup .remove();
         }
       })
     )
@@ -569,10 +560,6 @@ class UserView extends View {
       true
     );
     ui .scrollIntoView (popup)
-  }
-
-  updateConfigEncryptionPassword (cid, pwd) {
-    this._accountEdit .find ('._field_encryptionPassword._id_' + cid) .text (pwd);
   }
 
   addBudgetAddPopup (positionTarget, budgets) {
@@ -631,37 +618,6 @@ class UserView extends View {
       true
     );
     ui .scrollIntoView (popup)
-  }
-
-  async getConfigEncryptionPassword (name, isValidPassword) {
-    return new Promise ((resolve, reject) => {
-      let container = $('<div>', {class: '_getConfigEncryptionPassword'}) .appendTo ($('body'));
-      let panel     = $('<div>') .appendTo (container);
-      $('<div>', {text: 'Enter Private Cloud Encryption Password for ' + name + ' Configuration'}) .appendTo (panel);
-      let form = $('<form>') .appendTo (panel);
-      let input = $('<input>', {type: 'text', placeholder: 'Password'}) .appendTo (form);
-      input.focus();
-      let error = $('<span>') .appendTo (form);
-      form .on ('submit', () => {
-        (async () => {
-          let pwd = input .val();
-          if (await isValidPassword (pwd)) {
-            container .remove();
-            resolve (pwd);
-          } else
-            error .text ('Incorrect password');
-        }) ();
-        return false;
-      });
-      let confirm = $('<div>', {class: '_confirm'}) .appendTo (panel);
-      $('<button>', {text: 'Cancel'}) .appendTo (confirm) .click (() => {
-        container .remove();
-        reject();
-      });
-      $('<button>', {text: 'Select a Different Configuration'}) .appendTo (confirm) .click (() => {
-        // TODO popup to select different config ??? still needed?
-      });
-     });
   }
 
   addPleaseWait() {

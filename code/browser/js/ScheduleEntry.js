@@ -281,12 +281,6 @@ class ScheduleEntry extends List {
     } else
       await this._addCats (this._categories .getRoots());
     if (toHtml .hasClass ('_list')) {
-      let hasSchedule;
-      for (let cat of this._categories .getRoots())
-        if (this._categories .hasType (cat, ScheduleType .NOT_NONE)) {
-          hasSchedule = true;
-          break;
-        }
       const showHelp = () => this._view .addHelpTable (
         ['A budget plan consists of a hierarchical list of named categories.  ' +
         'You classify transactions by associating them with one of these categories.',
@@ -311,6 +305,12 @@ class ScheduleEntry extends List {
         ]);
       Help .add ('Plan', showHelp);
       const conditionallyShowHelp = () => {
+        let hasSchedule;
+        for (let cat of this._categories .getRoots())
+          if (this._categories .hasType (cat, ScheduleType .NOT_NONE)) {
+            hasSchedule = true;
+            break;
+          }
         if (! hasSchedule)
           showHelp();
       }

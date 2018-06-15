@@ -5,6 +5,10 @@ $(document) .ready (() => {
   // LocalDBTest .run();
   let app = new App();
   (async () => {await app .start()}) ();
+  // console.log(new Crypto('defuca') .getPasswordHash() .then (v => console.log(v)));
+  // const c = new Crypto('asdfasdf');
+  // c .getPasswordHash() .then (v => console.log(v));
+  // c .getServerPassword() .then (v => console.log(v));
 });
 
 class App {

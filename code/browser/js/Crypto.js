@@ -12,8 +12,7 @@ class Crypto {
     this._rules .set ('schedules',      {fields: ['notes']});
     this._rules .set ('configurations', {fields: ['keyTest']});
     this._salt       = 'MichaelLindaCaitlinLiamJosephKayMarieSeamus';
-    this._sPasswordI = new Uint8Array ([2,8,16,32,64,128,3,9,33,65,129,4,10,34,66,130]);
-    this._sPasswordT = 'ServerPassword';
+    this._iv         = new Uint8Array ([2,8,16,32,64,128,3,9,33,65,129,4,10,34,66,130]);
     this._iterations = 1000;
     this._hash       = 'SHA-256';
   }
@@ -34,9 +33,27 @@ class Crypto {
     return {name: 'AES-CBC', iv: iv};
   }
 
+  getPassword() {
+    return this._password;
+  }
+
   async getServerPassword() {
-    let al = this._getAlgorithm (this._sPasswordI);
-    return this._abToS (await crypto .subtle .encrypt (al, await this._getKey(), this._sToAb(this._sPasswordT)));
+    if (! this._serverPassword)
+      this._serverPassword = await (this._transformPassword (await this .getPasswordHash (await this .getPasswordHash())));
+    return this._serverPassword;
+  }
+
+  async _transformPassword (password) {
+    const saltedPassword    = this._sToAb (this._salt .concat (password));
+    const algorithm         = this._getAlgorithm (this._iv);
+    const encryptedPassword = await crypto .subtle .encrypt (algorithm, await this._getKey(), this._sToAb(saltedPassword));
+    return this._abToS (await crypto .subtle .digest (this._hash, encryptedPassword));
+  }
+
+  async getPasswordHash() {
+    if (!this._passwordHash)
+      this._passwordHash = await this._transformPassword (this._password);
+    return this._passwordHash;
   }
 
   async _getKey() {
