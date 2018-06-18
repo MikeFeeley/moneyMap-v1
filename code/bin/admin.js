@@ -5,14 +5,14 @@ const nodemailer = require ('nodemailer');
 
 async function login (req, res, next) {
   try {
-    var u = await (await req .dbPromise) .collection ('users') .find ({username: req .body .username}) .toArray();
+    var u = req .decrypt (await (await req .dbPromise) .collection ('users') .find ({username: req .body .username}) .toArray(), 'users');
     if (u .length == 0)
       res .json ({noUser: true})
 
     // // FOR CONVERSION TO HASHED PASSWORD
     // else {
     //
-    //   await (await req .dbPromise) .collection ('users') .update ({_id: u[0]._id}, {$set: {password: req .body .password}});
+    //   await (await req .dbPromise) .collection ('users') .update ({_id: u[0]._id}, req .encrypt ({$set: {password: req .body .password}}, 'users'));
     //   res .json ({okay: true, user: u[0]});
     //
     // }
@@ -31,17 +31,17 @@ async function login (req, res, next) {
 
 async function signup (req, res, next) {
   try {
-    var u = await (await req .dbPromise) .collection ('users') .find ({username: req .body .username}) .toArray();
+    var u = req .decrypt (await (await req .dbPromise) .collection ('users') .find ({username: req .body .username}) .toArray(), 'users');
     if (u .length != 0)
       res .json ({alreadyExists: true})
     else {
-      var doc = await (await req .dbPromise) .collection ('users') .insert ({
+      var doc = await (await req .dbPromise) .collection ('users') .insert (req .encrypt ({
         _id:       new ObjectID() .toString(),
         username:  req .body .username,
         password:  req .body .password,
         accessCap: Math .floor (Math .random() * 100000000000000000),
         name:      req .body .name
-      })
+      }, 'users'))
       return res.json ({
         okay:        true,
         _id:       doc .ops [0] ._id,
@@ -61,7 +61,7 @@ async function updateUser (req, res, next) {
     else {
       var query = {_id: req .body .id, accessCap: req .body .accessCap};
       if (req .body .update .password) {
-        var user = await (await req .dbPromise) .collection ('users') .find (query) .toArray();
+        var user = req .decrypt (await (await req .dbPromise) .collection ('users') .find (query) .toArray(), 'users');
         if (! user || user .length == 0)
           throw 'Invalid user update attempted';
         else user = user [0];
@@ -71,13 +71,13 @@ async function updateUser (req, res, next) {
         }
       }
       if (req .body .update .username) {
-        var u = await (await req .dbPromise) .collection ('users') .find ({username: req .body .update .username}) .toArray();
+        var u = await (await req .dbPromise) .collection ('users') .find (req .encrypt ({username: req .body .update .username}, 'users')) .toArray();
         if (u) {
           res .json ({alreadyExists: true});
           return;
         }
       }
-      var result = await (await req .dbPromise) .collection ('users') .update (query, {$set: req .body .update});
+      var result = await (await req .dbPromise) .collection ('users') .update (query, req .encrypt ({$set: req .body .update}, 'users'));
       if (!result || !result .result .ok)
         throw 'Invalid user update attempted';
       res.json ({okay: true});
@@ -173,7 +173,7 @@ async function removeUser (req, res, next) {
     const id        = req .body .id;
     const accessCap = req .body .accessCap;
     const adminDB   = await req .dbPromise;
-    const user      = await adminDB .collection ('users') .findOne ({_id: id, accessCap: accessCap});
+    const user      = req .decrypt (await adminDB .collection ('users') .findOne ({_id: id, accessCap: accessCap}), 'users');
     if (! user)
       res .json ({noUser: true});
     else {
@@ -191,7 +191,7 @@ async function removeUser (req, res, next) {
 
 async function sendPasswordHint (req, res, next) {
   const email = req .body .email;
-  const user = await (await req .dbPromise) .collection ('users') .findOne ({username: email});
+  const user = req .decrypt (await (await req .dbPromise) .collection ('users') .findOne ({username: email}), 'users');
   if (! user)
     res .json ({okay: false, noUser: true});
   else if (! user .passwordHint)

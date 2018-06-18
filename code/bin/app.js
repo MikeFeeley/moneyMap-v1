@@ -133,6 +133,7 @@ function getDB (name) {
   return dbCache .get (name) || dbCache .set (name, db .connect ('mongodb://localhost:27017/' + name)) .get (name);
 }
 
+const ADMIN_PASSWORD = '!20Italy20France20!';
 const cryptoKeyCache = new Map();
 const cryptoRules    = new Map();
 const cryptoAlgoritm = 'aes-128-cbc';
@@ -140,6 +141,7 @@ const cryptoSalt     = 'MichaelLindaCaitlinLiamJosephKayMarieSeamus';
 cryptoRules .set ('accounts',     {fields: ['balance']});
 cryptoRules .set ('actuals',      {fields: ['amount', 'count', 'pendingTransactions.update.debit', 'pendingTransactions.update.credit']});
 cryptoRules .set ('transactions', {fields: ['credit', 'debit']});
+cryptoRules .set ('users',        {fields: ['username', 'name', 'password', 'passwordHint']});
 
 function getCryptoKey (password) {
   return cryptoKeyCache .get (password) || cryptoKeyCache .set (password, crypto .pbkdf2Sync  (password, cryptoSalt, 1000, 16, 'sha256')) .get (password);
@@ -221,8 +223,10 @@ app.use(function (req, res, next) {
         error: err
       });
     } else if (req .body) {
-      if (req .url .startsWith ('/admin/') && ! ['/admin/copyBudget', '/admin/removeBudget', '/admin/removeConfiguration'] .includes (req.url))
+      if (req .url .startsWith ('/admin/') && ! ['/admin/copyBudget', '/admin/removeBudget', '/admin/removeConfiguration'] .includes (req.url)) {
         database = 'admin';
+        req .body .cryptoPassword = ADMIN_PASSWORD;
+      }
       req .dbPromise = getDB (database);
       req._getDB     = getDB;
       for (let op of [encrypt, decrypt])
