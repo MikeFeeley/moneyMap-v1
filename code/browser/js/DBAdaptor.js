@@ -71,7 +71,8 @@ var DatabaseOperation = {
   COPY_BUDGET:          12,
   REMOVE_BUDGET:        13,
   REMOVE_CONFIGURATION: 14,
-  REMOVE_USER:          15
+  REMOVE_USER:          15,
+  SEND_PASSWORD_HINT:   16
 }
 
 DBAdaptorState = {
@@ -81,8 +82,8 @@ DBAdaptorState = {
 }
 
 DBAdaptorEvent = {
-  STATE_CHANGE: 1,
+  STATE_CHANGE:           1,
   PENDING_UPDATES_CHANGE: 2,
-  SHARING_CHANGE: 3,
-  UPCALL: 4
+  SHARING_CHANGE:         3,
+  UPCALL:                 4
 }

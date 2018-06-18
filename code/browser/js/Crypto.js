@@ -9,8 +9,9 @@ class Crypto {
     this._rules .set ('rateFuture',     {fields: ['rate']})
     this._rules .set ('accounts',       {fields: ['name']})
     this._rules .set ('categories',     {fields: ['name']});
-    this._rules .set ('schedules',      {fields: ['notes']});
+    this._rules .set ('schedules',      {fields: ['notes', 'amount']});
     this._rules .set ('configurations', {fields: ['keyTest']});
+    this._rules .set ('balanceHistory', {fields: ['amount', 'date']})
     this._salt       = 'MichaelLindaCaitlinLiamJosephKayMarieSeamus';
     this._iv         = new Uint8Array ([2,8,16,32,64,128,3,9,33,65,129,4,10,34,66,130]);
     this._iterations = 1000;
@@ -73,7 +74,7 @@ class Crypto {
           "hash":       this._hash
         },
         baseKey,
-        {"name": "AES-CBC", "length": 256},
+        {"name": "AES-CBC", "length": 128},
         true,
         ["encrypt", "decrypt"]
       );
@@ -82,23 +83,20 @@ class Crypto {
   }
 
   async _encryptDoc (rule, doc) {
-    for (let p of Object .keys (doc))
-      if (doc [p] && typeof doc [p] == 'object')
-        await this._encryptDoc (rule, doc [p])
-      else {
-        let applies =
-          (rule .allFields    && p != '_id') ||
-          (rule .allButFields && ! rule .allButFields .includes (p)) ||
-          (rule .fields       && rule .fields .includes (p));
-        if (applies) {
-          let al = this._getAlgorithm();
-          let ct = await crypto .subtle .encrypt (al, await this._getKey(), this._sToAb (JSON .stringify (doc [p])));
-          doc [p] = {
-            iv: String .fromCharCode .apply (null, new Uint8Array  (al .iv)),
-            ct: String .fromCharCode .apply (null, new Uint8Array (ct))
-          };
-        }
+    for (let p of Object .keys (doc)) {
+      const applies =
+        (rule .allFields    && p != '_id') ||
+        (rule .allButFields && ! rule .allButFields .includes (p)) ||
+        (rule .fields       && rule .fields .includes (p));
+      if (applies) {
+        let al = this._getAlgorithm();
+        let ct = await crypto .subtle .encrypt (al, await this._getKey(), this._sToAb (JSON .stringify (doc [p])));
+        doc [p] = {
+          iv: String .fromCharCode .apply (null, new Uint8Array  (al .iv)),
+          ct: String .fromCharCode .apply (null, new Uint8Array (ct))
+        };
       }
+    }
   }
 
   async _decryptDoc (doc) {
@@ -110,7 +108,12 @@ class Crypto {
         let ct = new Uint8Array (doc [p] .ct .length);
         for (let i = 0; i < doc [p] .ct .length; i++)
           ct[i] = doc [p] .ct .charCodeAt (i);
-        doc [p] = JSON .parse (this._abToS (await crypto .subtle .decrypt (this._getAlgorithm (iv), await this._getKey(), ct)));
+        try {
+          doc [p] = JSON .parse (this._abToS (await crypto .subtle .decrypt (this._getAlgorithm (iv), await this._getKey(), ct)));
+        } catch (e) {
+          console.log ('decryption error', doc, p)
+          throw e;
+        }
       } else if (doc [p] && typeof (doc [p]) == 'object')
         await this._decryptDoc (doc [p]);
   }

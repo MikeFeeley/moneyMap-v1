@@ -21,7 +21,7 @@ async function TransactionDBMeta_apply (dbTran, pt, accId) {
           _id:    pt._id,
           update: {account: pt .update .account}
         }
-        await dbTran .updateOne       ('accounts', {_id: tpt .update .account, pendingTransactions: {$not: {$elemMatch: {uid: tpt .uid}}}}, {$push: {pendingTransactions: tpt}});
+        await dbTran .updateOne       ('accounts', {_id: tpt .update .account}, {$addToSet: {pendingTransactions: tpt}});
         await TransactionDBMeta_apply (dbTran, tpt, tpt .update. account);
       } else
         delete pt .update .account;
@@ -57,13 +57,12 @@ async function TransactionDBMeta_apply (dbTran, pt, accId) {
   }
   if (accId) {
     let acc = await dbTran .findOne ('accounts', {_id: accId});
-    if (acc) {
-      var creditBalance = acc .creditBalance;
-      await dbTran .updateOne ('accounts', {_id: accId, 'pendingTransactions.uid': pt .uid}, {
-        $inc:  {balance: amount * (creditBalance? -1: 1)},
+    if (acc && (acc .pendingTransactions || []) .find (t => t .uid == pt .uid))
+      await dbTran .updateOne ('accounts', {_id: accId, _updateSeq: acc._updateSeq}, {
+        $inc:  {_updateSeq: 1},
+        $set:  {balance: acc .balance + amount * (acc .creditBalance? -1: 1)},
         $pull: {pendingTransactions: {uid: pt .uid}}
       });
-    }
   }
 }
 
@@ -128,7 +127,6 @@ async function TransactionDBMeta_update (dbTran, id, update) {
         _id:     id,
         update:  update
       }
-      console.log(pt);
       await dbTran .updateOne     ('accounts', {_id: update .account}, {$push: {pendingTransactions: pt}});
       await TransactionDBMeta_apply (dbTran, pt);
     }

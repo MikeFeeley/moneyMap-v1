@@ -306,6 +306,10 @@ class Model extends Observable {
     return _Collection .removeUser (id, accessCap);
   }
 
+  static async sendPasswordHint (email) {
+    return _Collection .sendPasswordHint (email);
+  }
+
   /**
    * Delete this model from collection; stops callbacks.
    */
@@ -617,6 +621,10 @@ class _Collection extends Observable {
 
   static async removeUser (id, accessCap) {
     return _db .perform (DatabaseOperation .REMOVE_USER, {id: id, accessCap: accessCap});
+  }
+
+  static async sendPasswordHint (email) {
+    return _Collection .getDatabaseInstance ('') .perform (DatabaseOperation .SEND_PASSWORD_HINT, {email: email});
   }
 
   static newUndoGroup() {

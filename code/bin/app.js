@@ -1,19 +1,19 @@
-var fs      = require('fs');
-var http    = require('http');
-var https   = require('https');
-var express = require ('express');
-var path    = require ('path');
-var util    = require ('../lib/util.js');
-var router  = express .Router();
+const fs      = require('fs');
+const http    = require('http');
+const https   = require('https');
+const express = require ('express');
+const path    = require ('path');
+const util    = require ('../lib/util.js');
+const crypto  = require ('crypto');
+const router  = express .Router();
 
-var credentials = {
+const credentials = {
   key:  fs.readFileSync ('../ssl/key.pem', 'utf8'),
   cert: fs.readFileSync ('../ssl/cert.pem', 'utf8')
 };
 
-var express    = require ('express');
-var app        = express ();
-var bodyParser = require ('body-parser');
+const app        = express ();
+const bodyParser = require ('body-parser');
 
 app .set ('views', './views');
 app .set ('view engine', 'pug');
@@ -126,12 +126,82 @@ module .exports = {
    }
 }
 
-db      = require ('mongodb') .MongoClient;
-dbCache = new Map();
+const db      = require ('mongodb') .MongoClient;
+const dbCache = new Map();
 
 function getDB (name) {
   return dbCache .get (name) || dbCache .set (name, db .connect ('mongodb://localhost:27017/' + name)) .get (name);
 }
+
+const cryptoKeyCache = new Map();
+const cryptoRules    = new Map();
+const cryptoAlgoritm = 'aes-128-cbc';
+const cryptoSalt     = 'MichaelLindaCaitlinLiamJosephKayMarieSeamus';
+cryptoRules .set ('accounts',     {fields: ['balance']});
+cryptoRules .set ('actuals',      {fields: ['amount', 'count', 'pendingTransactions.update.debit', 'pendingTransactions.update.credit']});
+cryptoRules .set ('transactions', {fields: ['credit', 'debit']});
+
+function getCryptoKey (password) {
+  return cryptoKeyCache .get (password) || cryptoKeyCache .set (password, crypto .pbkdf2Sync  (password, cryptoSalt, 1000, 16, 'sha256')) .get (password);
+}
+
+function encrypt (password, text) {
+  const iv = crypto .randomBytes (16);
+  const c  = crypto .createCipheriv (cryptoAlgoritm, getCryptoKey (password), iv);
+  return {
+    ct: c .update (JSON .stringify (text), 'utf8', 'latin1') + c .final ('latin1'),
+    iv: iv .toString ('latin1')
+  }
+}
+
+function decrypt (password, cypherText) {
+  if (cypherText && typeof cypherText == 'object') {
+    const  d  = crypto .createDecipheriv (cryptoAlgoritm, getCryptoKey (password), Buffer .from (cypherText .iv, 'latin1'));
+    return JSON .parse (d .update (cypherText .ct, 'latin1', 'utf8') + d .final ('utf8'));
+  } else
+    return cypherText;
+}
+
+function cryptoDoc (cryptoOp, password, docs, table) {
+
+  const hasField = (docs, path) =>
+    !! (Array .isArray (docs)? docs: [docs]) .find (doc =>
+      Object .entries (doc) .find (([docField, docValue]) => {
+        if (docField .startsWith ('$'))
+          return hasField (docValue, path);
+        const dotPos = path .indexOf ('.');
+        const field  = dotPos == -1? path: path .slice (0, dotPos);
+        if (field == docField)
+          return dotPos == -1 || hasField (docValue, path .slice (dotPos + 1))
+      })
+    );
+
+  const cryptoFields = (docs, path) => {
+    const dotPos = path .indexOf ('.');
+    const field  = dotPos == -1? path: path .slice (0, dotPos);
+    for (const doc of Array .isArray (docs)? docs: [docs])
+      for (const d of [doc, doc .$set || {}, doc .$push || {}])
+        if (d [field]) {
+          if (dotPos == -1)
+            d [field] = cryptoOp (password, d [field]);
+          else
+            cryptoFields (d [field], path .slice (dotPos + 1))
+        }
+  };
+
+  const rule = cryptoRules .get (table);
+  if (rule) {
+    const isArray = Array .isArray (docs);
+    const outDocs = (isArray? docs: [docs]) . map (doc => rule .fields .find (field  => hasField (doc, field))? JSON .parse (JSON .stringify (doc)): doc);
+    for (const field of rule .fields)
+      cryptoFields (outDocs, field);
+    return isArray? outDocs: outDocs [0];
+  } else
+    return docs;
+
+}
+
+
 
 app .use ('/images', (req, res) => {
   res .sendFile (path .join (__dirname, '../browser/images', req .url));
@@ -155,6 +225,8 @@ app.use(function (req, res, next) {
         database = 'admin';
       req .dbPromise = getDB (database);
       req._getDB     = getDB;
+      for (let op of [encrypt, decrypt])
+        req [op .name] = (doc, table) => req .body .cryptoPassword? cryptoDoc (op, req .body .cryptoPassword, doc, table || req .body .collection): doc;
       if (req .body .collection == 'actuals' && ! req .url. startsWith ('/actuals/'))
         req .url = '/transaction/actuals';
       else if (! req .url .startsWith ('/transaction/')) {
@@ -210,3 +282,4 @@ var httpsServer = https .createServer (credentials, app);
 httpsServer.listen (3001, () => {
   console.log ('Listening for https on port ' + 3001)
 });
+

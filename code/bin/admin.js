@@ -1,16 +1,28 @@
-var express  = require ('express');
-var ObjectID = require ('mongodb').ObjectID
-var router  = express.Router();
+const express  = require ('express');
+const ObjectID = require ('mongodb').ObjectID
+const router   = express.Router();
+const nodemailer = require ('nodemailer');
 
 async function login (req, res, next) {
   try {
     var u = await (await req .dbPromise) .collection ('users') .find ({username: req .body .username}) .toArray();
     if (u .length == 0)
       res .json ({noUser: true})
+
+    // // FOR CONVERSION TO HASHED PASSWORD
+    // else {
+    //
+    //   await (await req .dbPromise) .collection ('users') .update ({_id: u[0]._id}, {$set: {password: req .body .password}});
+    //   res .json ({okay: true, user: u[0]});
+    //
+    // }
+
     else if (u [0] .password != req .body .password)
       res .json ({badPassword: true})
     else
-      res.json ({ok: true, user: u [0]});
+      res.json ({okay: true, user: u [0]});
+
+
   } catch (e) {
     console .log ('login: ', e, req.body);
     next (e);
@@ -31,7 +43,7 @@ async function signup (req, res, next) {
         name:      req .body .name
       })
       return res.json ({
-        ok:        true,
+        okay:        true,
         _id:       doc .ops [0] ._id,
         accessCap: doc .ops [0] .accessCap
       });
@@ -50,7 +62,7 @@ async function updateUser (req, res, next) {
       var query = {_id: req .body .id, accessCap: req .body .accessCap};
       if (req .body .update .password) {
         var user = await (await req .dbPromise) .collection ('users') .find (query) .toArray();
-        if (! user)
+        if (! user || user .length == 0)
           throw 'Invalid user update attempted';
         else user = user [0];
         if (user .password != req .body .password) {
@@ -68,7 +80,7 @@ async function updateUser (req, res, next) {
       var result = await (await req .dbPromise) .collection ('users') .update (query, {$set: req .body .update});
       if (!result || !result .result .ok)
         throw 'Invalid user update attempted';
-      res.json ({ok: true});
+      res.json ({okay: true});
     }
   } catch (e) {
     console .log ('updateUser: ', e, req.body);
@@ -89,7 +101,7 @@ async function copyDatabase (req, res, next) {
         promises .push (toCollection .insert (await fromDocs .next()));
       await Promise.all (promises);
     }
-    res.json ({ok: true});
+    res.json ({okay: true});
   } catch (e) {
     console .log ('copyDatabase: ', e);
     next (e);
@@ -177,6 +189,36 @@ async function removeUser (req, res, next) {
   }
 }
 
+async function sendPasswordHint (req, res, next) {
+  const email = req .body .email;
+  const user = await (await req .dbPromise) .collection ('users') .findOne ({username: email});
+  if (! user)
+    res .json ({okay: false, noUser: true});
+  else if (! user .passwordHint)
+    res .json ({okay: false, noHint: true});
+  else {
+    const t = nodemailer .createTransport({
+      service: 'gmail',
+      auth: {
+        user: 'moneyMap.pw.hint@gmail.com',
+        pass: 'NH9-FTt-Zx9-MsK'
+      }
+    });
+    const message = {
+      from:    'moneyMap.pw.hint@gmail.com',
+      to:       email,
+      subject: 'Password hint from moneyMap.app',
+      text:    'Your password hint is: "' + user .passwordHint + '"'
+    };
+    t .sendMail (message, (error, info) => {
+      if (error)
+        res .json ({okay: false, error: error});
+      else
+        res .json ({okay: true, info: info});
+    });
+  }
+}
+
 router.post ('/login', function(req, res, next) {
   (async () => {try {await login (req, res, next)} catch (e) {console .log (e)}}) ();
 });
@@ -208,6 +250,11 @@ router.post('/removeConfiguration', function (req, res, next) {
 router.post('/removeUser', function (req, res, next) {
   (async () => {try {await removeUser (req, res, next)} catch (e) {console .log (e)}}) ();
 })
+
+router.post('/sendPasswordHint', function (req, res, next) {
+  (async () => {try {await sendPasswordHint (req, res, next)} catch (e) {console .log (e)}}) ();
+})
+
 
 
 module.exports = router;

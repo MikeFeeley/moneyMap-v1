@@ -8,7 +8,7 @@ async function updateOne (req, res, next) {
   try {
     if (!req.body.update)
       throw 'No update in body';
-    var result = await (await req .dbPromise) .collection (req.body.collection) .update ({_id: req.body.id}, {$set: req.body.update});
+    const result = await (await req .dbPromise) .collection (req.body.collection) .update ({_id: req.body.id}, {$set: req .encrypt (req.body.update)});
     res.json (result && result .result .ok);
     app .notifyOtherClients (req .body .database, req .body .sessionId, {collection: req .body .collection, id: req .body .id, update: req .body .update});
   } catch (e) {

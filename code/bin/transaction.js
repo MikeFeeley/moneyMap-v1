@@ -10,7 +10,7 @@ async function insertOne (req, res, next) {
   try {
     if (! req .body .insert)
       throw 'Missing insert';
-    var tran = await tranMeta .insert (await req .dbPromise, req .body .insert);
+    var tran = await tranMeta .insert (await req .dbPromise, req .body .insert, req);
     res .json ({_id: tran._id, _seq: tran._seq});
     app .notifyOtherClients (req .body .database, req .body .sessionId, {collection: req .body .collection, insert: tran});
   } catch (e) {
@@ -25,7 +25,7 @@ async function insertList (req, res, next) {
       throw 'Missing list';
     var trans = [];
     for (let tran of req .body .list)
-      trans .push (await tranMeta .insert (await req .dbPromise, tran));
+      trans .push (await tranMeta .insert (await req .dbPromise, tran, req));
     res .json (trans);
     app .notifyOtherClients (req .body .database, req .body .sessionId, {collection: req .body .collection, insertList: trans});
   } catch (e) {
@@ -38,7 +38,7 @@ async function updateOne (req, res, next) {
   try {
     if (! req .body .id || ! req .body .update)
       throw 'Missing id or update';
-    await tranMeta .update (await req .dbPromise, req .body .id, req .body .update);
+    await tranMeta .update (await req .dbPromise, req .body .id, req .body .update, req);
     res .json (true);
     app .notifyOtherClients (req .body .database, req .body .sessionId, {collection: req .body .collection, id: req .body .id, update: req .body .update});
   } catch (e) {
@@ -54,7 +54,7 @@ async function updateList (req, res, next) {
     for (let item of req .body .list) {
       if (! item .id || ! item .update)
         throw 'Missing id or update';
-      await tranMeta .update (await req .dbPromise, item .id, item .update);
+      await tranMeta .update (await req .dbPromise, item .id, item .update, req);
     }
     res .json (true);
     app .notifyOtherClients (req .body .database, req .body .sessionId, {collection: req .body .collection, updateList: req .body .list});
@@ -81,7 +81,7 @@ async function removeList (req, res, next) {
       throw 'Missing list';
     var results = []
     for (let id of req .body .list) {
-      results .push (await tranMeta .remove (await req .dbPromise, id));
+      results .push (await tranMeta .remove (await req .dbPromise, id, req));
     }
     res .json (results);
     app .notifyOtherClients (req .body .database, req .body .sessionId, {collection: req .body .collection, removeList: req .body .list});
@@ -92,7 +92,7 @@ async function removeList (req, res, next) {
 
 async function findAccount (req, res, next) {
   try {
-    res .json (await tranMeta .findAccountAndRollForward (await req .dbPromise, req .body .query));
+    res .json (await tranMeta .findAccountAndRollForward (await req .dbPromise, req .body .query, req));
   } catch (e) {
     console .log ('transactions findAccountBalance: ', e, req .body);
   }
@@ -100,7 +100,7 @@ async function findAccount (req, res, next) {
 
 async function getActuals (req, res, next) {
   try {
-    res .json (await tranMeta .getActuals (await req .dbPromise, req .body .query));
+    res .json (await tranMeta .getActuals (await req .dbPromise, req .body .query, req));
   } catch (e) {
     console .log ('transactions getActuals: ', e, req .body);
   }

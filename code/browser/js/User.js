@@ -15,12 +15,12 @@ const ConfigType = {
 
 const ConfigDesc = ['Cloud Unencrypted', 'Cloud Encrypted', 'Local'];
 const ConfigExp  = [
-  'Your data is accessible from anywhere and you have no private password to remember.  ' +
-  'We keep your data secure.  It is encrypted in transit to/from the cloud, but is not protected by a local password.',
+  'Your data is accessible from anywhere.  ' +
+  'Your data is encrypted in transit to/from the cloud, but is not protected by a local password.',
 
   'Your data is accessible from anywhere and encrypted on your computer to ensure absolute privacy. ' +
   'You must remember your password.  It is not stored in the cloud.  It can not be recovered.  ' +
-  'If you forget it, your data will be permanently unreadable.',
+  'If you forget it, your data will be permanently lost.',
 
   'Your data is stored on and never leaves your computer, but is only accessible when you are on that computer.'
 ]
@@ -269,7 +269,7 @@ class User extends Observable {
           if (result .alreadyExists)
             this._view .setLoginError ('User with that email already exists');
           else {
-            assert (result .ok);
+            assert (result .okay);
             this._view .removeLanding();
             this._uid       = result._id;
             this._accessCap = result .accessCap;
@@ -846,7 +846,7 @@ class User extends Observable {
     let result = await Model .updateUser (this._uid, this._accessCap, update);
     if (result .alreadyExists)
       this._view .setLabel (this._accountEditError, 'Not updated &mdash; Email is used by someone else');
-    if (result .ok) {
+    if (result .okay) {
       this._username = email;
       this._name     = name;
       if (this._onLabelChange)
@@ -929,8 +929,8 @@ class User extends Observable {
         m .delete();
         return {table: t, data: d};
       }));
-      this._setCrypto();
       this._cid = to;
+      this._setCrypto();
       this._setModelsForConfig();
       for (let d of data) {
         let m = new Model (d .table + '$RAW', this .getDatabaseName());

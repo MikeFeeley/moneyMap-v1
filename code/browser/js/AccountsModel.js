@@ -146,14 +146,16 @@ class AccountsModel extends Observable {
 
     // ROBUSTNESS Each form need at least one group
     const formsWithNoGroup = AccountForms .filter (f => ! accounts .find (a => a .form == f && a .type == AccountType .GROUP));
-    if (formsWithNoGroup .length) {
-      accounts .push (... await this._model .insertList (formsWithNoGroup .map (f => ({
-        name: 'Default Group',
-        type: AccountType .GROUP,
-        form: f,
-        sort: 1
-      }))))
-    }
+    if (formsWithNoGroup.length)
+      console.log ('xxx', accounts, formsWithNoGroup, AccountType .GROUP, AccountForms);
+    // if (formsWithNoGroup .length) {
+    //   accounts .push (... await this._model .insertList (formsWithNoGroup .map (f => ({
+    //     name: 'Default Group',
+    //     type: AccountType .GROUP,
+    //     form: f,
+    //     sort: 1
+    //   }))))
+    // }
 
     this._accounts = accounts .map (a => {
       return new Account (this, a, this._budgetModel, this._actualsModel, this._balanceHistoryForAccount (a), this._rateFutureForAccount (a));

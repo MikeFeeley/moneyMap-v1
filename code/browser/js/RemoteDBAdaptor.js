@@ -19,14 +19,17 @@ class RemoteDBAdaptor extends DBAdaptor {
     this._urls [DatabaseOperation .REMOVE_BUDGET]        = '/admin/removeBudget';
     this._urls [DatabaseOperation .REMOVE_CONFIGURATION] = '/admin/removeConfiguration';
     this._urls [DatabaseOperation .REMOVE_USER]          = '/admin/removeUser';
+    this._urls [DatabaseOperation .SEND_PASSWORD_HINT]   = '/admin/sendPasswordHint';
   }
 
   async perform (operation, data) {
     this._updatePendingOperations (operation, 1);
     await super .perform (operation, data);
     let response, firstTry = true;
-    if (User_DB_Crypto)
-      data = await User_DB_Crypto .encryptRequestData (data);
+    if (User_DB_Crypto) {
+      data                 = await User_DB_Crypto .encryptRequestData (data);
+      data .cryptoPassword = await User_DB_Crypto .getServerPassword();
+    }
     while (response === undefined) {
       try {
         response = await $.ajax ({

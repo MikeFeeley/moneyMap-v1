@@ -557,7 +557,12 @@ class Accounts extends Observable {
           showHelp();
       }
       conditionallyShowHelp();
-      toHtml .data ('visible', conditionallyShowHelp);
+      const callback = toHtml .data ('visible');
+      toHtml .data ('visible', () => {
+        if (callback)
+          callback();
+        conditionallyShowHelp();
+      });
     }
     await build();
   }

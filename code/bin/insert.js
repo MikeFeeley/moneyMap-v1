@@ -19,9 +19,9 @@ async function insertOne (req, res, next) {
     if (! req .body .insert || ! req .body .insert._id)
       (req.body.insert = req.body.insert || {}) ._id = new ObjectID() .toString();
     await handleSeq (await req .dbPromise, req .body .collection, req .body .insert);
-    var doc = await (await req .dbPromise) .collection (req .body .collection) .insert (req .body .insert);
-    res.json ({_id: doc .ops [0] ._id, _seq: doc .ops [0] ._seq});
-    app .notifyOtherClients (req .body .database, req .body .sessionId, {collection: req .body .collection, insert: doc .ops [0]});
+    const result = await (await req .dbPromise) .collection (req .body .collection) .insert (req .encrypt (req .body .insert));
+    res.json ({_id: req .body .insert._id, _seq: req .body .insert._seq});
+    app .notifyOtherClients (req .body .database, req .body .sessionId, {collection: req .body .collection, insert: req .body .insert});
   } catch (e) {
     console .log ('insertOne: ', e, req.body);
     next (e);
@@ -33,17 +33,16 @@ async function insertList (req, res, next) {
   try {
     if (! req .body .list)
       throw 'No list in body';
-    var ids = [], docs = [];
+    const ids = [];
     for (let item of req .body .list) {
       if (! item._id)
         item._id = new ObjectID() .toString();
       await handleSeq (db, req .body .collection, item);
-      var doc = await db .collection (req .body .collection) .insert (item);
-      ids .push ({_id: doc .ops [0] ._id, _seq: doc .ops [0] ._seq});
-      docs .push (doc .ops [0]);
+      const result = await db .collection (req .body .collection) .insert (req .encrypt (item));
+      ids .push ({_id: item ._id, _seq: item ._seq});
     }
     res .json (ids);
-    app .notifyOtherClients (req .body .database, req .body .sessionId, {collection: req .body .collection, insertList: docs});
+    app .notifyOtherClients (req .body .database, req .body .sessionId, {collection: req .body .collection, insertList: req .body .list});
   } catch (e) {
     console .log ('insert: ', e, req.body);
     next (e);

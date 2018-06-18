@@ -29,7 +29,7 @@ async function get (req, res, next) {
     let find = (await req .dbPromise) .collection (req.body.collection) .find (req.body.query, req.body.projection);
     if (limit)
       find = limit? find .sort (sort || req.body.sort) .limit (limit): find .sort (sort || req.body.sort);
-    res.json (await find .toArray());
+    res.json (req .decrypt (await find .toArray()));
   } catch (e) {
     console .log ('get: ', e, req .body);
     next (e);
