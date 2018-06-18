@@ -1237,12 +1237,14 @@ class Navigate {
     let added      = false;
     for (let root of roots)
       added |= this._addProgressGraph (root, null, false, undefined, labelWidth, true, true, true);
-    const showHelp = modal => this._progressView .addHelp (
+    const showHelp = modal => this._progressView .addHelpTable (
       [
         'Use "Inbox" to start adding transactions to track your spending.',
         'Use "Plan" to start planning a budget.',
-        '________',
-        'Use CMD + F to search, or click or ALT + click to dig deeper.'
+        'On any page ...'
+      ], [
+        ['Search transactions',               'CMD + F'],
+        ['Deep deeper into graphs or tables', 'Click or ALT + Click or bars, names or values']
       ],
       modal
     );
