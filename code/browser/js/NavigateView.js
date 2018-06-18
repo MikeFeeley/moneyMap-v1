@@ -93,24 +93,6 @@ class NavigateView extends Observable  {
     return content;
   }
 
-  addHelp (text, modal) {
-    if (!this._helpShowing) {
-      let help = $('<div>') .appendTo ($('<div>', {class: modal? '_helpPopup': '_helpInline'}) .appendTo (modal? $('body'): this._content));
-      $('<div>', {text: 'TIP'}) .appendTo (help);
-      for (let t of text)
-        $('<div>', {text: t}) .appendTo (help);
-      this._helpShowing = true;
-      if (modal) {
-        help .parent() .css ({top: 100, left: 50});
-        ui .ModalStack .add (
-          e  => {return e && ! $.contains (help, e .target)},
-          () => {help .remove(); this._helpShowing = false},
-          true
-        );
-      }
-    }
-  }
-
   addHelpTable (descData, tableData, modal) {
     if (! this._helpShowing) {
       this._helpShowing = true;
