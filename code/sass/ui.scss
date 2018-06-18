@@ -654,6 +654,28 @@ div._systemStatus {
   }
  }
 
+body > ._passwordHintSent {
+  @include popup-container();
+  position: fixed;
+  top: 300px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10001;
+  width:   500px;
+  > ._popupContent {
+    @include popup-content();
+    padding: 16px;
+    > div:first-child {
+      color: #33b1ff;
+        font-size: 22px;
+        margin-bottom: 16px;
+      }
+    > div:not(:first-child) {
+      color: #888;
+    }
+  }
+}
+
 body > ._whiteout {
   position: fixed;
   top: 0px;
@@ -709,6 +731,12 @@ body > ._whiteout {
         }
       }
       &:not(._miniLogin) > form {
+        > ._forgotPassword {
+          margin-top: -8px;
+          margin-left: 9px;
+          font-size: 12px;
+          color: #33b1ff;
+        }
         margin-top: 24px;
         > input {
           margin: 0px 6px;

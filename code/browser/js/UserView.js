@@ -225,6 +225,24 @@ class UserView extends View {
     );
   }
 
+  addLoginHelp() {
+    const password = this._login .find ('#password');
+    if (password .next ('._forgotPassword') .length == 0)
+      $('<div>', {class: '_forgotPassword', text: 'We can email your password hint to you.'}) .insertAfter (password)
+        .click (e => {
+          this._notifyObservers (UserViewEvent .SEND_PASSWORD_HINT, {email: this._login .find ('#email') .val()});
+          let popup    = $('<div>', {class: '_popupContainer _passwordHintSent'}) .appendTo ($('body'));
+          let content  = $('<div>', {class: '_popupContent'}) .appendTo (popup);
+          $('<div>', {text: 'Check Your Email'}) .appendTo (content);
+          $('<div>', {text: 'If the email listed above is a registered user with a password hint, we have sent the hint to that email address.'}) .appendTo (content);
+          ui .ModalStack .add (
+            e  => {return e && ! $.contains (popup [0], e .target) && popup [0] != e .target},
+            () => {popup .remove()},
+            true
+          );
+        });
+  }
+
   setLoginError (text) {
     this._login .find ('._loginError') .text (text);
   }
@@ -650,5 +668,6 @@ const UserViewEvent = {
   BUDGET_EMPTY: 8,
   BUDGET_COPY: 9,
   BUDGET_ROLLOVER: 10,
-  DELETE_CONFIRMED: 11
+  DELETE_CONFIRMED: 11,
+  SEND_PASSWORD_HINT: 12
 }

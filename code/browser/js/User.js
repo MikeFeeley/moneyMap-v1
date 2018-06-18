@@ -211,43 +211,48 @@ class User extends Observable {
 
       case UserViewEvent .LOGIN_CLOUD:
         try {
-          let login = await Model .login (arg .username, await new Crypto (arg .password) .getPasswordHash());
-          if (login .noUser)
-            this._view .setLoginError ('No user exists with that email');
-          else if (login .badPassword)
-            this._view .setLoginError ('Incorrect password');
+          if (! arg .password)
+            this._view .setLoginError ('Enter your password');
           else {
-            localStorage .setItem (UserLocalStorageKey .HAS_LOGGED_IN, true);
-            this._view .removeLanding();
-            let user           = login .user;
-            this._uid          = user._id;
-            this._accessCap    = user .accessCap;
-            this._username     = user .username;
-            this._name         = user .name;
-            this._password     = arg .password;
-            this._passwordHint = user .passwordHint;
-            this._cid          = user .curConfiguration;
-            this._remember     = arg .remember;
-            this._setModelsForUser();
-            await this._getConfigs();
-            if (! this._getConfig (this._cid)) {
-              if (this._configs .length)
-                this._cid = this._configs [0] ._id;
-              else {
+            const login = await Model .login (arg .username, await new Crypto (arg .password) .getPasswordHash());
+            if (login .noUser)
+              this._view .setLoginError ('No user exists with that email');
+            else if (login .badPassword) {
+              this._view .setLoginError ('Incorrect password');
+              this._view .addLoginHelp();
+            } else {
+              localStorage .setItem (UserLocalStorageKey .HAS_LOGGED_IN, true);
+              this._view .removeLanding();
+              const user           = login .user;
+              this._uid          = user._id;
+              this._accessCap    = user .accessCap;
+              this._username     = user .username;
+              this._name         = user .name;
+              this._password     = arg .password;
+              this._passwordHint = user .passwordHint;
+              this._cid          = user .curConfiguration;
+              this._remember     = arg .remember;
+              this._setModelsForUser();
+              await this._getConfigs();
+              if (! this._getConfig (this._cid)) {
+                if (this._configs .length)
+                  this._cid = this._configs [0] ._id;
+                else {
+                  await this .logout();
+                  break;
+                }
+              }
+              if (arg .remember)
+                this._saveLoginState();
+              this._setModelsForConfig();
+              try {
+                await this._init();
+              } catch (e) {
                 await this .logout();
                 break;
               }
+              await this._notifyApp (UserEvent .NEW_USER);
             }
-            if (arg .remember)
-              this._saveLoginState();
-            this._setModelsForConfig();
-            try {
-              await this._init();
-            } catch (e) {
-              await this .logout();
-              break;
-            }
-            await this._notifyApp (UserEvent .NEW_USER);
           }
         } catch (e) {
           console.log (e);
@@ -374,6 +379,10 @@ class User extends Observable {
               console .log('failed to removeUser', result);
             break;
         }
+        break;
+
+      case UserViewEvent. SEND_PASSWORD_HINT:
+        Model .sendPasswordHint (arg .email);
         break;
     }
   }
