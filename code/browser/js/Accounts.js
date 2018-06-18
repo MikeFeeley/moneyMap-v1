@@ -549,7 +549,7 @@ class Accounts extends Observable {
           ['Add account to group', 'CMD + ALT + ENTER'],
           ['Add group',            'CMD + ENTER'],
           ['Delete',               'CMD + DELETE']
-          ]
+        ]
       );
       Help .add ('Accounts', showHelp);
       const conditionallyShowHelp = () => {

@@ -244,14 +244,16 @@ class UserView extends View {
     this._login .find ('._loginPopup > div') .text ('Sign Up');
     $('<input>', {type: 'text', id: 'name', placeholder: 'Name'})                     .insertAfter (this._login .find ('#email'));
     $('<input>', {type: 'password', id: 'confirm', placeholder: 'Re-Enter Password'}) .insertAfter (this._login .find ('#password'));
+    $('<input>', {type: 'text', id: 'passwordHint', placeholder: 'Password Hint'})    .insertAfter (this._login .find ('#confirm'));
     $(this._login .find ('button') [0]) .remove();
     $(this._login .find ('button') [0]) .text ('Confirm') .off ('click') .click (e => {
       this._notifyObservers (UserViewEvent .SIGNUP, {
-        username: this._login .find ('#email')    .val() .trim(),
-        password: this._login .find ('#password') .val() .trim(),
-        remember: this._login .find ('#remember') [0] .checked,
-        name:     this._login .find ('#name')     .val() .trim(),
-        confirm:  this._login .find ('#confirm')  .val() .trim()
+        username:     this._login .find ('#email')        .val() .trim(),
+        password:     this._login .find ('#password')     .val() .trim(),
+        remember:     this._login .find ('#remember')     [0] .checked,
+        name:         this._login .find ('#name')         .val() .trim(),
+        confirm:      this._login .find ('#confirm')      .val() .trim(),
+        passwordHint: this._login .find ('#passwordHint') .val() .trim()
       })
     });
     this .setLoginError ('');

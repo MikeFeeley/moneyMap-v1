@@ -188,10 +188,11 @@ class User extends Observable {
       case UserViewEvent .LOGIN_LOCAL:
         this._view .removeLanding();
         localStorage .removeItem (UserLocalStorageKey .HAS_LOGGED_IN);
-        this._uid       = null;
-        this._accessCap = null;
-        this._username  = null;
-        this._name      = null;
+        this._uid          = null;
+        this._accessCap    = null;
+        this._username     = null;
+        this._name         = null;
+        this._passwordHint = null;
         this._setModelsForUser();
         await this._getConfigs();
         if (this._configs .length == 0)
@@ -218,14 +219,15 @@ class User extends Observable {
           else {
             localStorage .setItem (UserLocalStorageKey .HAS_LOGGED_IN, true);
             this._view .removeLanding();
-            let user         = login .user;
-            this._uid        = user._id;
-            this._accessCap  = user .accessCap;
-            this._username   = user .username;
-            this._name       = user .name;
-            this._password   = arg .password;
-            this._cid        = user .curConfiguration;
-            this._remember   = arg .remember;
+            let user           = login .user;
+            this._uid          = user._id;
+            this._accessCap    = user .accessCap;
+            this._username     = user .username;
+            this._name         = user .name;
+            this._password     = arg .password;
+            this._passwordHint = user .passwordHint;
+            this._cid          = user .curConfiguration;
+            this._remember     = arg .remember;
             this._setModelsForUser();
             await this._getConfigs();
             if (! this._getConfig (this._cid)) {
@@ -271,11 +273,12 @@ class User extends Observable {
           else {
             assert (result .okay);
             this._view .removeLanding();
-            this._uid       = result._id;
-            this._accessCap = result .accessCap;
-            this._username  = arg .username;
-            this._name      = arg .name;
-            this._password  = arg .password;
+            this._uid          = result._id;
+            this._accessCap    = result .accessCap;
+            this._username     = arg .username;
+            this._name         = arg .name;
+            this._password     = arg .password;
+            this._passwordHint = arg .passwordHint;
             this._setModelsForUser();
             await this._getConfigs();
             if (this._configs .length == 0)
@@ -391,7 +394,7 @@ class User extends Observable {
 
   _saveLoginState() {
     if (this._remember) {
-      const pickle = ['_uid', '_accessCap', '_username', '_password', '_name', '_cid'];
+      const pickle = ['_uid', '_accessCap', '_username', '_password', '_passwordHint', '_name', '_cid'];
       localStorage .setItem (UserLocalStorageKey .LOGIN_STATE, JSON .stringify ({
         state:  pickle .reduce ((o,p) => {o [p] = this [p]; return o}, {}),
         expiry: Date .now() + (1000 * 24 * 60 * 60 * 1000)
@@ -732,13 +735,16 @@ class User extends Observable {
       let ag = this._view .addGroup ('Profile', ae);
       let email    = this._view .addLine (ag);
       let name     = this._view .addLine (ag);
+      let password = this._view .addLine (ag);
       let update   = this._view .addLine (ag);
-      this._view .addLabel          ('Email', email);
-      this._view .addLabel          ('Name',  name);
+      this._view .addLabel ('Email', email);
+      this._view .addLabel ('Name',  name);
+      this._view .addLabel ('Password Hint', password);
       let em = this._view .addInput ('Email', this._username, email);
       let nm = this._view .addInput ('Name',  this._name, name);
+      let ph = this._view .addInput ('Password Hint', this._passwordHint, password);
       this._view .addButton ('Update Profile',   (async () => {
-        await this._updateAccount ([em, nm] .map (f => {return f.val()}))
+        await this._updateAccount ([em, nm, ph] .map (f => {return f.val()}))
       }), update);
       this._view .addButton   ('Delete Profile and All Cloud Data', (async () => {
         this._view .addConfirmDelete (update .find ('button:nth-child(2)'), 0, 'profile', {top: -70, left: -110},
@@ -840,15 +846,16 @@ class User extends Observable {
    * Update profile model based on user input and "Update Profile" button click
    */
   async _updateAccount (values) {
-    let [email, name] = values;
+    let [email, name, passwordHint] = values;
     email = email .toLowerCase();
-    let update   = {username: email == this._username? undefined: email, name: name};
+    let update   = {username: email == this._username? undefined: email, name: name, passwordHint: passwordHint};
     let result = await Model .updateUser (this._uid, this._accessCap, update);
     if (result .alreadyExists)
       this._view .setLabel (this._accountEditError, 'Not updated &mdash; Email is used by someone else');
     if (result .okay) {
-      this._username = email;
-      this._name     = name;
+      this._username     = email;
+      this._name         = name;
+      this._passwordHint = passwordHint;
       if (this._onLabelChange)
         this._onLabelChange (this .getLabel())
       this._saveLoginState();
