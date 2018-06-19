@@ -19,12 +19,7 @@ body > div._blockEverything {
   left: 0px;
   height: 100%;
   width: 100%;
-  background: rgba(0,0,0,.1);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  @supports not ((backdrop-filter: blur(4px)) or (-webkit-backdrop-filter: blur(4px))) {
-    background: rgba(255,255,255,0.5)!important;
-  }
+  @include backdrop-blur(4px, rgba(0,0,0,.1), rgba(255,255,255,0.5));
   @include user-select (none);
 }
 
@@ -538,9 +533,7 @@ div._systemStatus {
       @include user-select (none);
       position: relative;
       padding: 16px;
-      background: rgba(255,255,255,.80);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
+      @include backdrop-blur(4px, rgba(255,255,255,.80), rgba(255,255,255,.95));
       border-radius: 6px;
       box-shadow: $drop-shadow;
       color: #555;
@@ -682,12 +675,7 @@ body > ._whiteout {
   left: 0px;
   height: 100vh;
   width: 100vw;
-  background: rgba(0,0,0,.1);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  @supports not ((backdrop-filter: blur(4px)) or (-webkit-backdrop-filter: blur(4px))) {
-    background: rgba(255,255,255,0.5)!important;
-  }
+  @include backdrop-blur(4px, rgba(0,0,0,.1), rgba(255,255,255,0.5));
   z-index: 10000;
   > ._popupContainer {
     @include popup-container();
@@ -906,9 +894,7 @@ body > ._whiteout {
   z-index: 20000;
   padding-top: 6px;
   padding-bottom: 6px;
-  background: rgba(255,255,255,.80);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  @include backdrop-blur(4px, rgba(255,255,255,.80), rgba(255,255,255,.95));
   border-radius: 0px 0px 6px 6px;
   box-shadow: 0px 4px 4px rgba(0,0,0,.4);
   color: #555;
@@ -934,9 +920,7 @@ body > ._whiteout {
     z-index: 9999;
     padding-top: 6px;
     padding-bottom: 6px;
-    background: rgba(255,255,255,.80);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    @include backdrop-blur(4px, rgba(255,255,255,.80), rgba(255,255,255,.95));
     border-radius: 6px;
     box-shadow: 0px 0px 8px rgba(0,0,0,.4);
     color: #555;
@@ -1182,20 +1166,7 @@ body > ._pleaseWait {
   position: fixed;
   height: 100vh;
   width: 100vw;
-
-  background: rgba(0,0,0,0.1);
-  backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
-  @supports not ((backdrop-filter: blur(25px)) or (-webkit-backdrop-filter: blur(25px))) {
-    background: rgba(255,255,255,0.94)!important;
-  }
-
-  //background: rgba(0,0,0,.1);
-  //backdrop-filter: blur(4px);
-  //-webkit-backdrop-filter: blur(4px);
-  //@supports not ((backdrop-filter: blur(4px)) or (-webkit-backdrop-filter: blur(4px))) {
-  //  background: rgba(255,255,255,0.5)!important;
-  //}
+  @include backdrop-blur (25px, rgba(0,0,0,0.1), rgba(255,255,255,0.94));
 
   > div {
     font-size: 48px;

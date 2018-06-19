@@ -69,14 +69,18 @@ table > tbody > tr > td > ._field > div > ._content {
   background: rgba(255,255,255,0)!important;
 }
 
+@mixin backdrop-blur($radius: 25px, $color1: rgba(255,255,255,.7), $color2: rgba(255,255,255,.94)) {
+  background: $color1;
+  backdrop-filter: blur($radius);
+  -webkit-backdrop-filter: blur($radius);
+  @supports not ((backdrop-filter: blur($radius)) or (-webkit-backdrop-filter: blur($radius))) {
+    background: $color2!important;
+  }
+}
+
 @mixin popup-content() {
   padding: 6px;
-  background: rgba(255,255,255,0.7);
-  backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
-  @supports not ((backdrop-filter: blur(25px)) or (-webkit-backdrop-filter: blur(25px))) {
-    background: rgba(255,255,255,0.94)!important;
-  }
+  @include backdrop-blur();
   border-radius: 6px;
   box-shadow: $drop-shadow;
   color: #555;
@@ -180,9 +184,7 @@ table > tbody > tr > td > ._field > div > ._content {
   right: 0px;
   z-index: 1;
   height: calc(100% - #{$tab-bar-height});
-  background-color: rgba(160, 160, 155, 0.2);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  @include backdrop-blur(4px, rgba(160, 160, 155, 0.2), rgba(230, 230, 223, 0.7));
   position:fixed!important;
   margin-top: 0px!important;
   box-shadow:0 2px 5px 0 rgba(0,0,0,0.16),0 2px 10px 0 rgba(0,0,0,0.12);

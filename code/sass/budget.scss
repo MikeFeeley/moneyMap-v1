@@ -78,9 +78,7 @@ body {
   position: absolute;
   z-index: 1001;
   > ._pickerContent {
-    background: rgba(245,246,246,.94);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    @include backdrop-blur(4px, rgba(245,246,246,.94), rgba(245,246,246,.98));
     margin-bottom: 16px;
     padding: 8px;
     border-radius: 6px;
@@ -116,9 +114,7 @@ body {
   margin-top: -8px;
   > ._hudContent {
     width: 514px;
-    background: rgba(245,246,246,.94);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    @include backdrop-blur(4px, rgba(245,246,246,.94), rgba(245,246,246,.98));
     border: 8px solid transparent;
     vertical-align: middle;
     box-shadow: $drop-shadow;
@@ -633,18 +629,18 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
       margin-right: auto;
       position: relative;
       > ._curNetWorth {
-        background-color: rgba(252,252,252,.5);
+        @include backdrop-blur(4px, rgba(252,252,252,.5), rgba(252,252,252,.95));
         box-shadow: 0px 0px 1px rgba(0,0,0,.3), 0px 0px 3px rgba(0,0,0,.15);
-        backdrop-filter: blur(4px);
-        -webkit-backdrop-filter: blur(4px);
         position: absolute;
         top:  50px;
         left: 150px;
         border: 1px solid #e0e0e0;
         padding: 4px;
         z-index: 2000;
-        font-size: 14px;
-        font-weight: 100;
+        * {
+          font-size: 14px;
+          font-weight: 100;
+        }
         > ._text {
           text-align: center;
           font-size: 24px;
