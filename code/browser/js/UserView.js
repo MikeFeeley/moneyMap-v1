@@ -30,9 +30,12 @@ class UserView extends View {
       .append ($('<li>', {html: 'Data is encrypted <b>on your computer</b> using a password only you know.'}))
       .append ($('<li>', {html: 'NO ads &mdash; NO data sharing.'}))
       .append ($('<li>', {text: 'Export your data to Excel or Numbers at anytime.'}));
-    $('<button>', {text: 'Get Started'}) .appendTo (go) .click (e => {
-      this._notifyObservers (UserViewEvent .GET_STARTED);
-    });
+    if (INIT_browserIsCompatible)
+      $('<button>', {text: 'Get Started'}) .appendTo (go) .click (e => {
+        this._notifyObservers (UserViewEvent .GET_STARTED);
+      });
+    else
+      $('<div>', {class:'_badBrowser', text: 'This application is not compatible with your browser.  It requires a recent version of Firefox, Chrome, or Safari.'}) .appendTo (go);
     $('<div>') .appendTo (table)
       .append ($('<div>', {class: '_landingTableImage'})
         .append ($('<img>', {src: 'images/rule.jpeg'}))
@@ -151,7 +154,7 @@ class UserView extends View {
       'we will never use your data to generate revenue by providing information about you (or aggregated from your data) to advertisers or anyone else. ' +
       'We enforce this policy using industry-standard encryption techniques and a password that only you know.'
     }) .appendTo (privacy)
-    if (isNotNew)
+    if (INIT_browserIsCompatible && isNotNew)
       this .addLogin (toHtml, false);
   }
 

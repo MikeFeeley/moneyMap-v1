@@ -1,5 +1,7 @@
-const APP_VERSION_HASH   = '3847647';
-const APP_VERSION_STRING = '1.0.0-pre-alpha (' + APP_VERSION_HASH + ')';
+const APP_VERSION_HASH   = 'cd94979';
+const APP_VERSION_STRING = '1.0.0-beta (' + APP_VERSION_HASH + ')';
+
+const INIT_browserIsCompatible = navigator .appCodeName .includes ('Mozilla') && Number (navigator .appVersion .split (' ') [0]) >= 5.0;
 
 const INIT = {
   version: APP_VERSION_HASH,
