@@ -74,7 +74,7 @@ const INIT = {
   ],
   'lib/css':    [
     'jquery-ui',
-    'nouislider',
+    'nouislider.min',
     'lnr-icons'
   ],
   'lib/js':     [
@@ -99,7 +99,10 @@ async function INIT_loadFile (url) {
     request .responseType = 'text';
     request .onload = () => {
       if (request .status == 200) {
-        localStorage .setItem (url, request .responseText);
+        if (INIT .cacheAssets)
+          localStorage .setItem (url, request .responseText);
+        else
+          localStorage .removeItem (url);
         resolve (request .responseText);
       } else
         reject ('Status ' + request .status + ': ' + request .statusText + (request .responseText? ' -- ' + request .responseText: ''));
@@ -116,11 +119,13 @@ async function INIT_loadScript (url) {
   document .getElementsByTagName ('head') [0] .appendChild (script);
 }
 
+const mmm = new Map();
+
 async function INIT_loadStyle (url) {
   const text = (INIT_cacheIsValid && localStorage .getItem (url)) || await INIT_loadFile (url);
   const style = document .createElement ('STYLE');
-  style .type = 'text/css';
   style .appendChild (document .createTextNode (text));
+  style .type = 'text/css';
   document .getElementsByTagName ('head') [0] .appendChild (style);
 }
 
@@ -146,5 +151,7 @@ async function INIT_loadStyle (url) {
         }
     if (INIT .cacheAssets)
       localStorage .setItem ('INIT_version', INIT .version);
+    else
+      localStorage .removeItem ('INIT_version');
 }) ();
 

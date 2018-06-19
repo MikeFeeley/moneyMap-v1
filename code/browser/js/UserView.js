@@ -136,11 +136,11 @@ class UserView extends View {
       'be accessed by you. '
     }) .appendTo (privacy)
    $('<div>', {text:
-      'First all data sent between your browser and the cloud is encrypted while it is in the network.  '
+      'First, all data sent between your browser and the cloud is encrypted while it is in the network.  '
     }) .appendTo (privacy)
    $('<div>', {text:
       'Second, all information other than amounts, balances and transaction dates is encrypted on your ' +
-      'computer using a password that only you know using 256-bit Advanced Encryption Standard (AES) in Cypher Block Chaining mode (CBC).  This password never leaves your computer and so ' +
+      'computer using a password that only you know using 128-bit Advanced Encryption Standard (AES) in Cypher Block Chaining mode (CBC).  This password never leaves your computer and so ' +
       'no one other than you can decrypt this data. '
     }) .appendTo (privacy)
    $('<div>', {text:
