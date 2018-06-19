@@ -1,5 +1,3 @@
-const APP_VERSION = '1.0.0-pre-alpha (' + INIT .version + ')';
-
 var PreferencesInstance;
 
 class Preferences extends Observable {
@@ -72,7 +70,7 @@ class Preferences extends Observable {
     let about = $('<div>', {class: '_about'})
       .appendTo ($('body'))
       .append ($('<div>', {text: 'moneyMap'}))
-      .append ($('<div>', {text: 'Version: ' + APP_VERSION}))
+      .append ($('<div>', {text: 'Version: ' + APP_VERSION_STRING}))
       .append ($('<div>', {html: '&nbsp;'}))
       .append ($('<div>', {html: '&nbsp;&nbsp;&nbsp;&nbsp; Thanks to:', css: {color: '#ccc'}}))
       .append ($('<div>', {html: '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; nodejs.org', css: {color: '#ccc'}}))

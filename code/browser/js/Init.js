@@ -1,5 +1,8 @@
+const APP_VERSION_HASH   = '3847647';
+const APP_VERSION_STRING = '1.0.0-pre-alpha (' + APP_VERSION_HASH + ')';
+
 const INIT = {
-  version: 'c8c9402',
+  version: APP_VERSION_HASH,
   cacheAssets: false,
   js: [
     'ui',
