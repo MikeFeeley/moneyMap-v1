@@ -7,6 +7,8 @@ const util    = require ('../lib/util.js');
 const crypto  = require ('crypto');
 const router  = express .Router();
 
+const ADMIN_PASSWORD = process .argv [2];
+
 const credentials = {
   key:  fs.readFileSync ('../ssl/key.pem', 'utf8'),
   cert: fs.readFileSync ('../ssl/cert.pem', 'utf8')
@@ -130,7 +132,6 @@ function getDB (name) {
   return dbCache .get (name) || dbCache .set (name, db .connect ('mongodb://localhost:27017/' + name)) .get (name);
 }
 
-const ADMIN_PASSWORD = '!20Italy20France20!';
 const cryptoKeyCache = new Map();
 const cryptoRules    = new Map();
 const cryptoAlgoritm = 'aes-128-cbc';
