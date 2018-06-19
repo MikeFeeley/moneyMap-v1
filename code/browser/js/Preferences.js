@@ -1,4 +1,4 @@
-var APP_VERSION = '1.0.0-pre-alpha (Jun 5 2018 8caa260)';
+const APP_VERSION = '1.0.0-pre-alpha (' + INIT .version + ')';
 
 var PreferencesInstance;
 

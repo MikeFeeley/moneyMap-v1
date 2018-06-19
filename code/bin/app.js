@@ -15,9 +15,6 @@ const credentials = {
 const app        = express ();
 const bodyParser = require ('body-parser');
 
-app .set ('views', './views');
-app .set ('view engine', 'pug');
-
 app .use (bodyParser.json({limit: '100mb'}));
 app .use (express.static ('browser'));
 
@@ -269,11 +266,7 @@ app.use(function(req, res, next) {
 });
 
 app.use(function(err, req, res, next) {
-  res.status (err.status || 500);
-  res.render('error', {
-    message: err.message,
-    error: {}
-  });
+  res.status (err.status || 500) .send ('error: ' + err .message);
 });
 
 
