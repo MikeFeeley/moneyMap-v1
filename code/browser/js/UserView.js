@@ -300,7 +300,7 @@ class UserView extends View {
         subMenuHead .addClass ('_selected');
         subMenu = $('<div>', {class: '_subMenu'})
           .on ('mouseout',  e => {
-            if (! $.contains (subMenu [0], e .originalEvent .toElement)) {
+            if (! $.contains (subMenu [0], e .originalEvent .relatedTarget) && subMenu [0] != e .originalEvent .relatedTarget) {
               subMenu .remove();
             }
           })
@@ -314,7 +314,7 @@ class UserView extends View {
         }
       })
       .on ('mouseout',  e => {
-        if (! $.contains (subMenu [0], e .originalEvent .toElement))
+        if (! $.contains (subMenu [0], e .originalEvent .relatedTarget) && subMenu [0] !=  e .originalEvent .relatedTarget)
           subMenu .remove();
         subMenuHead .removeClass ('_selected');
       })

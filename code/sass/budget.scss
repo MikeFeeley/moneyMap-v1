@@ -301,12 +301,16 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            vertical-align: bottom;
           }
           > ._subheading {
             color: #666;
             margin-left: 20px;
             font-size:   20px;
             font-weight: 100;
+            display: inline-block;
+            vertical-align: bottom;
+            padding-bottom: 5px;
           }
         }
     }

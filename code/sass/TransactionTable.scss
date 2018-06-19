@@ -450,9 +450,7 @@ div._TransactionHUD {
   &._occluded {
     * {color: #bbb!important};
     > div {
-      background-color: rgba(255,255,255,.1)!important;
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      @include backdrop-blur(20px, rgba(255,255,255,.1), rgba(255,255,255,.8));
     }
     tr:nth-child(even) {
       background: $table-stripe-background-occluded!important;
@@ -609,9 +607,7 @@ body > ._import_status_popup {
     right:   12px;
     top:     60px;
     padding: 16px;
-    background: rgba(255,255,255,.80);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    @include backdrop-blur(4px, rgba(255,255,255,.80), rgba(255,255,255,.95));
     border-radius: 6px;
     box-shadow: $drop-shadow;
     > div:first-child {

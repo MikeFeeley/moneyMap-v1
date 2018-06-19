@@ -163,7 +163,7 @@ div._systemStatus {
           > ._field > div ._content {
             font-size: 24px;
             color: #33b1ff;
-            border: 0px solid white;
+            border: 0px solid white!important;
           }
           margin-bottom: 2px;
         }
@@ -675,7 +675,7 @@ body > ._whiteout {
   left: 0px;
   height: 100vh;
   width: 100vw;
-  @include backdrop-blur(4px, rgba(0,0,0,.1), rgba(255,255,255,0.5));
+  @include backdrop-blur(4px, rgba(0,0,0,.1), rgba(255,255,255,0.8));
   z-index: 10000;
   > ._popupContainer {
     @include popup-container();
@@ -976,6 +976,16 @@ body > ._preferences_menu_head {
   margin-left: 16px;
 }
 
+.tabbed > .tabs > ._login > div:not(:last-child) {
+  @media (min-width: $wide-lower) {
+  }
+  @media (min-width: $medium-lower) and (max-width: $medium-upper) {
+  }
+  @media (max-width: $narrow-upper) {
+    font-size: 17px!important;
+  }
+}
+
 .tabbed  > .tabs > ._appName, body > ._preferences_menu_head {
   padding-top: 4px;
   @media (min-width: $wide-lower) {
@@ -1144,17 +1154,6 @@ body > ._getConfigEncryptionPassword {
         color:       #33b1ff;
         background:  white;
       }
-      //> label {
-      //  vertical-align: middle;
-      //  margin-left: 32px;
-      //  color: #33b1ff;
-      //  font-size:  20px;
-      //  font-weight: 500;
-      //  > select {
-      //    margin-left: 16px;
-      //    font-size:  16px;
-      //  }
-      //}
     }
   }
 }
