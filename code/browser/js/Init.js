@@ -88,7 +88,7 @@ const INIT = {
   ]
 };
 
-const INIT_loadSteps = ['lib/js', 'lib/css', 'css', 'js'];
+const INIT_loadSteps = ['lib/css', 'css', 'lib/js', 'js'];
 
 const INIT_cacheIsValid = INIT .cacheAssets && localStorage .getItem ('INIT_version') == INIT .version;
 
@@ -113,18 +113,30 @@ async function INIT_loadFile (url) {
 }
 
 async function INIT_loadScript (url) {
-  const text = (INIT_cacheIsValid && localStorage .getItem (url)) || await INIT_loadFile (url);
   const script = document .createElement ('SCRIPT');
-  script .text = text;
+  if (INIT .cacheAssets) {
+    const text = (INIT_cacheIsValid && localStorage .getItem (url)) || await INIT_loadFile (url);
+    script .text = text;
+  } else {
+    script .src   = url;
+    script .async = false;
+  }
   document .getElementsByTagName ('head') [0] .appendChild (script);
 }
 
 async function INIT_loadStyle (url) {
-  const text = (INIT_cacheIsValid && localStorage .getItem (url)) || await INIT_loadFile (url);
-  const style = document .createElement ('STYLE');
-  style .appendChild (document .createTextNode (text));
-  style .type = 'text/css';
-  document .getElementsByTagName ('head') [0] .appendChild (style);
+  if (INIT .cacheAssets) {
+    const text = (INIT_cacheIsValid && localStorage .getItem (url)) || await INIT_loadFile (url);
+    const style = document .createElement ('STYLE');
+    style .appendChild (document .createTextNode (text));
+    style .type = 'text/css';
+    document .getElementsByTagName ('head') [0] .appendChild (style);
+  } else {
+    const link = document .createElement ('LINK');
+    link .rel = 'stylesheet';
+    link .href = url;
+    document .getElementsByTagName ('head') [0] .appendChild (link);
+  }
 }
 
 (async function () {
