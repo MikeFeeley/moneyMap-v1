@@ -5,8 +5,8 @@ const nodemailer = require ('nodemailer');
 
 async function login (req, res, next) {
   try {
-    var u = req .decrypt (await (await req .dbPromise) .collection ('users') .find ({username: req .body .username}) .toArray(), 'users');
-    if (u .length == 0)
+    const u = req .decrypt (await (await req .dbPromise) .collection ('users') .find () .toArray(), 'users') .find (u => u .username == req .body .username);
+    if (! u)
       res .json ({noUser: true})
 
     // // FOR CONVERSION TO HASHED PASSWORD
@@ -17,10 +17,10 @@ async function login (req, res, next) {
     //
     // }
 
-    else if (u [0] .password != req .body .password)
+    else if (u .password != req .body .password)
       res .json ({badPassword: true})
     else
-      res.json ({okay: true, user: u [0]});
+      res.json ({okay: true, user: u});
 
 
   } catch (e) {
@@ -31,8 +31,8 @@ async function login (req, res, next) {
 
 async function signup (req, res, next) {
   try {
-    var u = req .decrypt (await (await req .dbPromise) .collection ('users') .find ({username: req .body .username}) .toArray(), 'users');
-    if (u .length != 0)
+    const u = req .decrypt (await (await req .dbPromise) .collection ('users') .find () .toArray(), 'users') .find (u => u .username == req .body .username);
+    if (u)
       res .json ({alreadyExists: true})
     else {
       var doc = await (await req .dbPromise) .collection ('users') .insert (req .encrypt ({
@@ -71,8 +71,8 @@ async function updateUser (req, res, next) {
         }
       }
       if (req .body .update .username) {
-        var u = await (await req .dbPromise) .collection ('users') .find (req .encrypt ({username: req .body .update .username}, 'users')) .toArray();
-        if (u) {
+        const u = await (await req .dbPromise) .collection ('users') .find (req .encrypt ({username: req .body .update .username}, 'users')) .toArray();
+        if (u .length) {
           res .json ({alreadyExists: true});
           return;
         }

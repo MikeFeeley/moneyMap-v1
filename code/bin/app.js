@@ -7,7 +7,7 @@ const util    = require ('../lib/util.js');
 const crypto  = require ('crypto');
 const router  = express .Router();
 
-const ADMIN_PASSWORD = process .argv [2];
+const ADMIN_PASSWORD = JSON .parse (fs .readFileSync ('config.json', 'utf8')) .adminPassword;
 
 const credentials = {
   key:  fs.readFileSync ('../ssl/key.pem', 'utf8'),

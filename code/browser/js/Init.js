@@ -119,8 +119,6 @@ async function INIT_loadScript (url) {
   document .getElementsByTagName ('head') [0] .appendChild (script);
 }
 
-const mmm = new Map();
-
 async function INIT_loadStyle (url) {
   const text = (INIT_cacheIsValid && localStorage .getItem (url)) || await INIT_loadFile (url);
   const style = document .createElement ('STYLE');
