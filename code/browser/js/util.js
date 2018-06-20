@@ -1,6 +1,7 @@
 'use strict';
 
-var isFirefox = (typeof window !== 'undefined') && window .navigator .userAgent .includes ('Firefox');
+const isFirefox = (typeof window !== 'undefined') && window .navigator .userAgent .includes ('Firefox');
+const isChrome  = (typeof window !== 'undefined') && window .navigator .userAgent .includes ('Chrome');
 
 class Observable {
   addObserver (thisArg, observer) {

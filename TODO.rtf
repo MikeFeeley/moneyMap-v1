@@ -6,12 +6,23 @@
 \pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
 
 \f0\fs36 \cf0 BUGS\
+	- transaction search popup scroll into view broken\
+		- doesn't scroll at all in safari\
+		- scrolls too far (banner) in firefox/chrome\
 	- add transaction, go to profile edit, export and reload, did not update tabs\
 	- when showing config for first time, the delay in showing budget stuff isn't nice\
 	- tab in cat input in transactions view sometimes does not select\
 \
+SCROLLING\
+	Difference is that in F/C documentElement is scrollTop when in safari its body\
+	Firefox / Chrome\
+		- transaction search does scroll\
+		- monthly graph popups don't scroll\
+		- scroll has wrong idea of the top (ignoring banner)\
+	Safari\
+		transaction search does not scroll\
+\
 TODO	\
-	- add philosophy to landing page\
 	- import file formatting\
 	- paypal integration\
 	- search terms\
@@ -23,12 +34,9 @@ AWS\
 	- DNS and SSL certificate\
 \
 FIREFOX\
-	- top bar dropdown menu disappears when it looses hover\
-	- some of the blurred popups don't revert to opaque (e.g., UserEdit add/confirm)\
-	- weird shit with login\
 \
 CHROME\
-	- default budget not saving for local configs\
+	- deep click default action is not prevented and is not recognized, but browser must see it\
 \
 UPCOMING\
 	- rbc scraping?\
