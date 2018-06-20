@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 
-router.get('/', function(req, res, next) {
+router.get ('/', function(req, res, next) {
   const head = '<title>moneyMap</title><script src="js/Init.js"></script>';
   const html = '<!DOCTYPE html><html><head>' + head + '</head></html>';
   res .format ({

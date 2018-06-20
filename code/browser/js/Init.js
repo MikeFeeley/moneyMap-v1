@@ -5,101 +5,102 @@ const INIT_browserIsCompatible = navigator .appCodeName .includes ('Mozilla') &&
 
 const INIT = {
   version: APP_VERSION_HASH,
-  cacheAssets: false,
-  js: [
-    'ui',
-    'util',
-    'Crypto',
-    'LocalDB',
-    'DBAdaptor',
-    'TransactionDBMeta',
-    'LocalDBAdaptor',
-    'RemoteDBAdaptor',
-    'Model',
-    'CSVConverter',
-    'View',
-    'Presenter',
-    'TaxTables',
-    'AccountsModel',
-    'ActualsModel',
-    'BudgetModel',
-    'VarianceModel',
-    'CategoriesModel',
-    'SchedulesModel',
-    'TransactionModel',
-    'BudgetYearGraph',
-    'BudgetProgressGraph',
-    'BudgetProgressHUD',
-    'BudgetProgressHUDView',
-    'CategoryPicker',
-    'CategoryPickerView',
-    'TupleView',
-    'TuplePresenter',
-    'SortedTupleView',
-    'SortedTuplePresenter',
-    'TableView',
-    'Table',
-    'ListView',
-    'List',
-    'IndexedListView',
-    'IndexedList',
-    'AccountBalance',
-    'AccountBalanceView',
-    'Accounts',
-    'AccountsView',
-    'TransactionTable',
-    'TransactionTableView',
-    'ImportRulesModel',
-    'ImportRules',
-    'ImportRulesView',
-    'ImportTransactions',
-    'ImportTransactionsView',
-    'TransactionHUD',
-    'Preferences',
-    'PreferencesView',
-    'ScheduleEntryView',
-    'ScheduleEntry',
-    'IndexedScheduleEntry',
-    'Navigate',
-    'NavigateView',
-    'UserView',
-    'User',
-    'App'
+  cacheResources: true,
+  resources: {
+     'lib/css':    [
+      'jquery-ui',
+      'nouislider.min',
+      'lnr-icons'
     ],
-  css: [
-    'budget',
-    'ui',
-    'ScheduleEntry',
-    'TransactionTable'
-  ],
-  'lib/css':    [
-    'jquery-ui',
-    'nouislider.min',
-    'lnr-icons'
-  ],
-  'lib/js':     [
-    'jquery',
-    'jquery-ui',
-    'jquery.mjs.nestedSortable',
-    'Chart',
-    'papaparse',
-    'nouislider.min',
-    'jszip.min'
-  ]
+    css: [
+      'budget',
+      'ui',
+      'ScheduleEntry',
+      'TransactionTable'
+    ],
+    'lib/js':     [
+      'jquery',
+      'jquery-ui',
+      'jquery.mjs.nestedSortable',
+      'Chart',
+      'papaparse',
+      'nouislider.min',
+      'jszip.min'
+    ],
+    js: [
+      'ui',
+      'util',
+      'Crypto',
+      'LocalDB',
+      'DBAdaptor',
+      'TransactionDBMeta',
+      'LocalDBAdaptor',
+      'RemoteDBAdaptor',
+      'Model',
+      'CSVConverter',
+      'View',
+      'Presenter',
+      'TaxTables',
+      'AccountsModel',
+      'ActualsModel',
+      'BudgetModel',
+      'VarianceModel',
+      'CategoriesModel',
+      'SchedulesModel',
+      'TransactionModel',
+      'BudgetYearGraph',
+      'BudgetProgressGraph',
+      'BudgetProgressHUD',
+      'BudgetProgressHUDView',
+      'CategoryPicker',
+      'CategoryPickerView',
+      'TupleView',
+      'TuplePresenter',
+      'SortedTupleView',
+      'SortedTuplePresenter',
+      'TableView',
+      'Table',
+      'ListView',
+      'List',
+      'IndexedListView',
+      'IndexedList',
+      'AccountBalance',
+      'AccountBalanceView',
+      'Accounts',
+      'AccountsView',
+      'TransactionTable',
+      'TransactionTableView',
+      'ImportRulesModel',
+      'ImportRules',
+      'ImportRulesView',
+      'ImportTransactions',
+      'ImportTransactionsView',
+      'TransactionHUD',
+      'Preferences',
+      'PreferencesView',
+      'ScheduleEntryView',
+      'ScheduleEntry',
+      'IndexedScheduleEntry',
+      'Navigate',
+      'NavigateView',
+      'UserView',
+      'User',
+      'App'
+    ]
+  }
 };
 
-const INIT_loadSteps = ['lib/css', 'css', 'lib/js', 'js'];
+const INIT_cacheIsValid = INIT .cacheResources && localStorage .getItem ('INIT_version') == INIT .version;
 
-const INIT_cacheIsValid = INIT .cacheAssets && localStorage .getItem ('INIT_version') == INIT .version;
-
-async function INIT_loadFile (url) {
+async function INIT_loadFile (url, binary) {
   return new Promise ((resolve, reject) => {
     const request = new XMLHttpRequest();
     request .open ('GET', url);
     request .responseType = 'text';
     request .onload = () => {
       if (request .status == 200) {
-        if (INIT .cacheAssets)
+        if (binary) console.log(request);
+        if (INIT .cacheResources)
           localStorage .setItem (url, request .responseText);
         else
           localStorage .removeItem (url);
@@ -114,52 +115,44 @@ async function INIT_loadFile (url) {
 
 async function INIT_loadScript (url) {
   const script = document .createElement ('SCRIPT');
-  if (INIT .cacheAssets) {
+  if (INIT .cacheResources) {
     const text = (INIT_cacheIsValid && localStorage .getItem (url)) || await INIT_loadFile (url);
     script .text = text;
   } else {
     script .src   = url;
     script .async = false;
   }
-  document .getElementsByTagName ('head') [0] .appendChild (script);
+  document .head .appendChild (script);
 }
 
 async function INIT_loadStyle (url) {
-  if (INIT .cacheAssets) {
+  if (INIT .cacheResources) {
     const text = (INIT_cacheIsValid && localStorage .getItem (url)) || await INIT_loadFile (url);
     const style = document .createElement ('STYLE');
     style .appendChild (document .createTextNode (text));
     style .type = 'text/css';
-    document .getElementsByTagName ('head') [0] .appendChild (style);
+    document .head .appendChild (style);
   } else {
     const link = document .createElement ('LINK');
     link .rel = 'stylesheet';
     link .href = url;
-    document .getElementsByTagName ('head') [0] .appendChild (link);
+    document .head .appendChild (link);
   }
 }
 
 (async function () {
-    for (const step of INIT_loadSteps)
-      for (const file of INIT [step])
-        if (step .includes ('js')) {
-          const url = step + '/' + file + '.js';
-          try {
-            await INIT_loadScript (url);
-          } catch (e) {
-            console .log ('Error while loading ' + url + '.  ' + e);
-            throw (e);
-          }
-        } else if (step .includes ('css')) {
-          const url = step + '/' + file + '.css';
-          try {
-            await INIT_loadStyle (url);
-          } catch (e) {
-            console .log ('Error while loading ' + url + '.  ' + e);
-            throw (e);
-          }
+    for (const step of Object .keys (INIT .resources))
+      for (const file of INIT .resources [step])
+        try {
+          if (step .includes ('js'))
+            await INIT_loadScript (step + '/' + file + '.js');
+          else if (step .includes ('css'))
+            await INIT_loadStyle (step + '/' + file + '.css');
+        } catch (e) {
+          console .log ('Error while loading ' + url + '.  ' + e);
+          throw (e);
         }
-    if (INIT .cacheAssets)
+  if (INIT .cacheResources)
       localStorage .setItem ('INIT_version', INIT .version);
     else
       localStorage .removeItem ('INIT_version');
