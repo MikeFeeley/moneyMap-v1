@@ -119,24 +119,24 @@ body {
     vertical-align: middle;
     box-shadow: $drop-shadow;
     border-radius: 6px;
-    ._topRow {
+    > ._topRow {
       display: flex;
       flex-direction: row;
-    }
-    ._title {
-      flex-grow: 1;
-      margin-bottom: -8px;
-      ._content {
-        font-size: 28px;
-        color: black;
-        font-weight: 200;
-        border: 0px;
-        background-color: transparent;
-        height: auto;
-        margin-bottom: 8px;
-      }
-      > ._field_name._account ._content {
-        color: #3d993d;
+      > ._title {
+        flex-grow: 1;
+        margin-bottom: -8px;
+        > ._field_name > div > ._content {
+          font-size: 28px;
+          color: black;
+          font-weight: 200;
+          &:not(:focus) {border: 2px solid transparent!important}
+          background-color: transparent;
+          height: auto;
+          margin-bottom: 8px;
+        }
+        > ._field_name._account ._content {
+          color: #3d993d;
+        }
       }
     }
     ._icons {

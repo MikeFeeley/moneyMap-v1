@@ -163,7 +163,7 @@ div._systemStatus {
           > ._field > div ._content {
             font-size: 24px;
             color: #33b1ff;
-            border: 0px solid white!important;
+            &:not(:focus) {border: 2px solid transparent!important}
           }
           margin-bottom: 2px;
         }

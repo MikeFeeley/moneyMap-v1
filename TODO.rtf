@@ -6,21 +6,18 @@
 \pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
 
 \f0\fs36 \cf0 BUGS\
-	- transaction search popup scroll into view broken\
-		- doesn't scroll at all in safari\
-		- scrolls too far (banner) in firefox/chrome\
 	- add transaction, go to profile edit, export and reload, did not update tabs\
 	- when showing config for first time, the delay in showing budget stuff isn't nice\
 	- tab in cat input in transactions view sometimes does not select\
 \
-SCROLLING\
-	Difference is that in F/C documentElement is scrollTop when in safari its body\
+SCROLLING / BROWSERS\
+	- when considering whether top will fit, not subtracting banner height\
+		- but when its triggered, it scrolls correctly\
+	- drilling in transaction hud, where should new hud be placed?\
 	Firefox / Chrome\
-		- transaction search does scroll\
-		- monthly graph popups don't scroll\
-		- scroll has wrong idea of the top (ignoring banner)\
+		- budget hud name has border\
 	Safari\
-		transaction search does not scroll\
+	- transaction search does not scroll\
 \
 TODO	\
 	- import file formatting\

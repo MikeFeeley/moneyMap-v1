@@ -31,6 +31,8 @@ var ui = {
         // tabbed is surrogate for body for scrolling entire page (on safari; for firefox and chrome its documentElement)
         if (sp == $('body > .tabbed') .get(0))
           sp = (isFirefox || isChrome)? document .documentElement: document .body;
+        else if (sp == document .documentElement)
+          sp = document .body;
         let bannerSkip = (sp == document .body || sp == document .documentElement)? UI_BANNER_HEIGHT: 0;
 
         let topOffset = 0;
@@ -60,7 +62,7 @@ var ui = {
 
         // calculate scroll delta
         let scrollY = Math .max (sp .offsetTop + sp .clientTop, eBottom - scrollBottom);
-        if (eTop < sp .scrollTop + scrollY)
+        if (eTop < sp .scrollTop + scrollY + bannerSkip)
           scrollY = eTop - sp .scrollTop - bannerSkip;
         scrollY -= sp .offsetTop + sp .clientTop;
 
