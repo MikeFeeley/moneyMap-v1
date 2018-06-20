@@ -203,7 +203,7 @@ class App {
         this._searchInput [0] .addEventListener ('keydown', e => {
           if (e .keyCode == 13) {
             console.log($('body') .scrollTop(), $('html') .scrollTop());
-            TransactionHUD .search (this._searchInput .val(), this._accModel, this._varModel, $('body'), {top: ($('html') .scrollTop() || $('body') .scrollTop()) + 100, left: 30});
+            TransactionHUD .search (this._searchInput .val(), this._accModel, this._varModel, $('body'), {top: ($('html') .scrollTop() || $('body') .scrollTop()) + 56, left: 30});
             close();
           }
           if (e .keyCode == 90 && e .metaKey) {

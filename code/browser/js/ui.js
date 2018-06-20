@@ -31,7 +31,7 @@ var ui = {
         // tabbed is surrogate for body for scrolling entire page (on safari; for firefox and chrome its documentElement)
         if (sp == $('body > .tabbed') .get(0))
           sp = (isFirefox || isChrome)? document .documentElement: document .body;
-        else if (sp == document .documentElement)
+        else if (!isChrome && !isFirefox && sp == document .documentElement)
           sp = document .body;
         let bannerSkip = (sp == document .body || sp == document .documentElement)? UI_BANNER_HEIGHT: 0;
 
