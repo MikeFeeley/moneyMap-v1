@@ -181,6 +181,11 @@ class User extends Observable {
 
     switch (eventType) {
 
+      case ViewEvent .UPDATE:
+        if (arg .id == 'user')
+          await this._updateAccount ({[arg .fieldName]: arg .value});
+        break;
+
       case UserViewEvent .GET_STARTED:
         await this .start();
         break;
@@ -741,25 +746,32 @@ class User extends Observable {
    */
   _addUserEdit (ae) {
     if (this._uid) {
-      let ag = this._view .addGroup ('Profile', ae);
-      let email    = this._view .addLine (ag);
-      let name     = this._view .addLine (ag);
-      let password = this._view .addLine (ag);
-      let update   = this._view .addLine (ag);
-      this._view .addLabel ('Email', email);
-      this._view .addLabel ('Name',  name);
-      this._view .addLabel ('Password Hint', password);
-      let em = this._view .addInput ('Email', this._username, email);
-      let nm = this._view .addInput ('Name',  this._name, name);
-      let ph = this._view .addInput ('Password Hint', this._passwordHint, password);
-      this._view .addButton ('Update Profile',   (async () => {
-        await this._updateAccount ([em, nm, ph] .map (f => {return f.val()}))
-      }), update);
+      const ag = this._view .addGroup ('Profile', ae);
+      const line0    = this._view .addLine (ag);
+      const line1     = this._view .addLine (ag);
+      const line2   = this._view .addLine (ag);
+      const line3   = this._view .addLine (ag);
+
+      // this._view .addLabel ('Email', email);
+      // this._view .addLabel ('Name',  name);
+      // this._view .addLabel ('Password Hint', password);
+      // field, id, value, toHtml, label
+
+      // TODO
+
+      this._view .addField (new ViewTextbox ('username',     ViewFormats ('string'), '', '', 'Email'),         'user', this._username, line0, 'Email');
+      this._view .addField (new ViewTextbox ('name',         ViewFormats ('string'), '', '', 'Name'),          'user', this._name, line0, 'Name');
+      this._view .addField (new ViewTextbox ('passwordHint', ViewFormats ('string'), '', '', 'Password Hint'), 'user', this._passwordHint, line1, 'Password Hint');
+
+      // this._view .addButton ('Update Profile',   (async () => {
+      //   await this._updateAccount ([em, nm, ph] .map (f => {return f.val()}))
+      // }), update);
+      //
+      this._accountEditError = this._view .addLabel ('', line3, '_errorMessage');
       this._view .addButton   ('Delete Profile and All Cloud Data', (async () => {
         this._view .addConfirmDelete (update .find ('button:nth-child(2)'), 0, 'profile', {top: -70, left: -110},
           'Doing so deletes everything that we store in the cloud about you, including all of your cloud configurations.  ', '_confirmProfileDelete');
-      }), update);
-      this._accountEditError = this._view .addLabel ('', update, '_errorMessage');
+      }), line3);
     }
   }
 
@@ -855,21 +867,19 @@ class User extends Observable {
   /**
    * Update profile model based on user input and "Update Profile" button click
    */
-  async _updateAccount (values) {
-    let [email, name, passwordHint] = values;
-    email = email .toLowerCase();
-    let update   = {username: email == this._username? undefined: email, name: name, passwordHint: passwordHint};
+  async _updateAccount (update) {
+    if (update .email != undefined)
+      email = email .toLowerCase();
     let result = await Model .updateUser (this._uid, this._accessCap, update);
     if (result .alreadyExists)
       this._view .setLabel (this._accountEditError, 'Not updated &mdash; Email is used by someone else');
     if (result .okay) {
-      this._username     = email;
-      this._name         = name;
-      this._passwordHint = passwordHint;
-      if (this._onLabelChange)
+      this._username     = update .username     !== undefined? update .username:     this._username;
+      this._name         = update .name         !== undefined? update .name:         this._name;
+      this._passwordHint = update .passwordHint !== undefined? update .passwordHint: this._passwordHint;
+      if (update .name !== undefined && this._onLabelChange)
         this._onLabelChange (this .getLabel())
       this._saveLoginState();
-      this._view .setLabel (this._accountEditError, 'Profile Updated');
     }
   }
 

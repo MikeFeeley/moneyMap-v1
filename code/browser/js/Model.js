@@ -298,8 +298,8 @@ class Model extends Observable {
     return _Collection .signup (data);
   }
 
-  static async updateUser (id, accessCap, update, password) {
-    return _Collection .updateUser (id, accessCap, update, password);
+  static async updateUser (id, accessCap, update) {
+    return _Collection .updateUser (id, accessCap, update);
   }
 
   static async removeUser (id, accessCap) {
@@ -615,8 +615,8 @@ class _Collection extends Observable {
     return _db .perform (DatabaseOperation .SIGNUP, data);
   }
 
-  static async updateUser (id, accessCap, update, password) {
-    return _db .perform (DatabaseOperation .UPDATE_USER, {id: id, accessCap: accessCap, update: update, password: password});
+  static async updateUser (id, accessCap, update) {
+    return _db .perform (DatabaseOperation .UPDATE_USER, {id: id, accessCap: accessCap, update: update});
   }
 
   static async removeUser (id, accessCap) {

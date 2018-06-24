@@ -60,16 +60,6 @@ async function updateUser (req, res, next) {
       throw 'Update missing';
     else {
       var query = {_id: req .body .id, accessCap: req .body .accessCap};
-      if (req .body .update .password) {
-        var user = req .decrypt (await (await req .dbPromise) .collection ('users') .find (query) .toArray(), 'users');
-        if (! user || user .length == 0)
-          throw 'Invalid user update attempted';
-        else user = user [0];
-        if (user .password != req .body .password) {
-          res .json ({passwordMismatch: true});
-          return;
-        }
-      }
       if (req .body .update .username) {
         const u = await (await req .dbPromise) .collection ('users') .find (req .encrypt ({username: req .body .update .username}, 'users')) .toArray();
         if (u .length) {
