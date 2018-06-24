@@ -775,11 +775,11 @@ class User extends Observable {
    */
   async _addConfig (config, select) {
     let [configTab, configContent] = this._view .addTab (this._configTabs);
+    configContent .css ({visible: false});
     this._view .addField (new ViewScalableTextbox ('c_name', ViewFormats ('string'), '', '', 'Config Name'), config._id, config .name, configTab);
 
     this._view .addLabel ('Configuration', configContent, '_heading');
     let configLine = this._view .addLine (configContent, '_line _configTypeLine');
-    //this._view .addLabel (ConfigDesc [config .type || 0], configLine);
     this._view .addReadOnlyField ('type', config._id, ConfigDesc [config .type || 0], configLine, 'Data Storage');
 
     let budgetContentGroup = this._view .addTabContentGroup ('Budgets', configContent);
@@ -799,6 +799,7 @@ class User extends Observable {
     let [budgetTab, budgetContent] = this._view .addTab (budgetTabs, '_add', true, 'Add');
     for (let b of this._budgets)
       this._addBudget (b, b._id == this._bid);
+    configContent .css ({visible: true});
     if (select)
       this._view .selectTab (configTab);
   }
