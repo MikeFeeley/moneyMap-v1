@@ -71,7 +71,7 @@ class ImportRulesModel extends Observable {
     for (let r of this._entries .values())
       if (r .predicate) {
         r .parent            = this._rules .get (r .predicate);
-        r .parent .children  = (r .parent .children || []) .concat (r);
+        r .parent .children  = ((r .parent && r .parent .children) || []) .concat (r);
       }
     for (let r of this._rules .values())
       if (r .children)
@@ -134,13 +134,13 @@ class ImportRulesModel extends Observable {
           match = t[0] == r[0];
           break;
         case 'sw':
-          match = t[0] .startsWith (r[0]);
+          match = typeof t[0] == 'string' && t[0] .startsWith (r[0]);
           break;
         case 'ew':
-          match = t[0] .endsWith (r[0]);
+          match = typeof t[0] == 'string' && t[0] .endsWith (r[0]);
           break;
         case 'co':
-          match = t[0] .includes (r[0]);
+          match = typeof t[0] == 'string' && t[0] .includes (r[0]);
           break;
         case 'lt':
           match = t[0] < r[0];

@@ -1107,7 +1107,6 @@ class User extends Observable {
    * Add a new budget and related categories and schedules to model by rolling specified budget over to new year
    */
   async _createRolloverBudget (from) {
-    // TODO this could move to server, unclear if necessary / better
     await this._disconnectApp();
     let b = Object .assign ({}, this._budgets .find (b => {return b._id == from}));
     b .start = Types .date .addYear (b .start, 1);

@@ -328,7 +328,7 @@ class App {
         this._setTabVisibility (arg);
         this._user .newConfigurationAccepted();
         this._tabs .setClickable (true);
-      }, 0)
+      }, 0);
 
    } else if (eventType == UserEvent .LOGOUT) {
      $('body') .empty();
