@@ -55,6 +55,7 @@ class Preferences extends Observable {
     this._view .addMenu (html, {top: UI_BANNER_HEIGHT,left: 8}, toHtml .parent(), {top: 0, left: 0});
     this._addMenuItem ('About moneyMap', () => {(async () => {await this._addAbout()}) ()}, true);
     this._addMenuItem ('Preferences',    () => {(async () => {await this._addPreferencesEdit()}) ()}, true);
+    this._addMenuItem ('Donate',         () => {this._addDonate()}, true);
     this._addMenuItem ('Help', () => {(async () => {await this._help()}) ()});
   }
 
@@ -88,6 +89,16 @@ class Preferences extends Observable {
       () => {about .remove()},
       true
     )
+  }
+
+  async _addDonate() {
+    $('<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">\n' +
+    '<input type="hidden" name="cmd" value="_s-xclick">\n' +
+    '<input type="hidden" name="hosted_button_id" value="D43YXJPN7454Q">\n' +
+    '<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">\n' +
+    '<img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">\n' +
+    '</form>\n' +
+    '\n') .submit();
   }
 
   /**

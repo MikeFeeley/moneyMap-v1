@@ -236,6 +236,7 @@ class User extends Observable {
               this._password     = arg .password;
               this._passwordHint = user .passwordHint;
               this._cid          = user .curConfiguration;
+              this._expiry       = user .expiry;
               this._remember     = arg .remember;
               this._setModelsForUser();
               await this._getConfigs();
@@ -322,7 +323,7 @@ class User extends Observable {
           /* ADD */
           switch (arg .name) {
             case 'configurations':
-              this._view .addConfigAddPopup (arg .target, this._configs, this._uid != null);
+              this._view .addConfigAddPopup (arg .target, this._configs, this._uid != null && this._expiry && this._expiry < Types .date .today());
               break;
             case 'budgets':
               this._view .addBudgetAddPopup (arg .target, this._budgets);
@@ -746,27 +747,20 @@ class User extends Observable {
    */
   _addUserEdit (ae) {
     if (this._uid) {
-      const ag = this._view .addGroup ('Profile', ae);
-      const line0    = this._view .addLine (ag);
-      const line1     = this._view .addLine (ag);
-      const line2   = this._view .addLine (ag);
-      const line3   = this._view .addLine (ag);
-
-      // this._view .addLabel ('Email', email);
-      // this._view .addLabel ('Name',  name);
-      // this._view .addLabel ('Password Hint', password);
-      // field, id, value, toHtml, label
-
-      // TODO
-
+      const ag    = this._view .addGroup ('Profile', ae);
+      const line0 = this._view .addLine (ag);
+      const line1 = this._view .addLine (ag);
+      const line2 = this._view .addLine (ag);
+      const line3 = this._view .addLine (ag);
       this._view .addField (new ViewTextbox ('username',     ViewFormats ('string'), '', '', 'Email'),         'user', this._username, line0, 'Email');
       this._view .addField (new ViewTextbox ('name',         ViewFormats ('string'), '', '', 'Name'),          'user', this._name, line0, 'Name');
       this._view .addField (new ViewTextbox ('passwordHint', ViewFormats ('string'), '', '', 'Password Hint'), 'user', this._passwordHint, line1, 'Password Hint');
-
-      // this._view .addButton ('Update Profile',   (async () => {
-      //   await this._updateAccount ([em, nm, ph] .map (f => {return f.val()}))
-      // }), update);
-      //
+      if (! this._expiry || this._expiry < Types .date .today()) {
+        this._view .addLabel ('Cloud service is $1 per month (CAD)', line2);
+      } else {
+        this._view .addLabel ('Blah', line2);
+      }
+      //this._view .addPayPalPurchase(line2);
       this._accountEditError = this._view .addLabel ('', line3, '_errorMessage');
       this._view .addButton   ('Delete Profile and All Cloud Data', (async () => {
         this._view .addConfirmDelete (update .find ('button:nth-child(2)'), 0, 'profile', {top: -70, left: -110},

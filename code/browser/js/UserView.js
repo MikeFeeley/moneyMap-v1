@@ -378,6 +378,25 @@ class UserView extends View {
     this._fieldHtml .set (id + '$' + field._name, fh);
   }
 
+  addPayPalPurchase (toHtml) {
+    // TODO IPN stuff so that we know when payment has been made and then update the expriation date
+    $('<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">\n' +
+    '<input type="hidden" name="cmd" value="_s-xclick">\n' +
+    '<input type="hidden" name="hosted_button_id" value="WGCEU7NB7GP94">\n' +
+    '<table>\n' +
+    '<tr><td><input type="hidden" name="on0" value="Subscription Options">Subscription Options</td></tr><tr><td><select name="os0">\n' +
+    '\t<option value="One Month">One Month $2.00 CAD</option>\n' +
+    '\t<option value="One Year">One Year $12.00 CAD</option>\n' +
+    '\t<option value="Three Years">Three Years $20.00 CAD</option>\n' +
+    '</select> </td></tr>\n' +
+    '</table>\n' +
+    '<input type="hidden" name="currency_code" value="CAD">\n' +
+    '<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_buynowCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">\n' +
+    '<img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">\n' +
+    '</form>\n' +
+    '\n') .appendTo (toHtml);
+  }
+
   addReadOnlyField (fieldName, id, value, toHtml, label) {
     if (label) {
       toHtml = $('<div>', {class: '_labeledField'}) .appendTo (toHtml);
@@ -497,7 +516,7 @@ class UserView extends View {
     ui .scrollIntoView (popup);
   }
 
-  addConfigAddPopup (positionTarget, configs, isLoggedIn) {
+  addConfigAddPopup (positionTarget, configs, isCloudAuthorized) {
     let parent  = this._accountEdit .find ('> div');
     let popup   = $('<div>', {class: '_popupContainer'}) .appendTo (parent);
     let content = $('<div>', {class: '_addPopup'}) .appendTo (popup);
@@ -525,11 +544,11 @@ class UserView extends View {
     let tf = $('<form>') .appendTo (content);
     for (let d of ConfigDesc) {
       let i = ConfigDesc .indexOf (d);
-      if (! isLoggedIn && i != 2)
+      if (! isCloudAuthorized && i != 2)
         continue;
       let e = $('<div>', {class: '_dataStorageChoice'}) .appendTo (tf);
       let l = $('<label>') .appendTo (e)
-        .append ($('<input>', {type: 'radio', name: 'dataStore', value: i, prop: {checked: ! isLoggedIn}}))
+        .append ($('<input>', {type: 'radio', name: 'dataStore', value: i, prop: {checked: ! isCloudAuthorized}}))
         .append ($('<span>',  {text: d}));
       e .append ($('<div>', {text: ConfigExp [i]}));
     }
