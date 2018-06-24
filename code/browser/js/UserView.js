@@ -231,7 +231,7 @@ class UserView extends View {
   addLoginHelp() {
     const password = this._login .find ('#password');
     if (password .next ('._forgotPassword') .length == 0)
-      $('<div>', {class: '_forgotPassword', text: 'We can email your password hint to you.'}) .insertAfter (password)
+      $('<div>', {class: '_forgotPassword', text: 'Forgot your password?'}) .insertAfter (password)
         .click (e => {
           this._notifyObservers (UserViewEvent .SEND_PASSWORD_HINT, {email: this._login .find ('#email') .val()});
           let popup    = $('<div>', {class: '_popupContainer _passwordHintSent'}) .appendTo ($('body'));

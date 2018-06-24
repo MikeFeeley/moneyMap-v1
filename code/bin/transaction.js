@@ -68,7 +68,7 @@ async function removeOne (req, res, next) {
   try {
     if (! req .body .id)
       throw 'Missing id';
-    res .json (await tranMeta .remove (await req .dbPromise, req .body .id));
+    res .json (await tranMeta .remove (await req .dbPromise, req .body .id, req));
     app .notifyOtherClients (req .body .database, req .body .sessionId, {collection: req .body .collection, remove: req .body .id});
   } catch (e) {
     console .log ('transactions removeOne: ', e, req .body);

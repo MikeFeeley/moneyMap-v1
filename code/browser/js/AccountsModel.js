@@ -37,6 +37,17 @@
  *     account
  *     date
  *     rate
+ *
+ * Institutions Model
+ *     name
+ *     importColumns (column number for each of the following)
+ *         account
+ *         date
+ *         payee
+ *         description
+ *         amount
+ *         debit
+ *         credit
  */
 
 class AccountsModel extends Observable {
@@ -273,25 +284,34 @@ class AccountsModel extends Observable {
     this._actualsObserver = this._actualsModel .addObserver (this, this._onActualsModelChange);
   }
 
+  /**
+   * parse transactions from input file
+   */
   parseTransactions (data) {
-    var trans = []
-    for (let tr of data .slice (1)) {
-      if (tr .length == 9) {
-        var amount  = Types .moneyDC .fromString (tr [6]);
-        var account = this._accounts .find (a => {return a .number == tr [1]})
-        if (account)
-          trans .push ({
-            date:         Types .dateMDY .fromString (tr [2]),
-            payee:        this._smartLowerCase (tr [4] .trim()),
-            debit:        amount < 0? -amount: 0,
-            credit:       amount > 0? amount: 0,
-            account:      account ._id,
-            description:  this._smartLowerCase (tr [5]),
-            category:     undefined
-          })
-      }
-    }
-    return trans;
+    const transactions     = [];
+    const cashFlowAccounts = this._accounts .filter (a => a .form == AccountForm .CASH_FLOW && a .type == AccountType .ACCOUNT);
+    for (const item of data)
+      processItem: for (const account of cashFlowAccounts)
+        if (account .importColumns && account .importColumns .date !== undefined && account .importColumns .payee !== undefined)
+          if (account .number && account .number == item [account .importColumns .account]) {
+            const tran = Object .entries (account .importColumns) .reduce ((o, [field, column]) =>  Object .assign (o, {[field]: item [column]}), {});
+            delete tran .account;
+            if (tran .amount !== undefined) {
+              tran .debit  = tran .amount < 0? -tran .amount: 0;
+              tran .credit = tran .amount > 0? tran .amount: 0;
+              delete tran .amount;
+            }
+            tran .date        = Types .dateMDY .fromString (tran .date);
+            tran .payee       = this._smartLowerCase ((tran .payee || '') .trim());
+            tran .debit       = Types .moneyDC .fromString (String (tran .debit || 0));
+            tran .credit      = Types .moneyDC .fromString (String (tran .credit || 0));
+            tran .account     = account._id;
+            tran .description = this._smartLowerCase ((tran .description || '') .trim());
+            tran .category    = undefined;
+            transactions .push (tran);
+            break processItem;
+          }
+    return transactions;
   }
 
   getAccounts() {

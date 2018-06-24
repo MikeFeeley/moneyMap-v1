@@ -681,4 +681,118 @@ body > ._import_status_popup {
   }
 }
 
+body > ._importFileFormatter {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  height: 100vh;
+  width: 100vw;
+  @include backdrop-blur(4px, rgba(0,0,0,.1), rgba(255,255,255,0.8));
+  z-index: 100001;
+  > div {
+    @include popup-container();
+    position: fixed;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10001;
+    > ._popupContent {
+      @include popup-content();
+      @include backdrop-blur(4px, rgba(255,255,255,.80), rgba(255,255,255,.95));
+      width:   1000px;
+      height:  470px;
+      padding: 16px;
+      color: #555;
+      display: flex;
+      flex-direction: column;
+      > ._title {
+        color: #33b1ff;
+        font-size: 32px;
+      }
+      > ._body {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        > ._start {
+          flex-grow: 1;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          > div {
+            font-size: 20px;
+            color: #aaa;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: 10px;
+            margin-bottom: 10px;
+          }
+        }
+        > ._table {
+          > ._columnSelect {
+            > table {
+              padding-bottom: 16px;
+              border-collapse: collapse;
+              font-size: 14px;
+              > tr {
+                border-top: 1px solid #ddd;
+                &:last-child {
+                  border-bottom: 1px solid #ddd;
+                }
+                > td {
+                  max-width:      200px;
+                  text-overflow:  ellipsis;
+                  overflow:       hidden;
+                  white-space:    nowrap;
+                  border-left: 1px solid #ddd;
+                  &:last-child {
+                    border-right: 1px solid #ddd;
+                  }
+                  padding: 4px 6px;
+                }
+              }
+            }
+          }
+        }
+        > ._accounts {
+          ._accountSelect {
+            > table {
+              padding-bottom: 16px;
+              border-collapse: collapse;
+              font-size: 14px;
+              > thead, tbody {
+                > tr {
+                  border-top: 1px solid #ddd;
+                  &:last-child {
+                    border-bottom: 1px solid #ddd;
+                  }
+                  > th, td {
+                    border-left: 1px solid #ddd;
+                    &:last-child {
+                      border-right: 1px solid #ddd;
+                    }
+                    padding: 4px 6px;
+                  }
+                }
+              }
+            }
+          }
+        }
+        > ._table, > ._accounts {
+          > ._columnSelect, ._accountSelect {
+            border-top: 1px solid #33b1ff;
+            padding-top: 6px;
+            overflow: scroll;
+            height: 150px;
+          }
+          > ._subtitle {
+            margin-top: 32px;
+            color: #33b1ff;
+            font-size: 20px;
+          }
+        }
+      }
+    }
+  }
+}
+
 

@@ -51,11 +51,12 @@ class ImportTransactions extends Observable {
       'Transactions that are yet to be categorized or have a question mark in their comment show in the INBOX.',
       'Get started ...'],
       [
-        ['Import',            'Drag bank file'],
-        ['Enter rule',        'Click R on transaction line'],
-        ['Enter transaction', 'CMD + ENTER or (+) button'],
-        ['Split transaction', 'CMD + ALT + ENTER'],
-        ['Delete',            'CMD + DELETE']
+        ['Import',                'Drag bank file'],
+        ['Configure import file', $('<span>', {class: 'lnr-cog'})],
+        ['Enter rule',            'Click R on transaction line'],
+        ['Enter transaction',     [$('<span>', {html: 'CMD + ENTER or &nbsp;'}), $('<span>', {class: 'lnr-plus-circle'})]],
+        ['Split transaction',     'CMD + ALT + ENTER'],
+        ['Delete',                'CMD + DELETE']
       ])
     Help .add ('Inbox', showHelp);
     toHtml .data ('visible', () => {
@@ -113,16 +114,12 @@ class ImportTransactions extends Observable {
       s .push (ic + ' transaction' + (ic>1? 's': '') + ' imported');
     if (dc)
       s .push (dc + ' duplicate'   + (dc>1? 's': '') + ' skipped');
+    if (csv .data .length)
     if (ic + dc == 0) {
       if (csv .data .length > 1) {
-        let acts = csv .data .slice (1)
-          .sort   ((a,b)   => {a[0] < b[0]? -1: a[0] == b[0]? 0: 1})
-          .filter (c       => {return c[0]})
-          .filter ((c,i,a) => {return i == a .length - 1 || a[i][0] != a[i+1][0]})
-          .map    (c       => {return '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + c[1] + '&nbsp;&nbsp;&nbsp;(' + c[0]+')'})
-        s = s .concat (['Nothing Imported &mdash; Accounts in File not Setup','&nbsp;']) .concat (acts)
+        s .push ('Nothing import &mdash; Some transactions skipped')
       } else
-        s .push ('empty or malformed file');
+        s .push ('Empty or malformed file');
     }
     this._view .updateImportStatus (s);
     if (trans .length)
@@ -403,6 +400,7 @@ class NeedsAttentionTable extends TransactionAndRulesTable {
 
   async addHtml (toHtml) {
     this._view .addHtml   (toHtml);
+    this._view .addButton ('_config',         'lnr-cog', true, () => ImportFormat .show (this._parent._accounts));
     this._view .addButton ('_down_load',      'lnr-download', false, () => {});
     this._view .addButton ('_insert_buttom',  'lnr-plus-circle', true, () => {this._addButtonPressed()});
     this._view .addButton ('_refresh_button', 'lnr-sync',  true, () => {(async () => {await this .refreshHtml()}) ()});

@@ -183,7 +183,7 @@ var ui = {
         .appendTo (tabs)
         .click (onNameClick);
       var rightMatter = $('<div>', {class: '_login _nonTab'}) .appendTo (tabs);
-      var clickable    = true;
+      var clickable    = false;
       var pendingClick;
       var tabMap = new Map();
       UI_BANNER_HEIGHT = $('body > .tabbed > .tabs') .height();
@@ -225,6 +225,10 @@ var ui = {
             }
             tabMap .set (name, {tab: t .tab, addContent: addContent});
           }
+        },
+
+        setClickable (isClickable) {
+          clickable = isClickable;
         },
 
         clear() {

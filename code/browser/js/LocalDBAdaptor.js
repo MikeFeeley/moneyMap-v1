@@ -255,6 +255,7 @@ const LocalDBAdaptor_SCHEMA_UPGRADER = {
       {create: 'categories'},
       {create: 'counters'},
       {create: 'importRules'},
+      {create: 'institutions'},
       {create: 'parameters'},
       {create: 'rateFuture', createIndexes: ['account']},
       {create: 'schedules', createIndexes: ['budget']},

@@ -301,6 +301,7 @@ class ScheduleEntry extends List {
           ['Budget for range of months',        'Enter values in Start and End fields'],
           ['Budget starting at month',          'Enter ... for End field'],
           ['Repeat budget in future years',     'Click Repeat and optionally limit the number of years'],
+          ['Show or Edit Historic Categories',  $('<scan>', {class: 'lnr-history'})]
         ]);
       Help .add ('Plan', showHelp);
       const conditionallyShowHelp = () => {

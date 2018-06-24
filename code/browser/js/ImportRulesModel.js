@@ -225,7 +225,8 @@ class ImportRulesModel extends Observable {
       }
 
       // add new splits, except for remaining
-      let remaining = tran .debit - tran .credit;
+      let remaining   = tran .debit - tran .credit;
+      let reallySplit = false;
       for (let [i, action] of splitRules .filter (r => {return r .debit != 'Remaining'}) .entries()) {
         let split = {
           group:       tran._id,
@@ -248,6 +249,7 @@ class ImportRulesModel extends Observable {
             for (let f of ['importTime', 'date', 'payee', 'account'])
               split [f] = tran [f];
             await this._tranModel .insert (split);
+            reallySplit = true;
           }
           remaining -= (split .debit - split .credit);
         }
@@ -269,8 +271,11 @@ class ImportRulesModel extends Observable {
           date:        tran .date,
           payee:       tran .payee,
           account:     tran .account
-        })
+        });
+        reallySplit = true;
       }
+      if (! reallySplit)
+        await this._tranModel .update (tran._id, {group: null, sort: null});
     }
 
     // do the rest of the rules

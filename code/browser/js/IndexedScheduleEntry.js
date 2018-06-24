@@ -77,11 +77,11 @@ async addHtml (toHtml) {
     )
     setTimeout (() => {popup .addClass ('fader_visible')}, 0);
   }
-  await super .addHtml (toHtml)
-    if (! this._options .noHeader && this._variance .getBudget() .getCategories() .hasZombies())
-      button = $('<div>', {class: 'lnr-history _disabled'})
-        .appendTo ($('<div>', {class: '_reorganizeButton'}) .prependTo (this._view._html))
-        .click (e => {(async () => {await addPopup()})()});
+  await super .addHtml (toHtml);
+  if (! this._options .noHeader && this._variance .getBudget() .getCategories() .hasZombies())
+    button = $('<div>', {class: 'lnr-history _disabled'})
+      .appendTo ($('<div>', {class: '_reorganizeButton'}) .prependTo (this._view._html))
+      .click (e => {(async () => {await addPopup()})()});
   }
 }
 

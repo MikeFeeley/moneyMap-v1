@@ -236,7 +236,7 @@ async function TransactionDBMeta_addDateToActualsBlacklist (dbTran, date) {
     const databaseName = dbTran .getDatabaseName();
     let blacklist = blacklistsCache .get (databaseName) || blacklistsCache .set (databaseName, new Set()) .get (databaseName);
     if (! blacklist .has (m)) {
-      await dbTran .updateOne ('actualsMeta', {type: 'blacklist', month: m}, {type: 'blacklist', month: m}, {upsert: true});
+      await dbTran .updateOne ('actualsMeta', {type: 'blacklist', month: m}, {$set: {type: 'blacklist', month: m}}, {upsert: true});
       blacklist .add (m);
     }
   }

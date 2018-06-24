@@ -136,8 +136,16 @@ class ScheduleEntryView extends ListView {
     let table = $('<table>') .appendTo (help);
     for (let row of tableData) {
       let tr = $('<tr>') .appendTo (table);
-      for (let t of row)
-        $('<td>', {text: t}) .appendTo (tr);
+      for (const c of row) {
+        const td = $('<td>') .appendTo (tr);
+        for (let t of Array .isArray (c)? c: [c]) {
+          if (typeof t[0] == 'object' && [... t[0] .classList] .find (c => c .startsWith ('lnr-')))
+            t .css ({'font-family': 'Linearicons-Free', 'font-weight': 100});
+          else if (typeof t == 'string')
+            t = $('<span>', {text: t});
+          t .appendTo (td);
+        }
+      }
     }
     ui .ModalStack .add (
       e => {return true},
@@ -145,7 +153,6 @@ class ScheduleEntryView extends ListView {
       true
     )
   }
-
 }
 
 class ScheduleEntryTotal extends ViewLabel {
