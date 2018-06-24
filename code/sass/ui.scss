@@ -415,6 +415,10 @@ div._systemStatus {
         > div > ._field_passwordHint > div > ._content {
           width: 500px;
         }
+        > ._labeledField > ._label {
+          font-size: 18px;
+          color:     #aaa;
+        }
       }
       padding: 12px;
       border: solid 0.1px #aaa;
