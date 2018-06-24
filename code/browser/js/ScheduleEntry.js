@@ -53,9 +53,8 @@ class ScheduleEntry extends List {
         }
       };
       if (this._options .showVariance) {
-        updateTotals (this._categories .get (doc .category || doc._id));
-        if (doc .parent)
-          updateTotals (this._categories .get (doc .parent));
+        const cat = this._categories .get (doc .category? (doc .category._id || doc .category): doc._id);
+        updateTotals (cat);
         if (arg && arg._original_parent)
           updateTotals (this._categories .get (arg._original_parent));
         if (arg && (arg .account || arg._original_account || (arg .budgets && doc .account))) {
