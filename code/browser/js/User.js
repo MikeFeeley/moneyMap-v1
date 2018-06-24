@@ -1242,18 +1242,20 @@ class User extends Observable {
     let psn    = this._configs .findIndex (c => {return c._id == id});
     let config = this._getConfig (id);
     let model  = this._getConfigModel (id);
-    await Model .removeConfiguration (this .getDatabaseName (id));
-    await model .remove (id);
-    if (this._configs .length == 0)
-      await this .logout();
+    if (this._configs .length == 1)
+      await this .logout;
     else {
-      await this._selectConfig (this._configs [Math .max (0, psn - 1)] ._id);
+      this._configs .splice (psn, 1);
+      const cid = this._configs [Math .max (0, psn - 1)] ._id;
+      await this._selectConfig (cid);
       await this._notifyApp();
       if (this._configTabs) {
         this._view .selectTab (this._getConfigTab (this._cid));
         this._view .selectTab (this._getBudgetTab (this._bid));
       }
     }
+    await Model .removeConfiguration (this .getDatabaseName (id));
+    await model .remove (id);
   }
 
   /**
