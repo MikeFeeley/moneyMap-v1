@@ -155,7 +155,7 @@ class LocalDBAdaptor extends DBAdaptor {
       }
       await t .hasCommitted();
     }
-    return data .list .map (_ => true);
+    return data .list;
   }
 
   async _removeOne (data) {
