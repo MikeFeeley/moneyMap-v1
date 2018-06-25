@@ -166,6 +166,17 @@ body {
     }
 
     > ._group > ._presenter > ._MiniScheduleEntry {
+      min-height: 25px;
+      > table > tbody > tr > td {
+        padding: 0px;
+      }
+      > table > tbody > tr > td > ._field_name > div > ._content {
+        font-size: 11px!important;
+        width: 250px;
+      }
+      > ul:first-child {
+        padding-top: 2px;
+      }
       > ul > li {
         > ._field > div, > ._field {
           > ._content, ._suffix {

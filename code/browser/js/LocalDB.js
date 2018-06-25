@@ -19,12 +19,12 @@ class LocalDB {
           if (upgrade .update)
             store = e .target .transaction .objectStore (upgrade .update);
           if (store) {
+            for (let index of upgrade .deleteIndexes || [])
+              store .deleteIndex (index);
             for (let index of upgrade .createIndexes|| []) {
               const simple = typeof index == 'string';
               store .createIndex (simple? index: index .name, simple? index: index .property, simple? undefined: index .options)
             }
-            for (let index of upgrade .deleteIndexes || [])
-              store .deleteIndex (index);
           }
         }
       }
@@ -203,6 +203,7 @@ class LocalTransaction {
     const objectStore = this._transaction .objectStore (objectStoreName);
     const keyRanges   = this._extractKeyRanges (objectStore, query);
     const needFilter  = query &&  Object .keys (query) .length > 0;
+
     return Promise .all (keyRanges .map (([index, keyRange]) => {
       return new Promise ((resolve, reject) => {
         const request      = index? index .getAll (keyRange, needFilter? 0: count): objectStore .getAll (keyRange, needFilter? 0: count);
@@ -278,6 +279,7 @@ class LocalTransaction {
   _extractKeyRanges (objectStore, query, useIndex = true, onlyOneRange) {
     const indexes       = useIndex? [... objectStore .indexNames] .map (indexName => objectStore .index (indexName)): [];
     const indexKeyPaths = indexes .map (index => index .keyPath);
+
     const extractKeyRange = query => {
       const queryProperties = Object .keys (query || {});
       for (let property of queryProperties)
@@ -312,14 +314,18 @@ class LocalTransaction {
         );
         if (canUseKeyRange) {
           const result = query .$or .map (subQuery => extractKeyRange (subQuery));
-          query .$or = query .$or .filter (subQuery => Object .keys (subQuery) > 0);
+          query .$or = query .$or .filter (subQuery => Object .keys (subQuery) .length > 0);
           if (query .$or .length == 0)
             delete query .$or;
-          return result .reduce ((a,e) => a .concat(e));
+          const includesEmpty = !! result .find (e => e .length == 0);
+          return result .reduce ((a,e) => a .concat(e)) .concat (includesEmpty? [[]]: []);
         }
       }
+      // TODO should return [index, keyrange, filter]
+      // TODO consolidate to avoid duplicate scans (1: only ONE scan of each index, 2: multiple queries on same field?)
       return [];
     }
+
     const result = extractKeyRange (query);
     return result .length? result: [[undefined, undefined]];
   }
@@ -444,13 +450,14 @@ class LocalDBTest {
   static async run() {
     try {
       const db = new LocalDB ('test');
-      await db .open (1, (oldVersion, newVersion) => {
+      await db .open (2, (oldVersion, newVersion) => {
         if (oldVersion == 0 && newVersion == 1)
-          return [{create: 'foo', key: '_id', createIndexes: ['value']}];
+          return [{create: 'foo', key: '_id', createIndexes: ['value', 'category']}];
         else
           return [];
       });
       const t = db .transactionReadWrite ('foo');
+      let result, c;
 
       await t .delete ('foo');
 
@@ -461,7 +468,6 @@ class LocalDBTest {
       await t .insert ('foo', {_id: 5, value: 5, name: 'c', blah: [4]});
       await t .insert ('foo', {_id: 6, value: 6, name: 'c', blah: [4,6]});
 
-      let result, c;
 
       result = await t .update ('foo', {_id: 4}, {$set: {name: 'updated'}, $inc: {counter: 5}}, {returnOriginal: false});
       assert(Array.isArray (result) && result .length == 1 && result[0] .value .counter == 5);
@@ -600,6 +606,25 @@ class LocalDBTest {
       assert(result[0].value.foo.length==2);
       result = await t .update('foo', {_id: 500}, {$pull: {foo: {bar: 2, bat: 3}}}, {returnOriginal: false});
       assert(result[0].value.foo.length==1);
+
+      await t .delete ('foo');
+      await t .insert ('foo', {_id: 600, category:null});
+      await t .insert ('foo', {_id: 601, category:''});
+      await t .insert ('foo', {_id: 602});
+      await t .insert ('foo', {_id: 603, category: 0});
+      await t .insert ('foo', {_id: 604, category: 1});
+      await t .insert ('foo', {_id: 605});
+      result = await t .findArray ('foo', {_id: {$gte: 600, $lte: 604}, category: null});
+      assert(result .length == 2);
+      result = await t .findArray ('foo', {_id: {$gte: 600, $lte: 604}, category: {$exists: true}});
+      assert (result .length == 4);
+      result = await t .findArray ('foo', {_id: {$gte: 600, $lte: 604}, category: {$exists: false}});
+      assert (result .length == 1);
+      result = await t .findArray ('foo', {_id: {$gte: 600, $lte: 604}, $or: [{category: null}, {category: ''}, {category: {$exists: false}}]});
+      assert (result .length == 3);
+      result = await t .findArray ('foo', {$or: [{category: null}, {category: ''}, {category: {$exists: false}}]});
+      result = await t .findArray ('foo', {$or: [{category: null}, {category: 0}]});
+      assert (result .length == 3);
 
       // const cur = t .findCursor ('foo');
       // while (await cur .hasNext())

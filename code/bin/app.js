@@ -10,15 +10,15 @@ const router  = express .Router();
 const ADMIN_PASSWORD = JSON .parse (fs .readFileSync ('config.json', 'utf8')) .adminPassword;
 
 const credentials = {
-  key:  fs.readFileSync ('../ssl/key.pem', 'utf8'),
-  cert: fs.readFileSync ('../ssl/cert.pem', 'utf8')
+  key:  fs.readFileSync ('ssl/key.pem', 'utf8'),
+  cert: fs.readFileSync ('ssl/cert.pem', 'utf8')
 };
 
 const app        = express ();
 const bodyParser = require ('body-parser');
 
 app .use (bodyParser.json({limit: '100mb'}));
-app .use (express.static ('browser'));
+app .use (express.static ('code/browser'));
 
 var connections = new Map();
 var count = 0;
@@ -204,7 +204,7 @@ function cryptoDoc (cryptoOp, password, docs, table) {
 
 
 app .use ('/images', (req, res) => {
-  res .sendFile (path .join (__dirname, '../browser/images', req .url));
+  res .sendFile (path .join (__dirname, 'code/browser/images', req .url));
 })
 
 app.use ('/', require ('./index'));

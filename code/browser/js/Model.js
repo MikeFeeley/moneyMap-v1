@@ -676,7 +676,7 @@ function Model_query_ismatch (query, doc) {
       }
     }
     if (typeof doc [field] == 'undefined')
-      return (op == '$eq' && ! val) || (op == '$ne' && val) || (op == '$notregex');
+      return (op == '$eq' && ! val) || (op == '$ne' && val) || (op == '$notregex') || (op == '$exists' && ! val);
     switch (op) {
       case '$eq':
         if (Array .isArray (doc [field])) {
@@ -685,7 +685,7 @@ function Model_query_ismatch (query, doc) {
           else
             return doc [field] .includes (val);
         } else
-          return doc [field] == val;
+          return doc [field] === val;
       case '$gt':
         return doc [field] >  val;
       case '$gte':
@@ -708,6 +708,8 @@ function Model_query_ismatch (query, doc) {
         return ! doc [field] || ! doc [field] .match (new RegExp (val));
       case '$elemMatch':
         return Array .isArray (doc [field]) && doc [field] .find (e => Model_query_ismatch (val, e));
+      case '$exists':
+        return doc [field] === undefined? ! val: val;
     }
   }
   if (!query)

@@ -388,6 +388,8 @@ class BudgetProgressHUDNameView extends View {
     this._html .on ('keydown', e => {
       if (e .keyCode == 8 && e .metaKey)
         return false;
+      if (e .keyCode == 13)
+        e .stopPropagation();
     });
     this._html .on ('click', e => {e.stopPropagation(); return false})
     if (this._setFocus) {

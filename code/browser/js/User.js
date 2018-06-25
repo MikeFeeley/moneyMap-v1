@@ -323,7 +323,7 @@ class User extends Observable {
           /* ADD */
           switch (arg .name) {
             case 'configurations':
-              this._view .addConfigAddPopup (arg .target, this._configs, this._uid != null && this._expiry && this._expiry < Types .date .today());
+              this._view .addConfigAddPopup (arg .target, this._configs, this._uid != null /*&& this._expiry && this._expiry < Types .date .today()*/);
               break;
             case 'budgets':
               this._view .addBudgetAddPopup (arg .target, this._budgets);
@@ -762,8 +762,8 @@ class User extends Observable {
       }
       //this._view .addPayPalPurchase(line2);
       this._accountEditError = this._view .addLabel ('', line3, '_errorMessage');
-      this._view .addButton   ('Delete Profile and All Cloud Data', (async () => {
-        this._view .addConfirmDelete (update .find ('button:nth-child(2)'), 0, 'profile', {top: -70, left: -110},
+      const button = this._view .addButton   ('Delete Profile and All Cloud Data', (async () => {
+        this._view .addConfirmDelete (button, 0, 'profile', {top: -105, left: -120},
           'Doing so deletes everything that we store in the cloud about you, including all of your cloud configurations.  ', '_confirmProfileDelete');
       }), line3);
     }
@@ -1245,9 +1245,7 @@ class User extends Observable {
     let psn    = this._configs .findIndex (c => {return c._id == id});
     let config = this._getConfig (id);
     let model  = this._getConfigModel (id);
-    if (this._configs .length == 1)
-      await this .logout;
-    else {
+    if (this._configs .length > 1) {
       this._configs .splice (psn, 1);
       const cid = this._configs [Math .max (0, psn - 1)] ._id;
       await this._selectConfig (cid);
@@ -1259,6 +1257,8 @@ class User extends Observable {
     }
     await Model .removeConfiguration (this .getDatabaseName (id));
     await model .remove (id);
+    if (this._configs .length == 0)
+      await this .logout();
   }
 
   /**
