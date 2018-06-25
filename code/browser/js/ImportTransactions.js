@@ -217,10 +217,12 @@ class TransactionAndRulesTable extends TransactionTable {
   }
 
   _toggleRule (id) {
-    let close = (cid, onClose) => {
+    let close = (cid, onClose, otherIds) => {
       let finish = () => {
         this._view .removeRuleBox (rulebox, field);
-        this._view .updateField   (cid, 'rules', this._importRulesModel .getMatchingRules (tran) .length > 0)
+        this._view .updateField   (cid, 'rules', this._importRulesModel .getMatchingRules (tran) .length > 0);
+        for (const id of otherIds || [])
+          this._view .updateField (id, 'rules', true);
       }
       let tran = this._model .refine (t => {return t._id == cid}) [0];
       let [rulebox, field] = this._view .getRuleBox (cid);
@@ -234,7 +236,9 @@ class TransactionAndRulesTable extends TransactionTable {
       let tran = this._model .refine (t => {return t._id == id}) [0];
       this._view .updateField (tran._id, 'rules', true);
       let rulebox = this._view .addRuleBox (tran._id);
-      this._openRule = {id: tran._id, rule: new ImportRules (this._importRulesModel, tran, this._accounts, this._variance, () => {close (id)})};
+      this._openRule = {id: tran._id, rule: new ImportRules (this._importRulesModel, tran, this._accounts, this._variance, affected => {
+        close (id, undefined, affected)
+      })};
       this._openRule .rule .addHtml (tran, rulebox);
     }
     if (this._openRule && this._openRule .id == id)

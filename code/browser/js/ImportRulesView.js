@@ -365,37 +365,39 @@ class ImportRulesView extends TupleView {
   }
 
   removeTuple (id) {
-    var table    = this._tuples .get (id) .closest ('table');
-    var rule     = table .closest ('._rule');
-    if ($(document.activeElement) .closest ('._rule') [0] == rule [0]) {
-      var tuple    = this ._tuples .get (id);
-      var newFocus = tuple .next ('tr');
-      if (newFocus .length == 0)
-        newFocus = tuple .prev ('tr');
-      if (newFocus .length) {
-        newFocus = newFocus .find ('._field') .toArray() .find (h => {
-          var f = $(h) .data ('field');
-          return f && f .isEnabled()
-        });
-        newFocus = newFocus && $(newFocus) .data ('field');
-      } else
-        newFocus = undefined
-    }
-    super .removeTuple (id);
-    if (table .find ('tr') .length ==0) {
-      this ._removeTable (table);
-      if (rule .find ('fieldset') .length == 0) {
-        rule .remove();
-        if (this._html .find ('._rule') .length == 0) {
-          this._html .remove();
-          this._notifyObservers (ImportRulesViewEvent .DELETED)
-        }
+    const tuple  = this ._tuples .get (id);
+    if (tuple) {
+      const table  = tuple .closest ('table');
+      const rule   = table .closest ('._rule');
+      if ($(document.activeElement) .closest ('._rule') [0] == rule [0]) {
+        var newFocus = tuple .next ('tr');
+        if (newFocus .length == 0)
+          newFocus = tuple .prev ('tr');
+        if (newFocus .length) {
+          newFocus = newFocus .find ('._field') .toArray() .find (h => {
+            var f = $(h) .data ('field');
+            return f && f .isEnabled()
+          });
+          newFocus = newFocus && $(newFocus) .data ('field');
+        } else
+          newFocus = undefined
       }
-    } else if (newFocus)
-      newFocus .click();
+      super .removeTuple (id);
+      if (table .find ('tr') .length ==0) {
+        this ._removeTable (table);
+        if (rule .find ('fieldset') .length == 0) {
+          rule .remove();
+          if (this._html .find ('._rule') .length == 0) {
+            this._html .remove();
+            this._notifyObservers (ImportRulesViewEvent .DELETED)
+          }
+        }
+      } else if (newFocus)
+        newFocus .click();
+    }
   }
 
-  async showApplyPopup (id, presenter) {
+  async showApplyPopup (id, presenter, onClose) {
     var popup = $('<div>', {class: '_ApplyPopup'}) .appendTo (this._rules .get(id));
     popup .css ({top: 30, left: 10});
     await presenter .addHtml (popup, () => {

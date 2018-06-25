@@ -199,7 +199,7 @@ class ImportRules extends TuplePresenter {
         async .push (this._model .applyRule (rule, tran));
       for (let a of async)
         await a;
-      this .close();
+      this .close (ids);
     }
     const rule  = this._model .get (id);
     const trans = this._model .getTransactionModel()
@@ -214,8 +214,8 @@ class ImportRules extends TuplePresenter {
     this._tran = tran;
   }
 
-  close() {
-    this._onClose();
+  close (ids) {
+    this._onClose (ids);
   }
 
   _addRule (rule) {
