@@ -154,7 +154,7 @@ class ImportRules extends TuplePresenter {
       let entry = this._model .get ((arg .pos && arg .pos .id) || arg .id || arg);
       if (entry && entry .type == ImportRulesModelType .SPLIT && this._isSplitRemainingEntry (entry)) {
         let hasOtherSplits = (entry .parent .children || []) .find (c => {
-          return c .type == ImportRulesModelType .SPLIT && (eventType != ImportRulesViewEvent .REMOVE || c._id != arg)
+          return c .type == ImportRulesModelType .SPLIT && (eventType != ImportRulesViewEvent .REMOVE || c._id != arg) && (c .debit != 'Remaining' || c .credit != 'Remaining')
         });
         if (hasOtherSplits) {
           this._view .flagTupleError (arg);
