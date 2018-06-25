@@ -96,7 +96,7 @@ class NavigateView extends Observable  {
   addHelpTable (descData, tableData, modal) {
     if (! this._helpShowing) {
       this._helpShowing = true;
-      const help = $('<div>') .appendTo ($('<div>', {class: modal? '_helpPopup': '_helpInline'}) .appendTo (modal? $('body'): this._content));
+      const help = $('<div>') .appendTo ($('<div>', {class: '_helpPopup'}) .appendTo (modal? $('body'): this._content));
       $('<div>', {text: 'TIP'}) .appendTo (help);
       for (let desc of descData)
         $('<div>', {text: desc}) .appendTo (help);
@@ -106,8 +106,8 @@ class NavigateView extends Observable  {
         for (let t of row)
           $('<td>', {text: t}) .appendTo (tr);
       }
+      help .parent() .css ({top: 100, left: 50});
       if (modal) {
-        help .parent() .css ({top: 100, left: 50});
         ui .ModalStack .add (
           e  => true,
           () => {help .remove(); this._helpShowing = false},

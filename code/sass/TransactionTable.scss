@@ -642,38 +642,44 @@ body > ._import_status_popup {
 }
 
 ._ApplyPopup {
-  @include dark-popup();
-  > ._title {
-    font-weight: 200;
-    font-size: 24px;
-    float: left;
-  }
-  > ._apply_button {
-    float: right;
-    margin-top: 6px;
-  }
-  > ._ApplyToTable {
-    > form > table {
-      > thead > tr > th {
-        width: auto;
-        font-weight: 600;
-        border-bottom: 1px solid #999;
-      }
-      > tbody {
-        > tr {
-          * {
-            padding: 0;
-            margin: 0;
-            border: 0;
-          }
-          > td:not(:last-child) {
-            border-right: 1px dotted #666;
-          }
-          > td:not(:first-child) {
-            padding-left: 2px;
-          }
-          > td:not(:last-child) {
-            padding-right: 2px;
+  @include popup-container();
+  > div {
+    @include popup-content();
+    padding: 16px;
+    > ._title {
+      color: #33b1ff;
+      font-weight: 300;
+      font-size: 24px;
+      float: left;
+      margin-bottom: 24px;
+    }
+    > ._apply_button {
+      float: right;
+      margin-top: 6px;
+    }
+    > ._ApplyToTable {
+      > form > table {
+        > thead > tr > th {
+          width: auto;
+          font-weight: 600;
+          border-bottom: 1px solid #999;
+        }
+        > tbody {
+          > tr {
+            * {
+              padding: 0;
+              margin: 0;
+              border: 0;
+            }
+            > td:not(:last-child) {
+              border-right: 1px dotted #666;
+            }
+            > td:not(:first-child) {
+              padding-left: 2px;
+            }
+            > td:not(:last-child) {
+              padding-right: 2px;
+            }
           }
         }
       }

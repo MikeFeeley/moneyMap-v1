@@ -376,10 +376,6 @@ class BudgetProgressCategoryTitle extends Presenter {
         new ScheduleEntryNameNotScalable ('name',    new ScheduleNameFormat (accounts, categories), '', '', 'Name', categories),
         new ScheduleEntryAccount         ('account', ViewFormats ('string'))
       ], parentView)
-
-
-
-        // new ViewTextbox ('name', ViewFormats ('string'))], parentView)
     );
     this._modelObserver = this._model .addObserver (this, this._onModelChange);
   }

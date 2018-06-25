@@ -41,7 +41,7 @@ class BudgetProgressHUDView extends View {
   addHtml (toHtml, position, titlePresenter) {
     this._resetHtml (toHtml);
     this._html .appendTo (toHtml);
-    this._html .mousedown (e => {e.stopPropagation()})
+    this._html .mousedown (e => {e.stopPropagation()});
     this._position = position;
     if (position)
       this._html .css ({top: position .top, right: position .right, left: position .left});
@@ -377,19 +377,26 @@ class BudgetProgressHUDView extends View {
 
 class BudgetProgressHUDNameView extends View {
   constructor (name, setFocus) {
-    super (name, [new ViewTextbox ('name', ViewFormats ('string'), '', '', 'Subcategory')]);
+    super (name, [new ViewTextbox ('name', ViewFormats ('string'), '', '', 'Name')]);
     this._setFocus = setFocus;
   }
 
   addHtml (toHtml) {
-    this._html = $('<table>') .appendTo ($('<div>', {class: this._name}).appendTo (toHtml));
-    var td = $('<td>') .appendTo ($('<tr>') .appendTo ($('<tbody>') .appendTo (this._html)));
-    this .createFields ({name: ''}, () => {return td});
+    this._html = $('<ul>', {class: 'ui-sortable'}) .appendTo ($('<div>', {class: this._name + ' _List'}) .appendTo (toHtml));
+    const li   = $('<li>') .appendTo (this._html);
+    const field = $(this .createFields ({name: ''}, () => li) [0]) .data ('field');
     this._html .on ('keydown', e => {
       if (e .keyCode == 8 && e .metaKey)
         return false;
-      if (e .keyCode == 13)
+      if (e .keyCode == 13) {
         e .stopPropagation();
+        e .preventDefault();
+        this._notifyObservers (ViewEvent .UPDATE, {
+          id:        field._id,
+          fieldName: field._name,
+          value:     field .get()
+        });
+      }
     });
     this._html .on ('click', e => {e.stopPropagation(); return false})
     if (this._setFocus) {
