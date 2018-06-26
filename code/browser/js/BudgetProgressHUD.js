@@ -85,9 +85,14 @@ class BudgetProgressHUD {
 
   update (id) {
     if (id == null || id != this._id) {
-      this._view .setVisible (id);
       this._id = id;
       this._getData();
+      const noVariance = ! this._varianceAmount .month && ! this._varianceAmount .year;
+      const noMonths   = ! ['actual', 'budget', 'priorYear'] .find (p => this._monthsAmount [p] .find (a => a != 0));
+      const noCompare  = ! [... Object .values (this._compareAmount)] .find (v => v != 0);
+      if (noVariance && noMonths && noCompare && this._options .noScheduleEntry)
+        return;
+      this._view .setVisible (id);
       this._updateAll();
     }
   }
