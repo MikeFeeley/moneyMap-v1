@@ -125,11 +125,10 @@ module .exports = {
    }
 }
 
-const db      = require ('mongodb') .MongoClient .connect ('mongodb://localhost:27017');
-const dbCache = new Map();
+const db = require ('mongodb') .MongoClient .connect ('mongodb://localhost:27017');
 
 async function getDB (name) {
-  return dbCache .get (name) || dbCache .set (name, (await db) .db (name)) .get (name);
+  return db .db (name);
 }
 
 const cryptoKeyCache = new Map();

@@ -137,12 +137,12 @@ class LocalDBAdaptor extends DBAdaptor {
     if (data._isTran) {
       const t = this._getTDBMTransaction (data);
       for (const item of data .list)
-        TransactionDBMeta_insert (t, item);
+        await TransactionDBMeta_insert (t, item);
       await t .hasCommitted();
     } else {
       const t = data._db .transactionReadWrite ([data .collection] .concat (true || data .list .find (i => i._seq !== undefined && ! i._seq)? 'counters': []));
       const needSeqCount = data .list .filter (item => item._seq !== undefined && ! item._seq) ;
-      let   seq = needSeqCount &&
+      let seq = needSeqCount &&
         (await t .findOneAndUpdate (
           'counters', {_id: data .collection}, {$inc: {seq: needSeqCount}}, {upsert: true, returnOriginal: true}
         )) .value .seq;
@@ -242,14 +242,19 @@ class LocalDBAdaptor extends DBAdaptor {
     await data._db .delete();
   }
 
+  async resetActualsMeta (data) {
+    const t = data._db .transactionReadWrite (['actualsMeta']);
+    t .delete ('actualsMeta');
+    await t .hasCommitted();
+  }
 }
 
 const LocalDBAdaptor_SCHEMA_UPGRADER = {
   _0_1: {
     'config': [
       {create: 'accounts'},
-      {create: 'actuals', createIndexes: ['month']},
-      {create: 'actualsMeta', key: 'type'},
+      {create: 'actuals', autoIncrement: true, createIndexes: ['month']},
+      {create: 'actualsMeta', autoIncrement: true},
       {create: 'balanceHistory', createIndexes: ['account']},
       {create: 'budgets'},
       {create: 'categories'},

@@ -17,7 +17,7 @@ class ImportFormatView extends Observable {
     $('<div>', {text: 'Drag the file here from your downloads folder to configure the import format.'}) .appendTo (start);
     $('<div>', {text: 'Then, just drag files into any window of the app to import them.'}) .appendTo (start);
 
-    this._popup .on ({
+    this._whiteout .on ({
       dragover: e => {e .preventDefault()},
       drop:     e => {
         e .preventDefault();

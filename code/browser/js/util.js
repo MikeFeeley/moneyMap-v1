@@ -2,6 +2,7 @@
 
 const isFirefox = (typeof window !== 'undefined') && window .navigator .userAgent .includes ('Firefox');
 const isChrome  = (typeof window !== 'undefined') && window .navigator .userAgent .includes ('Chrome');
+const isSafari  = ! isFirefox && ! isChrome;
 
 class Observable {
   addObserver (thisArg, observer) {

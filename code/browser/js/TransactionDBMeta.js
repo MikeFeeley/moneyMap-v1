@@ -60,7 +60,7 @@ async function TransactionDBMeta_apply (dbTran, pt, accId) {
     if (acc && (acc .pendingTransactions || []) .find (t => t .uid == pt .uid))
       await dbTran .updateOne ('accounts', {_id: accId, _updateSeq: acc._updateSeq}, {
         $inc:  {_updateSeq: 1},
-        $set:  {balance: acc .balance + amount * (acc .creditBalance? -1: 1)},
+        $set:  {balance: (acc .balance || 0) + amount * (acc .creditBalance? -1: 1)},
         $pull: {pendingTransactions: {uid: pt .uid}}
       });
   }
@@ -74,7 +74,7 @@ async function TransactionDBMeta_findAccountAndRollForward (dbTran, query) {
 }
 
 async function TransactionDBMeta_handleSeq (dbTran, id, insert) {
-  if (insert._seq === null)
+  if (insert._seq === undefined || insert._seq === null)
     insert._seq = (
       await dbTran .findOneAndUpdate ('counters', {_id: id}, {$inc: {seq: 1}}, {upsert: true, returnOriginal: false})
     ) .value .seq;
@@ -89,7 +89,7 @@ async function TransactionDBMeta_insert (dbTran, tran) {
       uid:    await TransactionDBMeta_newUID (dbTran),
       insert: tran
     }
-    await dbTran .updateOne     ('accounts', {_id: tran .account}, {$push: {pendingTransactions: pt}});
+    await dbTran .updateOne       ('accounts', {_id: tran .account}, {$push: {pendingTransactions: pt}});
     await TransactionDBMeta_apply (dbTran, pt, tran .account);
   } else
     await dbTran .insert ('transactions', tran);
@@ -181,9 +181,9 @@ function TransactionDBMeta_getYearMonth (date) {
 }
 
 async function TransactionDBMeta_updateActuals (dbTran, start, end) {
-  let rm    = dbTran .deleteMany ('actuals', start? {$and: [{month: {$gte: start}}, {month: {$lte: end}}]}: {});
-  let query = start? {$and: [{date: {$gte: start * 100}}, {date: {$lte: end * 100 + 99}}]}: {};
-  let acum  = new Map();
+  await dbTran .deleteMany ('actuals', start? {month: {$gte: start, $lte: end}}: {});
+  const query = start? {date: {$gte: start * 100, $lte: end * 100 + 99}}: {};
+  const acum  = new Map();
   const cursor = dbTran .find ('transactions', query);
   while (await cursor .hasNext()) {
     const tran = await cursor .next();
@@ -195,13 +195,12 @@ async function TransactionDBMeta_updateActuals (dbTran, start, end) {
       acum .set (key, val);
     }
   }
-  await rm;
-  let up = [];
+  const up = [];
   for (let e of acum .entries()) {
     e[0] = e[0] .split ('$');
     if (e[0] == '@NULL@')
       e[0] = null;
-    up .push (dbTran .insert ('actuals', {_id: TransactionDBMeta_createObjectID(), month: Number (e[0][0]), category: e[0][1], amount: e[1] .amount, count: e[1] .count}));
+    up .push (dbTran .insert ('actuals', {month: Number (e[0][0]), category: e[0][1], amount: e[1] .amount, count: e[1] .count}));
   }
   await Promise .all (up);
 }
@@ -217,12 +216,12 @@ async function TransactionDBMeta_getActuals (dbTran, query) {
           list .push ({start: e .month, end: e .month});
         return list;
       }, []);
-    await dbTran .deleteMany ('actualsMeta', {type: 'blacklist'});
     for (let ble of blacklist)
       await TransactionDBMeta_updateActuals (dbTran, ble .start, ble .end);
+    await dbTran .deleteMany ('actualsMeta', {type: 'blacklist'});
   } else {
     await TransactionDBMeta_updateActuals (dbTran);
-    await dbTran .insert ('actualsMeta', {_id: TransactionDBMeta_createObjectID(), type: 'isValid'});
+    await dbTran .updateOne ('actualsMeta', {type: 'isValid'}, {$set: {type: 'isValid'}}, {upsert: true});
   }
   let res = await dbTran .findArray ('actuals', query || {});
   let databaseName = dbTran .getDatabaseName();
@@ -232,7 +231,7 @@ async function TransactionDBMeta_getActuals (dbTran, query) {
 
 async function TransactionDBMeta_addDateToActualsBlacklist (dbTran, date) {
   if (date) {
-    let m         = TransactionDBMeta_getYearMonth (date);
+    let m              = TransactionDBMeta_getYearMonth (date);
     const databaseName = dbTran .getDatabaseName();
     let blacklist = blacklistsCache .get (databaseName) || blacklistsCache .set (databaseName, new Set()) .get (databaseName);
     if (! blacklist .has (m)) {

@@ -181,11 +181,6 @@ class User extends Observable {
 
     switch (eventType) {
 
-      case ViewEvent .UPDATE:
-        if (arg .id == 'user')
-          await this._updateAccount ({[arg .fieldName]: arg .value});
-        break;
-
       case UserViewEvent .GET_STARTED:
         await this .start();
         break;
@@ -356,7 +351,9 @@ class User extends Observable {
         break;
 
       case ViewEvent .UPDATE:
-        if (arg .id && arg .value) {
+        if (arg .id == 'user')
+          await this._updateAccount ({[arg .fieldName]: arg .value});
+        else if (arg .id && arg .value) {
           let model  = arg .fieldName .startsWith ('c_')? this._getConfigModel (this._cid): this._budgetModel;
           let update = {}
           update [arg .fieldName .slice (2)] = arg .value;

@@ -1,3 +1,8 @@
+// Jun 26 2018: Safari bug on index cursor:
+// after calling update or delete on cursor, continue skips over records with same index key as updated/deleted record
+// delete this (used in findCursor) when Safari bug is fixed.
+const SAFARI_INDEX_CURSOR_UPDATE_DELETE_BUG = isSafari;
+
 class LocalDB {
    constructor (name) {
      this._name = name;
@@ -73,12 +78,13 @@ class LocalDB {
 class LocalTransaction {
   constructor (localDB, stores, mode) {
     this._localDB     = localDB;
+    this._mode        = mode;
     this._transaction = this._localDB .getDB() .transaction (stores, mode);
     this._complete    = new Promise ((resolve, reject) => {
       this._transaction .oncomplete = e => resolve (e);
       this._transaction .onabort    = e => reject  (e);
       this._transaction .onerror    = e => reject  (e);
-    })
+    });
   }
 
   getDatabaseName() {
@@ -226,49 +232,83 @@ class LocalTransaction {
   }
 
   findCursor (objectStoreName, query) {
-    query              = query && JSON .parse (JSON .stringify (query));
-    const objectStore  = this._transaction .objectStore (objectStoreName);
-    const keyRanges    = this._extractKeyRanges (objectStore, query);
-    const needFilter   = query && Object .keys (query) .length > 0;
-    let   request, current, cursorAdvanced, keyRangeCursor = 0;
+    const originalQuery = query;
+    query               = query && JSON .parse (JSON .stringify (query));
+    const objectStore   = this._transaction .objectStore (objectStoreName);
+    const keyRanges     = this._extractKeyRanges (objectStore, query);
 
-    const getNext = () =>
-      new Promise ((resolve, reject) => {
-        const [index, keyRange] = keyRanges [keyRangeCursor];
-        if (! request)
-          request = index? index .openCursor (keyRange): objectStore .openCursor (keyRange);
-        else
-          request .result .continue();
-        request .onsuccess = () => {
-          if (! request .result && keyRangeCursor < keyRanges .length - 1) {
-            keyRangeCursor += 1;
-            request = null;
-            getNext()
-              .then  (result => resolve (result))
-              .catch (error  => reject  (error));
-          } else if (request .result && needFilter && ! Model_query_ismatch (query, request .result .value))
-            request .result .continue();
+    if (SAFARI_INDEX_CURSOR_UPDATE_DELETE_BUG && this._mode .startsWith ('readwrite') && keyRanges .length > 1 || keyRanges [0][0] !== undefined) {
+      const resultsPromise = this .findArray (objectStoreName, originalQuery);
+      let results;
+      let cursor;
+
+      return {
+        next: ()  => {
+          if (results)
+            return results [++cursor]
           else
-            resolve (request .result);
-        }
-        request .onerror = () => reject (request .error);
-      });
+            return resultsPromise .then (r => {
+              results = r;
+              cursor  = 0;
+              return results [0];
+            });
+        },
+        hasNext: () => {
+          if (results)
+            return cursor < results .length - 1;
+          else
+            return resultsPromise .then (r => {
+              results = r;
+              cursor  = -1;
+              return results .length > 0;
+            });
+        },
+        delete: ()     => objectStore .delete (results [cursor] [objectStore .keyPath]),
+        update: update => objectStore .put    (update)
+      };
 
-    current = getNext();
-    return {
-      next: () => {
-        cursorAdvanced = true;
-        return current .then (result => result && result .value)
-      },
-      hasNext: () => {
-        if (cursorAdvanced) {
-         current        = getNext();
-         cursorAdvanced = false;
-        }
-        return current .then (result => !! result);
-      },
-      delete: ()     => request .result .delete(),
-      update: update => request .result .update (update),
+    } else {
+      const needFilter   = query && Object .keys (query) .length > 0;
+      let   request, current, cursorAdvanced, keyRangeCursor = 0;
+
+      const getNext = () =>
+        new Promise ((resolve, reject) => {
+          const [index, keyRange] = keyRanges [keyRangeCursor];
+          if (! request)
+            request = index? index .openCursor (keyRange): objectStore .openCursor (keyRange);
+          else
+            request .result .continue();
+          request .onsuccess = () => {
+            if (! request .result && keyRangeCursor < keyRanges .length - 1) {
+              keyRangeCursor += 1;
+              request = null;
+              getNext()
+                .then  (result => resolve (result))
+                .catch (error  => reject  (error));
+            } else if (request .result && needFilter && ! Model_query_ismatch (query, request .result .value))
+              request .result .continue();
+            else
+              resolve (request .result);
+          }
+          request .onerror = () => reject (request .error);
+        });
+
+      current = getNext();
+      return {
+        next: () => {
+          cursorAdvanced = true;
+          return current .then (result => result && result .value)
+        },
+        hasNext: () => {
+          if (cursorAdvanced) {
+           current        = getNext();
+           cursorAdvanced = false;
+          }
+          return current .then (result => !! result);
+        },
+        delete: ()     => request .result .delete(),
+        update: update => request .result .update (update),
+      }
     }
   }
 
@@ -321,8 +361,6 @@ class LocalTransaction {
           return result .reduce ((a,e) => a .concat(e)) .concat (includesEmpty? [[]]: []);
         }
       }
-      // TODO should return [index, keyrange, filter]
-      // TODO consolidate to avoid duplicate scans (1: only ONE scan of each index, 2: multiple queries on same field?)
       return [];
     }
 
@@ -450,7 +488,7 @@ class LocalDBTest {
   static async run() {
     try {
       const db = new LocalDB ('test');
-      await db .open (2, (oldVersion, newVersion) => {
+      await db .open (1, (oldVersion, newVersion) => {
         if (oldVersion == 0 && newVersion == 1)
           return [{create: 'foo', key: '_id', createIndexes: ['value', 'category']}];
         else
@@ -625,6 +663,46 @@ class LocalDBTest {
       result = await t .findArray ('foo', {$or: [{category: null}, {category: ''}, {category: {$exists: false}}]});
       result = await t .findArray ('foo', {$or: [{category: null}, {category: 0}]});
       assert (result .length == 3);
+
+      result = await t .findOneAndUpdate ('foo', {_id: 600}, {$inc: {seq: 1}}, {upsert: true, returnOriginal: false});
+      result = await t .findOneAndUpdate ('foo', {_id: 600}, {$inc: {seq: 1}}, {upsert: true, returnOriginal: false});
+      result = await t .findOneAndUpdate ('foo', {_id: 600}, {$inc: {seq: 1}}, {upsert: true, returnOriginal: false});
+      result = await t .findOneAndUpdate ('foo', {_id: 600}, {$inc: {seq: 1}}, {upsert: true, returnOriginal: false});
+      result = await t .findOneAndUpdate ('foo', {_id: 600}, {$inc: {seq: 1}}, {upsert: true, returnOriginal: false});
+      result = await t .findOneAndUpdate ('foo', {_id: 600}, {$inc: {seq: 1}}, {upsert: true, returnOriginal: false});
+      result = await t .findOneAndUpdate ('foo', {_id: 600}, {$inc: {seq: 1}}, {upsert: true, returnOriginal: false});
+      result = await t .findOneAndUpdate ('foo', {_id: 600}, {$inc: {seq: 1}}, {upsert: true, returnOriginal: false});
+      result = await t .findOneAndUpdate ('foo', {_id: 600}, {$inc: {seq: 1}}, {upsert: true, returnOriginal: false});
+      assert (result .value .seq == 9);
+
+      await t .insert ('foo', {_id: 700, month: 201806});
+      await t .insert ('foo', {_id: 701, month: 201806});
+      await t .insert ('foo', {_id: 702, month: 201806});
+      await t .insert ('foo', {_id: 703, month: 201806});
+      await t .insert ('foo', {_id: 704, month: 201806});
+      await t .insert ('foo', {_id: 705, month: 201807});
+      await t .deleteMany ('foo', {$and: [{month: {$gte: 201806}}, {month: {$lte: 201806}}]});
+      result = await t .findArray ('foo', {_id: {$gte: 700, $lte: 705}});
+      assert (result.length == 1 && result[0]._id==705);
+
+      await t .insert ('foo', {_id: 800, category: 201806});
+      await t .insert ('foo', {_id: 801, category: 201806});
+      await t .insert ('foo', {_id: 802, category: 201806});
+      await t .insert ('foo', {_id: 803, category: 201806});
+      await t .insert ('foo', {_id: 804, category: 201806});
+      await t .insert ('foo', {_id: 805, category: 201807});
+
+      await t .update ('foo', {category: 201806}, {$set: {blah: 1}});
+      result = await t .findArray ('foo', {blah: 1});
+      assert (result .length == 5);
+
+      await t .update ('foo', {_id: {$gte: 802, $lte: 804}}, {$set: {blah: 2}});
+      result = await t .findArray ('foo', {blah: 2});
+      assert (result .length == 3);
+
+      await t .deleteMany ('foo', {category: 201806});
+      result = await t .findArray ('foo', {_id: {$gte: 800, $lte: 805}});
+      assert (result .length == 1);
 
       // const cur = t .findCursor ('foo');
       // while (await cur .hasNext())
