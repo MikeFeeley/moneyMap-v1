@@ -326,8 +326,10 @@ class NavigateView extends Observable  {
   }
 
   removeProgressGraphs() {
-    if (this._progressGraphs)
-      this._progressGraphs .empty();
+    if (this._progressGraphs) {
+      this._progressGraphs .remove();
+      this._progressGraphs = null;
+    }
   }
 
   addHeadingToProgressGraph (progressGraph, heading) {

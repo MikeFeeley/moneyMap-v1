@@ -1264,7 +1264,7 @@ class Navigate {
         const affectedRoots = ids
           .map    (id => this._categories .getPath (this._categories .get (id)) [0])
           .reduce ((a,e) => a .concat (e), [])
-        if (! affectedRoots .find (r => rootsAdded .includes (r))) {
+        if (affectedRoots .length && ! affectedRoots .find (r => rootsAdded .includes (r))) {
           this._progressView .removeProgressGraphs();
           this._progressView .removeHelpTable();
           addGraphs();
