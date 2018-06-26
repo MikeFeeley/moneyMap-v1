@@ -398,16 +398,17 @@ class ImportRulesView extends TupleView {
   }
 
   async showApplyPopup (id, presenter, onClose) {
-    const container = $('<div>', {class: '_ApplyPopup'}) .appendTo (this._rules .get(id));
+    const toHtml    = this._rules .get(id);
+    const container = $('<div>', {class: '_ApplyPopup'}) .appendTo (toHtml);
     const content   = $('<div>') .appendTo (container);
-    container .css ({top: 30, left: 10});
+    container .css (ui .calcPosition (toHtml, toHtml .offsetParent(), {top: 32, left: 0}));
     await presenter .addHtml (content, () => {
       container .remove();
       ui .ModalStack .delete (modal);
     });
     const modal = ui .ModalStack .add (
       e => {return e && !$.contains (container .get (0), e .target) && container .get (0) != e .target},
-      () => {popup .remove()},
+      () => {container .remove()},
       true
     );
   }

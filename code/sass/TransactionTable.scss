@@ -241,7 +241,6 @@ table._TransactionAndRulesTable {
         }
       }
       &._rule {
-        position: relative;
         padding-left: 3px;
         padding-right: 3px;
         margin-bottom: 8px;
@@ -652,6 +651,7 @@ body > ._import_status_popup {
       font-size: 24px;
       float: left;
       margin-bottom: 24px;
+      margin-right: 8px;
     }
     > ._apply_button {
       float: right;
