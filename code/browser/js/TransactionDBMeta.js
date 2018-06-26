@@ -146,20 +146,20 @@ async function TransactionDBMeta_update (dbTran, id, update) {
 
 async function TransactionDBMeta_remove (dbTran, id) {
   var tran = await dbTran .findOne ('transactions', {_id: id});
-  if (!tran)
-    throw 'Remove Transaction not found';
-  await TransactionDBMeta_addDateToActualsBlacklist (dbTran, tran .date);
-  if (tran .account) {
-    var pt = {
-      uid:    await TransactionDBMeta_newUID (dbTran),
-      _id:    id,
-      remove: true
+  if (tran) {
+    await TransactionDBMeta_addDateToActualsBlacklist (dbTran, tran .date);
+    if (tran .account) {
+      var pt = {
+        uid:    await TransactionDBMeta_newUID (dbTran),
+        _id:    id,
+        remove: true
+      }
+      await dbTran .updateOne     ('accounts', {_id: tran .account}, {$push: {pendingTransactions: pt}});
+      await TransactionDBMeta_apply (dbTran, pt, tran .account);
+      return true;
     }
-    await dbTran .updateOne     ('accounts', {_id: tran .account}, {$push: {pendingTransactions: pt}});
-    await TransactionDBMeta_apply (dbTran, pt, tran .account);
-    return true;
+    return (await dbTran .deleteOne ('transactions', {_id: id}));
   }
-  return (await dbTran .deleteOne ('transactions', {_id: id}));
 }
 
 

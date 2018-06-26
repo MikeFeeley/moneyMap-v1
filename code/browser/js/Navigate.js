@@ -131,23 +131,25 @@ class Navigate {
   }
 
   async _onModelChange (eventType, doc, arg, source, model) {
-    var modelName = model .constructor .name;
-    let skip =
-      (eventType == ModelEvent .INSERT && modelName == 'SchedulesModel' && doc .category) ||
-      (eventType == ModelEvent .UPDATE && modelName == 'SchedulesModel' && arg && arg .sort != null);
+    const modelName = model .constructor .name;
+    let   ids;
     switch (modelName) {
       case 'ActualsModel':
-        var ids = (doc .category && [doc .category]) || [];
+        ids = (doc .category && [doc .category]) || [];
         if (eventType == ModelEvent .UPDATE && arg._original_category != null)
           ids .push (arg._original_category);
         break;
       case 'SchedulesModel':
-        var ids = [doc .category || doc._id];
+        // TODO might need to also update progress right sidebar if its empty
+        ids = [doc .category || doc._id];
         break;
       default:
-        var ids = [doc._id] || [];
+        ids = [doc._id] || [];
         break;
     }
+    const skip =
+      (eventType == ModelEvent .INSERT && modelName == 'SchedulesModel' && doc .category) ||
+      (eventType == ModelEvent .UPDATE && modelName == 'SchedulesModel' && arg && arg .sort != null);
     await this._update (eventType, modelName, ids, doc, skip);
   }
 
@@ -1208,7 +1210,7 @@ class Navigate {
         if (affected) {
           var oldMonths = months, oldYears = years;
           getAllData();
-          if ((oldMonths .length == 0) != (months .length == 0) || (oldYears .length == 0) != (years .length == 0)) {
+          if (oldMonths .length != months .length || oldYears .length != years .length) {
             this._progressView .emptyProgressGraph (progressGraph);
             addGraphsToView();
           } else {
@@ -1234,9 +1236,17 @@ class Navigate {
     var date       = Types .dateMY .today();
     var roots      = [this._budget .getExpenseCategory(), this._budget .getSavingsCategory(), this._budget .getIncomeCategory(), this._budget .getWithdrawalsCategory()];
     var labelWidth = this._getProgressGraphLabels (roots);
-    let added      = false;
-    for (let root of roots)
-      added |= this._addProgressGraph (root, null, false, undefined, labelWidth, true, true, true);
+    let rootsAdded;
+
+    const addGraphs = () => {
+      rootsAdded = [];
+      for (let root of roots) {
+        const added = this._addProgressGraph (root, null, false, undefined, labelWidth, true, true, true);
+        if (added)
+          rootsAdded .push (root);
+      }
+    }
+
     const showHelp = modal => this._progressView .addHelpTable (
       [
         'Use "Inbox" to start adding transactions to track your spending.',
@@ -1248,10 +1258,25 @@ class Navigate {
       ],
       modal
     );
+
+    const updater = this._addUpdater (this._progressView, (eventType, model, ids) => {
+      if (model == 'ActualsModel') {
+        const affectedRoots = ids
+          .map    (id => this._categories .getPath (this._categories .get (id)) [0])
+          .reduce ((a,e) => a .concat (e), [])
+        if (! affectedRoots .find (r => rootsAdded .includes (r))) {
+          this._progressView .removeProgressGraphs();
+          this._progressView .removeHelpTable();
+          addGraphs();
+        }
+      }
+    });
+
+    addGraphs();
     Help .add ('Progress', showHelp);
-    if (! added)
+    if (rootsAdded .length == 0)
       showHelp (false);
-   }
+  }
 
 
 

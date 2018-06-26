@@ -117,6 +117,13 @@ class NavigateView extends Observable  {
     }
   }
 
+  removeHelpTable() {
+    if (this._helpShowing) {
+      this._helpShowing = false;
+      this._content .find ('._helpPopup') .remove();
+    }
+  }
+
 
   addContainer (name='', toHtml = this._content) {
     return $('<div>', {class: name}) .appendTo (toHtml);
@@ -316,6 +323,11 @@ class NavigateView extends Observable  {
       }
       return graph;
     }
+  }
+
+  removeProgressGraphs() {
+    if (this._progressGraphs)
+      this._progressGraphs .empty();
   }
 
   addHeadingToProgressGraph (progressGraph, heading) {

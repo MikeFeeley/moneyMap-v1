@@ -47,7 +47,7 @@ const Help = Object .freeze ({
   show: (name, modal = true) => {
     let cb = Help .registry .get (name);
     if (cb)
-      cb(modal);
+      cb (modal);
   }
 });
 
