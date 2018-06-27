@@ -51,7 +51,7 @@ async addHtml (toHtml) {
     let scheduleEntry = new IndexedScheduleEntry (
       '_CategoryMenu', '_ReorganizeScheduleEntry',
       this._accounts, this._variance,
-      {showVariance: false, includeZombies: true, includeZombieActiveYears: true, categoriesOnly: true, noHeader: true, noIndex: true}
+      {includeZombies: true, includeZombieActiveYears: true, categoriesOnly: true, noHeader: true, noIndex: true}
     );
     await scheduleEntry .addHtml (content);
     let lis = content .closest ('._IndexedListViewWithHead') .find ('._list');
@@ -87,8 +87,8 @@ async addHtml (toHtml) {
 
 class ScheduleEntryList extends ScheduleEntry {
   constructor (name, accounts, variance, options) {
-    if (options .showVariance === undefined)
-      options .showVariance = true;
+    if (options .showTotal === undefined)
+      options .showTotal = true;
     super (name, accounts, variance, options)
   }
   _onViewChange (eventType, arg) {

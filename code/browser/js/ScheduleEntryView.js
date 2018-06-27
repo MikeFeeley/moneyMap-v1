@@ -1,7 +1,7 @@
 class ScheduleEntryView extends ListView {
 
   constructor (name, options, accounts, variance) {
-    if (options && options .showVariance && ! options .categoriesOnlyWithParent)
+    if (options && options .showTotal && ! options .categoriesOnlyWithParent)
       var hud = new BudgetProgressHUD (accounts, variance, {noScheduleEntry: true, isNotModal: true});
     var startFormat = new ViewFormat (
       value => {return Types .dateMYorYear .toString   (value)},

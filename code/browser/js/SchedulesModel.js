@@ -430,12 +430,14 @@ class Schedules extends Categories {
         else if (cat._id == account .intCategory && account .incCategory)
           cat = this .get (account .incCategory);
       }
-      for (let s of cat .schedule || []) {
-        if (Types .date .isYear (s .start))
-          return ScheduleType .YEAR;
-        else if (Types .date .isMonth (s .start))
-          return ScheduleType .MONTH;
-      }
+      const bs = this._budget .getStartDate(), be = this._budget .getEndDate();
+      for (let s of cat .schedule || [])
+        if (Types .dateMYorYear .inRange (s .start, s .end, s .repeat, s .limit, bs, be, bs, be)) {
+          if (Types .date .isYear (s .start, bs ,be))
+            return ScheduleType .YEAR;
+          else if (Types .date .isMonth (s .start))
+            return ScheduleType .MONTH;
+        }
     }
     return ScheduleType .NONE;
   }
