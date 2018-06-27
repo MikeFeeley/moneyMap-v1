@@ -128,7 +128,7 @@ module .exports = {
 const db = require ('mongodb') .MongoClient .connect ('mongodb://localhost:27017');
 
 async function getDB (name) {
-  return db .db (name);
+  return (await db) .db (name);
 }
 
 const cryptoKeyCache = new Map();
