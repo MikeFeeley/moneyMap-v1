@@ -9,6 +9,9 @@ $(document) .ready (() => {
   // const c = new Crypto('asdfasdf');
   // c .getPasswordHash() .then (v => console.log(v));
   // c .getServerPassword() .then (v => console.log(v));
+  //console.log(NumberType .eval ('1+2'));
+  //console.log(NumberType .eval ('1+2*3+4'));
+  // console.log(NumberType .eval ('((3+432/7,300+3*9) + 3) * -10%)'));
 });
 
 class App {

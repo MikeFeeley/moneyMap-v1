@@ -400,22 +400,110 @@ class NumberType extends FieldType {
     this._isPercent   = isPercent;
     this._inThousands = inThousands;
   }
-  _eval (s) {
-    if (s .includes ('*'))
-      return s .split ('*') .reduce ((a,t) => {return a * this._eval (t)}, 1);
-    else if (s .includes ('/')) {
-      var ts = s .split ('/');
-      return ts .slice (1) .reduce ((a,t) => {return a / this._eval (t)}, this._eval (ts [0]));
-    } else if (s .includes ('+'))
-      return s .split ('+') .reduce ((a,t) => {return a + this._eval (t)}, 0);
-    else if (s .includes ('-')) {
-      var ts = s.split ('-');
-      return ts .slice (1) .reduce ((a,t) => {return a - this._eval (t)}, this._eval (ts [0]));
-    } else if (s .endsWith ('%'))
-      return Number (s .slice (0, -1)) / 100.0;
-    else
-      return Number (s);
+
+  static eval (str) {
+
+    const tokenize = (str) => {
+      const tokens = [];
+      let   stack  = '';
+      for (let i = 0; i < str .length; i++) {
+        const c = str [i];
+        if ('0123456789.%' .includes (c))
+          stack += c;
+        else if (c != ' ') {
+          if (stack != '') {
+            tokens .push (stack);
+            stack = '';
+          }
+          if ('+-' .includes (c) && (i==0 || '+-*/(' .includes (str [i - 1]))) {
+            if (c == '-') {
+              tokens .push (-1);
+              tokens .push ('*');
+            }
+          } else
+            tokens .push (c);
+        }
+      }
+      if (stack .length)
+        tokens .push (stack);
+      return tokens;
+    }
+
+    const presedence = op => op == '+' || op == '-'? 1: 2;
+
+    const postfix = tokens => {
+      const stack = [];
+      const out   = [];
+      for (const token of tokens) {
+        if (token == '(')
+          stack .push (token);
+        else if (token == ')') {
+          while (1) {
+            const stackTop = stack .slice (-1) [0];
+            const consume  = stackTop && stackTop != '(';
+            if (! consume)
+              break;
+            out .push (stack .pop());
+          }
+          stack .pop();
+        } else if ('+-*/' .includes (token)) {
+          while (1) {
+            const stackTop = stack .slice (-1) [0];
+            const consume  = stackTop && ('+-*/') .includes (stackTop) && presedence (token) <= presedence (stackTop);
+            if (!consume)
+              break;
+            out .push (stack .pop());
+          }
+          stack .push (token);
+        } else
+          out .push (token);
+      }
+      return out .concat (stack .reverse());
+    }
+
+    const value = token => {
+      if (typeof token == 'string') {
+        let factor = 1;
+        if (token .endsWith ('%')) {
+          token = token .slice (0,1);
+          factor = 0.01;
+        }
+        return Number (token) * factor;
+      } else
+        return token;
+    }
+
+    const evalPostfix = rpn => {
+      const stack = [];
+      for (const token of rpn) {
+        if ('+-*/' .includes (token)) {
+          const op0 = value (stack .pop());
+          const op1 = value (stack .pop());
+          let   result;
+          switch (token) {
+            case '+':
+              result = op0 + op1;
+              break;
+            case '-':
+              result = op0 - op1;
+              break;
+            case '*':
+              result = op0 * op1;
+              break;
+            case '/':
+              result = op0 / op1;
+              break;
+          }
+          stack .push (result);
+        } else
+          stack .push (token);
+      }
+      return stack .length == 1 && stack [0];
+    }
+
+    return evalPostfix (postfix (tokenize (str)));
   }
+
   toString (v) {
     if (v != null) {
       if (this._isPercent)
@@ -429,13 +517,13 @@ class NumberType extends FieldType {
   fromString (s) {
     if (this._showZero && s == '')
       return null;
-    s = s .trim() .replace (/[$,]*/g, '');
+    s = s .replace (/[$,\s]*/g, '');
     if (this._isPercent)
       s = s .replace (/%/g, '');
     if (s .includes ('m'))
-      var n = Number (s.replace (/[/m*]*/g,'')) * 12; // XXX What is this for?
+      var n = Number (s.replace (/[/m*]*/g,'')) * 12;
     else
-      var n = this._eval (s);
+      var n = NumberType .eval (s);
     return isNaN (n)? undefined: Math .round (n * Math .pow (10, this._digits) * (this._isPercent? 1/100: 1));
   }
 }
