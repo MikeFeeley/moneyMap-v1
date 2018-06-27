@@ -1,10 +1,11 @@
 class BudgetProgressHUD {
-  constructor (accounts, variance, options = {}) {
+  constructor (accounts, variance, options = {}, categoryPicker) {
     this._accounts        = accounts;
     this._variance        = variance;
     this._view            = new BudgetProgressHUDView (! options .isNotModal, () => {this .delete()}, options .topBuffer);
     this._observer        = this._variance .addObserver (this, this._onModelChange);
     this._options         = options;
+    this._categoryPicker  = categoryPicker;
     this._view .addObserver (this, this._onViewChange);
   }
 
@@ -30,6 +31,12 @@ class BudgetProgressHUD {
         if (((cat .children || []) .length != 0) != this._hasSubCategories)
           this._updateSubCategories (true);
       }
+      if (this._categoryPicker) {
+        if (eventType == ModelEvent .INSERT && doc .parent && doc .parent._id == this._id)
+          this._categoryPicker. pick (doc._id);
+        else if (eventType == ModelEvent .REMOVE && doc .parent  == this._id)
+          this._categoryPicker .pick (doc .parent);
+        }
     }
   }
 
@@ -87,11 +94,13 @@ class BudgetProgressHUD {
     if (id == null || id != this._id) {
       this._id = id;
       this._getData();
-      const noVariance = ! this._varianceAmount .month && ! this._varianceAmount .year;
-      const noMonths   = ! ['actual', 'budget', 'priorYear'] .find (p => this._monthsAmount [p] .find (a => a != 0));
-      const noCompare  = ! [... Object .values (this._compareAmount)] .find (v => v != 0);
-      if (noVariance && noMonths && noCompare && this._options .noScheduleEntry)
-        return;
+      if (this._options .noScheduleEntry) {
+        const noVariance = this._varianceAmount && ! this._varianceAmount .month && ! this._varianceAmount .year;
+        const noMonths   = this._monthsAmount   && ! ['actual', 'budget', 'priorYear'] .find (p => this._monthsAmount [p] .find (a => a != 0));
+        const noCompare  = this._compareAmount  && ! [... Object .values (this._compareAmount)] .find (v => v != 0);
+        if (noVariance && noMonths && noCompare)
+          return;
+      }
       this._view .setVisible (id);
       this._updateAll();
     }

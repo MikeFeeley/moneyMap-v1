@@ -893,13 +893,17 @@ class User extends Observable {
 
     let pm = new Model ('parameters', this .getDatabaseName());
     let am = new Model ('accounts',   this .getDatabaseName());
+    let sort = 1;
     await pm .insert ({name: 'rates', apr: 575, inflation: 225, presentValue: true, futureYears: 40});
-    await am .insert ({type: AccountType .GROUP, name: 'Bank Accounts', form: AccountForm .CASH_FLOW, sort: 1});
-    await am .insert ({type: AccountType .GROUP, name: 'Credit Cards', form: AccountForm .CASH_FLOW, sort: 2});
-    await am .insert ({type: AccountType .GROUP, name: 'Cash', form: AccountForm .CASH_FLOW, sort: 3});
-    await am .insert ({type: AccountType .GROUP, name: 'Investments', form: AccountForm .ASSET_LIABILITY, sort: 4});
-    await am .insert ({type: AccountType .GROUP, name: 'Home Equity', form: AccountForm .ASSET_LIABILITY, sort: 5});
-    await am .insert ({type: AccountType .GROUP, name: 'Salary', form: AccountForm .INCOME_SOURCE, sort: 6});
+    const bankGroup = await am .insert ({type: AccountType .GROUP, name: 'Bank Accounts', form: AccountForm .CASH_FLOW, sort: sort++});
+    am .insert ({type: AccountType .ACCOUNT, name: 'Checking', form: AccountForm .CASH_FLOW, sort: sort++, group: bankGroup._id, creditBalance: true});
+    const cardGroup = await am .insert ({type: AccountType .GROUP, name: 'Credit Cards', form: AccountForm .CASH_FLOW, sort: sort++});
+    am .insert ({type: AccountType .ACCOUNT, name: 'Credit Card', form: AccountForm .CASH_FLOW, sort: sort++, group: cardGroup._id, creditBalance: false});
+    const cashGroup = await am .insert ({type: AccountType .GROUP, name: 'Cash', form: AccountForm .CASH_FLOW, sort: sort++});
+    am .insert ({type: AccountType .ACCOUNT, name: 'Cash', form: AccountForm .CASH_FLOW, sort: sort++, group: cashGroup._id, creditBalance: true});
+    await am .insert ({type: AccountType .GROUP, name: 'Investments', form: AccountForm .ASSET_LIABILITY, sort: sort++});
+    await am .insert ({type: AccountType .GROUP, name: 'Home Equity', form: AccountForm .ASSET_LIABILITY, sort: sort++});
+    await am .insert ({type: AccountType .GROUP, name: 'Salary', form: AccountForm .INCOME_SOURCE, sort: sort++});
     pm .delete();
     am .delete();
 
