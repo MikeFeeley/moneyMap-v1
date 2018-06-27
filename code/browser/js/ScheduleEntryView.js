@@ -192,6 +192,8 @@ class ScheduleEntryViewUnallocated extends ViewLabel {
       this._html .removeClass ('_negative');
     }
     super .set (value);
+    const notes = this._html .prev ('._field_scheduleLine') .find ('._field_notes');
+    notes [(value? 'add': 'remove') + 'Class'] ('_narrow');
   }
   _set (value) {
     super ._set (value? (this._isNegative? '(Over: ': '(Unallocated: ') + value + ')': '');

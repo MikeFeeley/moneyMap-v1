@@ -71,7 +71,7 @@ $indent:       24px;
         @include adaptive-width(200px,325px);
       }
       &._narrow ._content {
-        @include adaptive-width(75px,200px);
+        @include adaptive-width(85px,200px);
       }
     }
     div._field_total {
