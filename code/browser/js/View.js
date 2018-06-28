@@ -452,7 +452,7 @@ const ViewCalendar = {
           showMYorYear (Types .date .addYear (showDate, -1), selDate, isEnd, otherDate);
           e .stopPropagation();
         });
-      $('<div>', {text:  options .budget .getLabel ({start: st, end: en})}) .appendTo (header)
+      const year = $('<div>', {text:  options .budget .getLabel ({start: st, end: en})}) .appendTo (header)
         .click (e => {
           if (! isEnd)
             selectDate (Types .date._year (st));
