@@ -1330,3 +1330,57 @@ body > ._landing {
     }
   }
 }
+
+._calendarPicker {
+  position: absolute;
+  z-index: 1000;
+  > div {
+    padding: 4px;
+    @include backdrop-blur(4px, rgba(245,246,246,.94), rgba(245,246,246,.98));
+    border-radius: 4px;
+    box-shadow: $drop-shadow;
+    position: relative;
+    > ._MYorYear {
+      display: flex;
+      flex-direction: column;
+      > ._header > :nth-child(2)._selected, ._calendar > table > tr > ._selected {
+        background: #33b1ff;
+        &, > div {
+          color: white;
+        }
+      }
+      > ._header > :nth-child(2)._included, ._calendar > table > tr > ._included {
+        background: #d1f0ff;
+      }
+      > ._header {
+        display: flex;
+        flex-diretion: row;
+        justify-content: space-between;
+        > div {
+          align-self: center;
+        }
+        > :first-child, > :last-child {
+          font-family: 'Linearicons-Free';
+          color: #888;
+        }
+        > :nth-child(2) {
+          font-weight: 400;
+          font-size: 16px;
+          color: #444;
+          padding: 3px;
+        }
+      }
+      > ._calendar {
+        margin-top: 4px;
+        border-top: 1px solid #ccc;
+        > table > tr > td {
+          border-radius: 4px;
+          padding: 3px;
+          > div {
+            color: #888;
+          }
+        }
+      }
+    }
+  }
+}

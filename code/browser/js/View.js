@@ -403,6 +403,131 @@ class ViewTextbox extends ViewEdit {
   }
 }
 
+const ViewCalendar = {
+  show: (date, options, html, callback) => {
+    const bs = options .budget .getStartDate();
+    const be = options .budget .getEndDate();
+
+    const showMYorYear = (showDate, selDate, isEnd, otherDate) => {
+      const st = Types .dateFY .getFYStart (showDate, bs, be);
+      const en = Types .dateFY .getFYEnd   (showDate, bs, be);
+      const content = $('<div>', {class: '_MYorYear'}) .appendTo (html);
+
+      const selectDate = date => {
+        callback (date);
+        selDate = date;
+        setSelected();
+      };
+
+      const setSelected = () => {
+        for (const cl of ['_selected', '_included'])
+          content .find ('.' + cl) .removeClass (cl);
+        if (selDate == Types .date._year (st)) {
+          year .addClass ('_selected');
+          table .find ('td') .addClass ('_included');
+        } else {
+          const tds = table .find ('td');
+          if (selDate >= st && selDate <= en) {
+            const selMonth = Types .date .subMonths (selDate, st);
+            $(tds [selMonth]) .addClass ('_selected');
+          }
+          if (otherDate) {
+            const s = isEnd
+              ? Math .max (0, Types .date .subMonths (otherDate, st))
+              : Math .max (0, Types .date .subMonths (selDate, st) + 1);
+            const e = isEnd
+              ? (Types .date .isInfinity (selDate)? 12 : (Types .date .isBlank (selDate)? s: Math .min (11, Types .date .subMonths (selDate, st) - 1)))
+              : (Types .date .isInfinity (otherDate)? 12: Math .min (11, Types .date .subMonths (otherDate, st)));
+            for (let i = s; i <= e; i++)
+              $(tds [i]) .addClass ('_included');
+          }
+        }
+      }
+
+      const header  = $('<div>', {class: '_header'}) .appendTo (content);
+      $('<div>', {class: 'lnr-chevron-left'}) .appendTo (header)
+        .click (e => {
+          html .empty();
+          showMYorYear (Types .date .addYear (showDate, -1), selDate, isEnd, otherDate);
+          e .stopPropagation();
+        });
+      const year = $('<div>', {text:  options .budget .getLabel ({start: st, end: en})}) .appendTo (header);
+      if (! isEnd)
+        year .click (e => {
+          selectDate (Types .date._year (st));
+          e .stopPropagation();
+        });
+      $('<div>', {class: 'lnr-chevron-right'}) .appendTo (header)
+        .click (e => {
+          html .empty();
+          showMYorYear (Types .date .addYear (showDate, 1), selDate, isEnd, otherDate);
+          e .stopPropagation();
+        });
+
+      const table = $('<table>') .appendTo ($('<div>', {class: '_calendar'}) .appendTo (content));
+      let dt = st;
+      for (let row = 0; row < 3; row++) {
+        const tr = $('<tr>') .appendTo (table);
+        for (let col = 0; col < 4; col++) {
+          const tdt = dt;
+          $('<td>') .appendTo (tr) .append ($('<div>', {text: Types .dateM .toString (dt)}))
+            .click (e => {
+              selectDate (tdt);
+              e .stopPropagation();
+            });
+          dt = Types .date .addMonthStart (dt, 1);
+        }
+      }
+
+      setSelected();
+    }
+
+    const other = options .otherField && options .otherField .get();
+    switch (options .type) {
+      case 'MYorYear':
+        showMYorYear (date || bs, date, false, other);
+        break;
+      case 'EndMY':
+        showMYorYear (Types .date .isInfinity (date)? other || bs: date || other || bs, date, true, other);
+        break;
+    }
+  }
+}
+
+/**
+ *
+ */
+class ViewDate extends ViewTextbox {
+
+  constructor (name, format, prefix='', suffix='', placeholder='', options) {
+    super (name, format, prefix, suffix, placeholder);
+    this._options = options;
+  }
+
+  _addHtml() {
+    super._addHtml();
+    if (this._options .other)
+      this._options .otherField = this._html .siblings ('._field_' + this._options .other) .data ('field');
+    let popup;
+    this._inputContainer .find ('input')
+      .on ('focusin',  e => {
+        if (popup)
+          popup .remove();
+        const toHtml = this._inputContainer .offsetParent();
+        popup = $('<div>', {class: '_calendarPicker'}) .appendTo (toHtml);
+        const content = $('<div>') .appendTo (popup);
+        popup .css (ui .calcPosition (this._inputContainer, toHtml, {top: 24, left: 0}));
+        ViewCalendar .show (this .get(), this._options, content, val => {this .set (val); this._handleChange(); this.click()});
+      })
+      .on ('focusout', e => {
+        if (popup) {
+          popup .remove();
+          popup = null;
+        }
+      })
+  }
+}
+
 /**
  */
 
@@ -466,6 +591,7 @@ var ViewScalable = Base => class extends Base {
 /**
  */
 class ViewScalableTextbox extends ViewScalable (ViewTextbox) {}
+class ViewScalableDate    extends ViewScalable (ViewDate) {}
 
 /**
  */

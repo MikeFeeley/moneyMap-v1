@@ -3,23 +3,24 @@ class ScheduleEntryView extends ListView {
   constructor (name, options, accounts, variance) {
     if (options && options .showTotal && ! options .categoriesOnlyWithParent)
       var hud = new BudgetProgressHUD (accounts, variance, {noScheduleEntry: true, isNotModal: true});
-    var startFormat = new ViewFormat (
+    const startFormat = new ViewFormat (
       value => {return Types .dateMYorYear .toString   (value)},
       view  => {return Types .dateMYorYear .fromString (view, variance .getBudget() .getStartDate())},
       value => {return ''}
     );
-    var endFormat = new ViewFormat (
+    const endFormat = new ViewFormat (
       value => {return Types .dateEndMY .toString   (value)},
       view  => {return Types .dateEndMY .fromString (view, variance .getBudget() .getStartDate())},
       value => {return ''}
     );
-    let totalFormat = new ViewFormat (
+    const totalFormat = new ViewFormat (
       value => {return isNaN(value)? value: Types .moneyDC .toString   (value)},
       view  => {return Types .moneyDC .fromString (view)},
       value => {return ''}
     )
-    let categories = variance .getBudget() .getCategories();
-    var fields = [
+    const budget     = variance .getBudget();
+    const categories = budget .getCategories();
+    const fields = [
       new ScheduleEntryName            ('name',            new ScheduleNameFormat (accounts, categories), '', '', 'Name', categories),
       new ScheduleEntryAccount         ('account',         ViewFormats ('string')),
       new ScheduleEntryZombie          ('zombie',          ViewFormats ('string')),
@@ -27,14 +28,14 @@ class ScheduleEntryView extends ListView {
       new ViewEmpty                    ('scheduleLine',    ViewFormats ('string')),
       new ScheduleEntryTotal           ('total',           totalFormat, hud),
       new ScheduleEntryViewUnallocated ('unallocated',     ViewFormats ('moneyDC')),
-      new ViewScalableTextbox          ('start',           startFormat,                  '', '', 'Start'),
-      new ViewScalableTextbox          ('end',             endFormat,                    '', '', 'End'),
+      new ViewScalableDate             ('start',           startFormat,                  '', '', 'Start', {type: 'MYorYear', budget: budget, other: 'end'}),
+      new ViewScalableDate             ('end',             endFormat,                    '', '', 'End',   {type: 'EndMY',    budget: budget, other: 'start'}),
       new ViewScalableTextbox          ('amount',          ViewFormats ('moneyDC'),      '', '', 'Amount'),
       new RepeatField                  ('repeat',          variance .getBudget()),
       new LimitField                   ('limit',           ViewFormats ('number'),       '', '', 'Yrs'),
       new ViewElasticTextbox           ('notes',           ViewFormats ('string'),       '', '', 'Notes')
     ];
-    var lineTypes = {
+    const lineTypes = {
       categoryLine: ['name', 'account', 'zombie', 'zombieActive', 'scheduleLine', 'unallocated', 'total'],
       scheduleLine: ['start', 'end', 'amount', 'repeat', 'limit', 'notes']
     }
