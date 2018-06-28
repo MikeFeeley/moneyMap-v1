@@ -7,22 +7,11 @@ async function login (req, res, next) {
   try {
     const u = req .decrypt (await (await req .dbPromise) .collection ('users') .find () .toArray(), 'users') .find (u => u .username == req .body .username);
     if (! u)
-      res .json ({noUser: true})
-
-    // // FOR CONVERSION TO HASHED PASSWORD
-    // else {
-    //
-    //   await (await req .dbPromise) .collection ('users') .update ({_id: u[0]._id}, req .encrypt ({$set: {password: req .body .password}}, 'users'));
-    //   res .json ({okay: true, user: u[0]});
-    //
-    // }
-
+      res .json ({noUser: true});
     else if (u .password != req .body .password)
       res .json ({badPassword: true})
     else
       res.json ({okay: true, user: u});
-
-
   } catch (e) {
     console .log ('login: ', e, req.body);
     next (e);
