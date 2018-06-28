@@ -604,10 +604,10 @@ class ViewDate extends ViewTextbox {
         ViewCalendar .show (this .get(), this._options, content, val => {this .set (val); this._handleChange(); this.click()});
         popup .addClass ('fader_visible');
         if (this._html .closest ('.ui-sortable') .length) {
-          // moving element causes (1) the handler to be dropped and (2) focus to be lost, so we don't get the focusout event
+          //moving element causes (1) the handler to be dropped and (2) focus to be lost, so we don't get the focusout event
           const addEventHandler = () => {
             $(this._html .closest ('._tuple') [0]) .one ('click', e => {
-              if (popup && e .originalEvent .srcElement != input [0])
+              if (popup && e .originalEvent .target != input [0])
                 removePopup();
               else
                 addEventHandler();
