@@ -1340,16 +1340,18 @@ body > ._landing {
     border-radius: 4px;
     box-shadow: $drop-shadow;
     position: relative;
-    > ._MYorYear {
+    > ._MYorYear, > ._DM {
       display: flex;
       flex-direction: column;
-      > ._header > :nth-child(2)._selected, ._calendar > table > tr > ._selected {
+      > ._header > :nth-child(2)._selected, ._calendar > table > tbody > tr > ._selected {
         background: #33b1ff;
+        border-radius: 4px;
         &, > div {
           color: white;
         }
       }
-      > ._header > :nth-child(2)._included, ._calendar > table > tr > ._included {
+      > ._header > :nth-child(2)._included, ._calendar > table > tbody > tr > ._included {
+        border-radius: 4px;
         background: #d1f0ff;
       }
       > ._header {
@@ -1373,14 +1375,32 @@ body > ._landing {
       > ._calendar {
         margin-top: 4px;
         border-top: 1px solid #ccc;
-        > table > tr > td {
-          border-radius: 4px;
+        > table > tbody > tr > td {
           padding: 3px;
           > div {
             color: #888;
           }
+          &._disabled, &._deemphasized {
+            > div {
+              color: #ddd;
+            }
+          }
+          &._today > div {
+            text-decoration: underline;
+          }
+          &._today:not(._selected):not(._deemphasized) > div {
+            color: #444;
+          }
+        }
+        > table > thead > tr > th {
+          font-weight: 100;
+          font-size:  15px;
+          color: #a8a8a8;
         }
       }
+    }
+    > ._DM > ._calendar > table > tbody > tr > td {
+      text-align: right;
     }
   }
 }

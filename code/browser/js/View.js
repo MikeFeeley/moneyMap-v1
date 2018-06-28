@@ -411,10 +411,11 @@ const ViewCalendar = {
     const showMYorYear = (showDate, selDate, isEnd, otherDate) => {
       const st = Types .dateFY .getFYStart (showDate, bs, be);
       const en = Types .dateFY .getFYEnd   (showDate, bs, be);
-      const content = $('<div>', {class: '_MYorYear'}) .appendTo (html);
+      const content = $('<div>', {class: '_MYorYear'}) .appendTo (html)
+        .click (e => e .stopPropagation());
 
       const selectDate = date => {
-        callback (date);
+        callback (isEnd && otherDate && otherDate == date? '': date);
         selDate = date;
         setSelected();
       };
@@ -427,16 +428,16 @@ const ViewCalendar = {
           table .find ('td') .addClass ('_included');
         } else {
           const tds = table .find ('td');
-          if (selDate >= st && selDate <= en) {
-            const selMonth = Types .date .subMonths (selDate, st);
+          if ((selDate >= st && selDate <= en) || (isEnd && Types .date .isBlank (selDate) && otherDate && otherDate >= st && otherDate <= en)) {
+            const selMonth = Types .date .subMonths (selDate || otherDate, st);
             $(tds [selMonth]) .addClass ('_selected');
           }
           if (otherDate) {
             const s = isEnd
-              ? Math .max (0, Types .date .subMonths (otherDate, st))
+              ? Math .max (0, Types .date .subMonths (otherDate, st) + (Types .date .isBlank (selDate)? 1: 0))
               : Math .max (0, Types .date .subMonths (selDate, st) + 1);
             const e = isEnd
-              ? (Types .date .isInfinity (selDate)? 12 : (Types .date .isBlank (selDate)? s: Math .min (11, Types .date .subMonths (selDate, st) - 1)))
+              ? (Types .date .isInfinity (selDate)? 12 : Math .min (11, Types .date .subMonths (selDate, st) - 1))
               : (Types .date .isInfinity (otherDate)? 12: Math .min (11, Types .date .subMonths (otherDate, st)));
             for (let i = s; i <= e; i++)
               $(tds [i]) .addClass ('_included');
@@ -451,10 +452,10 @@ const ViewCalendar = {
           showMYorYear (Types .date .addYear (showDate, -1), selDate, isEnd, otherDate);
           e .stopPropagation();
         });
-      const year = $('<div>', {text:  options .budget .getLabel ({start: st, end: en})}) .appendTo (header);
-      if (! isEnd)
-        year .click (e => {
-          selectDate (Types .date._year (st));
+      $('<div>', {text:  options .budget .getLabel ({start: st, end: en})}) .appendTo (header)
+        .click (e => {
+          if (! isEnd)
+            selectDate (Types .date._year (st));
           e .stopPropagation();
         });
       $('<div>', {class: 'lnr-chevron-right'}) .appendTo (header)
@@ -465,20 +466,87 @@ const ViewCalendar = {
         });
 
       const table = $('<table>') .appendTo ($('<div>', {class: '_calendar'}) .appendTo (content));
+      const tbody = $('<tbody>') .appendTo (table);
       let dt = st;
       for (let row = 0; row < 3; row++) {
-        const tr = $('<tr>') .appendTo (table);
+        const tr = $('<tr>') .appendTo (tbody);
         for (let col = 0; col < 4; col++) {
-          const tdt = dt;
-          $('<td>') .appendTo (tr) .append ($('<div>', {text: Types .dateM .toString (dt)}))
+          const tdt         = dt;
+          const isDisabled = isEnd && otherDate && dt < otherDate;
+          const td         = $('<td>', {class: isDisabled? '_disabled': ''}) .appendTo (tr) .append ($('<div>', {text: Types .dateM .toString (dt)}))
             .click (e => {
-              selectDate (tdt);
+              if (! isDisabled)
+                selectDate (tdt);
               e .stopPropagation();
             });
           dt = Types .date .addMonthStart (dt, 1);
         }
       }
 
+      setSelected();
+    }
+
+    const showDM = (showDate, selDate) => {
+
+      const setSelected = () => {
+        table .find ('._selected') .removeClass ('_selected');
+        table .find ('._today')    .removeClass ('_today');
+        const tds = table .find ('td');
+        if (selDate >= st && selDate <= en)
+          $(tds [Types .date .subDays (selDate, st)]) .addClass ('_selected');
+        const today = Types .date .today();
+        if (today >= st && today <= en)
+          $(tds [Types .date .subDays (today, st)]) .addClass ('_today');
+      }
+
+      const content = $('<div>', {class: '_DM'}) .appendTo (html)
+        .on ('mousedown click', e => {
+          e .stopPropagation();
+          e .preventDefault();
+        });
+      const header  = $('<div>', {class: '_header'}) .appendTo (content);
+      $('<div>', {class: 'lnr-chevron-left'}) .appendTo (header)
+        .click (e => {
+          html .empty();
+          showDM (Types .date .addMonthStart (showDate, -1), selDate);
+          e .stopPropagation();
+        });
+      const year = $('<div>', {text: Types .dateMonthY .toString (showDate)}) .appendTo (header);
+      $('<div>', {class: 'lnr-chevron-right'}) .appendTo (header)
+        .click (e => {
+          html .empty();
+          showDM (Types .date .addMonthStart (showDate, 1), selDate);
+          e .stopPropagation();
+        });
+
+      const table = $('<table>') .appendTo ($('<div>', {class: '_calendar'}) .appendTo (content));
+      const thead = $('<thead>') .appendTo (table);
+      const tbody = $('<tbody>') .appendTo (table);
+      let tr = $('<tr>') .appendTo (thead);
+      for (const d of ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'])
+        $('<th>') .appendTo (tr) .append ($('<div>', {text: d}));
+      const sta = Types .date .monthStart (showDate);
+      const end = Types .date .monthEnd (showDate);
+      const mon = Types .date._month (sta);
+      let   dat  = Types .date .addDay (sta, -Types .date .getDayOfWeek (Types .date .monthStart (sta)));
+      const st = dat;
+      let   col = 0;
+      while (dat <= end || col) {
+        const thisDat = dat;
+        if (col == 0)
+          tr = $('<tr>') .appendTo (tbody);
+        $('<td>', {class: Types .date._month (dat) != mon? '_deemphasized': ''})
+          .appendTo (tr) .append ($('<div>', {text: Types .date._day (dat)}))
+          .click (e => {
+            callback (thisDat);
+            selDate = thisDat;
+            setSelected();
+            e .stopPropagation();
+          })
+        dat = Types .date .addDay (dat, 1);
+        col = (col + 1) % 7;
+      }
+      const en = Types .date .addDay (dat, -1);
       setSelected();
     }
 
@@ -489,6 +557,9 @@ const ViewCalendar = {
         break;
       case 'EndMY':
         showMYorYear (Types .date .isInfinity (date)? other || bs: date || other || bs, date, true, other);
+        break;
+      case 'DM':
+        showDM (date || Types .date .today(), date);
         break;
     }
   }
@@ -505,26 +576,47 @@ class ViewDate extends ViewTextbox {
   }
 
   _addHtml() {
+
+    const removePopup = () => {
+      if (popup)
+        popup .removeClass ('fader_visible')
+          .one ('transitionend', () => {
+            if (popup) {
+              popup .remove();
+              popup = null;
+            }
+          })
+    }
+
     super._addHtml();
     if (this._options .other)
       this._options .otherField = this._html .siblings ('._field_' + this._options .other) .data ('field');
     let popup;
-    this._inputContainer .find ('input')
+    const input = this._inputContainer .find ('input');
+    input
       .on ('focusin',  e => {
         if (popup)
           popup .remove();
         const toHtml = this._inputContainer .offsetParent();
-        popup = $('<div>', {class: '_calendarPicker'}) .appendTo (toHtml);
+        popup = $('<div>', {class: '_calendarPicker fader'}) .appendTo (toHtml);
         const content = $('<div>') .appendTo (popup);
         popup .css (ui .calcPosition (this._inputContainer, toHtml, {top: 24, left: 0}));
         ViewCalendar .show (this .get(), this._options, content, val => {this .set (val); this._handleChange(); this.click()});
-      })
-      .on ('focusout', e => {
-        if (popup) {
-          popup .remove();
-          popup = null;
+        popup .addClass ('fader_visible');
+        if (this._html .closest ('.ui-sortable') .length) {
+          // moving element causes (1) the handler to be dropped and (2) focus to be lost, so we don't get the focusout event
+          const addEventHandler = () => {
+            $(this._html .closest ('._tuple') [0]) .one ('click', e => {
+              if (popup && e .originalEvent .srcElement != input [0])
+                removePopup();
+              else
+                addEventHandler();
+            })
+          }
+          addEventHandler();
         }
       })
+   .on ('focusout', e => removePopup());
   }
 }
 

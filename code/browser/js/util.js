@@ -359,6 +359,9 @@ class DateType extends FieldType {
       (new Date (new Date (this._year (date), this._month (date) - 1, this._day (date)) .valueOf() + days * 1000 * 60 * 60 * 24));
 
   }
+  getDayOfWeek (d) {
+    return (new Date (this._year (d), this._month (d) - 1, this._day (d)) .getDay());
+  }
 }
 
 class TimeType extends DateType {

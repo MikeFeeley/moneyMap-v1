@@ -1,29 +1,30 @@
 class TransactionTableView extends TableView {
 
   constructor (name, columns, options, accounts, variance) {
-    var cats      = variance && variance .getBudget() .getCategories();
-    var accFormat = new ViewFormatOptions (
+    const budget = variance && variance .getBudget();
+    const cats   = budget && budget .getCategories();
+    const accFormat = new ViewFormatOptions (
       value => {return (accounts .getAccounts() .find (a => {return a._id  == value}) || {}) .name},
       view  => {return (accounts .getAccounts() .find (a => {return a.name == view && a .isCashFlowAccount()}) || {}) ._id},
       value => {},
       ()    => {return accounts .getAccounts() .filter (a => {return a .isCashFlowAccount()}) .map (a => {return a.name})}
     );
-    var catFormat = new ViewFormatOptions (
+    const catFormat = new ViewFormatOptions (
       value => {var cat = cats .get (value); return cat? cat.name: value},
       view  => {return view},
       value => {return cats .getPathname (cats .get (value)) .join (' > ')},
       ()    => {return cats}
     );
-    var getValue = (field, html) => {
+    const getValue = (field, html) => {
       return html .closest ('tr') .find ('.' + this._getFieldHtmlClass (field)) .data ('field') .get();
     }
-    var getDate        = html => {return getValue ('date',   html)};
-    var getDebit       = html => {return getValue ('debit',  html)};
-    var getCredit      = html => {return getValue ('credit', html)};
-    var getIsPriorYear = html => {return getDate (html) < variance .getBudget() .getStartDate()};
-    var fieldDesc = {
+    const getDate        = html => {return getValue ('date',   html)};
+    const getDebit       = html => {return getValue ('debit',  html)};
+    const getCredit      = html => {return getValue ('credit', html)};
+    const getIsPriorYear = html => {return getDate (html) < variance .getBudget() .getStartDate()};
+    const fieldDesc = {
       date:        [new ViewDateLabel            ('date',        ViewFormats ('dateDM')),
-                    new ViewDateTextbox          ('date',        ViewFormats ('dateDM'), variance .getBudget() .getStartDate(), '', '', 'Date')],
+                    new ViewDateTextbox          ('date',        ViewFormats ('dateDM'), variance .getBudget() .getStartDate(), '', '', 'Date', {type: 'DM', budget: budget})],
       payee:       [new ViewLabel                ('payee',       ViewFormats ('string')),
                     new ViewScalableTextbox      ('payee',       ViewFormats ('string'), '', '', 'Payee')],
       debit:       [new ViewLabel                ('debit',       ViewFormats ('moneyDC')),
@@ -53,11 +54,11 @@ class TransactionTableView extends TableView {
       tcredit:     [new ViewLabel                ('tcredit',     ViewFormats ('string')),
                     new ViewLabel                ('tcredit',     ViewFormats ('string'))]
     }
-    var fields = Object .keys (fieldDesc) .map (f => {
+    const fields = Object .keys (fieldDesc) .map (f => {
       var ro = options .readOnly || (options .readOnlyFields && options .readOnlyFields .includes (f));
       return fieldDesc [f] [ro? 0: 1];
     });
-    var headerDesc = {
+    const headerDesc = {
       date:        'Date',
       payee:       'Payee',
       debit:       'Debit',
@@ -66,7 +67,7 @@ class TransactionTableView extends TableView {
       category:    'Category',
       description: 'Description'
     }
-    var headers = columns .map (f => {return {name: f, header: headerDesc [f]}});
+    const headers = columns .map (f => {return {name: f, header: headerDesc [f]}});
     super (name, fields, headers, options);
     this._accounts = accounts;
     this._variance = variance;
@@ -135,9 +136,9 @@ class TransactionTableView extends TableView {
   }
 }
 
-class ViewDateTextbox extends ViewScalableTextbox {
-  constructor (name, format, budgetStartDate, prefix='', suffix='', placeholder='') {
-    super (name, format, prefix, suffix, placeholder);
+class ViewDateTextbox extends ViewScalableDate {
+  constructor (name, format, budgetStartDate, prefix='', suffix='', placeholder='', options) {
+    super (name, format, prefix, suffix, placeholder, options);
     this._budgetStartDate = budgetStartDate;
   }
   get() {
