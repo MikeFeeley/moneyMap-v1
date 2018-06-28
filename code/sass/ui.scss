@@ -796,85 +796,6 @@ body > ._whiteout {
   }
 }
 
-  //._login_dialogue {
-  //  @include user-select (none);
-  //  margin-left: auto;
-  //  margin-right: auto;
-  //  text-align: center;
-  //  > ._login_heading {
-  //    padding-top: 20px;
-  //    padding-bottom: 60px;
-  //    font-size: 160px;
-  //    color: #33b1ff;
-  //    > span:nth-child(1) {font-weight: 100; font-style: italic; padding-right: 32px}
-  //    > span:nth-child(2) {font-weight: 600}
-  //  }
-  //  > ._login_body {
-  //    margin-left: auto;
-  //    margin-right: auto;
-  //    width: 300px;
-  //    box-shadow: $drop-shadow;
-  //    border-radius: 6px;
-  //    padding: 30px 40px;
-  //    > div {
-  //      margin-top: 10px;
-  //      > span:first-child {
-  //        font-weight: 400;
-  //      }
-  //      > span:nth-child(2) {
-  //        font-weight: 100;
-  //      }
-  //    }
-  //    > div:first-child {
-  //      text-align:center;
-  //      font-size: 32px;
-  //      font-weight: 200;
-  //      color: #33b1ff;
-  //      padding-bottom: 40px;
-  //    }
-  //    //> ._labeledField {
-  //    //  > div {
-  //    //    color: #aaa;
-  //    //    font-size: 16px;
-  //    //  }
-  //    //  > select {
-  //    //    -webkit-appearance: none;
-  //    //    font-size: 18px;
-  //    //    font-weight: 500;
-  //    //    border: 0.5px solid #aaa;
-  //    //    padding: 3px;
-  //    //    color: #555;
-  //    //    width: 260px;
-  //    //  }
-  //    //}
-  //    > div > input {
-  //      font-size: 20px;
-  //      color: #555;
-  //    }
-  //    > ._loginError {
-  //      font-size: 20px;
-  //      font-weight: 200;
-  //      margin-top:    30px;
-  //      margin-bottom: 30px;
-  //      color: rgb(200,0,0);
-  //    }
-  //    > ._remember {
-  //      > label > * {
-  //        vertical-align: top;
-  //      }
-  //      > label > input {
-  //        margin-right: 8px;
-  //      }
-  //      > label > span {
-  //        font-size: 16px;
-  //        font-weight: 100;
-  //        &._checked       {color: #777}
-  //        &:not(._checked) {color: #ddd}
-  //      }
-  //    }
-  //  }
-  //}
-
 ._user_menu_head {
   position:   fixed;
   z-index:    9999;
@@ -1283,6 +1204,7 @@ body > ._landing {
 ._calendarPicker {
   position: absolute;
   z-index: 1000;
+  padding-bottom: 8px;
   > div {
     padding: 4px;
     @include backdrop-blur(4px, rgba(245,246,246,.94), rgba(245,246,246,.98));

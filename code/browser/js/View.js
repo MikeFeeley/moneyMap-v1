@@ -603,6 +603,7 @@ class ViewDate extends ViewTextbox {
         popup .css (ui .calcPosition (this._inputContainer, toHtml, {top: 24, left: 0}));
         ViewCalendar .show (this .get(), this._options, content, val => {this .set (val); this._handleChange(); this.click()});
         popup .addClass ('fader_visible');
+        ui .scrollIntoView (popup);
         if (this._html .closest ('.ui-sortable') .length) {
           // moving element causes (1) the handler to be dropped and (2) focus to be lost, so we don't get the focusout event
           const addEventHandler = () => {
