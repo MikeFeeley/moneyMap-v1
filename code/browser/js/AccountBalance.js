@@ -80,6 +80,14 @@ class AccountBalance extends TuplePresenter {
       super._onViewChange (eventType, arg);
   }
 
+  _addTuple (acc, pos) {
+    super._addTuple ({
+      _id:     acc._id,
+      name:    acc .name,
+      balance: acc .balance
+    }, pos);
+  }
+
   _addGroup (name, accounts) {
     if (accounts .length > 0) {
       let g = this._view .addGroup (name, accounts [0] .creditBalance? '_flagGood': '_flagBad');
