@@ -88,8 +88,6 @@ class TransactionModel extends Model {
    *   - update list of previous queries
    */
   async _checkCache (query, append, loadOnMiss) {
-    if (query .$and || query .$or)
-      return false;
     let queries = this._getQueries();
     let dates, categories, cacheHit;
     if (query .date) {
@@ -119,7 +117,7 @@ class TransactionModel extends Model {
         return (dates .start >= q .start && dates .end <= q .end)  &&
           (! q .categories || (categories && this._isSubset (categories, q .categories)))
       }) != null;
-      if (! cacheHit && loadOnMiss && ! Array .from (Object .keys (query)) .find (p => {return p != 'date' && p != 'category' && p != '$options'})) {
+      if (! cacheHit && loadOnMiss) {
         let matched, infill;
         for (let q of queries) {
           // do real query only on part of range not already covered by previous query (if match)

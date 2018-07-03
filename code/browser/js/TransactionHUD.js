@@ -562,6 +562,8 @@ class TransactionHUD extends TransactionAndRulesTable {
       }, []) .filter (t => {return t});
 
       if (terms .length) {
+        if (! query .date)
+          query .date = {$gte: variance .getBudget() .getStartDate(), $lte: variance .getBudget() .getEndDate()}
         query .$and = terms .map (term => {
           let regex = '.*' + term .replace (/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + '.*';
           let cids  = matchingCats (term);
