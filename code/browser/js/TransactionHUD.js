@@ -454,8 +454,8 @@ class TransactionHUD extends TransactionAndRulesTable {
     }
     let matchingCats = term => {
       return family (variance .getBudget() .getCategories()
-        .findAll (c => {return c .name && c .name .toLowerCase() .includes (term)}, true))
-        .map     (c => {return c._id});
+        .findAll (c => c .name && String (c .name) .toLowerCase() .includes (term), true))
+        .map     (c => c._id);
     }
     let query = {$limit: 100, $sort: {date: -1}};
     if (text && text .length) {
