@@ -12,7 +12,7 @@ const ConfigType = {
   LOCAL: 1
 }
 
-const ConfigDesc = ['Cloud', 'This Computer'];
+const ConfigDesc = ['Cloud', 'Computer'];
 const ConfigExp  = [
   'Your data is accessible from anywhere and encrypted on your computer to ensure absolute privacy. ' +
   'You must remember your password.  It is not stored in the cloud.  It can not be recovered.  ' +
@@ -749,7 +749,7 @@ class User extends Observable {
       this._view .addField (new ViewTextbox ('name',         ViewFormats ('string'), '', '', 'Name'),          'user', this._name, line0, 'Name');
       this._view .addField (new ViewTextbox ('passwordHint', ViewFormats ('string'), '', '', 'Password Hint'), 'user', this._passwordHint, line1, 'Password Hint');
       if (! this._expiry || this._expiry < Types .date .today()) {
-        this._view .addLabel ('Cloud service is $1 per month (CAD)', line2, '_pay');
+        this._view .addLabel ('Cloud Service is Currently Complementary', line2, '_pay');
       } else {
         this._view .addLabel ('Blah', line2);
       }
@@ -779,8 +779,7 @@ class User extends Observable {
 
     this._view .addLabel ('Configuration', configContent, '_heading');
     let configLine = this._view .addLine (configContent, '_line _configTypeLine');
-    this._view .addLabel ('Stored ' + (config .type == 1? ' on ': ' in the ') + ConfigDesc [config .type || 0], configLine, '_type');
-    //this._view .addReadOnlyField ('type', config._id, ConfigDesc [config .type || 0], configLine, 'Your Data is Stored');
+    this._view .addLabel ('Stored ' + (config .type == 1? ' on this ': ' in the ') + ConfigDesc [config .type || 0], configLine, '_type');
 
     let budgetContentGroup = this._view .addTabContentGroup ('Budgets', configContent);
     let budgetTabs         = this._view .addTabGroup ('budgets', budgetContentGroup);
