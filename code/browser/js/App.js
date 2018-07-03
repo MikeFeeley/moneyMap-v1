@@ -269,6 +269,9 @@ class App {
         if (e .metaKey && (e .keyCode == 70 || e .keyCode == 102)) {
           this._search();
           e .preventDefault();
+        } else if (e .metaKey && e .shiftKey && e .keyCode == 191) {
+          Help .showCurrentPage();
+          e .preventDefault();
         }
         }, true);
       this._proT = this._tabs .addTab  ('Progress', ! arg .hasActivity && ! arg .hasBudget);

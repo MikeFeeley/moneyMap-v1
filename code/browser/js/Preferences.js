@@ -56,7 +56,7 @@ class Preferences extends Observable {
     this._addMenuItem ('About moneyMap', () => {(async () => {await this._addAbout()}) ()}, true);
     this._addMenuItem ('Preferences',    () => {(async () => {await this._addPreferencesEdit()}) ()}, true);
     this._addMenuItem ('Donate',         () => {this._addDonate()}, true);
-    this._addMenuItem ('Help', () => {(async () => {await this._help()}) ()});
+    this._addMenuItem ('Help', () => Help .showCurrentPage());
   }
 
   _addMenuItem (name, action, underline) {

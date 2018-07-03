@@ -48,6 +48,10 @@ const Help = Object .freeze ({
     let cb = Help .registry .get (name);
     if (cb)
       cb (modal);
+  },
+
+  showCurrentPage: (modal = true) => {
+    Help .show ($('body') .find ('.tabs > div:not(.background):not(._nonTab) > div') .text(), modal);
   }
 });
 
