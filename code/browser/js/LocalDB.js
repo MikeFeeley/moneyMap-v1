@@ -205,6 +205,11 @@ class LocalTransaction {
   }
 
   findArray (objectStoreName, query, count) {
+    if (query && query .$limit) {
+      if (count === undefined)
+        count = query .$limit;
+      delete query .$limit;
+    }
     query = query && JSON .parse (JSON .stringify (query));
     const objectStore = this._transaction .objectStore (objectStoreName);
     const keyRanges   = this._extractKeyRanges (objectStore, query);
@@ -213,7 +218,15 @@ class LocalTransaction {
     return Promise .all (keyRanges .map (([index, keyRange]) => {
       return new Promise ((resolve, reject) => {
         const request      = index? index .getAll (keyRange, needFilter? 0: count): objectStore .getAll (keyRange, needFilter? 0: count);
-        request .onsuccess = () => resolve (needFilter? request .result .filter (r => Model_query_ismatch (query, r)): request .result);
+        request .onsuccess = () => {
+          let result = request .result;
+          if (needFilter) {
+            result = result .filter (r => Model_query_ismatch (query, r));
+            if (count !== undefined)
+              result .splice (count);
+          }
+          resolve (result);
+        };
         request .onerror   = () => reject  (request .error);
       })
     })) .then (results => results .reduce ((result, r) => result .concat (r)));
@@ -237,7 +250,7 @@ class LocalTransaction {
     const objectStore   = this._transaction .objectStore (objectStoreName);
     const keyRanges     = this._extractKeyRanges (objectStore, query);
 
-    if (SAFARI_INDEX_CURSOR_UPDATE_DELETE_BUG && this._mode .startsWith ('readwrite') && keyRanges .length > 1 || keyRanges [0][0] !== undefined) {
+    if (SAFARI_INDEX_CURSOR_UPDATE_DELETE_BUG && this._mode .startsWith ('readwrite') && (keyRanges .length > 1 || keyRanges [0][0] !== undefined)) {
       const resultsPromise = this .findArray (objectStoreName, originalQuery);
       let results;
       let cursor;
@@ -268,8 +281,15 @@ class LocalTransaction {
       };
 
     } else {
+
+      let count;
+      if (query && query .$limit) {
+        count = query .$limit;
+        delete query .$limit;
+      }
+
       const needFilter   = query && Object .keys (query) .length > 0;
-      let   request, current, cursorAdvanced, keyRangeCursor = 0;
+      let   request, current, cursorAdvanced, keyRangeCursor = 0, resultCount = 0;
 
       const getNext = () =>
         new Promise ((resolve, reject) => {
@@ -287,8 +307,10 @@ class LocalTransaction {
                 .catch (error  => reject  (error));
             } else if (request .result && needFilter && ! Model_query_ismatch (query, request .result .value))
               request .result .continue();
-            else
-              resolve (request .result);
+            else {
+              resultCount += 1;
+              resolve (count == undefined || resultCount <= count? request .result: null);
+            }
           }
           request .onerror = () => reject (request .error);
         });
@@ -703,6 +725,30 @@ class LocalDBTest {
       await t .deleteMany ('foo', {category: 201806});
       result = await t .findArray ('foo', {_id: {$gte: 800, $lte: 805}});
       assert (result .length == 1);
+
+      await t .insert ('foo', {_id: 900, category: 9999});
+      await t .insert ('foo', {_id: 901, category: 9998});
+      await t .insert ('foo', {_id: 902, category: 9999});
+      await t .insert ('foo', {_id: 903, category: 9998});
+      await t .insert ('foo', {_id: 904, category: 9999});
+      await t .insert ('foo', {_id: 905, category: 9999});
+
+      result = await t .findArray ('foo', {_id: {$gte: 900, $lte: 905}, $limit: 3});
+      assert (result .length == 3);
+      c = t .findCursor ('foo', {category: 9999, $limit: 3});
+      result = [];
+      while (await c .hasNext())
+        result .push (await c .next());
+      assert (result .length == 3);
+
+      result = await t .findArray ('foo', {_id: {$gte: 900, $lte: 905}, category: 9999, $limit: 3});
+      assert (result .length == 3);
+      c = t .findCursor ('foo', {_id: {$gte: 900, $lte: 905}, $limit: 3});
+      result = [];
+      while (await c .hasNext())
+        result .push (await c .next());
+      assert (result.length == 3);
+
 
       // const cur = t .findCursor ('foo');
       // while (await cur .hasNext())

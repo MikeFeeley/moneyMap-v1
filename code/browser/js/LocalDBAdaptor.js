@@ -70,6 +70,7 @@ class LocalDBAdaptor extends DBAdaptor {
   }
 
   async _find (data) {
+    console.log(data);
     if (data .collection == 'actuals')
       return await TransactionDBMeta_getActuals (this._getTDBMTransaction (data), data .query);
     else if (data .collection == 'accounts')
