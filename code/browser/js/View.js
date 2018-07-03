@@ -26,7 +26,7 @@ class View extends Observable {
   createFields (data, getToHtml) {
     var fields = [];
     for (let fieldName in data)
-      if (! fieldName .startsWith ('_')) {
+      if (data [fieldName] !== undefined && ! fieldName .startsWith ('_')) {
         var field = this._fields .find (f => {return f._name == fieldName});
         if (field) {
           field = field .newInstance (data._id);

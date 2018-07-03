@@ -84,7 +84,8 @@ class CSVConverter {
               value = JSON .parse (value);
             else if (value .startsWith ('JSON$') && value .endsWith ('$JSON'))
               try {value = JSON .parse (value .slice (5, -5))} catch (e) {}
-          }
+          } else
+            value = undefined;
           return Object .assign (doc, {[field]: value});
         }, {}));
       }

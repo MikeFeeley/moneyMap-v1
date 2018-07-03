@@ -10,8 +10,8 @@ const router  = express .Router();
 const ADMIN_PASSWORD = JSON .parse (fs .readFileSync ('config.json', 'utf8')) .adminPassword;
 
 const credentials = {
-  key:  fs.readFileSync ('ssl/key.pem', 'utf8'),
-  cert: fs.readFileSync ('ssl/cert.pem', 'utf8')
+  key:  fs .readFileSync ('ssl/key.pem', 'utf8'),
+  cert: fs .readFileSync ('ssl/cert.pem', 'utf8')
 };
 
 const app        = express ();
@@ -273,10 +273,7 @@ app.use(function(err, req, res, next) {
 var httpServer  = http  .createServer (app);
 var httpsServer = https .createServer (credentials, app);
 
-// httpServer.listen (3000, () => {
-//   console.log ('Listening for http on port ' + 3000)
-// })
-httpsServer.listen (3001, () => {
-  console.log ('Listening for https on port ' + 3001)
+httpsServer.listen (4430, () => {
+  console.log ('Listening for https on port ' + 4430)
 });
 

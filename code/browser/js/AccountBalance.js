@@ -84,7 +84,8 @@ class AccountBalance extends TuplePresenter {
     super._addTuple ({
       _id:     acc._id,
       name:    acc .name,
-      balance: acc .balance
+      balance: acc .balance,
+      editable_balance: acc .editable_balance
     }, pos);
   }
 
