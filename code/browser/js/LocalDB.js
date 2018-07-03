@@ -205,10 +205,15 @@ class LocalTransaction {
   }
 
   findArray (objectStoreName, query, count) {
+    let sort;
     if (query && query .$limit) {
       if (count === undefined)
         count = query .$limit;
       delete query .$limit;
+    }
+    if (query && query .$sort) {
+      sort = query .$sort;
+      delete query .$sort;
     }
     query = query && JSON .parse (JSON .stringify (query));
     const objectStore = this._transaction .objectStore (objectStoreName);
@@ -217,14 +222,22 @@ class LocalTransaction {
 
     return Promise .all (keyRanges .map (([index, keyRange]) => {
       return new Promise ((resolve, reject) => {
-        const request      = index? index .getAll (keyRange, needFilter? 0: count): objectStore .getAll (keyRange, needFilter? 0: count);
+        const request      = index? index .getAll (keyRange, needFilter || sort? 0: count): objectStore .getAll (keyRange, needFilter || sort? 0: count);
         request .onsuccess = () => {
           let result = request .result;
-          if (needFilter) {
+          if (needFilter)
             result = result .filter (r => Model_query_ismatch (query, r));
-            if (count !== undefined)
+          if (sort)
+            result = result .sort ((a, b) => {
+              for (const p of Object .keys (sort))
+                if (a[p] < b[p])
+                  return -sort[p];
+                else if (a[p] > b[p])
+                  return sort[p];
+              return 0;
+            });
+          if (count !== undefined)
               result .splice (count);
-          }
           resolve (result);
         };
         request .onerror   = () => reject  (request .error);
@@ -250,7 +263,7 @@ class LocalTransaction {
     const objectStore   = this._transaction .objectStore (objectStoreName);
     const keyRanges     = this._extractKeyRanges (objectStore, query);
 
-    if (SAFARI_INDEX_CURSOR_UPDATE_DELETE_BUG && this._mode .startsWith ('readwrite') && (keyRanges .length > 1 || keyRanges [0][0] !== undefined)) {
+    if (SAFARI_INDEX_CURSOR_UPDATE_DELETE_BUG && this._mode .startsWith ('readwrite') && (keyRanges .length > 1 || keyRanges [0][0] !== undefined) || query .$sort) {
       const resultsPromise = this .findArray (objectStoreName, originalQuery);
       let results;
       let cursor;
@@ -748,6 +761,25 @@ class LocalDBTest {
       while (await c .hasNext())
         result .push (await c .next());
       assert (result.length == 3);
+
+      await t .insert ('foo', {_id: 1000, sorton: 10});
+      await t .insert ('foo', {_id: 1001, sorton: 5});
+      await t .insert ('foo', {_id: 1002, sorton: 11});
+      await t .insert ('foo', {_id: 1003, sorton: 12});
+      await t .insert ('foo', {_id: 1004, sorton: 6});
+      await t .insert ('foo', {_id: 1005, sorton: 3});
+
+      result = await t .findArray ('foo', {_id: {$gte: 1000, $lte: 1005}, $limit: 3, $sort: {sorton: 1}});
+      assert (result .length == 3 && result[0]._id==1005 && result[1]._id==1001 && result[2]._id==1004);
+
+      result = await t .findArray ('foo', {_id: {$gte: 1000, $lte: 1005}, $limit: 3, $sort: {sorton: -1}});
+      assert (result .length == 3 && result[0]._id==1003 && result[1]._id==1002 && result[2]._id==1000);
+
+      result = [];
+      c = t .findCursor ('foo', {_id: {$gte: 1000, $lte: 1005}, $limit: 3, $sort: {sorton: 1}});
+      while (await c .hasNext())
+        result .push (await c .next());
+      assert (result .length == 3 && result[0]._id==1005 && result[1]._id==1001 && result[2]._id==1004);
 
 
       // const cur = t .findCursor ('foo');
