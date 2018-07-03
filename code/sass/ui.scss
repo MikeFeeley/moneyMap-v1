@@ -366,6 +366,10 @@ div._systemStatus {
 ._profileEdit {
   width: 940px!important;
   left: calc(50vw - 470px);
+  > ._group > ._content > ._line > ._pay, ._content > ._line > ._type {
+    font-size: 20px;
+    color: #888;
+  }
   > ._group {
     margin-top: 32px;
     margin-bottom: 32px;

@@ -8,16 +8,12 @@
  */
 
 const ConfigType = {
-  CLOUD_UNENCRYPTED: 0,
-  CLOUD_ENCRYPTED:   1,
-  LOCAL:             2
+  CLOUD: 0,
+  LOCAL: 1
 }
 
-const ConfigDesc = ['Cloud Unencrypted', 'Cloud Encrypted', 'Local'];
+const ConfigDesc = ['Cloud', 'This Computer'];
 const ConfigExp  = [
-  'Your data is accessible from anywhere.  ' +
-  'Your data is encrypted in transit to/from the cloud, but is not protected by a local password.',
-
   'Your data is accessible from anywhere and encrypted on your computer to ensure absolute privacy. ' +
   'You must remember your password.  It is not stored in the cloud.  It can not be recovered.  ' +
   'If you forget it, your data will be permanently lost.',
@@ -454,8 +450,8 @@ class User extends Observable {
       const config = this._getConfig (this._cid);
       type = config && config .type;
     }
-    if (type == ConfigType .CLOUD_ENCRYPTED) {
-      if (type == ConfigType .CLOUD_ENCRYPTED && (! User_DB_Crypto || User_DB_Crypto .getPassword() != this._password))
+    if (type == ConfigType .CLOUD) {
+      if (type == ConfigType .CLOUD && (! User_DB_Crypto || User_DB_Crypto .getPassword() != this._password))
         User_DB_Crypto = new Crypto (this._password);
     } else
       User_DB_Crypto = null;
@@ -753,7 +749,7 @@ class User extends Observable {
       this._view .addField (new ViewTextbox ('name',         ViewFormats ('string'), '', '', 'Name'),          'user', this._name, line0, 'Name');
       this._view .addField (new ViewTextbox ('passwordHint', ViewFormats ('string'), '', '', 'Password Hint'), 'user', this._passwordHint, line1, 'Password Hint');
       if (! this._expiry || this._expiry < Types .date .today()) {
-        this._view .addLabel ('Cloud service is $1 per month (CAD)', line2);
+        this._view .addLabel ('Cloud service is $1 per month (CAD)', line2, '_pay');
       } else {
         this._view .addLabel ('Blah', line2);
       }
@@ -783,7 +779,8 @@ class User extends Observable {
 
     this._view .addLabel ('Configuration', configContent, '_heading');
     let configLine = this._view .addLine (configContent, '_line _configTypeLine');
-    this._view .addReadOnlyField ('type', config._id, ConfigDesc [config .type || 0], configLine, 'Data Storage');
+    this._view .addLabel ('Stored ' + (config .type == 1? ' on ': ' in the ') + ConfigDesc [config .type || 0], configLine, '_type');
+    //this._view .addReadOnlyField ('type', config._id, ConfigDesc [config .type || 0], configLine, 'Your Data is Stored');
 
     let budgetContentGroup = this._view .addTabContentGroup ('Budgets', configContent);
     let budgetTabs         = this._view .addTabGroup ('budgets', budgetContentGroup);
