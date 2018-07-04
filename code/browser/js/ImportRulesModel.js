@@ -131,7 +131,7 @@ class ImportRulesModel extends Observable {
             r[i] = Types .date._date (Types .date._year (t[i]), Types .date._month (r[i]), Types .date._day (r[i]))
       switch (rule [f + '_fn']) {
         case 'eq':
-          match = t[0] == r[0];
+          match = (typeof t[0] == 'string'? t[0].trim(): t[0]) == (typeof r[0] == 'string'? r[0].trim(): r[0]);
           break;
         case 'sw':
           match = typeof t[0] == 'string' && t[0] .startsWith (r[0]);
