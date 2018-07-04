@@ -749,7 +749,7 @@ class User extends Observable {
       this._view .addField (new ViewTextbox ('name',         ViewFormats ('string'), '', '', 'Name'),          'user', this._name, line0, 'Name');
       this._view .addField (new ViewTextbox ('passwordHint', ViewFormats ('string'), '', '', 'Password Hint'), 'user', this._passwordHint, line1, 'Password Hint');
       if (! this._expiry || this._expiry < Types .date .today()) {
-        this._view .addLabel ('Cloud Service is Currently Complementary', line2, '_pay');
+        this._view .addLabel ('Cloud Service is currently complementary, but you can donate (upper left).', line2, '_pay');
       } else {
         this._view .addLabel ('Blah', line2);
       }
