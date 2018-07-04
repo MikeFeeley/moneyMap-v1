@@ -265,15 +265,16 @@ class App {
     } else if (eventType == UserEvent .NEW_USER) {
 
       this._tabs = new ui.Tabs ($('body'), handleNameClick);
-      document .documentElement .addEventListener ('keydown', e => {
+      document .addEventListener ('keydown', e => {
         if (e .metaKey && (e .keyCode == 70 || e .keyCode == 102)) {
           this._search();
           e .preventDefault();
-        } else if (e .metaKey && e .shiftKey && e .keyCode == 191) {
+        } else if (e .metaKey && e .keyCode == 191) {
           Help .showCurrentPage();
           e .preventDefault();
         }
-        }, true);
+      }, true);
+
       this._proT = this._tabs .addTab  ('Progress', ! arg .hasActivity && ! arg .hasBudget);
       this._traT = this._tabs .addTab  ('Inbox');
       this._actT = this._tabs .addTab  ('Activity', ! arg .hasActivity);

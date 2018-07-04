@@ -297,13 +297,13 @@ class ScheduleEntry extends List {
           ['Add sibling category or schedule',  'CMD + ENTER'],
           ['Add child category',                'CMD + ALT + ENTER'],
           ['Delete',                            'CMD + DELETE'],
-          ['Enter schedule',                    'TAB the Start field'],
+          ['Enter schedule',                    'TAB to the Start field'],
           ['Budget for whole year',             'Enter a year number for Start'],
           ['Budget for single month',           'Enter month-year (e.g., Aug-19) and leave End date blank'],
           ['Budget for range of months',        'Enter values in Start and End fields'],
           ['Budget starting at month',          'Enter ... for End field'],
-          ['Repeat budget in future years',     'Click Repeat and optionally limit the number of years'],
-          ['Reorganize',                        'Click and Drag category or schedule to new location'],
+          ['Repeat budget in future years',     'CLICK Repeat and optionally Limit the number of years'],
+          ['Reorganize',                        'CLICK and DRAG category or schedule to new location'],
           ['Show or Edit Historic Categories',  $('<scan>', {class: 'lnr-history'})]
         ]);
       Help .add ('Plan', showHelp);

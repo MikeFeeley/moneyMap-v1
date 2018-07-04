@@ -1254,7 +1254,7 @@ class Navigate {
         'On any page ...'
       ], [
         ['Search transactions',               'CMD + F'],
-        ['Show help',                         'CMD + ?'],
+        ['Show help',                         'CMD + /'],
         ['Deep deeper into graphs or tables', 'Click or ALT + Click or bars, names or values']
       ],
       modal
