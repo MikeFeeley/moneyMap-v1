@@ -127,32 +127,34 @@ class ScheduleEntryView extends ListView {
   }
 
   addHelpTable (descData, tableData, top=130, left=220) {
-    let popup = $('<div>', {class: '_helpPopup'})
-      .appendTo ($('body'))
-      .css ({top: top, left: left});
-    let help = $('<div>') .appendTo (popup);
-    $('<div>', {text: 'TIP'}) .appendTo (help);
-    for (let desc of descData)
-      $('<div>', {text: desc}) .appendTo (help);
-    let table = $('<table>') .appendTo (help);
-    for (let row of tableData) {
-      let tr = $('<tr>') .appendTo (table);
-      for (const c of row) {
-        const td = $('<td>') .appendTo (tr);
-        for (let t of Array .isArray (c)? c: [c]) {
-          if (typeof t[0] == 'object' && [... t[0] .classList] .find (c => c .startsWith ('lnr-')))
-            t .css ({'font-family': 'Linearicons-Free', 'font-weight': 100});
-          else if (typeof t == 'string')
-            t = $('<span>', {text: t});
-          t .appendTo (td);
+    if (! this._helpTable) {
+      this._helpTable = $('<div>', {class: '_helpPopup'})
+        .appendTo ($('body'))
+        .css ({top: top, left: left});
+      let help = $('<div>') .appendTo (this._helpTable);
+      $('<div>', {text: 'TIP'}) .appendTo (help);
+      for (let desc of descData)
+        $('<div>', {text: desc}) .appendTo (help);
+      let table = $('<table>') .appendTo (help);
+      for (let row of tableData) {
+        let tr = $('<tr>') .appendTo (table);
+        for (const c of row) {
+          const td = $('<td>') .appendTo (tr);
+          for (let t of Array .isArray (c)? c: [c]) {
+            if (typeof t[0] == 'object' && [... t[0] .classList] .find (c => c .startsWith ('lnr-')))
+              t .css ({'font-family': 'Linearicons-Free', 'font-weight': 100});
+            else if (typeof t == 'string')
+              t = $('<span>', {text: t});
+            t .appendTo (td);
+          }
         }
       }
+      ui .ModalStack .add (
+        e => {return true},
+        e => {this._helpTable .remove(); this._helpTable = null},
+        true
+      )
     }
-    ui .ModalStack .add (
-      e => {return true},
-      e => {popup .remove()},
-      true
-    )
   }
 }
 

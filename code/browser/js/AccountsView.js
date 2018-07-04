@@ -153,24 +153,26 @@ class AccountsView extends View {
   }
 
   addHelpTable (descData, tableData, top=100, left=50) {
-    let popup = $('<div>', {class: '_helpPopup'})
-      .appendTo ($('body'))
-      .css ({top: top, left: left});
-    let help = $('<div>') .appendTo (popup);
-    $('<div>', {text: 'TIP'}) .appendTo (help);
-    for (let desc of descData)
-      $('<div>', {text: desc}) .appendTo (help);
-    let table = $('<table>') .appendTo (help);
-    for (let row of tableData) {
-      let tr = $('<tr>') .appendTo (table);
-      for (let t of row)
-        $('<td>', {text: t}) .appendTo (tr);
+    if (!this._helpTable) {
+      this._helpTable = $('<div>', {class: '_helpPopup'})
+        .appendTo ($('body'))
+        .css ({top: top, left: left});
+      let help = $('<div>') .appendTo (this._helpTable);
+      $('<div>', {text: 'TIP'}) .appendTo (help);
+      for (let desc of descData)
+        $('<div>', {text: desc}) .appendTo (help);
+      let table = $('<table>') .appendTo (help);
+      for (let row of tableData) {
+        let tr = $('<tr>') .appendTo (table);
+        for (let t of row)
+          $('<td>', {text: t}) .appendTo (tr);
+      }
+      ui .ModalStack .add (
+        e => {return true},
+        e => {this._helpTable .remove(); this._helpTable = null},
+        true
+      )
     }
-    ui .ModalStack .add (
-      e => {return true},
-      e => {popup .remove()},
-      true
-    )
   }
 
   getEntry (id) {
