@@ -153,7 +153,8 @@ class TableView extends TupleView {
           .find ('._field') .toArray()
           .reduce ((o,h) => {
             var f = $(h) .data ('field');
-            o [f._name] = f._value;
+            if (f)
+              o [f._name] = f._value;
             return o;
           }, {_id: $(t) .data ('id')})
       });
