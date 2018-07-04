@@ -281,12 +281,12 @@ class User extends Observable {
             this._name         = arg .name;
             this._password     = arg .password;
             this._passwordHint = arg .passwordHint;
+            this._remember     = arg .remember;
             this._setModelsForUser();
             await this._getConfigs();
             if (this._configs .length == 0)
               await this._createEmptyConfig (ConfigType .LOCAL, 'Default');
-            if (arg .remember)
-              this._saveLoginState();
+            this._saveLoginState();
             this._setModelsForConfig();
             try {
               await this._init();
