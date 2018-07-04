@@ -3,6 +3,7 @@
 body {
   font-family: -apple-system, Helvetica, Arial, "Lucida Grande", sans-serif;
   -webkit-tap-highlight-color: rgba(0,0,0,0);
+  -webkit-font-smoothing: antialiased;
 }
 
 .transparent {
@@ -400,7 +401,8 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
       }
       > ._text {
         font-size: 32px;
-        font-weight: 100;
+        font-weight: 300;
+        color: #666;
       }
     }
     > ._container > div {
@@ -483,7 +485,8 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
       }
       > ._suffix{
         font-size: 28px;
-        font-weight: 100;
+        font-weight: 300;
+        color: #666;
       }
       > ._suffix {
         width: 15%;
@@ -744,7 +747,8 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
       > ._suffix{
         @media (min-width: 1100px) {font-size: 28px}
         @media (max-width: 1099px) {font-size: 20px}
-        font-weight: 100;
+        font-weight: 300;
+        color: #666;
       }
       > ._suffix {
         width: 15%;
