@@ -8,8 +8,6 @@ class TransactionModel extends Model {
   }
 
   delete() {
-    TransactionModel_queries = [];
-    TransactionModel_database = undefined;
     super .delete();
   }
 
@@ -123,7 +121,10 @@ class TransactionModel extends Model {
           // do real query only on part of range not already covered by previous query (if match)
           if (dates .start == q .start && dates .end == q .end) {
             // same date range, additional categories
-            infill  = {date: {$gte: dates .start, $lte: dates .end}, category: {$in: categories && this._subtract (categories, q .categories)}}
+            infill   = {date: {$gte: dates .start, $lte: dates .end}};
+            const cl = categories && this._subtract (categories, q .categories);
+            if (cl)
+              infill .category = {$in: cl};
             matched = true;
             break;
           } else if ((! categories && ! q .categories) || (categories && q .categories && this._isEqual (categories, q .categories))) {
@@ -160,6 +161,10 @@ class TransactionModel extends Model {
           await super .find (infill, append, false);
           cacheHit = true;
         } else {
+          infill = {date: {$gte: dates .start, $lte: dates .end}};
+          if (categories && categories .length)
+            infill .categories = categories .length == 1? {category: categories [0]}: {category: {$in: categories}};
+          await super .find (infill, append, false);
           let i;
           for (i = 0; i < queries .length; i++)
             if (dates .start >= queries [i] .start)
@@ -168,7 +173,8 @@ class TransactionModel extends Model {
             start:      dates .start,
             end:        dates .end,
             categories: categories
-          })
+          });
+          cacheHit = true;
         }
       }
     }
