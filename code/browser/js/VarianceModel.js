@@ -174,6 +174,12 @@ class VarianceModel extends Observable {
 
   /**
    * Get budget and actual amounts for category and its children
+   *   transactionFocused
+   *     true:  variance based on actuals
+   *            category actuals are those allocated to this category only
+   *            only unallocated / unused budget amounts from descendants and ancestors propagate
+   *     false: variance accumulates through hierarchy
+   *            each category summarizes its descendants and handles unallocated amounts from ancestors
    */
   _getAmountDown (cat, period, skip, excludeChild, transactionFocused) {
     var type      = this._getScheduleTypeName (cat);
@@ -206,18 +212,14 @@ class VarianceModel extends Observable {
     }
 
     // If we have a type, then move any "none" actuals to this type
-    let chiWereNone = chiAmount .none;
-    if (type != 'none') {
-      if (! chiAmount [type])
-        chiAmount [type] = {actual: {prev: 0, cur: 0}, budget: {prev: 0, cur: 0}};
-      chiAmount [type] .actual = ['prev', 'cur'] .reduce ((o,per) => {
-        return (o [per] = chiAmount [type] .actual [per] + ((chiAmount .none && chiAmount .none .actual [per]) || 0)) != null && o;
-      }, {});
-      chiAmount .none = undefined;
+    if (type != 'none' && chiAmount .none) {
+      for (const per of ['prev', 'cur'])
+        amount [type] .actual [per] += chiAmount .none .actual [per] || 0;
+      delete chiAmount .none;
     }
 
     // If transactionFocused then only excess available budget propagates from children
-    if (transactionFocused && !chiWereNone)
+    if (transactionFocused)
       for (let sch of ['none','month','year'])
         for (let per of ['prev','cur'])
           if (chiAmount [sch]) {
@@ -467,12 +469,17 @@ class VarianceModel extends Observable {
         let a = variance .prev + variance .cur;
         if (amount .year && a > 0)
           a = Math .max (0, a - this._budget .getAmount (cat, period .cur .end) .year .allocated);
-        let ch = children .reduce ((t,c) => {
-          t .prev   += c .prev;
-          t .cur    += c .cur;
-          return t;
-        }, {amount: 0, prev: 0, cur: 0});
-        vs .push ({cat: cat, amount: a - ch .amount, prev: variance .prev - ch .prev, cur: variance .cur - ch .cur});
+        if (! transactionFocused) {
+          let ch = children .reduce ((t,c) => {
+            t .prev   += c .prev;
+            t .cur    += c .cur;
+            return t;
+          }, {amount: 0, prev: 0, cur: 0});
+          a -= ch .amount;
+          variance .prev -= ch .prev;
+          variance .cur  -= ch .cur;
+        }
+        vs .push ({cat: cat, amount: a, prev: variance .prev, cur: variance .cur});
       }
       vs = vs .concat (children);
     }

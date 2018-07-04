@@ -1347,7 +1347,7 @@ class Navigate {
     return update;
   }
 
-  _addTopVariance (title, tooltip, choose, getAmount, flag) {
+  _addTopVariance (title, tooltip, choose, getAmount, flag, sortOrder=1) {
     let updateView = this._progressView .addProgressSidebarGroup(title, tooltip, flag);
     let update = varianceList => {
       let list = varianceList
@@ -1358,7 +1358,7 @@ class Navigate {
           nameTooltip: this._budget .getCategories() .getPathname (v .cat) .slice (1) .join (' > '),
           amount:      getAmount (v)
         }})
-        .sort ((a,b) => {return a .amount > b .amount? -1: a .amount == b .amount? 0: 1})
+        .sort ((a,b) => {return a .amount > b .amount? -sortOrder: a .amount == b .amount? 0: sortOrder})
       updateView (list);
     }
     return update;
@@ -1393,9 +1393,9 @@ class Navigate {
           m .set (v .cat._id, {cat: v .cat, amount: Math .min (v .amount, e? e .amount: 0)});
           return m;
         }, new Map()) .values())
-      let toTodayVar     = this._variance .getVarianceList ([this._budget .getExpenseCategory()], {end: Types .date .today()});
-      let savings        = toTodayVar .map (v => {return {cat: v .cat, amount: v .prev + (v .cur < 0? v .cur: 0)}});
-      let futureVar      = this._variance .getVarianceList ([this._budget .getExpenseCategory()], {start: Types .date .addMonthStart (Types .date .today(), 1)});
+      let toTodayVar = this._variance .getVarianceList ([this._budget .getExpenseCategory()], {end: Types .date .today()}, true);
+      let savings    = this._variance .getVarianceList ([this._budget .getExpenseCategory()], {end: Types .date .today()}) .map (v => {return {cat: v .cat, amount: v .prev + (v .cur < 0? v .cur: 0)}});
+      let futureVar  = this._variance .getVarianceList ([this._budget .getExpenseCategory()], {start: Types .date .addMonthStart (Types .date .today(), 1)});
       bigPictureUpdate (toTodayVar);
       issuesUpdate     (toLastMonthVar);
       savingsUpdate    (savings);
