@@ -18,7 +18,7 @@ class ImportFormat {
 
       case ImportFormatViewEvent .COLUMN_SELECTED:
         const updateAccount =
-          (this._importColumns && this._importColumns .account !== undefined &&this._importColumns .account == arg .column) ||
+          (this._importColumns && this._importColumns .account !== undefined && this._importColumns .account == arg .column) ||
           (arg .importColumns .account !== undefined && arg .importColumns .account == arg .column);
         if (updateAccount)
           if (arg .importColumns .account !== undefined)
@@ -59,7 +59,7 @@ class ImportFormat {
       .filter (n => n)
       .sort();
     this._view .addAccounts (this._numbers, this._cashFlowAccounts);
-    this._selectedAccounts = this._cashFlowAccounts .filter (a => this._numbers .includes (a .number));
+    this._selectedAccounts = this._cashFlowAccounts .filter (a => this._numbers .find (n => n == a .number));
   }
 
   async _loadFile (file) {
