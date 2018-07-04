@@ -83,20 +83,23 @@ class Crypto {
   }
 
   async _encryptDoc (rule, doc) {
-    for (let p of Object .keys (doc)) {
-      const applies =
-        (rule .allFields    && p != '_id') ||
-        (rule .allButFields && ! rule .allButFields .includes (p)) ||
-        (rule .fields       && rule .fields .includes (p));
-      if (applies) {
-        let al = this._getAlgorithm();
-        let ct = await crypto .subtle .encrypt (al, await this._getKey(), this._sToAb (JSON .stringify (doc [p])));
-        doc [p] = {
-          iv: String .fromCharCode .apply (null, new Uint8Array  (al .iv)),
-          ct: String .fromCharCode .apply (null, new Uint8Array (ct))
-        };
+    if (typeof doc != 'object')
+      return doc;
+    else
+      for (let p of Object .keys (doc)) {
+        const applies =
+          (rule .allFields    && p != '_id') ||
+          (rule .allButFields && ! rule .allButFields .includes (p)) ||
+          (rule .fields       && rule .fields .includes (p));
+        if (applies) {
+          let al = this._getAlgorithm();
+          let ct = await crypto .subtle .encrypt (al, await this._getKey(), this._sToAb (JSON .stringify (doc [p])));
+          doc [p] = {
+            iv: String .fromCharCode .apply (null, new Uint8Array  (al .iv)),
+            ct: String .fromCharCode .apply (null, new Uint8Array (ct))
+          };
+        }
       }
-    }
   }
 
   async _decryptDoc (doc) {
