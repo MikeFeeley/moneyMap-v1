@@ -15,8 +15,8 @@ class BudgetProgressHUD {
     this._deleteScheduleEntries();
   }
 
-  static show (id, html, position, accounts, variance, date = Types .dateDMY .today()) {
-    (new BudgetProgressHUD (accounts, variance, {})) .show (id, date, 0, 0, html, position);
+  static show (id, html, position, accounts, variance, date = Types .dateDMY .today(), expanded) {
+    (new BudgetProgressHUD (accounts, variance, {})) .show (id, date, 0, 0, html, position, expanded);
   }
 
   _onModelChange (eventType, doc, arg, model) {
@@ -85,6 +85,9 @@ class BudgetProgressHUD {
       this._setNormal();
     else if (eventType == BudgetProgressHUDViewEvent .SHOW_EXPANDED)
       this._setExpanded();
+    else if (eventType == BudgetProgressHUDViewEvent .PIN)
+      if (this._id)
+        PinnedCategories .getInstance() .add (this._id);
   }
 
   _setNormal() {
@@ -198,12 +201,15 @@ class BudgetProgressHUD {
     this._view .setVisible (id);
   }
 
-  show (id, date, debit, credit, toHtml, position) {
+  show (id, date, debit, credit, toHtml, position, expanded) {
     this._originalId = id;
     this._amount     = (debit || 0) - (credit || 0);
     this._date       = date;
     this._view .addHtml (toHtml, position);
-    this._setNormal();
+    if (! expanded)
+      this._setNormal();
+    else
+      this._setExpanded();
   }
 
   update (id) {

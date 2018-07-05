@@ -38,6 +38,7 @@ const INIT = {
       'RemoteDBAdaptor',
       'Model',
       'CSVConverter',
+      'PinnedCategories',
       'View',
       'Presenter',
       'TaxTables',

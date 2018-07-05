@@ -847,12 +847,23 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
 
 ._progressSidebar {
   > ._sidebar_group {
+    > ._heading {
+      > ._icon {
+        font-family: 'Linearicons-Free';
+        color: #888;
+        padding-right: 4px;
+      }
+    }
     > table {
       > tr > td:last-child {
         text-align: right;
       }
       > tr > td._showMoreLess {
         color: #bbb;
+      }
+      > tr > td > ._icon {
+        font-family: 'Linearicons-Free';
+        color: #888;
       }
     }
   }

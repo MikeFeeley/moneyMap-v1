@@ -197,7 +197,13 @@ class Navigate {
       }
 
     } else if (eventType == NavigateViewEvent .PROGRESS_SIDEBAR_CLICK) {
-      if (arg .altClick)
+      if (arg .type == 'pinned') {
+        const html = $('body');
+        const pos  = {top: html .scrollTop() + 68, left: html .scrollLeft() + 20};
+        BudgetProgressHUD .show (arg .id, html, pos, this._accounts, this._variance, undefined, true);
+      } else if (arg .type == 'pinned_icon')
+        PinnedCategories .getInstance() .remove (arg .id);
+      else if (arg .altClick)
         await this._addMonthsGraph ('_budgetMonthsGraph', arg.view, [arg .id], true, arg .position, arg .html);
       else
         await this._addMonthsGraph ('_activityMonthsGraph', arg.view, [arg .id], true, arg .position, arg .html);
@@ -1290,6 +1296,21 @@ class Navigate {
   /****************************/
   /***** PROGRESS SIDEBAR *****/
 
+  _addPinnedCategories() {
+    const updateView = this._progressView .addProgressSidebarGroup ([{icon: 'lnr-pushpin'},' Pinned Categories'], '');
+
+    const pinnedCategories = PinnedCategories .getInstance();
+    const update = () => {
+      updateView (pinnedCategories .get()
+        .map (cid => this._categories .get (cid))
+        .map (cat => ({id: cat._id, name: cat .name, icon: 'lnr-cross', type: 'pinned'}))
+      );
+    }
+    pinnedCategories .setObserver (update);
+    update();
+    return update;
+  }
+
   _addBigPicture() {
     let updateView = this._progressView .addProgressSidebarGroup('Savings this Year', '');
     let update = varianceList => {
@@ -1370,6 +1391,7 @@ class Navigate {
 
   _addProgressSidebar (toHtml) {
     this._progressView .addProgressSidebar();
+    const pinnedCategoriesUpdate = this._addPinnedCategories();
     let bigPictureUpdate = this._addBigPicture();
     let issuesUpdate = this._addTopVariance (
       'Budget Issues',

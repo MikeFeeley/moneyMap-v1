@@ -225,7 +225,18 @@ class NavigateView extends Observable  {
     var table;
     var list              = [];
     var group             = $('<div>', {class: '_sidebar_group ' + (flag || '')}) .appendTo (this._progressSidebar);
-    let heading           = $('<div>', {class: '_heading', text: name}) .appendTo (group);
+    let heading           = $('<div>', {class: '_heading'}) .appendTo (group);
+    if (typeof name == 'string')
+      heading .text (name);
+    else {
+      for (let n of name) {
+        const s = $('<span>') .appendTo (heading);
+        if (typeof n == 'string')
+          s .text (n);
+        else if (n .icon)
+          s .addClass ('_icon ' + n .icon)
+      }
+    }
     if (tooltip && tooltip .length)
       this._addTooltip (heading, tooltip);
 
@@ -235,6 +246,7 @@ class NavigateView extends Observable  {
       if (list .filter (e => {return e .amount != 0}) .length == 0)
         group. css ('display', 'none');
       else {
+        group. css ('display', 'block');
         table = $('<table>') .appendTo (group);
         table [0] .addEventListener ('webkitmouseforcewillbegin', e => {e .preventDefault()}, true);
         for (let i = 0; i < Math .min (isShowingMore? list .length: shortListLength, list .length); i++) {
@@ -255,6 +267,7 @@ class NavigateView extends Observable  {
               let pos = {top: st + top, left: 50};
               this._notifyObservers (NavigateViewEvent .PROGRESS_SIDEBAR_CLICK, {
                 id:       item .id,
+                type:     item .type,
                 html:     html,
                 position: pos,
                 view:     this,
@@ -269,7 +282,17 @@ class NavigateView extends Observable  {
               text: Types .moneyDZ .toString (Math .abs (item .amount)),
               class: item .amount < 0? 'negative': ''
             })  .appendTo (tr), item .amountTooltip)
-          } else if (list [i] .percent)
+          } else if (list [i] .icon)
+            $('<td>') .appendTo (tr) .append ($('<div>', {class: '_icon ' + list [i] .icon})) .click (e => {
+              this._notifyObservers (NavigateViewEvent .PROGRESS_SIDEBAR_CLICK, {
+                id:       item .id,
+                type:     item .type + '_icon',
+                view:     this,
+                altClick: e .originalEvent .webkitForce > 1 || e .originalEvent .altKey
+              });
+              e .stopPropagation();
+            })
+          else if (list [i] .percent)
             this._addTooltip ($('<td>', {text: Types .percent .toString (item .percent)}) .appendTo (tr), item .amountTooltip);
         }
         if (list .length > shortListLength)
