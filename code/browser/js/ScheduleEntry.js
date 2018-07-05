@@ -2,6 +2,8 @@ class ScheduleEntry extends List {
 
   constructor (name, accounts, variance, options = {}) {
     let budget = variance .getBudget();
+    if (options .categories && options .categories .length == 1)
+      options .moveRootIsChild = true;
     super (budget .getSchedulesModel(), new ScheduleEntryView (name, options, accounts, variance), options);
     this._budget     = budget;
     this._variance   = variance;
@@ -122,8 +124,12 @@ class ScheduleEntry extends List {
 
       case ListViewEvent .MOVE:
         var target = this._categories .get (arg .id);
+        // if selecting a category subset, then these categories can not move
+        if (this._options .categories && this._options .categories .includes (arg .id)) {
+          this._view .cancelMove (arg .id);
+          return;
         // if limited to single category then move within it only
-        if (this._options .categoriesOnlyWithParent)
+        } else if (this._options .categoriesOnlyWithParent || this._options .categories)
           arg .pos .inside = target .parent ._id;
         else if (this._options .scheduleOnly)
           arg .pos .inside = target .category ._id;
@@ -279,7 +285,9 @@ class ScheduleEntry extends List {
         for (let s of this._categories .get (c) .schedule || [])
           await this._addTuple (s);
       }
-    } else
+    } else if (this._options .categories)
+      await this._addCats (this._options .categories .map (cid => this._categories .get (cid)))
+    else
       await this._addCats (this._categories .getRoots());
     if (toHtml .hasClass ('_list')) {
       const showHelp = () => this._view .addHelpTable (

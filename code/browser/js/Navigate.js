@@ -1149,16 +1149,20 @@ class Navigate {
       }, {});
       if (Array .from (Object .keys (oaTotal)) .reduce ((t,p) => {return t + oaTotal [p]}, 0) > 0) {
         for (let per of ['month', 'year'])
-          if (rootAmount [per])
-            rootAmount [per] .amounts = (raTotal [per] != oaTotal [per]) && otherAmount [per]
-        amounts .push ({
-          cat: {
-            _id:      'other_' + root._id,
-            name:     'Other',
-            children: []
-          },
-          amount: rootAmount
-        })
+          if (rootAmount [per]) {
+            rootAmount [per] .amounts = (raTotal [per] != oaTotal [per]) && otherAmount [per];
+            if (Math .abs (rootAmount [per]) == 1)
+              rootAmount [per] = 0;
+          }
+        if (Array .from (Object .keys (rootAmount)) .reduce ((t,p) => t + oaTotal [p], 0) > 0)
+          amounts .push ({
+            cat: {
+              _id:      'other_' + root._id,
+              name:     'Other',
+              children: []
+            },
+            amount: rootAmount
+          })
       }
       months = includeMonths && getData ('month', amounts .filter (a => {return a .amount .month}));
       years  = includeYears  && getData ('year',  amounts .filter (a => {return a .amount .year}));

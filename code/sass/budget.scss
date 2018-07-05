@@ -112,86 +112,160 @@ body {
   position: absolute;
   z-index: 4002;
   padding: 8px;
-  margin-top: -8px;
-  > ._hudContent {
-    width: 514px;
+  ._icons {
+    flex-grow: 0;
+    @include icon-button();
+    > div {
+      display: inline-block;
+      margin-top: 10px;
+      margin-left: $icon-spacing;
+    }
+  }
+  &:not(._expanded) {
+    margin-top: -8px;
+    > ._hudContent {
+      width: 514px;
+      @include backdrop-blur(4px, rgba(245,246,246,.94), rgba(245,246,246,.98));
+      border: 8px solid transparent;
+      vertical-align: middle;
+      box-shadow: $drop-shadow;
+      border-radius: 6px;
+      > ._topRow {
+        display: flex;
+        flex-direction: row;
+        > ._title {
+          flex-grow: 1;
+          margin-bottom: -8px;
+          > ._field_name > div > ._content {
+            font-size: 28px;
+            color: black;
+            font-weight: 200;
+            &:not(:focus) {border: 2px solid transparent!important}
+            background-color: transparent;
+            height: auto;
+            margin-bottom: 8px;
+          }
+          > ._field_name._account ._content {
+            color: #3d993d;
+          }
+        }
+      }
+      > ._compare {
+        margin-bottom: -10px;
+      }
+      ._graph_title {
+        margin-top: 16px;
+        margin-bottom: 4px;
+        font-size: 16px;
+        color: black;
+        font-weight: 100;
+      }
+      ._monthlyGraph {
+        margin-top: 6px;
+      }
+      ._presenter {
+        margin-top: -8px;
+      }
+
+      > ._group > ._presenter > ._MiniScheduleEntry {
+        > ul > li {
+          > ._field > div, > ._field {
+            > ._content, ._suffix {
+              font-size: 11px;
+            }
+            > label {
+              margin-top: 0px;
+              margin-bottom: 0px;
+              border-top: 0px;
+              border-bottom: 0px;
+              > input {
+                margin-top: 0px;
+                margin-bottom: 4px;
+              }
+              > ._suffix {
+                margin-top: 0px;
+                margin-bottom: 2px;
+              }
+            }
+          }
+          > ._field:not(._field_notes) > div > ._content {
+            color: #666;
+          }
+        }
+        padding-bottom: 2px;
+      }
+    }
+  }
+  &._expanded {
     @include backdrop-blur(4px, rgba(245,246,246,.94), rgba(245,246,246,.98));
     border: 8px solid transparent;
     vertical-align: middle;
     box-shadow: $drop-shadow;
     border-radius: 6px;
-    > ._topRow {
-      display: flex;
-      flex-direction: row;
-      > ._title {
-        flex-grow: 1;
-        margin-bottom: -8px;
-        > ._field_name > div > ._content {
-          font-size: 28px;
-          color: black;
+    margin-top: 0px;
+    > ._hudContent {
+      > ._topRow {
+        margin-top: -8px;
+        display: flex;
+        flex-direction: row;
+        > ._icons {
+          width: 28px;
+        }
+        > ._title {
+          flex-grow: 1;
+          margin-left: 12px;
+          > ._field_name > div > ._content {
+            font-size: 64px;
+            color: #33b1ff;
+            font-weight: 200;
+            &:not(:focus) {border: 2px solid transparent!important}
+            background-color: transparent;
+            height: auto;
+            margin-bottom: 8px;
+            width: 600px;
+          }
+        }
+        > ._budgetTotal {
+          font-size: 64px;
+          color: #33b1ff;
           font-weight: 200;
-          &:not(:focus) {border: 2px solid transparent!important}
-          background-color: transparent;
-          height: auto;
-          margin-bottom: 8px;
-        }
-        > ._field_name._account ._content {
-          color: #3d993d;
+          padding-right: 4px;
         }
       }
-    }
-    ._icons {
-      flex-grow: 0;
-      @include icon-button();
-      > div {
-        display: inline-block;
-        margin-top: 10px;
-        margin-left: $icon-spacing;
+      > ._topCaption {
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-end;
+        > div {
+          color: #33b1ff;
+          font-weight: 200;
+          font-size: 20px;
+          margin-right: 36px;
+          margin-top: -24px;
+        }
       }
-    }
-    > ._compare {
-      margin-bottom: -10px;
-    }
-    ._graph_title {
-      margin-top: 16px;
-      margin-bottom: 4px;
-      font-size: 16px;
-      color: black;
-      font-weight: 100;
-    }
-    ._monthlyGraph {
-      margin-top: 6px;
-    }
-    ._presenter {
-      margin-top: -8px;
-    }
-
-    > ._group > ._presenter > ._MiniScheduleEntry {
-      > ul > li {
-        > ._field > div, > ._field {
-          > ._content, ._suffix {
-            font-size: 11px;
-          }
-          > label {
-            margin-top: 0px;
-            margin-bottom: 0px;
-            border-top: 0px;
-            border-bottom: 0px;
-            > input {
-              margin-top: 0px;
-              margin-bottom: 4px;
-            }
-            > ._suffix {
-              margin-top: 0px;
-              margin-bottom: 2px;
+      > ._graphs {
+        margin: 32px;
+        display: flex;
+        flex-direction: row;
+        > ._progress {
+          margin-top: -32px;
+          flex: 1;
+          @include adaptive-width(986px - 250px, 1138px - 250px);
+          > ._graph_title {
+            color: #777;
+            font-size: 32px;
+            font-weight: 300;
+            &:not(:first-child) {
+              margin-top: 16px;
             }
           }
         }
-        > ._field:not(._field_notes) > div > ._content {
-          color: #666;
+        > ._budget {
+          flex: 0;
+          width: 200px;
         }
       }
-      padding-bottom: 2px;
     }
   }
 }
@@ -402,7 +476,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
       > ._text {
         font-size: 32px;
         font-weight: 300;
-        color: #666;
+        color: #777;
       }
     }
     > ._container > div {
@@ -486,7 +560,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
       > ._suffix{
         font-size: 28px;
         font-weight: 300;
-        color: #666;
+        color: #777;
       }
       > ._suffix {
         width: 15%;
@@ -748,7 +822,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
         @media (min-width: 1100px) {font-size: 28px}
         @media (max-width: 1099px) {font-size: 20px}
         font-weight: 300;
-        color: #666;
+        color: #777;
       }
       > ._suffix {
         width: 15%;

@@ -10,6 +10,30 @@ class BudgetProgressHUDView extends View {
     this._isModal        = isModal;
     this._onDelete       = onDelete;
     this._topBuffer      = topBuffer;
+    this._colors = [
+      [26,101,202],
+      [73, 167,46],
+      [235,205,32],
+      [255,113,19],
+      [255,37,14],
+      [113,64,158],
+      [128,128,128],
+      [168,36,168],
+      [47,177,210]
+    ];
+    this._colorIndex = 0;
+  }
+
+  _resetColors() {
+    this._colorIndex = 0;
+  }
+
+  _getColor (alpha) {
+    return 'rgba(' + (this._colors [this._colorIndex] .concat (alpha)) .join (',') + ')'
+  }
+
+  _nextColor() {
+    this._colorIndex = (this._colorIndex + 1) % this._colors .length;
   }
 
   delete() {
@@ -39,7 +63,7 @@ class BudgetProgressHUDView extends View {
   }
 
   addHtml (toHtml, position, titlePresenter) {
-    this._resetHtml (toHtml);
+    this._html = $('<div>', {class: '_BudgetProgressHUD fader'}) .appendTo (toHtml);
     this._html .appendTo (toHtml);
     this._html .mousedown (e => {e.stopPropagation()});
     this._position = position;
@@ -50,6 +74,15 @@ class BudgetProgressHUDView extends View {
         (e) => {return ! $.contains (this._html .get (0), e .target) && this._html .get (0) != e .target},
         ()  => {this .delete()}, true
       );
+    this._resetHtml();
+  }
+
+  setExpanded (expanded) {
+    if (this._expanded != expanded) {
+      this._expanded = expanded;
+      this._resetHtml();
+      return true;
+    }
   }
 
   addGroup (name, toGroup) {
@@ -69,9 +102,16 @@ class BudgetProgressHUDView extends View {
       group .addClass ('hidden');
   }
 
-  addText (group, name, text='') {
-    var toHtml = group != ''? this._content .find ('.' + group): this._content;
-    $('<div>', {class: '_graph_title ' + name, text: text}) .appendTo (toHtml);
+  addText (group, name, text='', isVisible=true) {
+    const toHtml = group != ''? this._content .find ('.' + group): this._content;
+    const element = $('<div>', {class: '_graph_title ' + name, text: text}) .appendTo (toHtml);
+    if (!isVisible)
+      element .css ({display: 'none'});
+  }
+
+  setTextVisibility (group, name, isVisible) {
+    const element = this._content .find ('.' + group) .find ('.' + name);
+    element .css ({display: isVisible? 'block': 'none'});
   }
 
   updateText (name, text) {
@@ -211,7 +251,6 @@ class BudgetProgressHUDView extends View {
           type: 'bar',
           data: {labels: data .date .map (d => {return Types .dateM .toString (d .start)})},
           options: {
-//            animation: false,
             legend: {display: false},
             elements: {rectangle: {borderWidth: 1, borderSkipped: 'bottom'}},
             events: ['mousemove', 'mouseout', 'click', 'touchstart', 'touchmove', 'webkitmouseforcedown'],
@@ -285,6 +324,64 @@ class BudgetProgressHUDView extends View {
     }
   }
 
+  addDoughnut(group) {
+    const canvas = $('<canvas>') .appendTo (this._content .find ('.' + group));
+    const config = {
+      type: 'doughnut',
+      options: {
+        legend: {display: false},
+        tooltips: {
+          backgroundColor: 'rgba(0,0,0,0.6)',
+          callbacks: {
+            title: (t, d) => {
+              return d .labels [t [0] .index];
+            },
+            label: (t, d) => {
+              return Types .moneyD .toString (d .datasets [0] .data [t.index]);
+            }
+          }
+        }
+      },
+      data: {}
+    }
+    const chart = new Chart (canvas .get (0) .getContext ('2d'), config);
+    canvas .data ('chart', chart);
+  }
+
+  updateDoughnut (group, data) {
+    const canvas = this._content .find ('.' + group + '> canvas');
+    const chart  = canvas .data ('chart');
+    const chartData = chart .config .data;
+
+    const pairingFactor = data .length && data [0] .length;
+    if (pairingFactor && chartData.labels && chartData .labels .length == data .length * pairingFactor) {
+      for (let i = 0; i < data .length; i++)
+        for (let j = 0; j < pairingFactor; j++) {
+          chartData .labels [i * pairingFactor + j]             = data [i][j] .name;
+          chartData .datasets [0] .data [i * pairingFactor + j] = data [i][j] .amount;
+        }
+    } else {
+      chart .config .data = {
+        labels: [],
+        datasets: [{data: [], backgroundColor: [], hoverBackgroundColor: [], borderColor: [], borderWidth: []}],
+      }
+      this._resetColors();
+      for (const itemList of data) {
+        let alpha = [0.1, 0.4];
+        for (const item of Array .isArray (itemList)? itemList: [itemList]) {
+          chart .config .data .labels .push (item .name);
+          chart .config .data .datasets [0] .data .push (item .amount);
+          const a = alpha .pop();
+          chart .config .data .datasets [0] .backgroundColor .push (this._getColor (a));
+          chart .config .data .datasets [0] .borderWidth .push (1);
+          chart .config .data .datasets [0] .hoverBackgroundColor .push (this._getColor (a + 0.075));
+        }
+        this._nextColor();
+      }
+    }
+    chart .update();
+  }
+
   setVisible (isVisible) {
     setTimeout (() => {
       if (this._html) {
@@ -297,11 +394,11 @@ class BudgetProgressHUDView extends View {
     }, 0);
   }
 
-  _resetHtml (toHtml) {
+  _resetHtml() {
     if (this._html)
-      this._html .remove();
-    this._html          = $('<div>', {class: '_BudgetProgressHUD fader'}) .appendTo (toHtml);
-    this._content       = $('<div>', {class: '_hudContent'})              .appendTo (this._html);
+      this._html .empty();
+    this._html [(this._expanded? 'add': 'remove') + 'Class'] ('_expanded');
+    this._content       = $('<div>', {class: '_hudContent'}) .appendTo (this._html);
     this._graphs           = undefined;
     this._progressGraphs   = new Map();
     this._monthsGraph      = null;
@@ -327,20 +424,45 @@ class BudgetProgressHUDView extends View {
     let top = $('<div>', {class: '_topRow'}) .appendTo (this._content);
     titlePresenter .addHtml (top);
     let icons = $('<div>', {class: '_icons'}) .appendTo (top)
-    $('<div>', {class: 'lnr-chart-bars'}) .appendTo (icons) .click (() => {
-      this._notifyObservers (BudgetProgressHUDViewEvent .BODY_CLICK, {
-        html:     this .getHtml(),
-        position: {top: 50, left: 50},
-        altClick: false
+    if (! this._expanded) {
+      $('<div>', {class: 'lnr-chart-bars'}) .appendTo (icons) .click (() => {
+        this._notifyObservers (BudgetProgressHUDViewEvent .BODY_CLICK, {
+          html:     this .getHtml(),
+          position: {top: 50, left: 50},
+          altClick: false
+        });
       });
-    });
-    $('<div>', {class: 'lnr-exit-up'}) .appendTo (icons) .click (() => {
-      this._notifyObservers (BudgetProgressHUDViewEvent .BODY_CLICK, {
-        html:     this .getHtml(),
-        position: {top: 50, left: 50},
-        altClick: true
+      $('<div>', {class: 'lnr-exit-up'}) .appendTo (icons) .click (() => {
+        this._notifyObservers (BudgetProgressHUDViewEvent .BODY_CLICK, {
+          html:     this .getHtml(),
+          position: {top: 50, left: 50},
+          altClick: true
+        });
       });
-    });
+      $('<div>', {class: 'lnr-chevron-up-circle'}) .appendTo (icons) .click (() =>
+        this._notifyObservers (BudgetProgressHUDViewEvent .SHOW_EXPANDED, {
+          html: this .getHtml()
+        })
+      )
+    } else {
+      $('<div>', {class: '_budgetTotal'}) .insertBefore (icons);
+      $('<div>', {class: 'lnr-chevron-down-circle'}) .appendTo (icons) .click (() =>
+        this._notifyObservers (BudgetProgressHUDViewEvent .SHOW_NORMAL, {
+          html: this .getHtml()
+        })
+      )
+      $('<div>', {class: 'lnr-pushpin'}) .appendTo (icons) .click (() =>
+        this._notifyObservers (BudgetProgressHUDViewEvent .PIN, {
+          html: this .getHtml()
+        })
+      )
+      $('<div>', {class: '_topCaption'}) .appendTo (this._content)
+        .append ($('<div>', {text: 'Budget this Year'}));
+    }
+  }
+
+  updateBudgetTotal (amount) {
+    this._content .find ('._budgetTotal') .text (Types .moneyDZ .toString (amount));
   }
 
   setTitleHasNoParent (noParent) {
@@ -353,17 +475,17 @@ class BudgetProgressHUDView extends View {
       presenter .addHtml ($('<div>', {class: '_presenter'}) .appendTo (toHtml));
   }
 
-  addProgressGraph (group, name) {
-    var pg = new BudgetProgressGraph (name, $('<div>') .appendTo (this._content .find ('._group.'+name)), true, true, {barThickness: 26});
+  addProgressGraph (group, name, graphAsPercentage = true, options = {barThickness: 26}) {
+    var pg = new BudgetProgressGraph (name, $('<div>') .appendTo (this._content .find ('._group.' + group)), true, graphAsPercentage, options);
     pg .addObserver (this, this._onProgressGraphChange);
     this._progressGraphs .set (name, pg);
   }
 
-  updateProgressGraph (name, data, isVisible=true) {
+  updateProgressGraph (name, data, isVisible=true, labels) {
     var graph = this._progressGraphs .get (name);
     if (graph) {
       if (isVisible)
-        graph .update (data);
+        graph .update (data, labels);
       graph .setVisible (isVisible);
     }
   }
@@ -431,7 +553,10 @@ class BudgetProgressCategoryTitleView extends View {
 }
 
 var BudgetProgressHUDViewEvent = Object.create (ViewEvent, {
-  GRAPH_CLICK: {value: 200},
-  BODY_CLICK:  {value: 201}
+  GRAPH_CLICK:   {value: 200},
+  BODY_CLICK:    {value: 201},
+  SHOW_NORMAL:   {value: 202},
+  SHOW_EXPANDED: {value: 203},
+  PIN:           {value: 204}
 });
 

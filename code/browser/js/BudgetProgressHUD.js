@@ -21,22 +21,29 @@ class BudgetProgressHUD {
 
   _onModelChange (eventType, doc, arg, model) {
     if (this._id) {
-      this._getData();
-      this._updateCompare();
-      this._updateMonth();
-      this._updateYear();
-      this._updateTitle();
-      if (eventType == ModelEvent .INSERT || eventType == ModelEvent .REMOVE) {
-        var cat = this._variance .getBudget() .getCategories() .get (this._id);
-        if (((cat .children || []) .length != 0) != this._hasSubCategories)
-          this._updateSubCategories (true);
-      }
-      if (this._categoryPicker) {
-        if (eventType == ModelEvent .INSERT && doc .parent && doc .parent._id == this._id)
-          this._categoryPicker. pick (doc._id);
-        else if (eventType == ModelEvent .REMOVE && doc .parent  == this._id)
-          this._categoryPicker .pick (doc .parent);
+      if (! this._expanded) {
+        this._getData();
+        this._updateCompare();
+        this._updateMonth();
+        this._updateYear();
+        this._updateTitle();
+        if (eventType == ModelEvent .INSERT || eventType == ModelEvent .REMOVE) {
+          var cat = this._variance .getBudget() .getCategories() .get (this._id);
+          if (((cat .children || []) .length != 0) != this._hasSubCategories)
+            this._updateSubCategories (true);
         }
+        if (this._categoryPicker) {
+          if (eventType == ModelEvent .INSERT && doc .parent && doc .parent._id == this._id)
+            this._categoryPicker. pick (doc._id);
+          else if (eventType == ModelEvent .REMOVE && doc .parent  == this._id)
+            this._categoryPicker .pick (doc .parent);
+          }
+      } else {
+        this._getExpandedData();
+        this._view .updateBudgetTotal (this._budgetTotal);
+        this._view .updateDoughnut ('_budget', this._budget);
+        this._updateProgress();
+      }
     }
   }
 
@@ -73,7 +80,122 @@ class BudgetProgressHUD {
           BudgetProgressHUD .show (parent._id, arg .html, arg .position, this._accounts, this._variance, this._date);
       } else
         await Navigate .showBudgetMonthGraph (this._id, dates, arg .html, arg .position);
+
+    } else if (eventType == BudgetProgressHUDViewEvent .SHOW_NORMAL)
+      this._setNormal();
+    else if (eventType == BudgetProgressHUDViewEvent .SHOW_EXPANDED)
+      this._setExpanded();
+  }
+
+  _setNormal() {
+    if (this._view .setExpanded (false)) {
+      this._expanded = false;
+      this._id = null;
+      this._addTitle();
+      this._addCompare();
+      this._addMonth();
+      this._addYear();
+      this._addSchedule();
+      this._addSubCategories();
+      this .update (this._originalId);
     }
+  }
+
+  _setExpanded() {
+    if (this._view .setExpanded (true)) {
+      this._expanded = true;
+      this._addTitle();
+      this._view .addGroup ('_graphs');
+      this._view .addGroup ('_progress', '_graphs');
+      this._view .addGroup ('_budget',   '_graphs');
+      this._view .addDoughnut ('_budget');
+      this._addProgress();
+      this._addSchedule();
+      this._id = null;
+      this._updateExpanded (this._originalId);
+    }
+  }
+
+  _getExpandedData() {
+    const budget      = this._variance .getBudget();
+    const actuals     = this._variance .getActuals();
+    const categories  = budget .getCategories();
+    const cat         = categories .get (this._id);
+    const children    = (cat .children || []);
+    this._budgetTotal = budget .getAmount (cat) .amount;
+
+    const st = budget .getStartDate();
+    const en = budget .getEndDate();
+    const va = [cat] .concat (children)
+      .map (c => {
+        const b = budget .getAmount (c, st, en) .amount;
+        const a = actuals .getAmountRecursively (c, st, en);
+        return {
+          _id:       c._id,
+          name:      c .name,
+          available: Math .max (0, b - a),
+          actual:    a
+        }
+      })
+      .filter (item => item .available || item .actual)
+    const ca = va .slice (1) .reduce ((t, i) => ({available: (t .available || 0) + i .available, actual: (t .actual || 0) + i .actual}), {});
+    va [0] .available = Math .max (0, va [0] .available, ca .available);
+    va [0] .actual    = Math .max (0, va [0] .actual,    ca .actual);
+    if (va .length > 1)
+      va [0] .name = 'Other';
+    this._budget = va .map (item => [
+      {name: item .name + ' Spending',  amount: item .actual},
+      {name: item .name + ' Available', amount: item .available}
+    ]);
+
+    this._varianceAmounts = [this._id] .concat (children .map (child => child._id))
+      .map    (cid => this._getAmount (cid, true))
+      .filter (item =>
+        (item._id == this._id || categories .hasType (categories .get (item._id), ScheduleType .NOT_NONE)) &&
+        (this._hasAmount (item .month) || this._hasAmount (item .year)));
+    if (this._varianceAmounts .length > 1)
+      for (const per of ['month', 'year'])
+        if (this._varianceAmounts [0] [per])
+          this._varianceAmounts [0] [per] .name = 'All ' + this._varianceAmounts [0] [per] .name;
+  }
+
+  _addProgress() {
+    const options = {barThickness: 24, barPercentage: .85};
+    this._view .addText ('_progress', '_thisMonth', 'This Month', false);
+    this._view .addProgressGraph ('_progress', '_monthly', false, options);
+    this._view .addText ('_progress', '_thisYear', 'This Year (at any time)', false);
+    this._view .addProgressGraph ('_progress', '_yearly', false,  options);
+  }
+
+  _updateProgress() {
+    const months = this._varianceAmounts
+      .map    (item => item .month)
+      .filter (item => item && this._hasAmount (item));
+    const years = this._varianceAmounts
+      .map    (item => item .year)
+      .filter (item => item && this._hasAmount (item));
+    const rebuildMonths = this._prevMonthsLength !== undefined && this._prevMonthsLength != months .length;
+    const rebuildYears  = this._prevYearsLength  !== undefined && this._prevYearsLength  != years .length;
+    if (rebuildMonths || rebuildYears) {
+      this._view .emptyGroup ('_progress');
+      this._addProgress();
+    }
+    this._prevMonthsLength = months .length || 0;
+    this._prevYearsLength  = years  .length || 0;
+    this._view .setTextVisibility ('_progress', '_thisMonth', !! months .length);
+    this._view .updateProgressGraph ('_monthly', months, !! months .length);
+    this._view .setTextVisibility ('_progress', '_thisYear', !! years .length);
+    this._view .updateProgressGraph ('_yearly', years, !! years .length);
+}
+
+  _updateExpanded (id) {
+    this._id = this._originalId;
+    this._getExpandedData();
+    this._updateTitle (this._budgetTotal);
+    this._view .updateDoughnut ('_budget', this._budget);
+    this._updateProgress();
+    this._updateScheduleEntry();
+    this._view .setVisible (id);
   }
 
   show (id, date, debit, credit, toHtml, position) {
@@ -81,13 +203,7 @@ class BudgetProgressHUD {
     this._amount     = (debit || 0) - (credit || 0);
     this._date       = date;
     this._view .addHtml (toHtml, position);
-    this._addTitle();
-    this._addCompare();
-    this._addMonth();
-    this._addYear();
-    this._addSchedule();
-    this._addSubCategories();
-    this .update (id);
+    this._setNormal();
   }
 
   update (id) {
@@ -103,7 +219,7 @@ class BudgetProgressHUD {
       }
       this._view .setVisible (id);
       this._updateAll();
-    }
+     }
   }
   
   hide() {
@@ -112,15 +228,17 @@ class BudgetProgressHUD {
     this._view .removeHtml();
   }
 
-  _addTitle() {
+  _addTitle(param) {
     this._title = new BudgetProgressCategoryTitle (this._variance, this._view, this._accounts, this._variance .getBudget() .getCategories());
-    this._view .addTitle (this._title);
+    this._view .addTitle (this._title, param);
   }
 
-  _updateTitle() {
+  _updateTitle (budgetTotal) {
     if (this._id && this._title) {
       this._title .setId (this._id);
-      this._view .setTitleHasNoParent (this._variance .getBudget() .getCategories() .get (this._id) .parent == null)
+      this._view .setTitleHasNoParent (this._variance .getBudget() .getCategories() .get (this._id) .parent == null);
+      if (budgetTotal !== undefined)
+        this._view .updateBudgetTotal (budgetTotal)
     }
   }
 
@@ -209,6 +327,14 @@ class BudgetProgressHUD {
         this._sub = new BudgetProgressHUDName ((name) => {this._addSub (name)}, setFocus);
       this._view .addText      ('_subcategories', '', 'Subcategories');
       this._view .addPresenter ('_subcategories',  this._sub);
+    }
+  }
+
+  _updateScheduleEntry() {
+    if (this._id) {
+      const opt = {categories: [this._id], showTotal: true};
+      this._sub = new ScheduleEntry ('_ExtendedMiniScheduleEntry', this._accounts, this._variance, opt);
+      this._view .addPresenter ('_schedule', this._sub);
     }
   }
   
@@ -312,7 +438,7 @@ class BudgetProgressHUD {
     this._view .blur();
   }
   
-  _getAmount (id) {
+  _getAmount (id, includeName) {
     var isZero = a => {
       var total = Object .keys (a .amounts) .reduce ((s,k) => {
         return s + (a .amounts [k] || 0)
@@ -320,11 +446,16 @@ class BudgetProgressHUD {
       return total == 0 || total == a .amounts .budgetlessActual;
     }
     var data       = this._variance .getAmount (id, this._date, [[this._originalId, this._date, this._amount]]);
+    data._id       = id;
     var isCredit   = (data .year && data .year .isCredit) || (data .month && data .month .isCredit);
     var amt        = this._amount * (isCredit? -1: 1);
     var isNegative = amt < 0;
+    var isNegative = amt < 0;
     amt = amt * (isNegative? -1: 1);
-    for (let t of ['month', 'year'])
+    const cat = includeName && this._variance .getBudget() .getCategories() .get (id);
+    for (let t of ['month', 'year']) {
+      if (data [t] && includeName)
+        data [t] .name = cat .name;
       if ((data [t] && ! isZero (data [t])) || (t == 'month' && data .month && ! data .month .amounts .budgetlessActual)) {
         var dat = data [t] .amounts;
         data [t] .isYear = (t == 'year');
@@ -357,6 +488,7 @@ class BudgetProgressHUD {
           }
         }
       }
+    }
     return data;
   }
 }

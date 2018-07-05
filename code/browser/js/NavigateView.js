@@ -27,14 +27,6 @@ class NavigateView extends Observable  {
     }
   }
 
-  setEnabled (isEnabled) {
-    console.log(this._html);
-    if (this._html) {
-      const thisContent = (this._html .closest ('.contents > div > div')) [0];
-      console.log(this._html .closest ('.contents > div') .children ('div') .toArray() .findIndex (e => e == thisContent));
-    }
-  }
-
   addHtml (toHtml, buildHtml) {
     this._toHtml    = toHtml;
     this._buildHtml = buildHtml;

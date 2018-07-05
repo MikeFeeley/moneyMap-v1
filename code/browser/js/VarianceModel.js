@@ -412,10 +412,10 @@ class VarianceModel extends Observable {
    *    skip = [[cat_id, date, amount]]
    *      if skip is non-null
    *        - amount is removed from actuals for specified cat and date
-   *        - parent amounts distriute to other children first
-   *        - budgetless categories report schedule of respoinsible parent
+   *        - parent amounts distribute to other children first
+   *        - budgetless categories report schedule of responsible parent
    *      if skip is null
-   *        - parent amounts distriute proportionally
+   *        - parent amounts distribute proportionally
    *        - budgetless categories report as budgetless
    */
   getAmount (id, date, skip) {

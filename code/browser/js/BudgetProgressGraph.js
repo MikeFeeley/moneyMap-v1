@@ -100,7 +100,6 @@ class BudgetProgressGraph extends Observable {
   }
 
   _setData() {
-    var dt    = this._data [0];
     this._chart .data .labels   = this._data .map (d => {return d .name || ''});
     this._chart .data .datasets = this._schema
       .map (schema => {
@@ -249,7 +248,7 @@ class BudgetProgressGraph extends Observable {
 
   setVisible (isVisible) {
     if (isVisible) {
-      this._canvas .height (BudgetProgressGraph_CANVAS_HEIGHT);
+      this._canvas .height (Math .max (BudgetProgressGraph_CANVAS_HEIGHT, this._chart .chart .height));
       this._content .removeClass ('hidden');
     } else
       this._content .addClass ('hidden');
