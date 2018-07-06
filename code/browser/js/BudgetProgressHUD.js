@@ -142,12 +142,11 @@ class BudgetProgressHUD {
         }
       })
       .filter (item => item .available || item .actual)
-    if (va .length > 0) {
+    if (va .length > 1) {
       const ca = va .slice (1) .reduce ((t, i) => ({available: (t .available || 0) + i .available, actual: (t .actual || 0) + i .actual}), {});
       va [0] .available = Math .max (0, va [0] .available - ca .available);
       va [0] .actual    = Math .max (0, va [0] .actual    - ca .actual);
-      if (va .length > 1)
-        va [0] .name = 'Other';
+      va [0] .name = 'Other';
     }
     const rootName = categories .getPath (cat) [0] .name;
     this._budget = va
