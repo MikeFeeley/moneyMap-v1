@@ -124,7 +124,7 @@ class SchedulesModel extends Observable {
       }
       await this._schModel .insert (data);
     }
-    if (mis .model == this._schModel && siblings .length == 1 && Types .dateMYorYear .isBlank (siblings [0] .start)) {
+    if (mis .model == this._schModel && siblings .length == 1 && Types .dateMYorYear .isBlank (siblings [0] .start) && target .category ._id != pos .inside) {
       var result = await this._schModel .remove (this._splitMI (siblings [0] ._id) .id);
       if (result)
         pos .before = undefined;
