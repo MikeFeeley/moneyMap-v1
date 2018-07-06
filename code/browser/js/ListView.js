@@ -195,6 +195,11 @@ class ListView extends SortedTupleView {
         toleranceElement:     '> div',
         typePrefix:           '_list_line',
         stop: (e,ui) => {
+          const callback = this._html .data ('_callback');
+          if (callback) {
+            this._html .data ('_callback', null);
+            setTimeout(callback,0);
+          }
           if (Math .abs (ui .originalPosition .top - ui .position .top) >= 16 || Math .abs (ui .originalPosition .left - ui .position .left) >= 16) {
             var item = $(ui .item);
             this._notifyObservers (ListViewEvent .MOVE, {

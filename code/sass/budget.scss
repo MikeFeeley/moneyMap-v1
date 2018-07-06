@@ -210,6 +210,8 @@ body {
         flex-direction: row;
         > ._icons {
           width: 28px;
+          display: flex;
+          flex-direction: column;
         }
         > ._title {
           flex-grow: 1;
@@ -863,7 +865,10 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
       }
       > tr > td > ._icon {
         font-family: 'Linearicons-Free';
-        color: #888;
+        color: #bbb;
+        &:hover{
+          color: #333;
+        }
       }
     }
   }

@@ -432,6 +432,9 @@ const ViewCalendar = {
             const selMonth = Types .date .subMonths (selDate || otherDate, st);
             $(tds [selMonth]) .addClass ('_selected');
           }
+          const today = Types .date .today();
+          if (today >= st && today <= en)
+            $(tds [Types .date .subMonths (today, st)]) .addClass ('_today');
           if (otherDate) {
             const s = isEnd
               ? Math .max (0, Types .date .subMonths (otherDate, st) + (Types .date .isBlank (selDate)? 1: 0))
@@ -472,7 +475,7 @@ const ViewCalendar = {
         const tr = $('<tr>') .appendTo (tbody);
         for (let col = 0; col < 4; col++) {
           const tdt         = dt;
-          const isDisabled = isEnd && otherDate && dt < otherDate;
+          const isDisabled = (isEnd && otherDate && dt < otherDate) || (!isEnd && otherDate && dt > otherDate);
           const td         = $('<td>', {class: isDisabled? '_disabled': ''}) .appendTo (tr) .append ($('<div>', {text: Types .dateM .toString (dt)}))
             .click (e => {
               if (! isDisabled)
@@ -578,14 +581,15 @@ class ViewDate extends ViewTextbox {
   _addHtml() {
 
     const removePopup = () => {
-      if (popup)
-        popup .removeClass ('fader_visible')
+      if (popup) {
+        const curPopup = popup;
+        popup = null;
+        curPopup .removeClass ('fader_visible')
           .one ('transitionend', () => {
-            if (popup) {
-              popup .remove();
-              popup = null;
-            }
+            if (curPopup)
+              curPopup .remove();
           })
+      }
     }
 
     super._addHtml();
@@ -596,28 +600,39 @@ class ViewDate extends ViewTextbox {
     input
       .on ('focusin',  e => {
         if (popup)
+          return;
+        if (popup)
           popup .remove();
         const toHtml = this._inputContainer .offsetParent();
         popup = $('<div>', {class: '_calendarPicker fader'}) .appendTo (toHtml);
         const content = $('<div>') .appendTo (popup);
         popup .css (ui .calcPosition (this._inputContainer, toHtml, {top: 24, left: 0}));
-        ViewCalendar .show (this .get(), this._options, content, val => {this .set (val); this._handleChange(); this.click()});
+        ViewCalendar .show (this .get(), this._options, content, val => {
+          this .set (val);
+          this._changePending = true;
+        });
         popup .addClass ('fader_visible');
         ui .scrollIntoView (popup);
-        if (this._html .closest ('.ui-sortable') .length) {
-          // moving element causes (1) the handler to be dropped and (2) focus to be lost, so we don't get the focusout event
-          const addEventHandler = () => {
-            $(this._html .closest ('._tuple') [0]) .one ('click', e => {
-              if (popup && e .originalEvent .target != input [0])
-                removePopup();
-              else
-                addEventHandler();
+        const sortable = this._html .closest ('.ui-sortable');
+        if (sortable .length) {
+          const addCallback = () => {
+            sortable .data ('_callback', () => {
+              if (popup) {
+                input .focus();
+                addCallback();
+              }
             })
           }
-          addEventHandler();
+          addCallback();
         }
       })
-   .on ('focusout', e => removePopup());
+      .on ('focusout', e => {
+        if (this._changePending) {
+          this._handleChange();
+          this._changePending = false;
+        }
+        removePopup();
+      });
   }
 }
 

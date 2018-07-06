@@ -1263,7 +1263,7 @@ body > ._landing {
           &._today > div {
             text-decoration: underline;
           }
-          &._today:not(._selected):not(._deemphasized) > div {
+          &._today:not(._selected):not(._deemphasized):not(._disabled) > div {
             color: #444;
           }
         }

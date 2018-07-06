@@ -147,9 +147,11 @@ table > tbody > tr > td > ._field > div > ._content {
   &._flagBad  > ._heading {background-color: rgba(230,180,180,.4)};
   > ._heading {
     background-color: rgba(210,210,210,.4);
-    font-size: 18px;
-    font-weight: 300;
-    color: #444;
+    &, & > span:not(._icon) {
+      font-size: 18px;
+      font-weight: 300;
+      color: #444;
+    }
     padding: 6px 8px 6px 8px;
   }
   > div:not(._heading) {

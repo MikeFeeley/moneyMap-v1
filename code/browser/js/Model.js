@@ -489,6 +489,11 @@ class _Collection extends Observable {
       var orig = {}
       for (let f in update)
         orig [f] = doc [f];
+
+      // TODO - DEBUG - XXX - trying to find where this happens
+      if (!update || (typeof update == 'object' && Object .keys (update) .length == 0))
+        console.trace ('EMPTY UPDATE', id, update, source, isUndo, tid);
+
       var ok  = await this._getDB() .perform (DatabaseOperation .UPDATE_ONE, {database: this._database, collection: this._name, id: id, update: update})
       if (ok) {
         let undo = Object .keys (update) .reduce ((o,f) => {o [f] = orig [f] || ''; return o}, {})

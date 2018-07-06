@@ -64,7 +64,7 @@ class BudgetProgressHUD {
         }
         TransactionHUD .showCategory (this._id, arg .month || dates, this._accounts, this._variance, arg .html, arg .position);
       } else {
-        let isMonth = arg .name == 'months' || arg .name == '_month';
+        let isMonth = arg .name == 'months' || arg .name == '_month' || arg .name == '_monthly';
         let isAll   = arg .name == 'all';
         if (arg .lastYear) {
           dates .start = Types .date .addYear (this._variance .getBudget() .getStartDate(), -1);

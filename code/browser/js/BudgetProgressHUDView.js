@@ -79,6 +79,14 @@ class BudgetProgressHUDView extends View {
 
   setExpanded (expanded) {
     if (this._expanded != expanded) {
+      if (expanded) {
+        this._rightPosition = this._html[0].style.right;
+        if (this._rightPosition)
+          this._html .css ({left: Number (this._rightPosition .slice (0, -2)) - 750, right: 'auto'});
+      } else {
+        if (this._rightPosition)
+          this._html .css ({left: 'auto', right: this._rightPosition});
+      }
       this._expanded = expanded;
       this._resetHtml();
       return true;
