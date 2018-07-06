@@ -367,7 +367,7 @@ class BudgetProgressHUDView extends View {
       }
       this._resetColors();
       for (const itemList of data) {
-        let alpha = [0.07, 0.4];
+        let alpha = [0.15, 0.4];
         for (const item of Array .isArray (itemList)? itemList: [itemList]) {
           chart .config .data .labels .push (item .name);
           chart .config .data .datasets [0] .data .push (item .amount);

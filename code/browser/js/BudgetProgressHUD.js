@@ -125,14 +125,15 @@ class BudgetProgressHUD {
     const categories  = budget .getCategories();
     const cat         = categories .get (this._id);
     const children    = (cat .children || []);
-    this._budgetTotal = budget .getAmount (cat) .amount;
+    const sign        = budget .isCredit (cat)? -1: 1;
+    this._budgetTotal = budget .getAmount (cat) .amount * sign;
 
     const st = budget .getStartDate();
     const en = budget .getEndDate();
     const va = [cat] .concat (children)
       .map (c => {
-        const b = budget .getAmount (c, st, en) .amount;
-        const a = actuals .getAmountRecursively (c, st, en);
+        const b = budget .getAmount (c, st, en) .amount * sign;
+        const a = actuals .getAmountRecursively (c, st, en) * sign;
         return {
           _id:       c._id,
           name:      c .name,
@@ -141,15 +142,20 @@ class BudgetProgressHUD {
         }
       })
       .filter (item => item .available || item .actual)
-    const ca = va .slice (1) .reduce ((t, i) => ({available: (t .available || 0) + i .available, actual: (t .actual || 0) + i .actual}), {});
-    va [0] .available = Math .max (0, va [0] .available, ca .available);
-    va [0] .actual    = Math .max (0, va [0] .actual,    ca .actual);
-    if (va .length > 1)
-      va [0] .name = 'Other';
-    this._budget = va .map (item => [
-      {name: item .name + ' Spending',  amount: item .actual},
-      {name: item .name + ' Available', amount: item .available}
-    ]);
+    if (va .length > 0) {
+      const ca = va .slice (1) .reduce ((t, i) => ({available: (t .available || 0) + i .available, actual: (t .actual || 0) + i .actual}), {});
+      va [0] .available = Math .max (0, va [0] .available - ca .available);
+      va [0] .actual    = Math .max (0, va [0] .actual    - ca .actual);
+      if (va .length > 1)
+        va [0] .name = 'Other';
+    }
+    const rootName = categories .getPath (cat) [0] .name;
+    this._budget = va
+      .filter (item => item .actual > 0 || item .available > 0)
+      .map (item => [
+        {name: item .name + ' ' + rootName,  amount: Math .max (0, item .actual)},
+        {name: item .name + ' Available',    amount: Math .max (0, item .available)}
+      ]);
 
     this._varianceAmounts = [this._id] .concat (children .map (child => child._id))
       .map    (cid => this._getAmount (cid, true))
