@@ -62,7 +62,7 @@ class BudgetProgressHUD {
           if (arg .lastYear)
             dates = {start: Types .date .addYear (dates .start, -1), end: Types .date .addYear (dates .end, -1)};
         }
-        TransactionHUD .showCategory (this._id, arg .month || dates, this._accounts, this._variance, arg .html, arg .position);
+        TransactionHUD .showCategory (arg .id || this._id, arg .month || dates, this._accounts, this._variance, arg .html, arg .position);
       } else {
         let isMonth = arg .name == 'months' || arg .name == '_month' || arg .name == '_monthly';
         let isAll   = arg .name == 'all';
@@ -71,7 +71,7 @@ class BudgetProgressHUD {
           dates .end   = Types .date .addYear (this._variance .getBudget() .getEndDate(),   -1);
         } else
           dates = undefined;
-        await Navigate .showActualMonthGraph (this._id, dates, arg .html, arg .position, isMonth || isAll, ! isMonth || isAll);
+        await Navigate .showActualMonthGraph (arg .id || this._id, dates, arg .html, arg .position, isMonth || isAll, ! isMonth || isAll);
       }
     } else if (eventType == BudgetProgressHUDViewEvent .BODY_CLICK) {
       if (arg .altClick) {
@@ -477,8 +477,10 @@ class BudgetProgressHUD {
     amt = amt * (isNegative? -1: 1);
     const cat = includeName && this._variance .getBudget() .getCategories() .get (id);
     for (let t of ['month', 'year']) {
-      if (data [t] && includeName)
+      if (data [t] && includeName) {
+        data [t]._id   = cat._id;
         data [t] .name = cat .name;
+      }
       if ((data [t] && ! isZero (data [t])) || (t == 'month' && data .month && ! data .month .amounts .budgetlessActual)) {
         var dat = data [t] .amounts;
         data [t] .isYear = (t == 'year');
