@@ -22,6 +22,8 @@ $medium-upper: $wide-lower   - 1px;
 
 $icon-spacing: 16px;
 
+$extendedMiniScheduleThreshold: 1240px;
+
 @mixin icon-button {
   font-family: 'Linearicons-Free';
   font-weight: 100;
@@ -126,11 +128,13 @@ table > tbody > tr > td > ._field > div > ._content {
   position: absolute;
 }
 
-@mixin adaptive-width($narrow,$wide) {
-  @media (max-width: 1364px) {
+$defaultThreshold: 1364px;
+
+@mixin adaptive-width($narrow,$wide,$threshold: $defaultThreshold) {
+  @media (max-width: $threshold) {
     width: $narrow;
   }
-  @media (min-width: 1364px) {
+  @media (min-width: $threshold) {
     width: $wide;
   }
 }

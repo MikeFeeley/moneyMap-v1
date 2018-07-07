@@ -40,7 +40,8 @@ class BudgetProgressHUD {
           }
       } else {
         this._getExpandedData();
-        this._view .updateBudgetTotal (this._budgetTotal);
+        this._updateTitle();
+        this._view .updateMonthsGraph (this._monthsAmount);
         this._view .updateDoughnut ('_budget', this._budget);
         this._updateProgress();
       }
@@ -107,7 +108,10 @@ class BudgetProgressHUD {
   _setExpanded() {
     if (this._view .setExpanded (true)) {
       this._expanded = true;
+      this._id = this._originalId;
+      this._getExpandedData();
       this._addTitle();
+      this._view .addMonthsGraph ('_monthlyGraphLine', this._monthsAmount, {width: 350, height: 100}, false);
       this._view .addGroup ('_graphs');
       this._view .addGroup ('_progress', '_graphs');
       this._view .addGroup ('_budget',   '_graphs');
@@ -115,7 +119,7 @@ class BudgetProgressHUD {
       this._addProgress();
       this._addSchedule();
       this._id = null;
-      this._updateExpanded (this._originalId);
+      this._updateExpanded (this._originalId, true);
     }
   }
 
@@ -177,6 +181,8 @@ class BudgetProgressHUD {
       for (const per of ['month', 'year'])
         if (this._varianceAmounts [0] [per])
           this._varianceAmounts [0] [per] .name = 'All ' + this._varianceAmounts [0] [per] .name;
+
+    this._monthsAmount = this._variance .getAmountByMonth (this._id, en, true);
   }
 
   _addProgress() {
@@ -208,10 +214,12 @@ class BudgetProgressHUD {
     this._view .updateProgressGraph ('_yearly', years, !! years .length);
 }
 
-  _updateExpanded (id) {
-    this._id = this._originalId;
-    this._getExpandedData();
-    this._updateTitle (this._budgetTotal);
+  _updateExpanded (id, skipGetData) {
+    this._id = id;
+    if (skipGetData)
+      this._getExpandedData();
+    this._updateTitle();
+    this._view .updateMonthsGraph (this._monthsAmount);
     this._view .updateDoughnut ('_budget', this._budget);
     this._updateProgress();
     this._updateScheduleEntry();
@@ -251,17 +259,20 @@ class BudgetProgressHUD {
     this._view .removeHtml();
   }
 
-  _addTitle(param) {
+  _addTitle() {
     this._title = new BudgetProgressCategoryTitle (this._variance, this._view, this._accounts, this._variance .getBudget() .getCategories());
-    this._view .addTitle (this._title, param);
+    this._view .addTitle (this._title);
   }
 
-  _updateTitle (budgetTotal) {
+  _updateTitle() {
     if (this._id && this._title) {
-      this._title .setId (this._id);
-      this._view .setTitleHasNoParent (this._variance .getBudget() .getCategories() .get (this._id) .parent == null);
-      if (budgetTotal !== undefined)
-        this._view .updateBudgetTotal (budgetTotal)
+      if (! this._expanded) {
+        this._title .setId (this._id);
+        this._view .setTitleHasNoParent (this._variance .getBudget() .getCategories() .get (this._id) .parent == null);
+      } else {
+        this._view .updateTitle (this._variance .getBudget() .getCategories() .get (this._id) .name);
+        this._view .updateBudgetTotal (this._budgetTotal);
+      }
     }
   }
 

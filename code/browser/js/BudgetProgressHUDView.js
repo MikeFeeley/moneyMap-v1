@@ -248,11 +248,11 @@ class BudgetProgressHUDView extends View {
   }
 
 
-  addMonthsGraph (group, data) {
+  addMonthsGraph (group, data, prop = {width: 400, height: 100}, displayXTicks = true) {
     if (!this._monthsGraph)
-      this._monthsGraph = $('<div>') .appendTo (this._content .find ('._group.' + group));
+      this._monthsGraph = $('<div>', {class: '_monthsGraphContainer'}) .appendTo (this._content .find ('._group.' + group));
     if (data) {
-      var canvas = $('<canvas>', {prop: {width: 400, height: 100}, class: '_monthsGraph'}) .appendTo (this._monthsGraph);
+      var canvas = $('<canvas>', {prop: prop, class: '_monthsGraph'}) .appendTo (this._monthsGraph);
       if (canvas .length) {
         this._monthsGraphAdded = true;
         var chart  = new Chart (canvas [0] .getContext ('2d'), {
@@ -295,9 +295,13 @@ class BudgetProgressHUDView extends View {
                 }
               }
             },
+            scaleShowLabels: false,
             scales: {
               xAxes: [{
-                gridLines: {zeroLineColor: 'rgba(0,0,0,0)'}
+                gridLines: {display: true, zeroLineColor: 'rgba(0,0,0,0)'},
+                ticks: {
+                  display: displayXTicks
+                }
               }],
               yAxes: [{
                 display: false, ticks: {max: 100}
@@ -313,23 +317,41 @@ class BudgetProgressHUDView extends View {
   updateMonthsGraph (data) {
     if (!this._monthsGraphAdded)
       this .addMonthsGraph (null, data);
-    var canvas = this._content .find ('._monthsGraph');
-    var chart = canvas .data ('chart');
-    var max = Object .keys (data) .filter (f => {return ['priorYear', 'budget', 'actual'] .includes (f)}) .reduce ((m,f) => {
+    const canvas = this._content .find ('._monthsGraph');
+    const chart = canvas .data ('chart');
+    const max = Object .keys (data) .filter (f => {return ['priorYear', 'budget', 'actual'] .includes (f)}) .reduce ((m,f) => {
       return Math .max (m, data [f] .reduce ((s,v) => {return Math .max (s, Math .abs(v))}, 0));
     }, 0);
-    if (chart && chart .data) {
-      chart .data .datasets = this._monthsDatasets .map (d => {return {
-        label:           d [0],
-        value:           data [d [1]] .map (v => {return Types .moneyDC .toString (v)}),
-        data:            data [d [1]] .map (v => {return Math .round (v * 98 / max)}),
-        backgroundColor: d [2], hoverBackgroundColor: d [2],
-        borderColor:     d [3], hoverBorderColor: d [3]
-      }});
-      if (chart .data .datasets [0] .data .reduce ((t,d) => {return t + d}) == 0)
-        chart .data .datasets .splice (0, 1);
-      chart .update();
+
+    if (chart && chart .data && chart .data .datasets .length) {
+      const datasets = chart .data .datasets;
+      for (const [label, field] of [['Last Year', 'priorYear'], ['Budget', 'budget'], ['Activity', 'actual']]) {
+        const line = datasets .find (d => d .label == label);
+        if (line) {
+          for (let i = 0; i < line .data .length; i++) {
+            const value = data [field] [i];
+            line .data [i]  = Math .round (value * 98 / max);
+            line .value [i] = Types .moneyDC .toString (value);
+          }
+        }
+      }
+
+    } else {
+
+      if (chart && chart .data) {
+        chart .data .datasets = this._monthsDatasets .map (d => {return {
+          label:           d [0],
+          value:           data [d [1]] .map (v => {return Types .moneyDC .toString (v)}),
+          data:            data [d [1]] .map (v => {return Math .round (v * 98 / max)}),
+          backgroundColor: d [2], hoverBackgroundColor: d [2],
+          borderColor:     d [3], hoverBorderColor: d [3]
+        }});
+        if (chart .data .datasets [0] .data .reduce ((t,d) => {return t + d}) == 0)
+          chart .data .datasets .splice (0, 1);
+      }
     }
+
+    chart .update();
   }
 
   addDoughnut(group) {
@@ -430,9 +452,9 @@ class BudgetProgressHUDView extends View {
 
   addTitle (titlePresenter) {
     let top = $('<div>', {class: '_topRow'}) .appendTo (this._content);
-    titlePresenter .addHtml (top);
-    let icons = $('<div>', {class: '_icons'}) .appendTo (top)
     if (! this._expanded) {
+      titlePresenter .addHtml (top);
+      const icons = $('<div>', {class: '_icons'}) .appendTo (top);
       $('<div>', {class: 'lnr-chart-bars'}) .appendTo (icons) .click (() => {
         this._notifyObservers (BudgetProgressHUDViewEvent .BODY_CLICK, {
           html:     this .getHtml(),
@@ -453,6 +475,8 @@ class BudgetProgressHUDView extends View {
         })
       )
     } else {
+      $('<div>', {class: '_title'}) .appendTo (top);
+      const icons = $('<div>', {class: '_icons'}) .appendTo (top);
       $('<div>', {class: '_budgetTotal'}) .insertBefore (icons);
       $('<div>', {class: 'lnr-chevron-down-circle'}) .appendTo (icons) .click (() =>
         this._notifyObservers (BudgetProgressHUDViewEvent .SHOW_NORMAL, {
@@ -466,7 +490,12 @@ class BudgetProgressHUDView extends View {
       )
       $('<div>', {class: '_topCaption'}) .appendTo (this._content)
         .append ($('<div>', {text: 'Budget this Year'}));
+      $('<div>', {class: '_group _monthlyGraphLine'}) .appendTo (this._content);
     }
+  }
+
+  updateTitle (title) {
+    this._content .find ('._title') .text (title);
   }
 
   updateBudgetTotal (amount) {
