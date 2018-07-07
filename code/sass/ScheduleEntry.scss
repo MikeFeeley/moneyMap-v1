@@ -271,14 +271,8 @@ $indent:       24px;
     margin: 0px;
   }
     > ul > li {
-      > ._field_name {
-        margin-top: -4px;
-        max-height: 24px;
-      }
       > ._field_name ._content {
         @include adaptive-width($name-narrow - $indent * 0, $name-wide - $indent * 0, $threshold);
-        font-size: 15px;
-        font-weight: 500;
         color: #0081cc;
       }
       ._field_name._account ._content {
@@ -286,6 +280,9 @@ $indent:       24px;
       }
       > ._field_name._account ._content {
         color: #4d994d;
+      }
+      > ._field_unallocated, > ._field_total {
+        padding-top: 9px;
       }
       > ul > li {
         margin-left: $indent * 0;
