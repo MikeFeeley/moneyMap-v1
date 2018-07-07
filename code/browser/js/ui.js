@@ -9,6 +9,24 @@ var UI_BANNER_HEIGHT; // set by tab constructor
 
 var ui = {
 
+  isResponsive: true,
+  whenResponsiveMap: new Map(),
+
+  setResponsive (isResponsive) {
+    const wasResponsive = ui .isResponsive;
+    ui .isResponsive = isResponsive;
+    if (! wasResponsive) {
+      for (const updater of ui .whenResponsiveMap .values())
+        updater();
+      ui .whenResponsiveMap .clear();
+    }
+  },
+
+  whenResponsive (view, updater) {
+    if (! ui .isResponsive)
+      ui .whenResponsiveMap .set (view, updater);
+  },
+
   getScrollParent: node => {
     if (node === null || node == document .documentElement || window .getComputedStyle (node) .overflowY == 'scroll') {
       return node;

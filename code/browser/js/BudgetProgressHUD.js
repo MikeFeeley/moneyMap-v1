@@ -13,6 +13,7 @@ class BudgetProgressHUD {
     this._variance .deleteObserver (this._observer);
     this._view     .delete();
     this._deleteScheduleEntries();
+    ui .setResponsive (true);
   }
 
   static show (id, html, position, accounts, variance, date = Types .dateDMY .today(), expanded) {
@@ -120,6 +121,7 @@ class BudgetProgressHUD {
       this._addSchedule();
       this._id = null;
       this._updateExpanded (this._originalId, true);
+      ui .setResponsive (false);
     }
   }
 
@@ -254,6 +256,7 @@ class BudgetProgressHUD {
   }
   
   hide() {
+    console.log('hide');
     this._id = undefined;
     this._deleteScheduleEntries();
     this._view .removeHtml();
@@ -367,7 +370,7 @@ class BudgetProgressHUD {
   _updateScheduleEntry() {
     if (this._id) {
       const opt = {categories: [this._id], showTotal: true};
-      this._sub = new ScheduleEntry ('_ExtendedMiniScheduleEntry', this._accounts, this._variance, opt);
+      this._sub = new ScheduleEntry ('_ExpandedMiniScheduleEntry', this._accounts, this._variance, opt);
       this._view .addPresenter ('_schedule', this._sub);
     }
   }

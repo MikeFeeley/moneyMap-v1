@@ -71,6 +71,7 @@ class ImportTransactions extends Observable {
   }
 
   async _importFile (file) {
+    ui .setResponsive (false);
     var csv = await new Promise ((resolve, reject) => {
       Papa .parse (file, {
         complete: (results) => {resolve (results)},
@@ -121,6 +122,7 @@ class ImportTransactions extends Observable {
       } else
         s .push ('Empty or malformed file');
     }
+    ui .setResponsive (true);
     this._view .updateImportStatus (s);
     if (trans .length)
       await this._lastImport .refreshToLatest();

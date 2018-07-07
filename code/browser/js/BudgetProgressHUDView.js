@@ -355,7 +355,7 @@ class BudgetProgressHUDView extends View {
   }
 
   addDoughnut(group) {
-    const canvas = $('<canvas>') .appendTo (this._content .find ('.' + group));
+    const canvas = $('<canvas>', {prop: {width: 200, height: 200}}) .appendTo (this._content .find ('.' + group));
     const config = {
       type: 'doughnut',
       options: {

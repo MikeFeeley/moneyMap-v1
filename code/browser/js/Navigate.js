@@ -198,7 +198,7 @@ class Navigate {
 
     } else if (eventType == NavigateViewEvent .PROGRESS_SIDEBAR_CLICK) {
       if (arg .type == 'pinned') {
-        const html = $('body');
+        const html = isSafari? $('body'): $('html');
         const pos  = {top: html .scrollTop() + 68, left: html .scrollLeft() + 20};
         BudgetProgressHUD .show (arg .id, html, pos, this._accounts, this._variance, undefined, true);
       } else if (arg .type == 'pinned_icon')
@@ -1995,9 +1995,14 @@ class Navigate {
   async _update (eventType, model, ids, doc, arg, skipLiveUpdate) {
     for (let view of this._updaters .keys()) {
       if (!view || !view .isVisible || view .isVisible()) {
-        if (! skipLiveUpdate)
-          for (let updater of this._updaters .get (view))
-            await updater (eventType, model, ids, doc, arg);
+        if (! skipLiveUpdate) {
+          if (ui .isResponsive) {
+            for (let updater of this._updaters .get (view))
+              updater (eventType, model, ids, doc, arg);
+          }
+          else
+            ui .whenResponsive (view, () => view .refreshHtml());
+        }
       } else
         view .resetHtml();
     }

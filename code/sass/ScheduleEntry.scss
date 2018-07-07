@@ -397,8 +397,8 @@ $indent:       24px;
   }
 }
 
-._ExtendedMiniScheduleEntry {
-  $threshold: $extendedMiniScheduleThreshold;
+._ExpandedMiniScheduleEntry {
+  $threshold: $expandedMiniScheduleThreshold;
   @include noroot-schedule-entry (976px, 1138px, 30px, 24px, 15px, 13px, $threshold);
   position: relative;
   background: #ffffff;

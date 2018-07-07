@@ -47,6 +47,16 @@ class NavigateView extends Observable  {
     this._helpShowing = false;
   }
 
+  refreshHtml() {
+    if (this._toHtml) {
+      const scrollParent = isSafari? $('body'): $('html');
+      const scrollTop = scrollParent .scrollTop();
+      this .resetHtml();
+      this._createHtml();
+      scrollParent.scrollTop (scrollTop);
+    }
+  }
+
   _createHtml () {
     if (this._toHtml) {
       this._html    = $('<div>', {class: this._name }) .appendTo (this._toHtml);
