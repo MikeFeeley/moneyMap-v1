@@ -133,7 +133,7 @@ class BudgetProgressHUDView extends View {
     }
   }
 
-  updateCompareGraph (data) {
+  updateCompareGraph (data, prop) {
     let updateGraph = () => {
       let chart = this._compareGraph .find ('._compareGraph') .data ('chart');
       let max = Math .max (data .lastYear, data .actual + data .available + data .over);
@@ -151,7 +151,7 @@ class BudgetProgressHUDView extends View {
     if (data && (data .lastYear > 0 || data .actual > 0 || data .available > 0 || data .over > 0)) {
       if (! this._hasCompareGraph && this._compareGraph && this._compareGraph .length) {
         this._hasCompareGraph = true;
-        let canvas = $('<canvas>', {prop: {width: 400, height: 44}, class: '_compareGraph'}) .appendTo (this._compareGraph);
+        let canvas = $('<canvas>', {prop: prop? prop: {width: 400, height: 44}, class: '_compareGraph'}) .appendTo (this._compareGraph);
         let chart  = new Chart (canvas [0] .getContext ('2d'), {
           type: 'horizontalBar',
           data: {labels: ['', '','','']},
@@ -298,7 +298,7 @@ class BudgetProgressHUDView extends View {
             scaleShowLabels: false,
             scales: {
               xAxes: [{
-                gridLines: {display: true, zeroLineColor: 'rgba(0,0,0,0)'},
+                gridLines: {display: true, zeroLineColor: 'rgba(0,0,0,0)', tickMarkLength: displayXTicks? 10: 1},
                 ticks: {
                   display: displayXTicks
                 }

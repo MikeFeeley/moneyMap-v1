@@ -239,10 +239,18 @@ html {
           margin-top: -6px;
         }
       }
-      > ._monthlyGraphLine {
+      > ._graphLine {
         margin-top: -70px;
         display: flex;
         justify-content: center;
+        > ._graphLineContainer {
+          display: flex;
+          flex-direction: column;
+          > ._compareGraphContainer {
+            margin-top: -24px;
+            padding-left: 8px;
+          }
+        }
       }
       > ._graphs {
         margin: 32px;
@@ -251,7 +259,7 @@ html {
         flex-direction: row;
         > ._progress {
           margin-right: 16px;
-          margin-top: -24px;
+          margin-top: -12px;
           flex: 1;
           @include adaptive-width(986px - 250px, 1138px - 250px, $expandedMiniScheduleThreshold);
           > ._graph_title {

@@ -42,6 +42,7 @@ class BudgetProgressHUD {
       } else {
         this._getExpandedData();
         this._updateTitle();
+        this._updateCompare();
         this._view .updateMonthsGraph (this._monthsAmount);
         this._view .updateDoughnut ('_budget', this._budget);
         this._updateProgress();
@@ -112,7 +113,11 @@ class BudgetProgressHUD {
       this._id = this._originalId;
       this._getExpandedData();
       this._addTitle();
-      this._view .addMonthsGraph ('_monthlyGraphLine', this._monthsAmount, {width: 350, height: 100}, false);
+      this._view .addGroup ('_graphLine');
+      this._view .addGroup ('_graphLineContainer', '_graphLine');
+      this._view .addGroup ('_compareGraphContainer', '_graphLineContainer');
+      this._view .addCompareGraph ('_compareGraphContainer');
+      this._view .addMonthsGraph  ('_graphLineContainer', this._monthsAmount, {width: 350, height: 100}, false);
       this._view .addGroup ('_graphs');
       this._view .addGroup ('_progress', '_graphs');
       this._view .addGroup ('_budget',   '_graphs');
@@ -185,6 +190,9 @@ class BudgetProgressHUD {
           this._varianceAmounts [0] [per] .name = 'All ' + this._varianceAmounts [0] [per] .name;
 
     this._monthsAmount = this._variance .getAmountByMonth (this._id, en, true);
+
+    this._varianceAmount = this._getAmount (this._id);
+    this._getCompareAmount();
   }
 
   _addProgress() {
@@ -222,6 +230,7 @@ class BudgetProgressHUD {
       this._getExpandedData();
     this._updateTitle();
     this._view .updateMonthsGraph (this._monthsAmount);
+    this._updateCompare({width: 350, height: 44});
     this._view .updateDoughnut ('_budget', this._budget);
     this._updateProgress();
     this._updateScheduleEntry();
@@ -291,8 +300,8 @@ class BudgetProgressHUD {
     this._view .addCompareGraph ('_compare')
   }
 
-  _updateCompare() {
-    this._view .updateCompareGraph (this._compareAmount)
+  _updateCompare (prop) {
+    this._view .updateCompareGraph (this._compareAmount, prop)
   }
 
   _updateMonth() {
@@ -427,30 +436,37 @@ class BudgetProgressHUD {
       let cyS              = budget .getStartDate();
       let cyE              = budget .getEndDate();
       this._monthsAmount   = this._variance .getAmountByMonth (this._id, cyE, true);
-      let lyS              = Types .date .addYear (budget .getStartDate(), -1);
-      let lyE              = Types .date .addYear (cyE,   -1);
-      let cat              = budget .getCategories() .get (this._id);
-      let isCredit         = ['month', 'year'] .reduce ((isc, per) => {
-        return isc || (this._varianceAmount [per] && this._varianceAmount [per] .isCredit)
-      }, false)
-      let creditAdjust     = isCredit? -1: 1;
-      let lastYearAmount   = [cat]
-        .concat ((cat .parent && cat .parent .zombies) || [])
-        .filter (c      => {return c .name == cat .name})
-        .reduce ((t, c) => {return t + this._variance .getActuals() .getAmountRecursively (c, lyS, lyE)}, 0);
-      let actualAmount = this._variance .getActuals() .getAmountRecursively (cat, cyS, cyE) * creditAdjust;
-      let budgetAmount = budget .getAmount (cat) .amount;
+      this._getCompareAmount();
+    }
+  }
+
+  _getCompareAmount() {
+    const budget           = this._variance .getBudget();
+    const cyS              = budget .getStartDate();
+    const cyE              = budget .getEndDate();
+    const lyS              = Types .date .addYear (budget .getStartDate(), -1);
+    const lyE              = Types .date .addYear (cyE,   -1);
+    const cat              = budget .getCategories() .get (this._id);
+    const isCredit         = ['month', 'year'] .reduce ((isc, per) => {
+      return isc || (this._varianceAmount [per] && this._varianceAmount [per] .isCredit)
+    }, false)
+    const creditAdjust     = isCredit? -1: 1;
+    const lastYearAmount   = [cat]
+      .concat ((cat .parent && cat .parent .zombies) || [])
+      .filter (c      => {return c .name == cat .name})
+      .reduce ((t, c) => {return t + this._variance .getActuals() .getAmountRecursively (c, lyS, lyE)}, 0);
+    let actualAmount = this._variance .getActuals() .getAmountRecursively (cat, cyS, cyE) * creditAdjust;
+    let budgetAmount = budget .getAmount (cat) .amount;
       const isBudgetLess = ! ['month', 'year']
-        .find (p => this._varianceAmount [p] && ! this._varianceAmount [p] .isBudgetless);
-      if (isBudgetLess)
-        budgetAmount = actualAmount;
-      this._compareAmount  = {
-        lastYear:  lastYearAmount * creditAdjust,
-        actual:    Math .min (actualAmount, budgetAmount),
-        available: Math .max (0, budgetAmount - actualAmount),
-        over:      Math .max (0, actualAmount - budgetAmount),
-        over:      Math .max (0, actualAmount - budgetAmount)
-      }
+      .find (p => this._varianceAmount [p] && ! this._varianceAmount [p] .isBudgetless);
+    if (isBudgetLess)
+      budgetAmount = actualAmount;
+    this._compareAmount  = {
+      lastYear:  lastYearAmount * creditAdjust,
+      actual:    Math .min (actualAmount, budgetAmount),
+      available: Math .max (0, budgetAmount - actualAmount),
+      over:      Math .max (0, actualAmount - budgetAmount),
+      over:      Math .max (0, actualAmount - budgetAmount)
     }
   }
 
