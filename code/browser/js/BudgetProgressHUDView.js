@@ -475,7 +475,8 @@ class BudgetProgressHUDView extends View {
         })
       )
     } else {
-      $('<div>', {class: '_title'}) .appendTo (top);
+      $('<div>', {class: '_title'})  .appendTo (top);
+      $('<div>', {class: '_filler'}) .appendTo (top);
       const icons = $('<div>', {class: '_icons'}) .appendTo (top);
       $('<div>', {class: '_budgetTotal'}) .insertBefore (icons);
       $('<div>', {class: 'lnr-chevron-down-circle'}) .appendTo (icons) .click (() =>

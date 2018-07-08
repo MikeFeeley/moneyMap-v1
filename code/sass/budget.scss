@@ -210,13 +210,19 @@ html {
         flex-direction: row;
         > ._title {
           margin-left: 12px;
-          flex: 1;
-          font-size: 64px;
+          font-size: 48px;
           color: #33b1ff;
           font-weight: 200;
+          width: 410px;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          overflow: hidden;
+        }
+        > ._filler {
+          flex: 1;
         }
         > ._budgetTotal {
-          font-size: 64px;
+          font-size: 48px;
           color: #33b1ff;
           font-weight: 200;
         }
@@ -240,7 +246,7 @@ html {
         }
       }
       > ._graphLine {
-        margin-top: -70px;
+        margin-top: -60px;
         display: flex;
         justify-content: center;
         > ._graphLineContainer {
