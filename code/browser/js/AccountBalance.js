@@ -81,11 +81,17 @@ class AccountBalance extends TuplePresenter {
   }
 
   _addTuple (acc, pos) {
-    super._addTuple (Object .assign ({
+    const data = {
       _id:     acc._id,
       name:    acc .name
-    }, acc .editable_balance !== undefined? {editable_balance: acc .editable_balance} : {balance: acc .balance}),
-    pos);
+    };
+    if (acc .editable_balance !== undefined)
+      data .editable_balance = acc .editable_balance;
+    else
+      data .balance = acc .balance;
+    if (acc .isCat !== undefined)
+      data .isCat = acc .isCat;
+    super._addTuple (data, pos);
   }
 
   _addGroup (name, accounts) {
