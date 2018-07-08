@@ -463,6 +463,7 @@ class BudgetProgressHUDView extends View {
         this._html .remove();
         this._html = null;
       }
+      this._expanded = undefined;
     }
   }
 
