@@ -1298,12 +1298,15 @@ class Navigate {
 
   _addPinnedCategories() {
     const updateView = this._progressView .addProgressSidebarGroup ([{icon: 'lnr-pushpin'},' Pinned Categories'], '');
-
     const pinnedCategories = PinnedCategories .getInstance();
     const update = () => {
-      updateView (pinnedCategories .get()
-        .map (cid => this._categories .get (cid))
-        .map (cat => ({id: cat._id, name: cat .name, icon: 'lnr-cross', type: 'pinned'}))
+      const cats = pinnedCategories .get() .map (cid => this._categories .get (cid) || cid)
+      for (const cat of cats)
+        if (typeof cat != 'object')
+          pinnedCategories .remove (cat);
+      updateView (cats
+        .filter (cat => typeof cat == 'object')
+        .map    (cat => ({id: cat._id, name: cat .name, icon: 'lnr-cross', type: 'pinned'}))
       );
     }
     pinnedCategories .setObserver (update);
