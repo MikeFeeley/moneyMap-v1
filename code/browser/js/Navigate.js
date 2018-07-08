@@ -1431,9 +1431,7 @@ class Navigate {
       futureUpdate     (futureVar);
     }
     update();
-    this._addUpdater (this._progressView, (e,m,i) => {
-      update();
-    })
+    this._addUpdater (this._progressView, {force: true, updater: (e,m,i) => update()});
   }
 
 
@@ -2000,11 +1998,21 @@ class Navigate {
       if (!view || !view .isVisible || view .isVisible()) {
         if (! skipLiveUpdate) {
           if (ui .isResponsive) {
-            for (let updater of this._updaters .get (view))
+            for (const updater of this._updaters .get (view))
+              if (typeof updater != 'function')
+                updater = updater .updater;
               updater (eventType, model, ids, doc, arg);
           }
-          else
-            ui .whenResponsive (view, () => view .refreshHtml());
+          else {
+            let delayed;
+            for (const updater of this._updaters .get (view))
+              if (typeof updater != 'function' && updater .force)
+                updater .updater (eventType, model, ids, doc, arg);
+              else
+                delayed = true;
+            if (delayed)
+              ui .whenResponsive (view, () => view .refreshHtml());
+          }
         }
       } else
         view .resetHtml();

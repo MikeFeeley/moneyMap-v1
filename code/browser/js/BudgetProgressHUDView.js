@@ -376,7 +376,7 @@ class BudgetProgressHUDView extends View {
             }
           }
        },
-      events: ['click'],
+      events: ['click', 'mousemove'],
       onClick: (e, elements) => {
         const index = elements .length? elements [0] ._index: undefined;
         const pos   = this._html .position ();
