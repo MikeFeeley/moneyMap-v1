@@ -213,7 +213,7 @@ html {
           font-size: 48px;
           color: #33b1ff;
           font-weight: 200;
-          width: 410px;
+          @include adaptive-width(330px, 410px, $expandedMiniScheduleThreshold);
           white-space: nowrap;
           text-overflow: ellipsis;
           overflow: hidden;
@@ -267,7 +267,7 @@ html {
           margin-right: 16px;
           margin-top: -12px;
           flex: 1;
-          @include adaptive-width(986px - 250px, 1138px - 250px, $expandedMiniScheduleThreshold);
+          @include adaptive-width(986px - 280px, 1138px - 260px, $expandedMiniScheduleThreshold);
           > ._graph_title {
             color: #777;
             font-size: 32px;
