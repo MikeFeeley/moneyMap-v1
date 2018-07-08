@@ -81,8 +81,13 @@ class BudgetProgressHUDView extends View {
     if (this._expanded != expanded) {
       if (expanded) {
         this._rightPosition = this._html[0].style.right;
-        if (this._rightPosition)
-          this._html .css ({left: Number (this._rightPosition .slice (0, -2)) - 750, right: 'auto'});
+        if (this._rightPosition) {
+          const rp = Number (this._rightPosition .slice (0, -2));
+          if (rp > 100)
+            this._html .css ({left: rp - 750, right: 'auto'});
+          else
+            this._html .css ({left: 16, right: 'auto'});
+        }
       } else {
         if (this._rightPosition)
           this._html .css ({left: 'auto', right: this._rightPosition});
