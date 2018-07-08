@@ -370,7 +370,21 @@ class BudgetProgressHUDView extends View {
               return Types .moneyD .toString (d .datasets [0] .data [t.index]);
             }
           }
-        }
+       },
+      events: ['click'],
+      onClick: (e, elements) => {
+        const index = elements .length? elements [0] ._index: undefined;
+        const pos   = this._html .position ();
+        if (index != null)
+          this._notifyObservers (BudgetProgressHUDViewEvent .DOUGHNUT_CLICK, {
+            id:       canvas .data ('chart') .config .data .datasets [0] .ids [index],
+            html:     this._html .parent(),
+            position: {top: pos .top + 50, left: pos .left + 50},
+            view:     this
+          });
+        e .stopPropagation();
+        return false;
+      }
       },
       data: {}
     }
@@ -381,10 +395,10 @@ class BudgetProgressHUDView extends View {
   updateDoughnut (group, data) {
     const canvas = this._content .find ('.' + group + '> canvas');
     const chart  = canvas .data ('chart');
-    const chartData = chart .config .data;
+    let   chartData = chart .config .data;
 
     const pairingFactor = data .length && data [0] .length;
-    if (pairingFactor && chartData.labels && chartData .labels .length == data .length * pairingFactor) {
+    if (pairingFactor && chartData .labels && chartData .labels .length == data .length * pairingFactor) {
       for (let i = 0; i < data .length; i++)
         for (let j = 0; j < pairingFactor; j++) {
           chartData .labels [i * pairingFactor + j]             = data [i][j] .name;
@@ -393,18 +407,20 @@ class BudgetProgressHUDView extends View {
     } else {
       chart .config .data = {
         labels: [],
-        datasets: [{data: [], backgroundColor: [], hoverBackgroundColor: [], borderColor: [], borderWidth: []}],
+        datasets: [{data: [], ids: [], backgroundColor: [], hoverBackgroundColor: [], borderColor: [], borderWidth: []}],
       }
+      chartData = chart .config .data;
       this._resetColors();
       for (const itemList of data) {
         let alpha = [0.15, 0.4];
         for (const item of Array .isArray (itemList)? itemList: [itemList]) {
-          chart .config .data .labels .push (item .name);
-          chart .config .data .datasets [0] .data .push (item .amount);
+          chartData .labels .push (item .name);
+          chartData .datasets [0] .data .push (item .amount);
+          chartData .datasets [0] .ids .push  (item .id);
           const a = alpha .pop();
-          chart .config .data .datasets [0] .backgroundColor .push (this._getColor (a));
-          chart .config .data .datasets [0] .borderWidth .push (1);
-          chart .config .data .datasets [0] .hoverBackgroundColor .push (this._getColor (a + 0.075));
+          chartData .datasets [0] .backgroundColor .push (this._getColor (a));
+          chartData .datasets [0] .borderWidth .push (1);
+          chartData .datasets [0] .hoverBackgroundColor .push (this._getColor (a + 0.075));
         }
         this._nextColor();
       }
@@ -591,10 +607,11 @@ class BudgetProgressCategoryTitleView extends View {
 }
 
 var BudgetProgressHUDViewEvent = Object.create (ViewEvent, {
-  GRAPH_CLICK:   {value: 200},
-  BODY_CLICK:    {value: 201},
-  SHOW_NORMAL:   {value: 202},
-  SHOW_EXPANDED: {value: 203},
-  PIN:           {value: 204}
+  GRAPH_CLICK:    {value: 200},
+  BODY_CLICK:     {value: 201},
+  SHOW_NORMAL:    {value: 202},
+  SHOW_EXPANDED:  {value: 203},
+  PIN:            {value: 204},
+  DOUGHNUT_CLICK: {value: 205}
 });
 

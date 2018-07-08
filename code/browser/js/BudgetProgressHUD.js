@@ -88,9 +88,11 @@ class BudgetProgressHUD {
       this._setNormal();
     else if (eventType == BudgetProgressHUDViewEvent .SHOW_EXPANDED)
       this._setExpanded();
-    else if (eventType == BudgetProgressHUDViewEvent .PIN)
+    else if (eventType == BudgetProgressHUDViewEvent .PIN) {
       if (this._id)
         PinnedCategories .getInstance() .add (this._id);
+    } else if (eventType == BudgetProgressHUDViewEvent .DOUGHNUT_CLICK)
+      BudgetProgressHUD .show (arg .id, arg .html, arg .position, this._accounts, this._variance, this._date, true)
   }
 
   _setNormal() {
@@ -163,8 +165,8 @@ class BudgetProgressHUD {
     this._budget = va
       .filter (item => item .actual > 0 || item .available > 0)
       .map (item => [
-        {name: item .name + ' ' + rootName,  amount: Math .max (0, item .actual)},
-        {name: item .name + ' Available',    amount: Math .max (0, item .available)}
+        {id: item._id, name: item .name + ' ' + rootName,  amount: Math .max (0, item .actual)},
+        {id: item._id, name: item .name + ' Available',    amount: Math .max (0, item .available)}
       ]);
 
     this._varianceAmounts = [this._id] .concat (children .map (child => child._id))
@@ -265,7 +267,6 @@ class BudgetProgressHUD {
   }
   
   hide() {
-    console.log('hide');
     this._id = undefined;
     this._deleteScheduleEntries();
     this._view .removeHtml();
