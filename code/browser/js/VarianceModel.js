@@ -404,6 +404,21 @@ class VarianceModel extends Observable {
         }
         amount .none  .actual [per]  = 0;
       }
+
+    // deal year over into month available if possible
+    if (amount .year && amount .month)
+      for (const per of ['prev', 'cur']) {
+        const yearVariance = amount .year .budget [per] - amount .year .actual [per];
+        if (yearVariance < 0) {
+          const monthAvailable = Math .max (0, amount .month .budget [per] - amount .month .actual [per]);
+          if (monthAvailable > 0) {
+            const deal = Math .min (-yearVariance, monthAvailable);
+            amount .year .actual [per] -= deal;
+            amount .month .actual [per] += deal;
+          }
+        }
+      }
+
     return {amount: amount, addCats: amountUp .addCats};
   }
 
