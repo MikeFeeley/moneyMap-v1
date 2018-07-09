@@ -49,9 +49,9 @@ class BudgetYearGraph {
     this._config .data .datasets = datasets;
     this._suffix .html ((variance < 0? "You're Over": variance > 0? 'Unallocated': '') +'<br/>'+ Types .moneyD .toString (Math .abs (variance)));
     if (variance < 0)
-      this._suffix .addClass ('negative');
+      this._suffix .addClass ('coolNegative');
     else
-      this._suffix .removeClass ('negative');
+      this._suffix .removeClass ('coolNegative');
   }
 
   addHtml (toHtml) {
