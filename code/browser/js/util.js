@@ -475,7 +475,7 @@ class NumberType extends FieldType {
       if (typeof token == 'string') {
         let factor = 1;
         if (token .endsWith ('%')) {
-          token = token .slice (0,1);
+          token  = token .slice (0,-1);
           factor = 0.01;
         }
         return Number (token) * factor;
@@ -506,7 +506,7 @@ class NumberType extends FieldType {
           }
           stack .push (result);
         } else
-          stack .push (token);
+          stack .push (value (token));
       }
       return stack .length == 1 && stack [0];
     }
