@@ -283,6 +283,19 @@ html {
           margin-top: -16px;
         }
       }
+      > ._schedule > ._path {
+        padding-left: 4px;
+        margin-bottom: -16px;
+        font-size: 24px;
+        font-weight: 200;
+        > span {
+          padding-right: 12px;
+          color: #999;
+          &._pathElement:hover {
+            color: #0081cc;
+          }
+        }
+      }
     }
   }
 }

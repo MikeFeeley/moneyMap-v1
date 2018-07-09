@@ -93,6 +93,8 @@ class BudgetProgressHUD {
         PinnedCategories .getInstance() .add (this._id);
     } else if (eventType == BudgetProgressHUDViewEvent .DOUGHNUT_CLICK)
       BudgetProgressHUD .show (arg .id, arg .html, arg .position, this._accounts, this._variance, this._date, true)
+    else if (eventType == BudgetProgressHUDViewEvent .PATH_CLICK)
+      BudgetProgressHUD .show (arg .id, arg .html, arg .position, this._accounts, this._variance, this._date, true)
   }
 
   _setNormal() {
@@ -394,6 +396,10 @@ class BudgetProgressHUD {
 
   _addSchedule () {
     this._view .addGroup ('_schedule');
+    if (this._expanded) {
+      const categories = this._variance .getBudget() .getCategories();
+      this._view .addPath  ('_schedule', categories .getPath (categories .get (this._id)) .slice (0, -1));
+    }
   }
 
   _updateSchedule() {

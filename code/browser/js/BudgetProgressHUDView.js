@@ -359,6 +359,21 @@ class BudgetProgressHUDView extends View {
     chart .update();
   }
 
+  addPath (group, path) {
+    const container = $('<div>', {class: '_path'}) .appendTo (this._content .find ('._group.' + group));
+    console.log('ap', path, container, this._content .find ('._group.' + group));
+    for (const cat of path) {
+      const pos = this._html .position();
+      $('<span>', {text: cat .name, class: '_pathElement'}) .appendTo (container)
+        .click (e => this._notifyObservers (BudgetProgressHUDViewEvent .PATH_CLICK, {
+          id: cat._id,
+          html: this._html .parent(),
+          position: {top: pos .top + 50, left: pos .left + 50}
+        }));
+      $('<span>', {text: '>'}) .appendTo (container);
+    }
+  }
+
   addDoughnut(group) {
     const canvas = $('<canvas>', {prop: {width: 200, height: 200}}) .appendTo (this._content .find ('.' + group));
     const config = {
@@ -618,6 +633,7 @@ var BudgetProgressHUDViewEvent = Object.create (ViewEvent, {
   SHOW_NORMAL:    {value: 202},
   SHOW_EXPANDED:  {value: 203},
   PIN:            {value: 204},
-  DOUGHNUT_CLICK: {value: 205}
+  DOUGHNUT_CLICK: {value: 205},
+  PATH_CLICK:     {value: 206}
 });
 
