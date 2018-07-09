@@ -200,13 +200,14 @@ html {
     }
   }
   &._expanded {
-    @include backdrop-blur(4px, rgba(245,246,246,.94), rgba(245,246,246,.98));
-    border: 8px solid transparent;
-    vertical-align: middle;
-    box-shadow: $drop-shadow;
-    border-radius: 6px;
-    margin-top: 0px;
+    margin-top: -8px;
     > ._hudContent {
+      @include backdrop-blur(4px, rgba(245,246,246,.94), rgba(245,246,246,.98));
+      vertical-align: middle;
+      box-shadow: $drop-shadow;
+      border-radius: 6px;
+      border: 8px solid transparent;
+      padding: 8px;
       > ._topRow {
         margin-top: -8px;
         display: flex;
