@@ -261,6 +261,7 @@ html {
       > ._graphs {
         margin: 32px;
         margin-top: 12px;
+        margin-bottom: 12px;
         display: flex;
         flex-direction: row;
         > ._progress {
@@ -290,7 +291,7 @@ html {
         font-weight: 200;
         > span {
           padding-right: 12px;
-          color: #999;
+          color: #bbb;
           &._pathElement:hover {
             color: #0081cc;
           }
