@@ -43,9 +43,9 @@ class Navigate {
   async addProgressHtml (toHtml) {
     if (!this._progressView)
       this.prime();
-    this._progressView .addHtml (toHtml, () => {
+    this._progressView .addHtml (toHtml, noAnimateSidebar => {
       this._clearUpdatersForView (this._progressView);
-      this._addProgressSidebar()
+      this._addProgressSidebar (undefined, noAnimateSidebar)
       this._addProgressGraphs();
     });
   }
@@ -1392,8 +1392,8 @@ class Navigate {
     return update;
   }
 
-  _addProgressSidebar (toHtml) {
-    this._progressView .addProgressSidebar();
+  _addProgressSidebar (toHtml, noAnimateSidebar) {
+    this._progressView .addProgressSidebar (noAnimateSidebar);
     const pinnedCategoriesUpdate = this._addPinnedCategories();
     let bigPictureUpdate = this._addBigPicture();
     let issuesUpdate = this._addTopVariance (

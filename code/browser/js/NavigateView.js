@@ -52,21 +52,21 @@ class NavigateView extends Observable  {
       const scrollParent = isSafari? $('body'): $('html');
       const scrollTop = scrollParent .scrollTop();
       this .resetHtml();
-      this._createHtml();
+      this._createHtml (true);
       scrollParent.scrollTop (scrollTop);
     }
   }
 
-  _createHtml () {
+  _createHtml (noAnimateSidebar) {
     if (this._toHtml) {
       this._html    = $('<div>', {class: this._name }) .appendTo (this._toHtml);
       this._content = $('<div>', {class: '_list'})  .appendTo (this._html);
       this._toHtml .data ('visible', () => {
         if (this._html == null && this._toHtml)
-          this._createHtml()
+          this._createHtml (true)
       });
       if (this._buildHtml)
-        this._buildHtml();
+        this._buildHtml (noAnimateSidebar);
     }
   }
 
@@ -194,11 +194,11 @@ class NavigateView extends Observable  {
     return content;
   }
 
-  addProgressSidebar() {
+  addProgressSidebar (noAnimate) {
     this._html .parent() .addClass ('_progressContents');
     this._content .remove();
     this._content = this._html;
-    this._progressSidebar = $('<div>', {class: '_progressSidebar _sidebar_right'}) .appendTo (this._content);
+    this._progressSidebar = $('<div>', {class: '_progressSidebar _sidebar_right' + (noAnimate? ' _noAnimate': '') }) .appendTo (this._content);
     this._hideButton      = $('<button>', {class: '_sidebar_right_hide_botton lnr-cross', click: () => {
       this._progressSidebar .hide();
       this._showButton      .show();

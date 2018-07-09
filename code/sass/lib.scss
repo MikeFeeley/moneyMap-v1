@@ -146,7 +146,6 @@ $defaultThreshold: 1364px;
   border-radius: 12px;
   box-shadow: 0px 0px 1px rgba(0,0,0,.3), 0px 0px 3px rgba(0,0,0,.15);
   * {color: #777}
-/*  &._flagInfo > ._heading {background-color: rgba(170,210,250,.4)};*/
   &._flagGood > ._heading {background-color: rgba(180,220,180,.4)};
   &._flagBad  > ._heading {background-color: rgba(230,180,180,.4)};
   > ._heading {
@@ -193,9 +192,10 @@ $defaultThreshold: 1364px;
   position:fixed!important;
   margin-top: 0px!important;
   box-shadow:0 2px 5px 0 rgba(0,0,0,0.16),0 2px 10px 0 rgba(0,0,0,0.12);
-  animation:animateright 0.4s;
-  @keyframes animateright{from{right:-300px;opacity:0} to{right:0;opacity:1}}
-
+  &:not(._noAnimate) {
+    animation:animateright 0.4s;
+    @keyframes animateright{from{right:-300px;opacity:0} to{right:0;opacity:1}}
+  }
   ._sidebar_right_hide_botton {
     @include icon-button();
     border:none;
