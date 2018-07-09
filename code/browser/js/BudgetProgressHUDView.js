@@ -361,7 +361,6 @@ class BudgetProgressHUDView extends View {
 
   addPath (group, path) {
     const container = $('<div>', {class: '_path'}) .appendTo (this._content .find ('._group.' + group));
-    console.log('ap', path, container, this._content .find ('._group.' + group));
     for (const cat of path) {
       const pos = this._html .position();
       $('<span>', {text: cat .name, class: '_pathElement'}) .appendTo (container)

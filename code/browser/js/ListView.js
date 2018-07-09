@@ -249,6 +249,8 @@ class ListView extends SortedTupleView {
         if (fieldHtml .length == 0)
           fieldHtml = target .find ('._field');
         let field  = fieldHtml .data ('field');
+        if (fieldHtml .find ('._content') .html() == '')
+          return true;
         let name   = field && field._name;
         let skip = false;
         if (target [0] == line [0])
