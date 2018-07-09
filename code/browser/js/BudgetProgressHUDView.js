@@ -527,7 +527,6 @@ class BudgetProgressHUDView extends View {
       )
       $('<div>', {class: '_topCaption'}) .appendTo (this._content)
         .append ($('<div>', {text: 'Budget this Year'}));
-      $('<div>', {class: '_group _monthlyGraphLine'}) .appendTo (this._content);
     }
   }
 

@@ -249,28 +249,30 @@ html {
           margin-top: -6px;
         }
       }
-      > ._graphLine {
-        margin-top: -60px;
+
+      > ._graphLine0 {
         display: flex;
         justify-content: center;
-        > ._graphLineContainer {
-          display: flex;
-          flex-direction: column;
-          > ._compareGraphContainer {
-            margin-top: -24px;
-            padding-left: 8px;
-          }
+        margin-top: -70px;
+      }
+
+      > ._graphLine1 {
+        display: flex;
+        justify-content: center;
+        margin-top: 32px;
+        margin-bottom: 32px;
+        > ._monthsGraphContainer {
         }
       }
+
       > ._graphs {
         margin: 32px;
-        margin-top: 12px;
+        margin-top: -32px;
         margin-bottom: 12px;
         display: flex;
         flex-direction: row;
         > ._progress {
           margin-right: 16px;
-          margin-top: -12px;
           flex: 1;
           @include adaptive-width(986px - 280px, 1138px - 260px, $expandedMiniScheduleThreshold);
           > ._graph_title {
@@ -285,7 +287,7 @@ html {
         > ._budget {
           flex: 0;
           width: 200px;
-          margin-top: -16px;
+          margin-top: -80px;
         }
       }
       > ._schedule > ._path {

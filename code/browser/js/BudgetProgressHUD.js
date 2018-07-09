@@ -117,11 +117,14 @@ class BudgetProgressHUD {
       this._id = this._originalId;
       this._getExpandedData();
       this._addTitle();
-      this._view .addGroup ('_graphLine');
-      this._view .addGroup ('_graphLineContainer', '_graphLine');
-      this._view .addGroup ('_compareGraphContainer', '_graphLineContainer');
-      this._view .addCompareGraph ('_compareGraphContainer');
-      this._view .addMonthsGraph  ('_graphLineContainer', this._monthsAmount, {width: 350, height: 100}, false);
+
+      this._view .addGroup ('_graphLine0');
+      this._view .addGroup ('_graphContainer0', '_graphLine0')
+      this._view .addCompareGraph ('_graphContainer0');
+
+      this._view .addGroup ('_graphLine1');
+      this._view .addMonthsGraph  ('_graphLine1', this._monthsAmount, {width: 500, height: 100}, false);
+
       this._view .addGroup ('_graphs');
       this._view .addGroup ('_progress', '_graphs');
       this._view .addGroup ('_budget',   '_graphs');
@@ -234,7 +237,7 @@ class BudgetProgressHUD {
       this._getExpandedData();
     this._updateTitle();
     this._view .updateMonthsGraph (this._monthsAmount);
-    this._updateCompare({width: 350, height: 44});
+    this._updateCompare({width: 300, height: 44});
     this._view .updateDoughnut ('_budget', this._budget);
     this._updateProgress();
     this._updateScheduleEntry();
