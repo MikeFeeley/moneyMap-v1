@@ -20,7 +20,7 @@ class PinnedCategories {
   get() {
     let list = this._map .get (_default_database_id);
     if (! list) {
-      list = JSON .parse (localStorage .getItem (this._keyName)) || [];
+      list = JSON .parse (localStorage .getItem (this._keyName())) || [];
       this._map .set (_default_database_id, list);
     }
     return list;
