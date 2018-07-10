@@ -1327,7 +1327,7 @@ class Navigate {
         return t + (a < 0? a: 0)
       }, 0);
       let ovr = ovp + ovc;
-      let una = -(inc + (sav + exp));
+      let una = - (inc + wth + (sav + exp));
       let list = [];
       if (sav > 0)
         list .push ({name: 'Planned Savings', amount: sav});
