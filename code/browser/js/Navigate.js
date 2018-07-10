@@ -1809,7 +1809,7 @@ class Navigate {
     const datasetCopy   = Object .assign ({}, dataset);
     if (datasetCopy .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       const updater = this._addUpdater (view, async (eventType, model, ids) => {
-        dataset .groups   = await this._getHistoryData (parentIds, date, date) .groups;
+        dataset .groups   = (await this._getHistoryData (parentIds, date, date)) .groups;
         let ds            = JSON .parse (JSON .stringify (dataset));
         this._filterHistoryBySlider (ds)
         for (const g of ds .groups)
@@ -1997,11 +1997,12 @@ class Navigate {
     for (let view of this._updaters .keys()) {
       if (!view || !view .isVisible || view .isVisible()) {
         if (! skipLiveUpdate) {
-          if (ui .isResponsive || view != this._progressView) {
-            for (const updater of this._updaters .get (view))
+          if (ui .isResponsive) {
+            for (let updater of this._updaters .get (view)) {
               if (typeof updater != 'function')
                 updater = updater .updater;
               updater (eventType, model, ids, doc, arg);
+            }
           } else {
             let delayed;
             for (const updater of this._updaters .get (view))
