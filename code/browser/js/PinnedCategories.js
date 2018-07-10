@@ -1,7 +1,6 @@
 class PinnedCategories {
   constructor() {
-    const value = localStorage .getItem (PinnedCategories_key)
-    this._list = value? JSON .parse (value): [];
+    this._map = new Map();
   }
 
   static getInstance() {
@@ -14,24 +13,35 @@ class PinnedCategories {
     this._onChange = onChange;
   }
 
+  _keyName() {
+    return PinnedCategories_key + '$' + _default_database_id;
+  }
+
   get() {
-    return this._list;
+    let list = this._map .get (_default_database_id);
+    if (! list) {
+      list = JSON .parse (localStorage .getItem (this._keyName)) || [];
+      this._map .set (_default_database_id, list);
+    }
+    return list;
   }
 
   add (cid) {
-    if (! this._list .includes (cid)) {
-      this._list .push (cid);
-      localStorage .setItem (PinnedCategories_key, JSON .stringify (this._list));
+    const list = this .get();
+    if (! list .includes (cid)) {
+      list .push (cid);
+      localStorage .setItem (this._keyName(), JSON .stringify (list));
       if (this._onChange)
         this._onChange();
     }
   }
 
   remove (cid) {
-    const psn = this._list .indexOf (cid);
+    const list = this .get();
+    const psn = list .indexOf (cid);
     if (psn != -1) {
-      this._list .splice (psn, 1)
-      localStorage .setItem (PinnedCategories_key, JSON .stringify (this._list));
+      list .splice (psn, 1)
+      localStorage .setItem (this._keyName(), JSON .stringify (list));
       if (this._onChange)
         this._onChange();
     }
