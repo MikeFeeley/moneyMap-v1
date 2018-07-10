@@ -1997,13 +1997,12 @@ class Navigate {
     for (let view of this._updaters .keys()) {
       if (!view || !view .isVisible || view .isVisible()) {
         if (! skipLiveUpdate) {
-          if (ui .isResponsive) {
+          if (ui .isResponsive || view != this._progressView) {
             for (const updater of this._updaters .get (view))
               if (typeof updater != 'function')
                 updater = updater .updater;
               updater (eventType, model, ids, doc, arg);
-          }
-          else {
+          } else {
             let delayed;
             for (const updater of this._updaters .get (view))
               if (typeof updater != 'function' && updater .force)
