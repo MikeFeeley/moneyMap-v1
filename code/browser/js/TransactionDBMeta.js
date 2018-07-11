@@ -187,8 +187,8 @@ async function TransactionDBMeta_updateActuals (dbTran, start, end) {
   const cursor = dbTran .find ('transactions', query);
   while (await cursor .hasNext()) {
     const tran = await cursor .next();
-    if (tran .date && tran .category && (tran .debit || tran .credit)) {
-      let key = String (TransactionDBMeta_getYearMonth (tran .date)) + '$' + (String (tran .category) || '@NULL@');
+    if (tran.date && (tran.debit || tran.credit)) {
+      let key = String (TransactionDBMeta_getYearMonth (tran.date)) + '$' + (tran.category ? String (tran.category) : '@NULL@');
       let val = acum .get (key) || {amount: 0, count: 0};
       val .amount += tran .debit - tran .credit;
       val .count  += 1;
