@@ -92,7 +92,8 @@ class BudgetProgressHUD {
       if (this._id)
         PinnedCategories .getInstance() .add (this._id);
     } else if (eventType == BudgetProgressHUDViewEvent .DOUGHNUT_CLICK)
-      BudgetProgressHUD .show (arg .id, arg .html, arg .position, this._accounts, this._variance, this._date, true)
+      if (arg.id != this._id)
+        BudgetProgressHUD.show (arg.id, arg.html, arg.position, this._accounts, this._variance, this._date, true)
     else if (eventType == BudgetProgressHUDViewEvent .PATH_CLICK)
       BudgetProgressHUD .show (arg .id, arg .html, arg .position, this._accounts, this._variance, this._date, true)
   }
