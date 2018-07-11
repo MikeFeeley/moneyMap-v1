@@ -173,7 +173,9 @@ var ui = {
     }
 
     static clear() {
-      for (let entry of ui._modalStack || []) {
+      const keys = Object.keys (ui._modalStack || []);
+      for (let i = keys.length - 1; i >= 0; i --) {
+        const entry = ui._modalStack [i];
         entry .action();
       }
       ui._modalStack = ui._modalStack && ui._modalStack .filter (entry => {return ! entry .remove});
