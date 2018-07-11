@@ -163,7 +163,7 @@ class TransactionModel extends Model {
         } else {
           infill = {date: {$gte: dates .start, $lte: dates .end}};
           if (categories && categories .length)
-            infill .categories = categories .length == 1? {category: categories [0]}: {category: {$in: categories}};
+            infill.category = categories.length == 1 ? categories [0] : {$in: categories};
           await super .find (infill, append, false);
           let i;
           for (i = 0; i < queries .length; i++)
