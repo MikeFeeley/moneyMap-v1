@@ -115,6 +115,8 @@ class BudgetProgressHUD {
   _setExpanded() {
     if (this._view .setExpanded (true)) {
       this._expanded = true;
+      if (! this._originalId)
+        this._originalId = this._id;
       this._id = this._originalId;
       this._getExpandedData();
       this._addTitle();
