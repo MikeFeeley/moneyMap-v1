@@ -186,7 +186,7 @@ class BudgetProgressHUD {
       const list = this._varianceAmounts .map (item => item [per]) .filter (item => item);
       if (list .length == 2) {
         if (! Object .keys (list [0] .amounts) .find (p => list [0] [p] != list [1] [p]))
-          list [1] .deleteThis = true;
+          list [0].deleteThis = true;
       }
     }
     for (const item of this._varianceAmounts)
