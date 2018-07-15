@@ -244,39 +244,42 @@ class ViewCategoryEdit extends ViewTextbox {
       this._view._categoryPicker .filter (super._get())
     });
     let tr = input .closest('tr');
+    const thisInput = this._html.find ('input') [0];
     (tr .length? tr: input) .on ('keydown', e  => {
-      if (e .keyCode == 8 && e .metaKey && this._isOpen)
-        this._close();
-      switch (e.keyCode) {
-        case 13: /* return */
-          if (this._isOpen) {
-            this._close();
-            return false;
-          }
-          break;
-        case 37: /* arrow left */
-          if (this._isOpen) {
-            this._view._categoryPicker .moveLeft();
-            return false;
-          }
-          break;
-        case 38: /* arrow up */
-          if (this._isOpen) {
-            this._view._categoryPicker .moveUp();
-            return false;
-          }
-          break;
-        case 39: /* arrow right */
-          if (this._isOpen) {
-            this._view._categoryPicker .moveRight();
-            return false;
-          }
-          break;
-        case 40: /* arrow down */
-          if (this._isOpen) {
-            this._view._categoryPicker .moveDown();
-            return false;
-          }
+      if (e.target == thisInput) {
+        if (e.keyCode == 8 && e.metaKey && this._isOpen)
+          this._close ();
+        switch (e.keyCode) {
+          case 13: /* return */
+            if (this._isOpen) {
+              this._close ();
+              return false;
+            }
+            break;
+          case 37: /* arrow left */
+            if (this._isOpen) {
+              this._view._categoryPicker.moveLeft ();
+              return false;
+            }
+            break;
+          case 38: /* arrow up */
+            if (this._isOpen) {
+              this._view._categoryPicker.moveUp ();
+              return false;
+            }
+            break;
+          case 39: /* arrow right */
+            if (this._isOpen) {
+              this._view._categoryPicker.moveRight ();
+              return false;
+            }
+            break;
+          case 40: /* arrow down */
+            if (this._isOpen) {
+              this._view._categoryPicker.moveDown ();
+              return false;
+            }
+        }
       }
       return true;
     });
