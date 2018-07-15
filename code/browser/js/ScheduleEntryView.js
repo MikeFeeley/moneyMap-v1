@@ -45,6 +45,7 @@ class ScheduleEntryView extends ListView {
   }
 
   delete() {
+    super.delete ();
     if (this._hud)
       ui .ModalStack .delete (this._modalStackEntry);
   }

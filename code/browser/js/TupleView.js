@@ -11,6 +11,10 @@ class TupleView extends View {
     this._tuples = new Map();
   }
 
+  delete () {
+    this._clearSelectedTuple ();
+  }
+
   remove() {
     if (this._html) {
       this._html .remove();

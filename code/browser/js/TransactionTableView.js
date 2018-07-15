@@ -74,6 +74,7 @@ class TransactionTableView extends TableView {
   }
 
   delete() {
+    super.delete ();
     if (this._categoryPicker)
       this._categoryPicker .delete();
   }

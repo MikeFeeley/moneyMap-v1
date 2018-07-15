@@ -14,6 +14,7 @@ class TransactionHUD extends TransactionAndRulesTable {
   }
 
   delete() {
+    super.delete ();
     if (this._html) {
       this._html .remove();
       this._html = null;
@@ -21,7 +22,6 @@ class TransactionHUD extends TransactionAndRulesTable {
     ui .ModalStack .delete (this._modalStackEntry);
     if (this._onClose)
       this._onClose();
-    super .delete();
   }
 
   _onViewChange (eventType, arg) {

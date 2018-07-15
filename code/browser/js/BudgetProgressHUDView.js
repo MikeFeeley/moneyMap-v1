@@ -38,12 +38,13 @@ class BudgetProgressHUDView extends View {
 
   delete() {
     if (this._html) {
-      this._html .remove();
+      const html = this._html;
       this._html = null;
       if (this._onDelete)
         this._onDelete();
       if (this._isModal)
         ui .ModalStack .delete (this._modalStackEntry);
+      html.remove ();
     }
   }
 
