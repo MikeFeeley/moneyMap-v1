@@ -487,8 +487,8 @@ class NumberType extends FieldType {
       const stack = [];
       for (const token of rpn) {
         if ('+-*/' .includes (token)) {
-          const op0 = value (stack .pop());
           const op1 = value (stack .pop());
+          const op0 = value (stack.pop ());
           let   result;
           switch (token) {
             case '+':
