@@ -204,8 +204,7 @@ class AccountsModel extends Observable {
   async _onTranModelChange (eventType, doc, arg, source) {
     if (doc .account) {
       let acc  = this._accounts .find (a => {return a._id == doc .account});
-      if (acc.balance === undefined)
-        acc.balance = 0;
+      acc.balance = acc.balance || 0;
       if (acc) {
         let sign = acc .creditBalance? -1: 1;
         switch (eventType) {
