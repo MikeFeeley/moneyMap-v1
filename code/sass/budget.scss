@@ -250,6 +250,15 @@ html {
         }
       }
 
+      > ._date {
+        margin-left: 32px;
+        margin-top: -94px;
+        margin-bottom: 94px;
+        font-size: 28px;
+        font-weight: 200;
+        color: #bbb;
+      }
+
       > ._graphLine0 {
         display: flex;
         justify-content: center;
@@ -259,16 +268,16 @@ html {
       > ._graphLine1 {
         display: flex;
         justify-content: center;
-        margin-top: 32px;
-        margin-bottom: 32px;
+        margin-top: 16px;
+        margin-bottom: 16px;
         > ._monthsGraphContainer {
         }
       }
 
       > ._graphs {
         margin: 32px;
-        margin-top: -48px;
-        margin-bottom: 12px;
+        margin-top: -76px;
+        margin-bottom: 8px;
         display: flex;
         flex-direction: row;
         > ._progress {
@@ -287,7 +296,7 @@ html {
         > ._budget {
           flex: 0;
           width: 200px;
-          margin-top: -64px;
+          margin-top: -30px;
           margin-bottom: -20px;
         }
       }

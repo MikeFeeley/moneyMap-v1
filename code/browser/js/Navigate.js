@@ -263,7 +263,7 @@ class Navigate {
             if (arg .date .end > this._budget .getStartDate()) {
               let activeId = arg .id .find (i => {let cat= this._categories .get (i); return cat && cat .budgets .includes (this._budget .getId())})
               if (activeId)
-                BudgetProgressHUD .show (activeId, arg .html, arg .position, this._accounts, this._variance);
+                BudgetProgressHUD.show (activeId, arg.html, arg.position, this._accounts, this._variance, arg.date.end);
             } else if (arg .id) {
               TransactionHUD .showCategory (arg.id[0], arg .date, this._accounts, this._variance, arg .html, arg .position);
             }

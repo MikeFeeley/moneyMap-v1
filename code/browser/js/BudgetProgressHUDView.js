@@ -329,35 +329,47 @@ class BudgetProgressHUDView extends View {
       return Math .max (m, data [f] .reduce ((s,v) => {return Math .max (s, Math .abs(v))}, 0));
     }, 0);
 
-    if (chart && chart .data && chart .data .datasets .length) {
-      const datasets = chart .data .datasets;
-      for (const [label, field] of [['Last Year', 'priorYear'], ['Budget', 'budget'], ['Activity', 'actual']]) {
-        const line = datasets .find (d => d .label == label);
-        if (line) {
-          for (let i = 0; i < line .data .length; i++) {
-            const value = data [field] [i];
-            line .data [i]  = Math .round (value * 98 / max);
-            line .value [i] = Types .moneyDC .toString (value);
+    if (chart) {
+
+      if (chart && chart.data && chart.data.datasets.length) {
+        const datasets = chart.data.datasets;
+        for (const [label, field] of [['Last Year', 'priorYear'], ['Budget', 'budget'], ['Activity', 'actual']]) {
+          const line = datasets.find (d => d.label == label);
+          if (line) {
+            for (let i = 0; i < line.data.length; i ++) {
+              const value = data [field] [i];
+              line.data [i] = Math.round (value * 98 / max);
+              line.value [i] = Types.moneyDC.toString (value);
+            }
           }
+        }
+
+      } else {
+
+        if (chart && chart.data) {
+          chart.data.datasets = this._monthsDatasets.map (d => {
+            return {
+              label: d [0],
+              value: data [d [1]].map (v => {
+                return Types.moneyDC.toString (v)
+              }),
+              data: data [d [1]].map (v => {
+                return Math.round (v * 98 / max)
+              }),
+              backgroundColor: d [2], hoverBackgroundColor: d [2],
+              borderColor: d [3], hoverBorderColor: d [3]
+            }
+          });
+          if (chart.data.datasets [0].data.reduce ((t, d) => {
+            return t + d
+          }) == 0)
+            chart.data.datasets.splice (0, 1);
         }
       }
 
-    } else {
+      chart.update ();
 
-      if (chart && chart .data) {
-        chart .data .datasets = this._monthsDatasets .map (d => {return {
-          label:           d [0],
-          value:           data [d [1]] .map (v => {return Types .moneyDC .toString (v)}),
-          data:            data [d [1]] .map (v => {return Math .round (v * 98 / max)}),
-          backgroundColor: d [2], hoverBackgroundColor: d [2],
-          borderColor:     d [3], hoverBorderColor: d [3]
-        }});
-        if (chart .data .datasets [0] .data .reduce ((t,d) => {return t + d}) == 0)
-          chart .data .datasets .splice (0, 1);
-      }
     }
-
-    chart .update();
   }
 
   addPath (group, path) {
@@ -487,7 +499,7 @@ class BudgetProgressHUDView extends View {
     }
   }
 
-  addTitle (titlePresenter) {
+  addTitle (titlePresenter, subtitle) {
     let top = $('<div>', {class: '_topRow'}) .appendTo (this._content);
     if (! this._expanded) {
       titlePresenter .addHtml (top);
@@ -527,7 +539,7 @@ class BudgetProgressHUDView extends View {
         })
       )
       $('<div>', {class: '_topCaption'}) .appendTo (this._content)
-        .append ($('<div>', {text: 'Budget this Year'}));
+      .append ($ ('<div>', {text: subtitle}));
     }
   }
 

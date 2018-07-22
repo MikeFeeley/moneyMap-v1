@@ -119,14 +119,15 @@ class BudgetProgressHUD {
         this._originalId = this._id;
       this._id = this._originalId;
       this._getExpandedData();
-      this._addTitle();
+      this._addTitle ('Budget ' + this._budgetDescription);
 
       this._view .addGroup ('_graphLine0');
       this._view .addGroup ('_graphContainer0', '_graphLine0')
       this._view .addCompareGraph ('_graphContainer0');
 
       this._view .addGroup ('_graphLine1');
-      this._view .addMonthsGraph  ('_graphLine1', this._monthsAmount, {width: 500, height: 100}, false);
+      this._view.addText ('', '_date', 'As of ' + (this._date == Types.date.today () ? 'Today' : Types.dateLong.toString (this._date)));
+      this._view.addMonthsGraph ('_graphLine1', this._monthsAmount, {width: 500, height: 80}, false);
 
       this._view .addGroup ('_graphs');
       this._view .addGroup ('_progress', '_graphs');
@@ -149,8 +150,11 @@ class BudgetProgressHUD {
     const sign        = budget .isCredit (cat)? -1: 1;
     this._budgetTotal = budget .getAmount (cat) .amount * sign;
 
-    const st = budget .getStartDate();
-    const en = budget .getEndDate();
+    const bs = budget.getStartDate ();
+    const be = budget.getEndDate ();
+    const st = Types.dateFY.getFYStart (this._date, bs, be);
+    const en = Types.dateFY.getFYEnd (this._date, bs, be);
+    this._budgetDescription = st == bs ? 'this Year' : budget.getLabel ({start: st, end: en});
     const va = [cat] .concat (children)
       .map (c => {
         const b = budget .getAmount (c, st, en) .amount * sign;
@@ -198,19 +202,9 @@ class BudgetProgressHUD {
       for (const per of ['month', 'year'])
         if (this._varianceAmounts [0] [per])
           this._varianceAmounts [0] [per] .name = 'All ' + this._varianceAmounts [0] [per] .name;
-
     this._monthsAmount = this._variance .getAmountByMonth (this._id, en, true);
-
     this._varianceAmount = this._getAmount (this._id);
     this._getCompareAmount();
-  }
-
-  _addProgress() {
-    const options = {barThickness: 24, barPercentage: .85};
-    this._view .addText ('_progress', '_thisMonth', 'This Month', false);
-    this._view .addProgressGraph ('_progress', '_monthly', false, options);
-    this._view .addText ('_progress', '_thisYear', 'This Year (at any time)', false);
-    this._view .addProgressGraph ('_progress', '_yearly', false,  options);
   }
 
   _updateProgress() {
@@ -250,7 +244,7 @@ class BudgetProgressHUD {
   show (id, date, debit, credit, toHtml, position, expanded) {
     this._originalId = id;
     this._amount     = (debit || 0) - (credit || 0);
-    this._date       = date;
+    this._date = date || Types.date.today ();
     this._view .addHtml (toHtml, position);
     if (! expanded)
       this._setNormal();
@@ -280,9 +274,9 @@ class BudgetProgressHUD {
     this._view .removeHtml();
   }
 
-  _addTitle() {
+  _addTitle (subtitle) {
     this._title = new BudgetProgressCategoryTitle (this._variance, this._view, this._accounts, this._variance .getBudget() .getCategories());
-    this._view .addTitle (this._title);
+    this._view.addTitle (this._title, subtitle);
   }
 
   _updateTitle() {
@@ -298,10 +292,32 @@ class BudgetProgressHUD {
   }
 
   _addMonth() {
-    this._view .addGroup         ('_month');
-    this._view .addText          ('_month', '_monthTitle', 'Monthly as of ' + Types .dateLong .toString (this._date));
-    this._view .addMonthsGraph   ('_month', this._monthsAmount);
-    this._view .addProgressGraph ('_month', '_month');
+    if (this._date <= this._variance.getBudget ().getEndDate ()) {
+      this._view.addGroup ('_month');
+      this._view.addText ('_month', '_monthTitle', 'Monthly as of ' + Types.dateLong.toString (this._date));
+      this._view.addMonthsGraph ('_month', this._monthsAmount);
+      this._view.addProgressGraph ('_month', '_month');
+    }
+  }
+
+  _addYear () {
+    if (this._date <= this._variance.getBudget ().getEndDate ()) {
+      this._view.addGroup ('_year');
+      var budget = this._variance.getBudget ();
+      var year = Types.dateFY.toString (this._date, budget.getStartDate (), budget.getEndDate ());
+      this._view.addText ('_year', '_yearTitle', 'Anytime in ' + year);
+      this._view.addProgressGraph ('_year', '_year');
+    }
+  }
+
+  _addProgress () {
+    if (this._date <= this._variance.getBudget ().getEndDate ()) {
+      const options = {barThickness: 24, barPercentage: .85};
+      this._view.addText ('_progress', '_thisMonth', 'This Month', false);
+      this._view.addProgressGraph ('_progress', '_monthly', false, options);
+      this._view.addText ('_progress', '_thisYear', 'This Year (at any time)', false);
+      this._view.addProgressGraph ('_progress', '_yearly', false, options);
+    }
   }
 
   _addCompare() {
@@ -321,14 +337,6 @@ class BudgetProgressHUD {
         this._view .updateProgressGraph ('_month', this._varianceAmount .month, this._hasAmount (this._varianceAmount .month));
       }
     }
-  }
-
-  _addYear() {
-    this._view .addGroup ('_year');
-    var budget = this._variance .getBudget();
-    var year   = Types .dateFY .toString (this._date, budget .getStartDate(), budget .getEndDate ());
-    this._view .addText  ('_year', '_yearTitle', 'Anytime in ' + year);
-    this._view .addProgressGraph ('_year', '_year');
   }
 
   _hasAmount (a) {
@@ -446,30 +454,39 @@ class BudgetProgressHUD {
     if (this._id) {
       this._varianceAmount = this._getAmount (this._id);
       let budget           = this._variance .getBudget();
-      let cyS              = budget .getStartDate();
-      let cyE              = budget .getEndDate();
-      this._monthsAmount   = this._variance .getAmountByMonth (this._id, cyE, true);
+      let bs = budget.getStartDate ();
+      let be = budget.getEndDate ();
+      this._monthsAmount = this._variance.getAmountByMonth (this._id, Types.dateFY.getFYEnd (this._date, bs, be), true);
       this._getCompareAmount();
     }
   }
 
   _getCompareAmount() {
-    const budget           = this._variance .getBudget();
-    const cyS              = budget .getStartDate();
-    const cyE              = budget .getEndDate();
-    const lyS              = Types .date .addYear (budget .getStartDate(), -1);
-    const lyE              = Types .date .addYear (cyE,   -1);
-    const cat              = budget .getCategories() .get (this._id);
-    const isCredit         = ['month', 'year'] .reduce ((isc, per) => {
+    const budget = this._variance.getBudget ();
+    const bs = budget.getStartDate ();
+    const be = budget.getEndDate ();
+    const cyS = Types.dateFY.getFYStart (this._date, bs, be);
+    const cyE = Types.dateFY.getFYEnd (this._date, bs, be);
+    const lyS = Types.date.addYear (cyS, - 1);
+    const lyE = Types.date.addYear (cyE, - 1);
+    const cat = budget.getCategories ().get (this._id);
+    const isCredit = ['month', 'year'].reduce ((isc, per) => {
       return isc || (this._varianceAmount [per] && this._varianceAmount [per] .isCredit)
     }, false)
-    const creditAdjust     = isCredit? -1: 1;
-    const lastYearAmount   = [cat]
-      .concat ((cat .parent && cat .parent .zombies) || [])
-      .filter (c      => {return c .name == cat .name})
-      .reduce ((t, c) => {return t + this._variance .getActuals() .getAmountRecursively (c, lyS, lyE)}, 0);
+    const creditAdjust = isCredit ? - 1 : 1;
+    let lastYearAmount;
+    if (lyS < bs)
+      lastYearAmount = [cat].concat ((cat.parent && cat.parent.zombies) || [])
+      .filter (c => {
+        return c.name == cat.name
+      })
+      .reduce ((t, c) => {
+        return t + this._variance.getActuals ().getAmountRecursively (c, lyS, lyE)
+      }, 0);
+    else
+      lastYearAmount = budget.getAmount (cat, lyS, lyE).amount;
     let actualAmount = this._variance .getActuals() .getAmountRecursively (cat, cyS, cyE) * creditAdjust;
-    let budgetAmount = budget .getAmount (cat) .amount;
+    let budgetAmount = budget.getAmount (cat, cyS, cyE).amount;
       const isBudgetLess = ! ['month', 'year']
       .find (p => this._varianceAmount [p] && ! this._varianceAmount [p] .isBudgetless);
     if (isBudgetLess)
@@ -478,7 +495,6 @@ class BudgetProgressHUD {
       lastYear:  lastYearAmount * creditAdjust,
       actual:    Math .min (actualAmount, budgetAmount),
       available: Math .max (0, budgetAmount - actualAmount),
-      over:      Math .max (0, actualAmount - budgetAmount),
       over:      Math .max (0, actualAmount - budgetAmount)
     }
   }

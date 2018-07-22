@@ -30,11 +30,15 @@ class VarianceModel extends Observable {
   }
 
   getAmountByMonth (id, date, includePriorYear) {
-    var cat  = this._budget .getCategories() .get (id);
-    var data = {date: [], budget: [], actual: []}
-    for (let st = this._budget .getStartDate(); st <= date; st = Types .date .addMonthStart (st, 1)) {
-      var period = {cur: {start: st, end: Math .min (Types .date .monthEnd (st), date)}};
-      var amount = this._getAmountDown (cat, period);
+    const cat = this._budget.getCategories ().get (id);
+    const data = {date: [], budget: [], actual: []};
+    const bs = this._budget.getStartDate ();
+    const be = this._budget.getEndDate ();
+    const st = Types.dateFY.getFYStart (date, bs, be);
+    const en = Types.dateFY.getFYEnd (date, bs, be);
+    for (let dt = st; dt <= en; dt = Types.date.addMonthStart (dt, 1)) {
+      const period = {cur: {start: dt, end: Math.min (Types.date.monthEnd (dt), date)}};
+      const amount = this._getAmountDown (cat, period);
       data .date   .push (period .cur);
       data .budget .push (amount .month? amount .month .budget .cur: 0);
       data .actual .push ((amount .month? amount .month .actual .cur: 0) + (amount .none? amount .none .actual .cur: 0));
@@ -42,11 +46,18 @@ class VarianceModel extends Observable {
     if (includePriorYear) {
       let homonyms = (cat .parent && (cat .parent .children || []) .concat (cat .parent .zombies || []) .filter (c => {return c .name == cat .name})) || [];
       data .priorYear = [];
-      for (let st = Types .date .addYear (this._budget .getStartDate(), -1); st < Types .date .addYear (date, -1); st = Types .date .addMonthStart (st, 1)) {
-        let actual = homonyms .reduce ((a, cat) => {
-          return a + this._actuals .getAmountRecursively (cat, st, Types .date .monthEnd (st)); 
-        }, 0)
-        data .priorYear .push (actual * (this._budget .isCredit (cat)? -1: 1));
+      const ps = Types.date.addYear (st, - 1);
+      const pe = Types.date.addYear (en, - 1);
+      for (let dt = st; dt < en; dt = Types.date.addMonthStart (dt, 1)) {
+        if (ps < be) {
+          const actual = homonyms.reduce ((a, cat) => {
+            return a + this._actuals.getAmountRecursively (cat, dt, Types.date.monthEnd (dt));
+          }, 0)
+          data.priorYear.push (actual * (this._budget.isCredit (cat) ? - 1 : 1));
+        } else {
+          const amount = this._budget.getAmount (cat, dt, Types.date.monthEnd (dt));
+          data.priorYear.push (amount.month ? amount.month.amount : 0);
+        }
       }
     }
     return data;
@@ -129,8 +140,8 @@ class VarianceModel extends Observable {
             a [sch] [typ] [per] *= -1;
   }
 
-  _getScheduleTypeName (cat) {
-    switch (this._budget .getCategories() .getType (cat)) {
+  _getScheduleTypeName (cat, period) {
+    switch (this._budget.getCategories ().getType (cat, undefined, period.start, period.end)) {
       case ScheduleType .NONE:
         return 'none';
       case ScheduleType .MONTH:
@@ -140,17 +151,13 @@ class VarianceModel extends Observable {
     }
   }
 
-  _allocateNoneAmounts (amount) {
-
-  }
-
   /**
    * Get budget and actuals amounts for category
    */
   _getAmount (cat, period, skip) {
     var isCredit  = this._budget .isCredit    (cat);
     var isGoal    = this._budget .isGoal      (cat);
-    var type      = this._getScheduleTypeName (cat);
+    var type = this._getScheduleTypeName (cat, period.cur);
     var amount    = {};
     amount [type] = {actual: {prev: 0, cur: 0}, budget: {prev: 0, cur: 0}};
     for (let per in period) {
@@ -182,7 +189,7 @@ class VarianceModel extends Observable {
    *            each category summarizes its descendants and handles unallocated amounts from ancestors
    */
   _getAmountDown (cat, period, skip, excludeChild, transactionFocused) {
-    var type      = this._getScheduleTypeName (cat);
+    var type = this._getScheduleTypeName (cat, period.cur);
     var amount    = this._getAmount (cat, period, skip);
     var chiAmount = (cat .children || []) .concat (cat .zombies || [])
       .filter (c => {return c != excludeChild})
@@ -336,7 +343,7 @@ class VarianceModel extends Observable {
         var alloc = {prev: 0, cur: 0, addCats: upAmount .addCats}
 
       // get nearest category with a non-null schedule
-      alloc .nearestType        = this._getScheduleTypeName (cat .parent);
+      alloc.nearestType = this._getScheduleTypeName (cat.parent, period.cur);
       alloc .nearestCatWithType = cat .parent;
       if (alloc .nearestType == 'none') {
         alloc .nearestType        = upAmount .nearestType;

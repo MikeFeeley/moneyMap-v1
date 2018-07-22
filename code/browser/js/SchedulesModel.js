@@ -421,7 +421,7 @@ class Schedules extends Categories {
     }
   }
 
-  getType (cat, noIndirectSchedule) {
+  getType (cat, noIndirectSchedule, date) {
     if (cat) {
       if (! noIndirectSchedule && cat .account) {
         let account = this._model._actModel .getAccountsModel() .getAccount (cat .account);
@@ -430,10 +430,13 @@ class Schedules extends Categories {
         else if (cat._id == account .intCategory && account .incCategory)
           cat = this .get (account .incCategory);
       }
-      const bs = this._budget .getStartDate(), be = this._budget .getEndDate();
+      const bs = this._budget.getStartDate ();
+      const be = this._budget.getEndDate ();
+      const start = date ? Types.dateFY.getFYStart (date, bs, be) : bs;
+      const end = date ? Types.dateFY.getFYEnd (date, bs, be) : be;
       for (let s of cat .schedule || [])
-        if (Types .dateMYorYear .inRange (s .start, s .end, s .repeat, s .limit, bs, be, bs, be)) {
-          if (Types .date .isYear (s .start, bs ,be))
+        if (Types.dateMYorYear.inRange (s.start, s.end, s.repeat, s.limit, start, end, start, end)) {
+          if (Types.date.isYear (s.start, start, end))
             return ScheduleType .YEAR;
           else if (Types .date .isMonth (s .start))
             return ScheduleType .MONTH;
