@@ -1,3 +1,27 @@
+/**
+ * ScheduleEntry
+ *     options = {
+ *         --- presenter ---
+ *         categories:                           [cat*],                       // include only cats and their descendants
+ *         moveRootIsChild:                      boolean,
+ *         depthLimit:                           number,
+ *         scheduleOnly:                         [cat*],
+ *         startDate:                            date,
+ *         endDate:                              date,
+ *         showTotal:                            {false, true, 'variance'},
+ *         includeZombies:                       boolean,
+ *         includeZombieActiveYears:             boolean,
+ *         setFocus:                             boolean,
+ *         noInsertInside:                       boolean,
+ *         categoriesOnlyWithParent:             [cat*],
+ *         noRemoveCategoryWithNonBlankSchedule: boolean,
+ *         noRemoveLastSchedule:                 boolean,
+ *         onFieldClick:                         function (id, name, html, pos),
+ *         --- view ---
+ *         protectRoot
+ *     }
+ */
+
 class ScheduleEntry extends List {
 
   constructor (name, accounts, variance, options = {}) {
@@ -128,7 +152,7 @@ class ScheduleEntry extends List {
         if (this._options .categories && this._options .categories .includes (arg .id)) {
           this._view .cancelMove (arg .id);
           return;
-        // if limited to single category then move within it only
+          // if limited to single category then move within it only
         } else if ((this._options .categoriesOnlyWithParent || this._options .categories) && target .parent)
           arg .pos .inside = target .parent ._id;
         else if (this._options .scheduleOnly)
@@ -294,13 +318,13 @@ class ScheduleEntry extends List {
       const showHelp = () => this._view .addHelpTable (
         ['A budget plan consists of a hierarchical list of named categories.  ' +
         'You classify transactions by associating them with one of these categories.',
-        'You assign a budget amount to a category by giving it (or one of its desendants) a schedule.  ' +
-        'Each schedule is a list of budget amounts for a particular year, month, or range of months.  ' +
-        'A category can have full-year, or monthly schedules, but not both.  ',
-        "A category's budget is the aggregation of its descendants.  " +
-        'If a category has a yearly schedule, then its descendants allocate that yearly budget.  ' +
-        'If a category has a monthly schedule, then its descendants add to its budget.',
-        'Get started ...'
+          'You assign a budget amount to a category by giving it (or one of its desendants) a schedule.  ' +
+          'Each schedule is a list of budget amounts for a particular year, month, or range of months.  ' +
+          'A category can have full-year, or monthly schedules, but not both.  ',
+          "A category's budget is the aggregation of its descendants.  " +
+          'If a category has a yearly schedule, then its descendants allocate that yearly budget.  ' +
+          'If a category has a monthly schedule, then its descendants add to its budget.',
+          'Get started ...'
         ],
         [
           ['Add sibling category or schedule',  'CMD + ENTER'],
@@ -370,13 +394,11 @@ class ScheduleEntry extends List {
             data .total = '...';
         }
       }
-      if (! this._options .selectCategory || this._options .selectCategory (data)) {
-        if (this._options .includeZombies)
-          data = await this._getZombieData (data, cat);
-        let parent = cat [type == 'scheduleLine'? 'category': 'parent'];
-        this._view .addTuple (type, data, parent && parent ._id);
-        this._setVisibility  (data._id);
-      }
+      if (this._options.includeZombies)
+        data = await this._getZombieData (data, cat);
+      let parent = cat [type == 'scheduleLine' ? 'category' : 'parent'];
+      this._view.addTuple (type, data, parent && parent._id);
+      this._setVisibility (data._id);
     }
   }
 
