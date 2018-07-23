@@ -56,7 +56,7 @@ class VarianceModel extends Observable {
           data.priorYear.push (actual * (this._budget.isCredit (cat) ? - 1 : 1));
         } else {
           const amount = this._budget.getAmount (cat, dt, Types.date.monthEnd (dt));
-          data.priorYear.push (amount.month ? amount.month.amount : 0);
+          data.priorYear.push (amount.month ? amount.month.amount * (this._budget.isCredit (cat) ? - 1 : 1) : 0);
         }
       }
     }
