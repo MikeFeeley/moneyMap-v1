@@ -301,7 +301,7 @@ class DateType extends FieldType {
           en0        = this._yearEnd     (yr0, stY, enY);
           var yr1    = this._yearForDate (st1, stY);
           st1        = this._yearStart   (yr1, stY);
-          en1        = this._yearEnd     (yr1, stY, enY);
+          en1 = this.isInfinity (en1) ? en1 : this._yearEnd (yr1, stY, enY);
         }
       case 'MY':
         st0 = this ._yearMonth (st0);
@@ -349,6 +349,10 @@ class DateType extends FieldType {
   }
   isInfinity (d) {
     return d == '...';
+  }
+
+  infinity () {
+    return '...';
   }
   subDays (a, b) {
     var ad = new Date (this._year (a), this._month (a) - 1, this._day (a)) .valueOf();

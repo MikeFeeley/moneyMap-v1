@@ -357,16 +357,52 @@ class ScheduleEntry extends List {
   }
 
   async _addCats (cats, depth = 0) {
+    const bs = this._budget.getStartDate ();
+    const be = this._budget.getEndDate ();
     if (!this._options .depthLimit || depth < this._options .depthLimit)
+
       for (let cat of cats || []) {
-        await this ._addTuple (cat);
-        for (let sch of cat .schedule || [])
-          await this ._addTuple (sch);
-        if (cat .children && cat .children.length)
-          await this._addCats (cat .children, depth + 1);
-        if (this._options .includeZombies)
-          if (cat .zombies && cat .zombies.length)
-            await this._addCats (cat .zombies, depth + 1);      }
+
+        if (this._options.startDate && this._options.startDate > be) {
+
+          const selectCandidates = cat => ({
+            cat: cat,
+            schedule: (cat.schedule || []).filter (s => Types.dateMYorYear.inRange (s.start, s.end, s.repeat, s.limit, this._options.startDate, Types.date.infinity (), bs, be)),
+            children: (cat.children || []).map (c => selectCandidates (c))
+          });
+          const candidates = selectCandidates (cat);
+
+          const markCandidates = candidate => {
+            const chKeep = candidate.children.reduce ((chKeep, child) => markCandidates (child) || chKeep, false);
+            candidate.keep = candidate.schedule.length > 0 || chKeep;
+            return candidate.keep;
+          }
+          markCandidates (candidates);
+
+          const addTuples = async candidate => {
+            if (candidate.keep) {
+              await this._addTuple (candidate.cat);
+              for (const schedule of candidate.schedule)
+                await this._addTuple (schedule);
+              for (const child of candidate.children)
+                await addTuples (child);
+            }
+          }
+          await addTuples (candidates);
+
+        } else {
+
+          await this._addTuple (cat);
+          for (const sch of cat.schedule || [])
+            await this._addTuple (sch);
+          if (cat.children && cat.children.length)
+            await this._addCats (cat.children, depth + 1);
+          if (this._options.includeZombies)
+            if (cat.zombies && cat.zombies.length)
+              await this._addCats (cat.zombies, depth + 1);
+        }
+
+      }
   }
 
   async _addTuple (cat) {

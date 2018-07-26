@@ -395,7 +395,15 @@ class BudgetProgressHUD {
 
   _updateScheduleEntry() {
     if (this._id) {
-      const opt = {categories: [this._id], showTotal: true};
+      const budget = this._variance.getBudget ();
+      const bs = budget.getStartDate ();
+      const be = budget.getEndDate ();
+      const opt = {
+        categories: [this._id],
+        showTotal: true,
+        startDate: Types.dateFY.getFYStart (this._date, bs, be),
+        endDate: Types.dateFY.getFYEnd (this._date, bs, be)
+      };
       this._sub = new ScheduleEntry ('_ExpandedMiniScheduleEntry', this._accounts, this._variance, opt);
       this._view .addPresenter ('_schedule', this._sub);
     }
