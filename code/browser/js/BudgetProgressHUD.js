@@ -13,7 +13,6 @@ class BudgetProgressHUD {
     this._variance .deleteObserver (this._observer);
     this._view     .delete();
     this._deleteScheduleEntries();
-    ui .setResponsive (true);
   }
 
   static show (id, html, position, accounts, variance, date = Types .dateDMY .today(), expanded) {
@@ -137,7 +136,6 @@ class BudgetProgressHUD {
       this._addSchedule();
       this._id = null;
       this._updateExpanded (this._originalId, true);
-      ui .setResponsive (false);
     }
   }
 

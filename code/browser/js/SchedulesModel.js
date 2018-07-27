@@ -178,7 +178,7 @@ class SchedulesModel extends Observable {
   /**
    *
    */
-  async insert (data, pos) {
+  async insert (data, pos, source) {
     let updateSort = (ref, siblings) => {
       let sort = pos .inside
         ? (pos .before?         0: siblings .reduce ((m, e) => {return Math .max (m, e .sort || 0)}, 0) + 1)
@@ -201,7 +201,7 @@ class SchedulesModel extends Observable {
       [data .sort, sortUpdate] = updateSort (ref, siblings);
       if (! cat) {
         data .budgets = [bid];
-        cat = await this._catModel .insert (data);
+        cat = await this._catModel.insert (data, source);
         if (! cat) return;
       } else {
         data .budgets = cat .budgets .includes (bid)? cat .budgets: cat .budgets .concat (bid);
@@ -209,11 +209,11 @@ class SchedulesModel extends Observable {
           parent:  data .parent,
           sort:    data .sort,
           budgets: data .budgets
-         }));
+        }, source));
       }
       insertedIds .push (cat._id);
       if (sortUpdate .length)
-        promises .push (this._catModel .updateList (sortUpdate));
+        promises.push (this._catModel.updateList (sortUpdate, source));
       pos  = {inside: true, id: cat._id};
       data = {}
     }
@@ -225,11 +225,11 @@ class SchedulesModel extends Observable {
       [data .sort, sortUpdate] = updateSort (ref, siblings);
       data .budget   = bid;
       data .category = cat._id;
-      let sch = await this._schModel .insert (data);
+      let sch = await this._schModel.insert (data, source);
       if (sch)
         insertedIds .push (this._joinMI (this._schModel, sch._id));
       if (sortUpdate .length)
-        promises .push (this._schModel .updateList (sortUpdate));
+        promises.push (this._schModel.updateList (sortUpdate, source));
     }
     await Promise .all (promises);
     return insertedIds;

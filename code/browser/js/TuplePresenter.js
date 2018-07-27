@@ -7,7 +7,7 @@ class TuplePresenter extends Presenter {
 
   async _onModelChange (eventType, doc, arg, source) {
     await super._onModelChange (eventType, doc, arg, source);
-    if (eventType == ModelEvent .INSERT && source != this._view)
+    if (eventType == ModelEvent.INSERT)
       this._addTuple (doc);
     else if (eventType == ModelEvent .REMOVE)
       this._removeTuple (doc._id);
@@ -40,7 +40,7 @@ class TuplePresenter extends Presenter {
       case TupleViewEvent .INSERT:
         if (! this._options .noInsert) {
           Model .newUndoGroup();
-          this._insert (arg.insert, arg.pos);
+          this._insert (arg.insert, arg.pos, this._view);
         }
         break;
       case TupleViewEvent .REMOVE:
@@ -58,8 +58,8 @@ class TuplePresenter extends Presenter {
     }
   }
 
-  async _insert (insert, pos) {
-    await this._model .insert (insert, this._view);
+  async _insert (insert, pos, source) {
+    await this._model.insert (insert, this._view, source);
     this._addTuple (insert, pos);
     return insert;
   }

@@ -283,10 +283,10 @@ class ScheduleEntry extends List {
     super._onViewChange  (eventType, arg);
   }
 
-  async _insert (lineType, pos) {
+  async _insert (lineType, pos, source) {
     if (lineType == 'scheduleLine')
       pos .inside = false;
-    var insert = (await this._model .insert ({}, pos)) [0];
+    var insert = (await this._model.insert ({}, pos, source)) [0];
     this._view .selectTupleWithId (insert._id, {first: true});
   }
 

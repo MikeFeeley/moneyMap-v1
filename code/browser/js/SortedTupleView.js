@@ -6,7 +6,9 @@ class SortedTupleView extends TupleView {
 
   addTuple (data, sort, tuple, toHtml, getToHtml) {
     tuple .data ('sort', sort);
-    var insertBefore = toHtml .children ('._tuple') .toArray() .find (t => {return $(t) .data ('sort') > sort});
+    var insertBefore = toHtml.children ('._tuple').toArray ().find (t => {
+      return $ (t).data ('sort') >= sort
+    });
     super .addTuple (data, tuple, {
       before: insertBefore,
       inside: !insertBefore && toHtml
