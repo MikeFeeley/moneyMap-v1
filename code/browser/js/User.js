@@ -90,11 +90,10 @@ class User extends Observable {
             if (this._onLabelChange)
               this._onLabelChange (this .getLabel());
           }
-          if (source != this._view)
-            Object .entries (arg)
-              .forEach (([fieldName, value]) =>
-                ! fieldName .startsWith ('_') && this._view .updateField (doc._id, 'c_' + fieldName, value)
-              );
+          Object.entries (arg)
+          .forEach (([fieldName, value]) =>
+            ! fieldName.startsWith ('_') && this._view.updateField (doc._id, 'c_' + fieldName, value)
+          );
           break;
       }
     }
@@ -133,11 +132,10 @@ class User extends Observable {
             if (this._onLabelChange)
               this._onLabelChange (this .getLabel())
           }
-          if (source != this._view)
-            Object .entries (arg)
-              .forEach (([fieldName, value]) =>
-                ! fieldName .startsWith ('_') && this._view .updateField (doc._id, 'b_' + fieldName, value)
-              );
+          Object.entries (arg)
+          .forEach (([fieldName, value]) =>
+            ! fieldName.startsWith ('_') && this._view.updateField (this._cid + '$' + doc._id, 'b_' + fieldName, value)
+          );
           break;
       }
     }
@@ -811,16 +809,16 @@ class User extends Observable {
     let [budgetTab, budgetContent] = this._view .addTab (budgetTabs);
     this._view .addField (
       new ViewScalableTextbox ('b_name',  ViewFormats ('string'), '', '',  'Budget Name'),
-      budget._id, budget .name, budgetTab
+      budget._id, budget.name, budgetTab, undefined, this._cid
     );
     let line = this._view .addLine (budgetContent);
     this._view .addField (
       new ViewTextbox ('b_start', ViewFormats ('dateDMY'), '', '', 'Start Date'),
-      budget._id, budget .start, line, 'Start'
+      budget._id, budget.start, line, 'Start', this._cid
     );
     this._view .addField (
       new ViewTextbox ('b_end',   ViewFormats ('dateDMY'), '', '', 'End Date'),
-      budget._id, budget .end, line, 'End'
+      budget._id, budget.end, line, 'End', this._cid
     );
     this._view .addButton ('Delete Budget', () => {
       if (this._budgets .length > 1) {

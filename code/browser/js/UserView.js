@@ -368,14 +368,14 @@ class UserView extends View {
     return this._fieldHtml .get (id + '$' + name);
   }
 
-  addField (field, id, value, toHtml, label) {
+  addField (field, id, value, toHtml, label, idPrefix) {
     let f = field .newInstance (id);
     if (label) {
       toHtml = $('<div>', {class: '_labeledField ' + '_id_' + id}) .appendTo (toHtml);
       $('<div>', {class: '_label', text: label}) .appendTo (toHtml);
     }
     const fh = f .addHtml (value, this, toHtml);
-    this._fieldHtml .set (id + '$' + field._name, fh);
+    this._fieldHtml.set ((idPrefix ? idPrefix + '$' : '') + id + '$' + field._name, fh);
   }
 
   addPayPalPurchase (toHtml) {
@@ -395,15 +395,6 @@ class UserView extends View {
     '<img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">\n' +
     '</form>\n' +
     '\n') .appendTo (toHtml);
-  }
-
-  addReadOnlyField (fieldName, id, value, toHtml, label) {
-    if (label) {
-      toHtml = $('<div>', {class: '_labeledField'}) .appendTo (toHtml);
-      $('<div>', {class: '_label', text: label}) .appendTo (toHtml);
-    }
-    const fh = $('<div>', {class: '_readOnlyField _field_' + fieldName + ' _id_' + id, text: value}) .appendTo (toHtml);
-    this._fieldHtml .set (id + '$' + fieldName, fh);
   }
 
   setLabel (label, text) {
