@@ -609,7 +609,7 @@ class NavigateView extends Observable  {
         head [0] .addEventListener ('webkitmouseforcewillbegin', e => {e .preventDefault()}, true);
         $('<div>', {class: '_heading', text: [] .concat (dataset .note? dataset .note: data [0] .name)}) .appendTo (head);
         if (!dataset .note && data [0] .note)
-          $('<div>', {class: '_subheading', text: data [0] .note}) .appendTo (head);
+          $ ('<span>', {class: '_subheading', text: data [0].note}).appendTo (head);
       }
       if (position)
         graph .css (position)

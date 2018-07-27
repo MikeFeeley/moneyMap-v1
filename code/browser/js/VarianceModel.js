@@ -48,11 +48,9 @@ class VarianceModel extends Observable {
       data .priorYear = [];
       const ps = Types.date.addYear (st, - 1);
       const pe = Types.date.addYear (en, - 1);
-      for (let dt = st; dt < en; dt = Types.date.addMonthStart (dt, 1)) {
+      for (let dt = ps; dt < pe; dt = Types.date.addMonthStart (dt, 1)) {
         if (ps < be) {
-          const actual = homonyms.reduce ((a, cat) => {
-            return a + this._actuals.getAmountRecursively (cat, dt, Types.date.monthEnd (dt));
-          }, 0)
+          const actual = homonyms.reduce ((a, cat) => a + this._actuals.getAmountRecursively (cat, dt, Types.date.monthEnd (dt)), 0)
           data.priorYear.push (actual * (this._budget.isCredit (cat) ? - 1 : 1));
         } else {
           const amount = this._budget.getAmount (cat, dt, Types.date.monthEnd (dt));

@@ -190,7 +190,7 @@ async function TransactionDBMeta_updateActuals (dbTran, start, end) {
     if (tran.date && (tran.debit || tran.credit)) {
       let key = String (TransactionDBMeta_getYearMonth (tran.date)) + '$' + (tran.category ? String (tran.category) : '@NULL@');
       let val = acum .get (key) || {amount: 0, count: 0};
-      val .amount += tran .debit - tran .credit;
+      val.amount += (tran.debit || 0) - (tran.credit || 0);
       val .count  += 1;
       acum .set (key, val);
     }

@@ -97,7 +97,7 @@ class ActualsModel extends Observable {
     let include = (includeMonths && type == ScheduleType .MONTH) || (includeYears  && type == ScheduleType .YEAR) || type == ScheduleType .NONE;
     var amt = include? this .getAmount (cat, st, en, skip): 0;
     for (let child of (cat .children || []) .concat (cat .zombies || []))
-      amt += this .getAmountRecursively (child, st, en, skip, includeMonths, includeYears); // XXX Homonyms?
+      amt += this.getAmountRecursively (child, st, en, skip, includeMonths, includeYears);
     return amt;
   }
 
