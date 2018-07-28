@@ -31,6 +31,8 @@ class Navigate {
       this._planView .remove();
     if (this._realityView)
       this._realityView .remove();
+    NavigateSavedHistorySlider = undefined;
+    NavigateSavedNetWorthSlider = undefined;
   }
 
   prime() {
@@ -2038,9 +2040,9 @@ class Navigate {
   }
 }
 
-var NavigateInstance;
-var NavigateSavedHistorySlider;
-var NavigateSavedNetWorthSlider;
+let NavigateInstance;
+let NavigateSavedHistorySlider;
+let NavigateSavedNetWorthSlider;
 
 const NavigateValueType = {
   BUDGET:            0,
