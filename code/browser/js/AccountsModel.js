@@ -82,6 +82,10 @@ class AccountsModel extends Observable {
       this._actualsModel .deleteObserver (this._actualsObserver);
   }
 
+  setActuals (actuals) {
+    this._actuals = actuals;
+  }
+
   async _onModelChange (eventType, doc, arg) {
     if (eventType == ModelEvent .UPDATE) {
       let account = this .getAccount (doc._id);
@@ -341,6 +345,18 @@ class AccountsModel extends Observable {
   getAccount (aid) {
     return this._accounts && this._accounts .find (a => {return a._id == aid});
   }
+
+  getCashFlowBalances (dates) {
+    const amounts = this._actuals.getCashFlowBalancesByYear (dates [0], dates.slice (- 2) [0]);
+    const detail = amounts.map (a => a > 0 ? {addAmt: a} : {subAmt: a})
+    return {
+      name: 'Cash Flow',
+      curBal: this._actuals.getCashFlowBalance (),
+      amounts: amounts,
+      detail: detail,
+      liquid: 1
+    };
+  }
 }
 
 
@@ -564,7 +580,7 @@ class Account {
         return amount + Math .round (this._getInterest (bal, start, Types .date .subDays (end, start) + 1)) * taxRate;
       }
     }
-}
+  }
 
   /**
    * Get income-source amount
@@ -647,7 +663,19 @@ class Account {
   }
 
   /**
-   * Returns account balance on last day of specified month
+   * Returns account balance on last day of specified month with detail for specified period
+   *   returns
+   *     amount: ,
+   *     detail: {
+   *         intAmt: int,
+   *         infAmt: inf,
+   *         addAmt: add,
+   *         subAmt: sub,
+   *         id:     this._id,
+   *         addCat: addCat,
+   *         subCat: subCat,
+   *         intCat: intCat
+   *    }
    */
   getBalance (startDate, endDate) {
 

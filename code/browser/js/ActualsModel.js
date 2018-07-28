@@ -3,6 +3,7 @@ class ActualsModel extends Observable {
     super();
     this._budget = budget;
     this._accounts = accounts;
+    this._accounts.setActuals (this);
     this._transactionModel = new TransactionModel();
     this._transactionModel .addObserver (this, this._onModelChange);
     this._transactionModel .observe ();
@@ -173,12 +174,13 @@ class ActualsModel extends Observable {
    *     (b) undo transactions since date (or beginning of budget if dates is in future) to get starting balance
    *     (c) if date is in future, add budget results date less one month
    */
-  getCashFlowBalance (date) {
+  getCashFlowBalance (date = Types.date.today ()) {
     let bal      = this._accounts .getCashFlowBalance();
     let today    = Types .date .today();
     let start    = Math .min (date, this._budget .getStartDate());
-    for (let cat of this._budget .getCategories() .getRoots() .concat (null))
-      bal += this .getAmountRecursively (cat, start, today);
+    if (date != today)
+      for (let cat of this._budget.getCategories ().getRoots ().concat (null))
+        bal += this.getAmountRecursively (cat, start, today);
     if (date > today) {
       let end = Types .date .addMonthStart (date, -1);
       for (let cat of this._budget .getCategories() .getRoots())
@@ -188,5 +190,35 @@ class ActualsModel extends Observable {
         }
     }
     return bal;
+  }
+
+  /**
+   * Return list of beginning-year cache-flow balances for years between start and end date inclusive
+   */
+  getCashFlowBalancesByYear (start, end) {
+    let bal = this._accounts.getCashFlowBalance ();
+    const today = Types.date.today ();
+    for (let cat of this._budget.getCategories ().getRoots ().concat (null))
+      bal += this.getAmountRecursively (cat, start, today);
+    const actEn = Types.date.monthEnd (Types.date.addMonthStart (Types.date.today (), - 1));
+    const budSt = Types.date.addMonthStart (actEn, 1);
+    const bals = [bal];
+    for (let st = start, en = Types.date.addYear (st, 1); st <= end; st = en, en = Types.date.addYear (en, 1)) {
+      let as, ae, bs, be;
+      if (en <= actEn)
+        [as, ae, bs, be] = [st, en, 0, 0]
+      else if (st >= budSt)
+        [as, ae, bs, be] = [0, 0, st, en]
+      else
+        [as, ae, bs, be] = [st, actEn, budSt, en];
+      for (let cat of this._budget.getCategories ().getRoots ()) {
+        if (as)
+          bal -= this.getAmountRecursively (cat, as, ae);
+        if (bs)
+          bal -= this._budget.getAmount (cat, bs, be).amount;
+      }
+      bals.push (bal);
+    }
+    return bals;
   }
 }

@@ -1449,6 +1449,8 @@ class NavigateView extends Observable  {
       ['Liquid', Types .moneyD .toString (dataset .rows .filter (r => {return r .liquid}) .reduce ((s,r) => {return s + r .curBal}, 0))],
       ['TOTAL',  Types .moneyD .toString (dataset .rows                                   .reduce ((s,r) => {return s + r .curBal}, 0))]
     ];
+    if (fvs[0][1] == fvs[1][1])
+      fvs.splice (0, 1);
     for (let fv of fvs) {
       var tr = $('<tr>') .appendTo (tfoot);
       for (let v of fv)
@@ -1647,6 +1649,8 @@ class NavigateView extends Observable  {
           ['Liquid'] .concat (liquid .map (a => {return Types .moneyK .toString (a)})),
           ['TOTAL']  .concat (net    .map (a => {return Types .moneyK .toString (a)}))
         ]
+        if (! vss [0].slice (1).find ((a, i) => a != vss [1] [i + 1]))
+          vss.splice (0, 1);
         for (let vs of vss) {
           var tr = $('<tr>') .appendTo (tfoot);
           if (vs .slice (1) .find (v => {return v != ''}))

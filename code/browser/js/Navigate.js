@@ -394,7 +394,7 @@ class Navigate {
     } else if (eventType == NavigateViewEvent .NETWORTH_TABLE_CLICK) {
       if (arg .ids && arg .ids .length > 1) {
         this._addNetWorthTable (arg .view, await this._getNetWorthData (arg .ids, arg .label), true, arg .html, arg .position);
-      } else {
+      } else if (arg.cats [0]) {
         arg .id = arg .cats [0]._id;
         if (arg .column > arg .highlight)
           BudgetProgressHUD .show (arg .id, arg .html, arg .position, this._accounts, this._variance);
@@ -1780,7 +1780,7 @@ class Navigate {
           r .amounts = r .amounts .slice (this._netWorthSliderLeft, this._netWorthSliderRight + 1);
           r .detail  = r .detail  .slice (this._netWorthSliderLeft, this._netWorthSliderRight + 1);
           return r;
-        })
+        });
         rds .highlight -= this._netWorthSliderLeft;
         graphUpdater ([{filterCols: {start: this._netWorthSliderLeft, end: this._netWorthSliderRight}}]);
         tableUpdater ([{replace: rds}]);
@@ -1874,7 +1874,7 @@ class Navigate {
     // compute column dates; start at end of FY with oldest history or LAST FY if no history
     let today         = Types .date .today();
     let oldestHistory = balances .map (b => {return b .date}) .reduce ((m ,d) => {return m? d? Math .min (m,d): m: d}, null);
-    let startDate     = Types .dateFY .getFYEnd (oldestHistory || Types .date .addMonthStart (today, -12), budgetStart, budgetEnd);
+    let startDate = Types.dateFY.getFYEnd (oldestHistory || today, budgetStart, budgetEnd);
     let endDate = Types .date .addYear (Types .dateFY .getFYEnd (today, budgetStart, budgetEnd), PreferencesInstance .get() .futureYears || 0);
     let colDates = [];
     for (let d = startDate; d <= endDate; d = Types .date .addYear (d, 1))
@@ -1916,6 +1916,7 @@ class Navigate {
           })}, [])
       };
     })
+    rowsData = [this._accounts.getCashFlowBalances (colDates)].concat (rowsData);
     let result = {
       cols:      colDates .map (d => {return Types .dateMY .toString (d)}),
       highlight: Types .date._year (budgetStart) - Types .date._year (startDate) + 1,
