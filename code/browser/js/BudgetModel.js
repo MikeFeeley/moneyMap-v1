@@ -109,7 +109,7 @@ class BudgetModel extends Observable {
     if (sy == ey)
       return sy .toString();
     else
-      return sy + '/'+ (((sy + 1) % 10))
+      return sy + '/' + (((sy + 1) % 100))
   }
 
   getLabel (date = {start: this._budget .start, end: this._budget .end}) {

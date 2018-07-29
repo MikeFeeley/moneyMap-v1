@@ -189,7 +189,7 @@ class DateType extends FieldType {
       case 'MY':
         return v? this._mths [this._month (v) - 1] + '-' + (this._year (v) - 2000): '';
       case 'MYorYear':
-        return v ? (v < 9999 ? v + (context && this._month (context) != 1 ? '/' + ((v % 10) + 1) : '') : this._mths [this._month (v) - 1] + '-' + (this._year (v) - 2000)) : ''
+        return v ? (v < 9999 ? v + (context && this._month (context) != 1 ? '/' + ((v % 100) + 1) : '') : this._mths [this._month (v) - 1] + '-' + (this._year (v) - 2000)) : ''
       case 'MonthY':
         return v? this._months [this._month (v) - 1] + ' ' + this._year (v): '';
       case 'MYear':
