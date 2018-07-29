@@ -4,8 +4,12 @@ class ScheduleEntryView extends ListView {
     if (options && options .showTotal && ! options .categoriesOnlyWithParent && ! options .categories)
       var hud = new BudgetProgressHUD (accounts, variance, {noScheduleEntry: true, isNotModal: true});
     const startFormat = new ViewFormat (
-      value => {return Types .dateMYorYear .toString   (value)},
-      view  => {return Types .dateMYorYear .fromString (view, variance .getBudget() .getStartDate())},
+      value => {
+        return Types.dateMYorYear.toString (value, variance.getBudget ().getStartDate ())
+      },
+      view => {
+        return Types.dateMYorYear.fromString (view, variance.getBudget ().getStartDate ())
+      },
       value => {return ''}
     );
     const endFormat = new ViewFormat (

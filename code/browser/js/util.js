@@ -177,7 +177,8 @@ class DateType extends FieldType {
   daysInMonth (d) {
     return this._daysInMonth (this._year (d), this._month (d));
   }
-  toString (v) {
+
+  toString (v, context) {
     switch (this._format) {
       case 'DM':
         return v? this._day (v) + '-' + this._mths [this._month (v) - 1] : '';
@@ -188,7 +189,7 @@ class DateType extends FieldType {
       case 'MY':
         return v? this._mths [this._month (v) - 1] + '-' + (this._year (v) - 2000): '';
       case 'MYorYear':
-        return v? (v < 9999? v: this._mths [this._month (v) - 1] + '-' + (this._year (v) - 2000)): ''
+        return v ? (v < 9999 ? v + (context && this._month (context) != 1 ? '/' + ((v % 10) + 1) : '') : this._mths [this._month (v) - 1] + '-' + (this._year (v) - 2000)) : ''
       case 'MonthY':
         return v? this._months [this._month (v) - 1] + ' ' + this._year (v): '';
       case 'MYear':
