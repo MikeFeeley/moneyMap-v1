@@ -126,12 +126,8 @@ class App {
       block .remove();
       ui .ModalStack .setBlocked (false);
     }
-    if (transition && block .length) {
-      if (immediately)
-        makeUp();
-      else
-        this._status .fadeOut (100, () => {makeUp()})
-    }
+    if (transition && block.length)
+      this._status.fadeOut (immediately ? 0 : 100, () => makeUp ());
   }
 
   _setStatus (newStatus) {
