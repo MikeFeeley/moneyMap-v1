@@ -702,15 +702,15 @@ function Model_query_ismatch (query, doc) {
       case '$ne':
         return doc [field] != val;
       case '$in':
-        return val .includes (doc [field]);
+        return Array.isArray (val) && val.includes (doc [field]);
       case '$nin':
-        return ! val .includes (doc [field]);
+        return ! Array.isArray (val) || ! val.includes (doc [field]);
       case '$regex':
-        return doc [field] && doc [field] .match (new RegExp (val));
+        return doc [field] && typeof doc [field] == 'string' && doc [field].match (new RegExp (val));
       case '$regexi':
-        return doc [field] && doc [field] .match (new RegExp (val, 'i'));
+        return doc [field] && typeof doc [field] == 'string' && doc [field].match (new RegExp (val, 'i'));
       case '$notregex':
-        return ! doc [field] || ! doc [field] .match (new RegExp (val));
+        return ! doc [field] || typeof doc [field] != 'string' || ! doc [field].match (new RegExp (val));
       case '$elemMatch':
         return Array .isArray (doc [field]) && doc [field] .find (e => Model_query_ismatch (val, e));
       case '$exists':
