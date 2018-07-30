@@ -1612,6 +1612,7 @@ class NavigateView extends Observable  {
     } else
       table .appendTo ($('<div>', {class: '_netWorthTableContainer' + (popup? ' _popup': '')}) .appendTo (this._content));
     let showHeadFoot = dataset .cols .length > 1;
+    const fmtMoney = amt => Types ['money' + (Math.abs (amt) >= 10000000 ? 'K' : 'D')].toString (amt);
     var buildTable = () => {
       table.empty();
       var thead = $('<thead>') .appendTo (table);
@@ -1629,7 +1630,9 @@ class NavigateView extends Observable  {
         if (row .amounts .find (a => {return a})) {
           var tr = $('<tr>') .appendTo (tbody);
           let vs = [row .name] .concat (
-            row .amounts .map (a => {return Types .moneyK .toString (a)})
+            row.amounts.map (a => {
+              return fmtMoney (a)
+            })
           )
           net = row .amounts .map ((a,i) => {return a + (net [i] || 0)});
           if (row .liquid)
@@ -1646,8 +1649,12 @@ class NavigateView extends Observable  {
         }
       if (showHeadFoot) {
         var vss = [
-          ['Liquid'] .concat (liquid .map (a => {return Types .moneyK .toString (a)})),
-          ['TOTAL']  .concat (net    .map (a => {return Types .moneyK .toString (a)}))
+          ['Liquid'].concat (liquid.map (a => {
+            return fmtMoney (a)
+          })),
+          ['TOTAL'].concat (net.map (a => {
+            return fmtMoney (a)
+          }))
         ]
         if (! vss [0].slice (1).find ((a, i) => a != vss [1] [i + 1]))
           vss.splice (0, 1);

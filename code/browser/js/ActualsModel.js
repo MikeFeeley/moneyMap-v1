@@ -169,18 +169,14 @@ class ActualsModel extends Observable {
   }
 
   /**
-   * Returns starting cash flow balance for specified date
-   *     (a) start with current balance
-   *     (b) undo transactions since date (or beginning of budget if dates is in future) to get starting balance
-   *     (c) if date is in future, add budget results date less one month
+   * Returns starting cash flow balance for specified budget year (current or future)
    */
-  getCashFlowBalance (date = Types.date.today ()) {
+  getStartingCashFlowBalance (date = this._budget.getStartDate ()) {
     let bal      = this._accounts .getCashFlowBalance();
     let today    = Types .date .today();
     let start    = Math .min (date, this._budget .getStartDate());
-    if (date != today)
-      for (let cat of this._budget.getCategories ().getRoots ().concat (null))
-        bal += this.getAmountRecursively (cat, start, today);
+    for (let cat of this._budget.getCategories ().getRoots ().concat (null))
+      bal += this.getAmountRecursively (cat, start, today);
     if (date > today) {
       let end = Types .date .addMonthStart (date, -1);
       for (let cat of this._budget .getCategories() .getRoots())
@@ -196,29 +192,30 @@ class ActualsModel extends Observable {
    * Return list of beginning-year cache-flow balances for years between start and end date inclusive
    */
   getCashFlowBalancesByYear (start, end) {
-    let bal = this._accounts.getCashFlowBalance ();
-    const today = Types.date.today ();
-    for (let cat of this._budget.getCategories ().getRoots ().concat (null))
-      bal += this.getAmountRecursively (cat, start, today);
-    const actEn = Types.date.monthEnd (Types.date.addMonthStart (Types.date.today (), - 1));
-    const budSt = Types.date.addMonthStart (actEn, 1);
-    const bals = [bal];
-    for (let st = start, en = Types.date.addYear (st, 1); st <= end; st = en, en = Types.date.addYear (en, 1)) {
-      let as, ae, bs, be;
-      if (en <= actEn)
-        [as, ae, bs, be] = [st, en, 0, 0]
-      else if (st >= budSt)
-        [as, ae, bs, be] = [0, 0, st, en]
-      else
-        [as, ae, bs, be] = [st, actEn, budSt, en];
-      for (let cat of this._budget.getCategories ().getRoots ()) {
-        if (as)
-          bal -= this.getAmountRecursively (cat, as, ae);
-        if (bs)
-          bal -= this._budget.getAmount (cat, bs, be).amount;
-      }
-      bals.push (bal);
+    const bs = this._budget.getStartDate ();
+    const be = this._budget.getEndDate ();
+    start = Types.dateFY.getFYStart (start, bs, be);
+    end = Types.dateFY.getFYEnd (end, bs, be);
+
+    const cyBal = this.getStartingCashFlowBalance ();
+    let bal = cyBal;
+    const balances = [bal];
+
+    for (let st = Types.date.addYear (bs, - 1); st >= start; st = Types.date.addYear (st, - 1)) {
+      const en = Types.dateFY.getFYEnd (st, bs, be);
+      for (const cat of this._budget.getBudgetedRootCategories ())
+        bal += this.getAmountRecursively (cat, st, en);
+      balances.unshift (bal);
     }
-    return bals;
+
+    bal = cyBal;
+    for (let st = bs; st < end; st = Types.date.addYear (st, 1)) {
+      const en = Types.dateFY.getFYEnd (st, bs, be);
+      for (const cat of this._budget.getBudgetedRootCategories ())
+        bal -= this._budget.getAmount (cat, st, en).amount;
+      balances.push (bal);
+    }
+
+    return balances;
   }
 }

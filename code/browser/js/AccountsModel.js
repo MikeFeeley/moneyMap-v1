@@ -347,11 +347,16 @@ class AccountsModel extends Observable {
   }
 
   getCashFlowBalances (dates) {
-    const amounts = this._actuals.getCashFlowBalancesByYear (dates [0], dates.slice (- 2) [0]);
-    const detail = amounts.map (a => a > 0 ? {addAmt: a} : {subAmt: a})
+    const start = Types.date.addMonthStart (dates [0], 1);
+    const end = dates.slice (- 2) [0]
+    const amounts = this._actuals.getCashFlowBalancesByYear (start, end);
+    const detail = amounts.map ((a, i) => {
+      const d = i == 0 ? 0 : a - amounts [i - 1];
+      return {[(d >= 0 ? 'add' : 'sub') + 'Amt']: Math.abs (d)};
+    });
     return {
       name: 'Cash Flow',
-      curBal: this._actuals.getCashFlowBalance (),
+      curBal: this.getCashFlowBalance (),
       amounts: amounts,
       detail: detail,
       liquid: 1
