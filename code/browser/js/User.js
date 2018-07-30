@@ -1137,7 +1137,9 @@ class User extends Observable {
           ts .push (sch);
 
         } else if (Types .date .isYear (sch .start)) {
-          if (sch .repeat && (! sch .limit || sch .limit >= c)) {
+          if (sch.start >= Types.date._year (b.start))
+            ts.push (sch);
+          else if (sch.repeat && (! sch.limit || sch.limit >= c)) {
             sch .start += c;
             if (sch .limit) {
               sch .limit -= c;
@@ -1146,24 +1148,30 @@ class User extends Observable {
             ts .push (sch);
           }
 
-        } else if (Types .date .isInfinity (sch .end)) {
-          sch .start = b .start;
+        } else if (! sch.repeat) {
+          if (Types.date.isBlank (sch.end)) {
+            if (sch.start >= b.start)
+              ts.push (sch);
+          } else if (Types.date.isInfinity (sch.end)) {
+            if (sch.start < b.start)
+              sch.start = b.start;
+            ts.push (sch);
+          } else if (sch.end >= b.start) {
+            if (sch.start < b.start)
+              sch.start = b.start;
+            ts.push (sch);
+          }
+
+        } else if (! sch.limit)
           ts .push (sch);
 
+        else if (Types.date.isBlank (sch.end)) {
+          if (Types.date.addYear (sch.start, sch.limit) >= b.start)
+            ts.push (sch);
 
-        } else {
-          if ((sch .repeat && (! sch .limit || sch .limit >= c)) || (sch .end >= b .start)) {
-            sch .start = Types .date .addYear (sch .start, c);
-            if (Types .date .isMonth (sch .end) && (sch .repeat && (! sch .limit || sch .limit >= c)))
-              sch .end = Types .date .addYear (sch .end,   c);
-            if (sch .limit) {
-              sch .limit -= c;
-              sch .repeat = sch .limit > 0;
-            }
-            ts .push (sch)
-          }
-        }
-       }
+        } else if (Types.date.addYear (sch.end, sch.limit) >= b.start)
+          ts.push (sch);
+      }
     }
 
     // get new categories
