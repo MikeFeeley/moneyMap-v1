@@ -359,6 +359,8 @@ class User extends Observable {
       case UserViewEvent .DELETE_CONFIRMED:
         switch (arg .type) {
           case 'configuration':
+            const config = this._getConfig (arg.id);
+            await CSVConverter.export (config.name, 'Export and Delete in progress ...');
             await this._deleteConfig (arg .id);
             this._setConfigDeleteButtonDisabled();
             break;
@@ -782,11 +784,11 @@ class User extends Observable {
     let budgetContentGroup = this._view .addTabContentGroup ('Budgets', configContent);
     let budgetTabs         = this._view .addTabGroup ('budgets', budgetContentGroup);
     const configTabs       = this._view .addLine (configContent);
-    this._view .addButton ('Delete Configuration', () => {
+    this._view.addButton ('Export and Delete Configuration', () => {
       let html = this._configTabs .find ('> ._tabGroupContents > ._content._selected > ._line > button');
       this._view .addConfirmDelete (html, config._id, 'configuration', {top: -70, left: -70})
     }, configTabs);
-    this._view .addButton ('Export Configuration to CSV', () => CSVConverter .export (config .name), configTabs);
+    this._view.addButton ('Export Configuration', () => CSVConverter.export (config.name), configTabs);
     if (select)
       this._setConfigDeleteButtonDisabled();
 

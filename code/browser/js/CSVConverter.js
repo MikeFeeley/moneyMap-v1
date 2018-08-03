@@ -22,8 +22,8 @@ class CSVConverter {
     }
   }
 
-  async _export (name) {
-    const pleaseWait = $('<div>', {class: '_pleaseWait'}) .appendTo ($('body')) .append ($('<div>', {text: 'Export in progress ...'}));
+  async _export (name, waitMessage = 'Export in progress ...') {
+    const pleaseWait = $ ('<div>', {class: '_pleaseWait'}).appendTo ($ ('body')).append ($ ('<div>', {text: waitMessage}));
     const zip      = new JSZip();
     const folder   = zip .folder (name);
 
@@ -110,8 +110,8 @@ class CSVConverter {
     return has;
   }
 
-  static async export (name) {
-    await CSVConverter._getInstance()._export (name);
+  static async export (name, waitMessage) {
+    await CSVConverter._getInstance ()._export (name, waitMessage);
   }
 
   static async import (file, configModel, cid, database) {
