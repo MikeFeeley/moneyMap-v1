@@ -24,7 +24,6 @@ class BudgetModel extends Observable {
       this._schModel .delete();
   }
 
-
   _onBudgetModelChange (eventType, doc, arg, source) {
     this._onModelChange (eventType, doc, arg, source, this._budModel)
   }

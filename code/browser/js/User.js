@@ -912,7 +912,7 @@ class User extends Observable {
    * Create a new config by copying from specified config
    */
   async _copyConfig (type, from) {
-    this._view .addPleaseWait();
+    this._view.addPleaseWait ('Copy in progress ...');
     await this._disconnectApp();
     let fromConfig = this._getConfig (from);
     let to = (await this._getConfigModel (undefined, type) .insert ({
@@ -1108,6 +1108,7 @@ class User extends Observable {
   async _createRolloverBudget (from) {
     await this._disconnectApp();
     let b = Object .assign ({}, this._budgets .find (b => {return b._id == from}));
+    const [fStart, fEnd] = [b.start, b.end];
     b .start = Types .date .addYear (b .start, 1);
     b .end   = Types .date .addYear (b .end,   1);
     b .name  = BudgetModel .getLabelForDates (b .start, b .end);
@@ -1219,7 +1220,42 @@ class User extends Observable {
     for (let sch of ts)
       sch .budget = b._id;
 
-    // update the models
+    // roll outstanding suspense over from old period to new
+    const getFamily = (cats => cats.concat (cats.reduce ((list, cat) => list.concat (cat.children && cat.children.length ? getFamily (cat.children) : []), [])));
+    const suspenseCats = getFamily ([fc.get (b.suspenseCategory)]).map (c => c._id);
+    const actualsModel = new Model ('actuals');
+    const suspenseActuals = [...
+      (await actualsModel.find ({
+        category: {$in: suspenseCats},
+        month: {$gte: Types.date._yearMonth (fStart), $lte: Types.date._yearMonth (fEnd)}
+      }))
+      .reduce ((map, actual) => map.set (actual.category, (map.get (actual.category) || 0) + actual.amount), new Map ())
+    ].filter (([cid, amount]) => amount);
+    actualsModel.delete ();
+    const newTrans = []
+    const importTime = (new Date ()).getTime ();
+    for (const [cid, amount] of suspenseActuals) {
+      newTrans.push ({
+        date: fEnd,
+        category: cid,
+        payee: 'Carried over to next year',
+        debit: (amount < 0 ? - amount : 0),
+        credit: (amount > 0 ? amount : 0),
+        importTime: importTime
+      });
+      newTrans.push ({
+        date: b.start,
+        category: cid,
+        payee: 'Carried over from last year',
+        debit: (amount > 0 ? amount : 0),
+        credit: (amount < 0 ? - amount : 0),
+        importTime: importTime
+      });
+    }
+    const tm = new Model ('transactions');
+    tm.insertList (newTrans);
+
+    // update cat and sch models
     let updateList = []
     for (let cid of Array .from (tc .keys()))
       updateList .push ({
@@ -1230,12 +1266,16 @@ class User extends Observable {
       })
     let catUpdate = cm .updateList (updateList);
     let schInsert = sm .insertList (ts);
+
+    // wait for model updates to complete
     await catUpdate;
     await schInsert;
+    await Promise.all (newTrans);
 
     // finish
     cm .delete();
     sm .delete();
+    tm.delete ();
     await this._selectBudget (b._id);
     await this._notifyApp();
   }
@@ -1269,7 +1309,9 @@ class User extends Observable {
    */
   async _deleteBudget (id) {
     await this._disconnectApp();
+    this._view.addPleaseWait ('Deleting ...');
     await Model .removeBudget (id);
+    this._view.removePleaseWait ();
     let psn = this._budgets .findIndex (b => {return b._id == id});
     this._budgets .splice (psn, 1);
     await this._onBudgetModelChange (ModelEvent .REMOVE, {_id: id});

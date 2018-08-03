@@ -428,7 +428,9 @@ class Account {
         let possibleAffectedCats = getFamily (
           [this .category, this .intCategory, this .disCategory, this .traCategory]
             .filter (cid => {return cid})
-            .map    (cid => {return this._budget .getCategories() .get (cid)})
+          .map (cid => {
+            return this._budget.getCategories () && this._budget.getCategories ().get (cid)
+          })
         );
         let isAffected = possibleAffectedCats .find (c => {
           return [doc .category, arg && arg .category, arg && arg._original_category] .includes (c._id);

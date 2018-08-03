@@ -653,9 +653,9 @@ class UserView extends View {
     ui .scrollIntoView (popup)
   }
 
-  addPleaseWait() {
+  addPleaseWait (text) {
     let pw = $('<div>', {class: '_pleaseWait'}) .appendTo ($('body'));
-    $('<div>', {text: 'Copy in progress ...'}) .appendTo (pw);
+    $ ('<div>', {text: text}).appendTo (pw);
     pw .on ('keypress', e => {
       e .preventDefault();
       e .stopPropagation();
