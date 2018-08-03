@@ -19,7 +19,7 @@ class Crypto {
   }
 
   _sToAb (str) {
-    return new TextEncoder ("utf-8") .encode (str);
+    return new TextEncoder ('utf-8').encode (str);
   }
 
   _abToS (buf) {
@@ -92,10 +92,11 @@ class Crypto {
           (rule .allButFields && ! rule .allButFields .includes (p)) ||
           (rule .fields       && rule .fields .includes (p));
         if (applies) {
-          let al = this._getAlgorithm();
-          let ct = await crypto .subtle .encrypt (al, await this._getKey(), this._sToAb (JSON .stringify (doc [p])));
+          const al = this._getAlgorithm ();
+          const u8 = typeof doc [p] == 'string' ? unescape (encodeURIComponent (doc [p])) : doc [p];
+          const ct = await crypto.subtle.encrypt (al, await this._getKey (), this._sToAb (JSON.stringify (u8)));
           doc [p] = {
-            iv: String .fromCharCode .apply (null, new Uint8Array  (al .iv)),
+            iv: String.fromCharCode.apply (null, new Uint8Array (al.iv)),
             ct: String .fromCharCode .apply (null, new Uint8Array (ct))
           };
         }
