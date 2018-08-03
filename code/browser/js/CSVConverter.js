@@ -86,6 +86,11 @@ class CSVConverter {
               try {value = JSON .parse (value .slice (5, -5))} catch (e) {}
           } else
             value = undefined;
+
+          // XXX to correct export here where single quote was turned into â
+          if (typeof value == 'string' && value.includes ('â'))
+            value = value.replace (/â/, "'");
+
           return Object .assign (doc, {[field]: value});
         }, {}));
       }
