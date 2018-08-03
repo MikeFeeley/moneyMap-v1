@@ -92,7 +92,7 @@ class TransactionModel extends Model {
       if (typeof query .date == 'number')
         dates = {start: query .date, end: query .date}
       else if (query .date .$gte && Object .keys (query .date) .length == 1)
-        dates = {start: query .date .$gte, end: Types .date .today()}
+        dates = {start: query.date.$gte, end: 99999999}
       else if (query .date .$gte && query .date .$lte && Object .keys (query .date) .length == 2)
         dates = {start: query .date .$gte, end: query .date .$lte}
       else if (query .date .$and && query .date .$and .length == 2) {
