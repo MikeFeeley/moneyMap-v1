@@ -493,6 +493,9 @@ div._systemStatus {
           color: #33b1ff;
           padding-bottom: 8px;
         }
+        ._heading:not(:first-child) {
+          font-size:24px;
+        }
         > ._contentGroup {
           background: #fafafa;
           padding: 12px;

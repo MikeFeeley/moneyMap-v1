@@ -58,6 +58,15 @@ class User extends Observable {
     return $(this._configTabs .find ('> ._tabGroupContents > ._content') .toArray() [i]) .find ('> ._contentGroup > ._tabGroup');
   }
 
+  _makeConfigVisible () {
+    let tabs = this._configTabs.find ('> ._tabGroupTabs > ._tab');
+    let i = tabs.find ('> ._field').toArray ().findIndex (fh => {
+      let f = $ (fh).data ('field');
+      return f && f._id == this._cid
+    });
+    $ (this._configTabs.find ('> ._tabGroupContents > ._content').toArray () [i]).css ({visibility: 'visible'});
+  }
+
   /**
    * Config Model Change Handler
    */
@@ -749,7 +758,7 @@ class User extends Observable {
       this._view .addField (new ViewTextbox ('name',         ViewFormats ('string'), '', '', 'Name'),          'user', this._name, line0, 'Name');
       this._view .addField (new ViewTextbox ('passwordHint', ViewFormats ('string'), '', '', 'Password Hint'), 'user', this._passwordHint, line1, 'Password Hint');
       if (! this._expiry || this._expiry < Types .date .today()) {
-        this._view .addLabel ('Cloud Service is currently complementary, but you can donate (upper left).', line2, '_pay');
+        this._view.addLabel ('Cloud storage is currently complementary ... but you can donate if you like (click on upper left).', line2, '_pay');
       } else {
         this._view .addLabel ('Blah', line2);
       }
@@ -774,7 +783,7 @@ class User extends Observable {
    */
   async _addConfig (config, select) {
     let [configTab, configContent] = this._view .addTab (this._configTabs);
-    configContent .css ({visible: false});
+    configContent.css ({visibility: 'hidden'});
     this._view .addField (new ViewScalableTextbox ('c_name', ViewFormats ('string'), '', '', 'Config Name'), config._id, config .name, configTab);
 
     this._view .addLabel ('Configuration', configContent, '_heading');
@@ -798,7 +807,6 @@ class User extends Observable {
     let [budgetTab, budgetContent] = this._view .addTab (budgetTabs, '_add', true, 'Add');
     for (let b of this._budgets)
       this._addBudget (b, b._id == this._bid);
-    configContent .css ({visible: true});
     if (select)
       this._view .selectTab (configTab);
   }
@@ -807,6 +815,7 @@ class User extends Observable {
    * Add specified budget to budgetTabs view
    */
   _addBudget (budget, select) {
+    this._makeConfigVisible ();
     let budgetTabs = this._getBudgetTabs();
     let [budgetTab, budgetContent] = this._view .addTab (budgetTabs);
     this._view .addField (
