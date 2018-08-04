@@ -482,7 +482,7 @@ class UserView extends View {
     let content = $('<div>', {class: '_addPopup ' + (addClass || '')}) .appendTo (popup);
     popup .css (ui .calcPosition (positionTarget, parent, {top: -40 + (positionOffset .top || 0), left: 0 + (positionOffset .left || 0)}));
     $('<div>', {text: 'Do you really want to delete this ' + type + '?'}) .appendTo (content);
-    $('<div>', {text: (additionalMessage || '') + 'This action can not be undone.'}) .appendTo (content);
+    $ ('<div>', {html: (additionalMessage || '') + 'This action can not be undone.'}).appendTo (content);
     $('<div>') .appendTo (content)
     .append (
       $('<button>', {text: 'Delete'})

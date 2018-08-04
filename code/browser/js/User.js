@@ -793,9 +793,12 @@ class User extends Observable {
     let budgetContentGroup = this._view .addTabContentGroup ('Budgets', configContent);
     let budgetTabs         = this._view .addTabGroup ('budgets', budgetContentGroup);
     const configTabs       = this._view .addLine (configContent);
-    this._view.addButton ('Export and Delete Configuration', () => {
+    this._view.addButton ('Delete Configuration', () => {
       let html = this._configTabs .find ('> ._tabGroupContents > ._content._selected > ._line > button');
-      this._view .addConfirmDelete (html, config._id, 'configuration', {top: -70, left: -70})
+      this._view.addConfirmDelete (html, config._id, 'configuration', {
+        top: - 70,
+        left: - 70
+      }, 'The configuration will first be exported to your downloads folder.<br>')
     }, configTabs);
     this._view.addButton ('Export Configuration', () => CSVConverter.export (config.name), configTabs);
     if (select)
