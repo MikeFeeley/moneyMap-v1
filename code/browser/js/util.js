@@ -97,16 +97,14 @@ class FiscalYearDateType extends FieldType {
     var e = String (this._dateType._year (this._dateType ._yearEnd   (y, bs, be)));
     if (s == e)
       return s;
-    else {
-      var i=0;
-      while (i < Math .min (s .length, e .length) && s [i] == e [i])
-        i++;
-      return s + '/' + e .slice (i);
-    }
+    else
+      return s + '/' + e.slice (2);
   }
+
   getFYStart (d, bs, be) {
     return this._dateType ._yearStart (this._fiscalYear (d, bs, be), bs, be)
   }
+
   getFYEnd (d, bs, be) {
     return this._dateType ._yearEnd (this._fiscalYear (d, bs, be), bs, be)
   }
