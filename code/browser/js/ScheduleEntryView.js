@@ -445,10 +445,6 @@ class RepeatField extends ViewScalableCheckbox {
           if (curPopup)
             curPopup.remove ();
         })
-        // if (this._changePending) {
-        //   this._handleChange();
-        //   this._changePending = false;
-        // }
       }
     }
 
