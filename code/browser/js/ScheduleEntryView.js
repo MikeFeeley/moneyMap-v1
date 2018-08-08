@@ -36,7 +36,7 @@ class ScheduleEntryView extends ListView {
       new ViewScalableDate             ('end',             endFormat,                    '', '', 'End',   {type: 'EndMY',    budget: budget, other: 'start'}),
       new ViewScalableTextbox          ('amount',          ViewFormats ('moneyDC'),      '', '', 'Amount'),
       new RepeatField                  ('repeat',          variance .getBudget()),
-      new LimitField                   ('limit',           ViewFormats ('number'),       '', '', 'Yrs'),
+      new LimitField ('limit', ViewFormats ('number')),
       new ViewElasticTextbox           ('notes',           ViewFormats ('string'),       '', '', 'Notes')
     ];
     const lineTypes = {
@@ -344,12 +344,134 @@ class RepeatField extends ViewScalableCheckbox {
     this._budgetStart = budget .getStartDate();
     this._budgetEnd   = budget .getEndDate();
   }
-  _setWithLimit (limit) {
-    if (limit > 0) {
-      var start = this._html .closest ('li') .find ('.' + this._view._getFieldHtmlClass ('start')) .data ('field')._value;
-      var thru  = Types .dateFY .toString (Types .date .addYear (start, limit), this._budgetStart, this._budgetEnd);
+
+  _addHtml () {
+    let popup;
+
+    const addPopup = () => {
+
+      if (this.get ()) {
+
+        if (popup)
+          return;
+        if (popup)
+          popup.remove ();
+        popup = $ ('<div>', {class: '_limitPicker fader'}).appendTo (this._html);
+        popup.addClass ('fader_visible');
+        const content = $ ('<div>').appendTo (popup);
+        popup.css ({top: 22, left: 4});
+
+        const limit = this._limit.get ();
+        $ ('<div>', {class: '_heading'}).appendTo (content);
+        const table = $ ('<table>').appendTo (content);
+        const tbody = $ ('<tbody>').appendTo (table);
+        const minYears = PreferencesInstance.get ().futureYears + 1;
+        const rows = Math.round (Math.sqrt (minYears));
+        const cols = Math.ceil (minYears / rows);
+        const startFY = Types.dateFY.getFYStart (this._html.closest ('li').find ('.' + this._view._getFieldHtmlClass ('start')).data ('field')._value, this._budgetStart, this._budgetEnd);
+        const startPos = Types.date._year (startFY) - Types.date._year (this._budgetStart);
+
+        const updatePopup = () => {
+          const limit = this._limit.get ();
+          const heading = content.find ('._heading');
+          heading.text (this.get () ? 'Repeats ' + (! limit ? 'every year' : limit + 1 + ' times until ' + this._getThroughYear (limit)) : 'Does not repeat');
+          const endFY = this.get () ? limit && Types.date.addYear (startFY, limit) : startFY;
+          const tds = tbody.find ('td');
+          let date = this._budgetStart;
+          for (let r = 0; r < rows; r ++)
+            for (let c = 0; c < cols; c ++) {
+              const td = $ (tds [r * cols + c]);
+              td.removeClass ('_endPoint _included');
+              if (date >= startFY && ! (r == rows - 1 && c == cols - 1)) {
+                if (date == startFY || date == endFY)
+                  td.addClass ('_endPoint')
+                else if (! endFY || date < endFY)
+                  td.addClass ('_included');
+              }
+              date = Types.date.addYear (date, 1);
+            }
+        }
+
+        let date = this._budgetStart;
+        for (let r = 0; r < rows; r ++) {
+          const tr = $ ('<tr>').appendTo (tbody);
+          for (let c = 0; c < cols; c ++) {
+            let td;
+            if (r == rows - 1 && c == cols - 1)
+              td = $ ('<td>', {class: '_infinity'}).appendTo (tr).append ($ ('<div>', {html: '&#x221e;'}));
+            else {
+              td = $ ('<td>', {text: Types.dateFY.toString (date, this._budgetStart, this._budgetEnd)}).appendTo (tr);
+              if (date < startFY)
+                td.addClass ('_disabled');
+              date = Types.date.addYear (date, 1);
+            }
+            td.on ('click', e => {
+              const pos = r * cols + c;
+              if (pos >= startPos) {
+                const count = pos == (rows * cols - 1) ? 0 : pos - startPos + 1;
+                this.set (count != 1);
+                this._limit.set (count ? count - 1 : 0);
+                updatePopup ();
+              }
+            });
+          }
+          updatePopup ();
+        }
+
+        ui.scrollIntoView (popup);
+
+        // handle issue where moving causes undetected loss of focus
+        const sortable = this._html.closest ('.ui-sortable');
+        if (sortable.length) {
+          const addCallback = () => {
+            sortable.data ('_callback', () => {
+              if (popup) {
+                this.click ();
+                addCallback ();
+              }
+            })
+          }
+          addCallback ();
+        }
+      }
     }
-    this._labels [1] = ! limit? 'every year' : 'until ' + thru;
+
+    const removePopup = () => {
+      if (popup) {
+        const curPopup = popup;
+        popup = null;
+        curPopup.removeClass ('fader_visible')
+        .one ('transitionend', () => {
+          if (curPopup)
+            curPopup.remove ();
+        })
+        // if (this._changePending) {
+        //   this._handleChange();
+        //   this._changePending = false;
+        // }
+      }
+    }
+
+    super._addHtml ();
+    this._html
+    .on ('focusin', addPopup)
+    .on ('focusout', removePopup)
+    .on ('change', () => {
+      if (this.get ())
+        addPopup ();
+      else
+        removePopup ();
+    })
+  }
+
+  _getThroughYear (limit) {
+    if (limit > 0) {
+      const start = this._html.closest ('li').find ('.' + this._view._getFieldHtmlClass ('start')).data ('field')._value;
+      return Types.dateFY.toString (Types.date.addYear (start, limit), this._budgetStart, this._budgetEnd);
+    }
+  }
+  _setWithLimit (limit) {
+    this._labels [1] = ! limit ? 'every year' : 'until ' + this._getThroughYear (limit);
     super._set (this._value);
   }
   _set (value) {
@@ -373,6 +495,7 @@ class LimitField extends ViewScalableTextbox {
   _addHtml() {
     super._addHtml();
     this._repeat = this._html .closest ('li') .find ('.' + this._view._getFieldHtmlClass ('repeat')) .data ('field');
+    this._html.css ({display: 'none'});
   }
   _set (value) {
     super._set (value);

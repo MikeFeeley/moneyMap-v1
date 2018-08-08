@@ -130,7 +130,6 @@ class ScheduleEntry extends List {
       var isEndInfinity = Types .dateEndMY    .isInfinity (upd .end);
       var isRepeat      = upd .repeat;
       var enabled = {
-        limit:  !isStartBlank && !isEndInfinity && isRepeat,
         repeat: !isStartBlank && !isEndInfinity,
         amount: !isStartBlank,
         end:    !isStartBlank && !isStartYear,

@@ -1209,6 +1209,47 @@ body > ._landing {
   }
 }
 
+._limitPicker {
+  position: absolute;
+  z-index: 1000;
+  padding-bottom: 8px;
+  > div {
+    padding: 4px;
+    @include backdrop-blur(4px, rgba(245,246,246,.94), rgba(245,246,246,.98));
+    border-radius: 4px;
+    box-shadow: $drop-shadow;
+    position: relative;
+    > ._heading {
+      font-weight: 400!important;
+      font-size: 16px;
+      color: #444!important;
+      padding: 4px;
+      padding-bottom: 8px;
+    }
+    > table {
+      border-top: 1px solid #ccc;
+    }
+    > table > tbody > tr > td {
+      border-radius: 4px;
+      padding: 3px;
+      color: #444;
+      &._disabled {color: #ddd}
+      &._endPoint {background: #33b1ff; color: white}
+      &._included {background: #d1f0ff}
+      &._infinity {
+        text-align: center;
+        > div {
+          color: #33b1ff;
+          font-size: 24px;
+          font-weight: 400;
+          margin-top: -9px;
+          margin-bottom: -5px;
+        }
+      }
+    }
+  }
+}
+
 ._calendarPicker {
   position: absolute;
   z-index: 1000;

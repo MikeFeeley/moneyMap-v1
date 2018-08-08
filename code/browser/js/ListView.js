@@ -80,8 +80,9 @@ class ListView extends SortedTupleView {
   }
 
   _moveLeftRight (target, dir) {
-    var isSelectable = f => {
-      return $(f) .data ('field') .isEnabled() && $(f) .find ('li,:input') .length;
+    const isSelectable = f => {
+      const ff = $ (f);
+      return ff.css ('display') != 'none' && ff.data ('field').isEnabled () && ff.find ('li,:input').length;
     }
     var field = target .closest ('._field');
     if (field .length) {

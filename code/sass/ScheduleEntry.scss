@@ -49,16 +49,6 @@ $indent:       24px;
       &:not(._value_checked) ._suffix
         {color: #ddd}
     }
-    ._field_limit {
-      ._content {width: 20px;}
-      ._prefix, ._content, ._suffix {
-        font-style: italic;
-        color: #aaa;
-      }
-      div._content {
-        opacity: 0;
-      }
-    }
     ._field_notes {
       ._content {
         white-space: nowrap;
@@ -68,10 +58,10 @@ $indent:       24px;
         font-style: italic;
       }
       &:not(._narrow) ._content {
-        @include adaptive-width(200px,325px,$threshold);
+        @include adaptive-width(220px,345px,$threshold);
       }
       &._narrow ._content {
-        @include adaptive-width(85px,200px,$threshold);
+        @include adaptive-width(105px,220px,$threshold);
       }
     }
     div._field_total {
