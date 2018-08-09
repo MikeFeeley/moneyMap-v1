@@ -131,6 +131,7 @@ class User extends Observable {
       switch (eventType) {
         case ModelEvent .INSERT:
           await this._addBudget (doc, true);
+          this._makeConfigVisible ();
           break;
         case ModelEvent .REMOVE:
           if (tab)
@@ -308,14 +309,16 @@ class User extends Observable {
 
       case UserViewEvent .TAB_CLICK:
         if (arg .tab) {
-          this._view .selectTab (arg .tab);
           let field = arg .tab .find ('._field') .data('field');
           if (field._name .startsWith ('c_')) {
             await this._selectConfig (field._id);
+            this._view.selectTab (arg.tab);
             this._view .selectTab (this._getBudgetTab (this._bid));
             this._setConfigDeleteButtonDisabled();
-          } else
+          } else {
             await this._selectBudget (field._id);
+            this._view.selectTab (arg.tab);
+          }
           await this._notifyApp();
         } else
           /* ADD */
@@ -782,6 +785,10 @@ class User extends Observable {
    * Add specified config to view
    */
   async _addConfig (config, select) {
+    let bm = new Model ('budgets', this.getDatabaseName (config._id));
+    this._budgets = this._sortByName (await bm.find ({}));
+    bm.delete ();
+
     let [configTab, configContent] = this._view .addTab (this._configTabs);
     configContent.css ({visibility: 'hidden'});
     this._view .addField (new ViewScalableTextbox ('c_name', ViewFormats ('string'), '', '', 'Config Name'), config._id, config .name, configTab);
@@ -804,12 +811,10 @@ class User extends Observable {
     if (select)
       this._setConfigDeleteButtonDisabled();
 
-    let bm = new Model ('budgets', this .getDatabaseName (config._id));
-    this._budgets = this._sortByName (await bm .find ({}));
-    bm .delete();
     let [budgetTab, budgetContent] = this._view .addTab (budgetTabs, '_add', true, 'Add');
     for (let b of this._budgets)
       this._addBudget (b, b._id == this._bid);
+    this._makeConfigVisible ();
     if (select)
       this._view .selectTab (configTab);
   }
@@ -818,7 +823,6 @@ class User extends Observable {
    * Add specified budget to budgetTabs view
    */
   _addBudget (budget, select) {
-    this._makeConfigVisible ();
     let budgetTabs = this._getBudgetTabs();
     let [budgetTab, budgetContent] = this._view .addTab (budgetTabs);
     this._view .addField (
