@@ -1,11 +1,11 @@
-const APP_VERSION_HASH = '011916f4xx';
+const APP_VERSION_HASH = '0dfc616';
 const APP_VERSION_STRING = '1.0.0-beta (' + APP_VERSION_HASH + ')';
 
 const INIT_browserIsCompatible = navigator .appCodeName .includes ('Mozilla') && Number (navigator .appVersion .split (' ') [0]) >= 5.0;
 
 const INIT = {
   version: APP_VERSION_HASH,
-  cacheResources: false,
+  cacheResources: true,
   resources: {
      'lib/css':    [
       'jquery-ui',
@@ -153,6 +153,7 @@ async function INIT_loadStyle (url) {
     loadingMessage.style.top = '100px';
     loadingMessage.style.left = '50%';
     loadingMessage.style.transform = 'translateX(-50%)';
+    loadingMessage.style.fontFamily = 'apple-system, Helvetica, Arial, "Lucida Grande", sans-serif';
     loadingMessage.style.fontSize = '48px';
     loadingMessage.style.color = '#bbb';
   }
