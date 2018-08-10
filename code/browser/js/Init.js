@@ -1,4 +1,4 @@
-const APP_VERSION_HASH = '9d0f32f';
+const APP_VERSION_HASH = '011916f4xx';
 const APP_VERSION_STRING = '1.0.0-beta (' + APP_VERSION_HASH + ')';
 
 const INIT_browserIsCompatible = navigator .appCodeName .includes ('Mozilla') && Number (navigator .appVersion .split (' ') [0]) >= 5.0;
@@ -144,20 +144,34 @@ async function INIT_loadStyle (url) {
 }
 
 (async function () {
-    for (const step of Object .keys (INIT .resources))
-      for (const file of INIT .resources [step])
-        try {
-          if (step .includes ('js'))
-            await INIT_loadScript (step + '/' + file + '.js');
-          else if (step .includes ('css'))
-            await INIT_loadStyle (step + '/' + file + '.css');
-        } catch (e) {
-          console .log ('Error while loading ' + url + '.  ' + e);
-          throw (e);
-        }
+  let loadingMessage;
+  if (true || INIT.cacheResources && ! INIT_cacheIsValid) {
+    loadingMessage = document.createElement ('div')
+    document.documentElement.appendChild (loadingMessage);
+    loadingMessage.innerHTML = 'Loading ...';
+    loadingMessage.style.position = 'fixed';
+    loadingMessage.style.top = '100px';
+    loadingMessage.style.left = '50%';
+    loadingMessage.style.transform = 'translateX(-50%)';
+    loadingMessage.style.fontSize = '48px';
+    loadingMessage.style.color = '#bbb';
+  }
+  for (const step of Object.keys (INIT.resources))
+    for (const file of INIT.resources [step])
+      try {
+        if (step.includes ('js'))
+          await INIT_loadScript (step + '/' + file + '.js');
+        else if (step.includes ('css'))
+          await INIT_loadStyle (step + '/' + file + '.css');
+      } catch (e) {
+        console.log ('Error while loading ' + url + '.  ' + e);
+        throw (e);
+      }
   if (INIT .cacheResources)
       localStorage .setItem ('INIT_version', INIT .version);
     else
       localStorage .removeItem ('INIT_version');
+  if (loadingMessage)
+    $ (loadingMessage).remove ();
 }) ();
 
