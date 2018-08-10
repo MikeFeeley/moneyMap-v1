@@ -1,11 +1,11 @@
-const APP_VERSION_HASH = '0dfc616';
+const APP_VERSION_HASH = 'a41a50c';
 const APP_VERSION_STRING = '1.0.0-beta (' + APP_VERSION_HASH + ')';
 
 const INIT_browserIsCompatible = navigator .appCodeName .includes ('Mozilla') && Number (navigator .appVersion .split (' ') [0]) >= 5.0;
 
 const INIT = {
   version: APP_VERSION_HASH,
-  cacheResources: true,
+  cacheResources: false,
   resources: {
      'lib/css':    [
       'jquery-ui',
@@ -145,7 +145,7 @@ async function INIT_loadStyle (url) {
 
 (async function () {
   let loadingMessage;
-  if (true || INIT.cacheResources && ! INIT_cacheIsValid) {
+  if (INIT.cacheResources && ! INIT_cacheIsValid) {
     loadingMessage = document.createElement ('div')
     document.documentElement.appendChild (loadingMessage);
     loadingMessage.innerHTML = 'Loading ...';
