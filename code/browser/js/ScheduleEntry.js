@@ -173,6 +173,18 @@ class ScheduleEntry extends List {
             return;
           }
         }
+        // prevent combining yearly and monthly schedules
+        if (arg.type == 'scheduleLine' && arg.pos.inType == 'scheduleLine') {
+          const start = this._categories.get (arg.id).start;
+          if (! Types.date.isBlank (start)) {
+            const type = Types.date.isYear (start) ? ScheduleType.YEAR : ScheduleType.MONTH;
+            const toType = this._categories.getType (this._categories.get (arg.pos.inside));
+            if (type != toType && toType != ScheduleType.NONE) {
+              this._view.cancelMove (arg.id);
+              return;
+            }
+          }
+        }
         this._move (arg .id, arg .pos, this._view);
         break;
 
