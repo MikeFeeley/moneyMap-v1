@@ -362,9 +362,9 @@ class DateType extends FieldType {
     return this._month (a) - this._month (b) + (this._year  (a) - this._year  (b)) * 12;
   }
   addDay (date, days) {
-    return (d => {return this._date (d .getFullYear(), d .getMonth() + 1, d .getDate())})
-      (new Date (new Date (this._year (date), this._month (date) - 1, this._day (date)) .valueOf() + days * 1000 * 60 * 60 * 24));
-
+    const d = new Date (this._year (date), this._month (date) - 1, this._day (date));
+    d.setDate (d.getDate () + days);
+    return this._date (d.getFullYear (), d.getMonth () + 1, d.getDate ());
   }
   getDayOfWeek (d) {
     return (new Date (this._year (d), this._month (d) - 1, this._day (d)) .getDay());

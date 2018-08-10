@@ -531,7 +531,7 @@ const ViewCalendar = {
       const sta = Types .date .monthStart (showDate);
       const end = Types .date .monthEnd (showDate);
       const mon = Types .date._month (sta);
-      let   dat  = Types .date .addDay (sta, -Types .date .getDayOfWeek (Types .date .monthStart (sta)));
+      let dat = Types.date.addDay (sta, - Types.date.getDayOfWeek (Types.date.monthStart (sta)));
       const st = dat;
       let   col = 0;
       while (dat <= end || col) {
@@ -545,7 +545,7 @@ const ViewCalendar = {
             selDate = thisDat;
             setSelected();
             e .stopPropagation();
-          })
+          });
         dat = Types .date .addDay (dat, 1);
         col = (col + 1) % 7;
       }
