@@ -390,8 +390,7 @@ class SchedulesModel extends Observable {
    * Get budget amount directly allocated to this individual category (non-recursively)
    */
   getIndividualAmount (cat, start = this._budget .getStartDate(), end = this._budget .getEndDate()) {
-    let debug = this._getAmount (cat, start, end, false);
-    return debug;
+    return this._getAmount (cat, start, end, false);
   }
 
   /**
