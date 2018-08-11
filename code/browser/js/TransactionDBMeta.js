@@ -29,9 +29,9 @@ async function TransactionDBMeta_apply (dbTran, pt, accId) {
     if (Object .keys (pt .update) .length) {
       var prev = (await dbTran .findOneAndUpdate ('transactions', {_id: pt._id}, {$set: pt .update})) .value;
       if (pt .update .debit != null)
-        amount += pt .update .debit - (prev .debit || 0);
+        amount += (pt .update .debit || 0) - (prev .debit || 0);
       if (pt .update .credit != null)
-        amount -= pt .update .credit - (prev .credit || 0);
+        amount -= (pt .update .credit || 0) - (prev .credit || 0);
       if (pt .update .account) {
         if (pt._master)
           amount = - ((prev .debit || 0) - (prev .credit || 0));
