@@ -88,6 +88,7 @@ class CSVConverter {
             value = undefined;
 
           // XXX to correct export here where single quote was not formatted in utf-8 and thus got corrupted by crypto
+          // XXX can be removed and export / import is performed on production database
           if (typeof value == 'string' && value.includes ('â'))
             value = value.replace (/â/, "'");
 
