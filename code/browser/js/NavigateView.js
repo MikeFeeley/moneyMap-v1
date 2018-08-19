@@ -1354,12 +1354,13 @@ class NavigateView extends Observable  {
       }
     }
     this._resetColors();this._nextColor();this._nextColor();this._nextColor();this._nextColor();
+    const resolution = dataset.cols.reduce ((m, _, c) => Math.max (m, dataset.rows.reduce ((t, row) => t + row.amounts [c], 0)), 0) / 50;
     var data = {
       labels:   dataset .cols,
       datasets: dataset .rows .map (r => {
         var ds = {
           label: r .name,
-          data:  r .amounts,
+          data: r.amounts.map (a => a > 0 || - a > resolution ? a : 0),
           backgroundColor: this._getColor (0.05),
           borderColor: this._getColor (.5),
           borderWidth: 3,
