@@ -5,7 +5,7 @@ const INIT_browserIsCompatible = navigator .appCodeName .includes ('Mozilla') &&
 
 const INIT = {
   version: APP_VERSION_HASH,
-  cacheResources: true,
+  cacheResources: false,
   resources: {
      'lib/css':    [
       'jquery-ui',

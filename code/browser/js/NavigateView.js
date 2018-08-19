@@ -1668,7 +1668,7 @@ class NavigateView extends Observable  {
                   let total = dataset .rows .reduce ((t, r) => {
                     if (vss .indexOf (vs) == 1 || r .liquid) {
                       for (let p of ['intAmt', 'addAmt', 'subAmt', 'infAmt'])
-                        t [p] += r .detail [i-1] [p];
+                        t [p] += r.detail [i - 1] [p] || 0;
                     }
                     return t;
                   }, {addAmt: 0, subAmt: 0, intAmt: 0, infAmt: 0})
