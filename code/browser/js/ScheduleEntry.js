@@ -152,7 +152,7 @@ class ScheduleEntry extends List {
           this._view .cancelMove (arg .id);
           return;
           // if limited to single category then move within it only
-        } else if ((this._options .categoriesOnlyWithParent || this._options .categories) && target .parent)
+        } else if (this._options.categoriesOnlyWithParent && target.parent)
           arg .pos .inside = target .parent ._id;
         else if (this._options .scheduleOnly)
           arg .pos .inside = target .category ._id;
