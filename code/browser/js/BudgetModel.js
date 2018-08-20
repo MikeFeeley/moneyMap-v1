@@ -58,7 +58,8 @@ class BudgetModel extends Observable {
     if (missingBudgetRoots .length) {
       const catModel         = new Model ('categories');
       const missingRootNames = missingBudgetRoots .map (br => this._rootNames [this._budgetRoots .indexOf (br)]);
-      const roots            = await catModel .find ({name: {$in: missingRootNames}, $or: [{parent: null}, {parent: {$exists: false}}]});
+      const roots = (await catModel.find ({$or: [{parent: null}, {parent: {$exists: false}}]}))
+      .filter (cat => missingRootNames.includes (cat.name));
       if (roots .length)
         await catModel .updatelist (roots .map (c => ({id: c._id, update: {budgets: c .budgets .concat (this._budget._id)}})));
       if (roots .length != missingRootNames .length) {
@@ -87,8 +88,9 @@ class BudgetModel extends Observable {
       return [];
     else {
       const badRoots = badBudgetRoots .map (br => this._rootNames [this._budgetRoots .indexOf (br)]);
-      const cats     = await catModel .find ({name: {$in: badRoots}, $or: [{parent: null}, {parent: {$exists: false}}]});
-      const update   = cats .filter (c => ! c .budgets || ! c .budgets .includes (this._budget._id));
+      const cats = (await catModel.find ({$or: [{parent: null}, {parent: {$exists: false}}]}))
+      .filter (cat => badRoots.includes (cat.name));
+      const update = cats.filter (c => ! c.budgets || ! c.budgets.includes (this._budget._id));
       if (update .length)
         await catModel .updateList (update .map (u => ({id: u._id, update: {budgets: (u .budgets || []) .concat (this._budget._id)}})));
       let insert = this._rootNames .filter (n => ! cats .find (c => c .name == n));
