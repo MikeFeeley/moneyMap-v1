@@ -7,7 +7,7 @@ class TuplePresenter extends Presenter {
 
   async _onModelChange (eventType, doc, arg, source) {
     await super._onModelChange (eventType, doc, arg, source);
-    if (eventType == ModelEvent.INSERT)
+    if (eventType == ModelEvent.INSERT && source != this._view)
       this._addTuple (doc);
     else if (eventType == ModelEvent .REMOVE)
       this._removeTuple (doc._id);

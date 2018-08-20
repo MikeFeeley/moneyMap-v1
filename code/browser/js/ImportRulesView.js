@@ -274,6 +274,7 @@ class ImportRulesView extends TupleView {
   }
 
   addUpdate (data) {
+    console.trace ('au');
     var update = this._addTable ('_update', 'Modify', this._rules .get (data .predicate), ['_split', '_add']);
     var tr     = $('<tr>', {data: {id: data._id}}) .appendTo (update);
     this .createFields ({
