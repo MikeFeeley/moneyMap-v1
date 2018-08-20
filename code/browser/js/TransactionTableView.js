@@ -247,7 +247,9 @@ class ViewCategoryEdit extends ViewTextbox {
     let tr = input .closest('tr');
     const thisInput = this._html.find ('input') [0];
     (tr .length? tr: input) .on ('keydown', e  => {
-      if (e.target == thisInput) {
+      if (e.keyCode == 13 && (e.metaKey))
+        return;
+      else if (e.target == thisInput) {
         if (e.keyCode == 8 && e.metaKey && this._isOpen)
           this._close ();
         switch (e.keyCode) {
