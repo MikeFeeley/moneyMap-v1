@@ -409,7 +409,7 @@ class Navigate {
           TransactionHUD .showCategory (arg .id, dateRange, this._accounts, this._variance, arg .html, arg .position);
         }
       }
-    } else if (eventType == NavigateViewEvent .NETWORTH_TABLE_ROW_CLICK) {
+    } else if (eventType == NavigateViewEvent.NETWORTH_TABLE_ROW_CLICK && arg.id) {
       let rows =  this._accounts .getAccounts() .filter (a => {return a .group == arg .id}) .map (a => {return a._id});
       if (rows .length > 1)
         this._addNetWorthTable (arg .view, this._filterNetWorthBySlider (await this._getNetWorthData (rows, arg .label)), true, arg .html, arg .position);
@@ -1918,7 +1918,8 @@ class Navigate {
           })}, [])
       };
     })
-    rowsData = [this._accounts.getCashFlowBalances (colDates)].concat (rowsData);
+    if (! accountIds)
+      rowsData = [this._accounts.getCashFlowBalances (colDates)].concat (rowsData);
     let result = {
       cols:      colDates .map (d => {return Types .dateMY .toString (d)}),
       highlight: Types .date._year (budgetStart) - Types .date._year (startDate) + 1,
