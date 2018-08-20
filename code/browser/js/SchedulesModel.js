@@ -201,7 +201,7 @@ class SchedulesModel extends Observable {
       [data .sort, sortUpdate] = updateSort (ref, siblings);
       if (! cat) {
         data .budgets = [bid];
-        cat = await this._catModel.insert (data, source);
+        cat = await this._catModel.insert (data);
         if (! cat) return;
       } else {
         data .budgets = cat .budgets .includes (bid)? cat .budgets: cat .budgets .concat (bid);
@@ -225,7 +225,7 @@ class SchedulesModel extends Observable {
       [data .sort, sortUpdate] = updateSort (ref, siblings);
       data .budget   = bid;
       data .category = cat._id;
-      let sch = await this._schModel.insert (data, source);
+      let sch = await this._schModel.insert (data);
       if (sch)
         insertedIds .push (this._joinMI (this._schModel, sch._id));
       if (sortUpdate .length)
