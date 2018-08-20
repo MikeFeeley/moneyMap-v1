@@ -608,7 +608,7 @@ class ViewDate extends ViewTextbox {
         const content = $('<div>') .appendTo (popup);
         popup .css (ui .calcPosition (this._inputContainer, toHtml, {top: 24, left: 0}));
         ViewCalendar .show (this .get(), this._options, content, val => {
-          this._set (Types.dateMYorYear.toString (val));
+          this._set (this._options.type == 'DM' ? Types.dateDM.toString (val) : Types.dateMYorYear.toString (val));
           this._changePending = true;
         });
         popup .addClass ('fader_visible');
