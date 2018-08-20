@@ -1047,7 +1047,7 @@ class User extends Observable {
       ['Savings',     true,  false],
       ['Income',      true,  true],
       ['Withdrawals', false, true],
-      ['Suspense',    false, false]
+      ['Off Budget', false, false]
     ]
     let rootCats = await Promise .all (roots .map (async (root, index) => {
       let cat = await cm .find ({name: root[0], $or: [{parent: null}, {parent: {$exists: false}}]});
