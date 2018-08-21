@@ -341,7 +341,7 @@ class BudgetProgressHUDView extends View {
           if (line) {
             for (let i = 0; i < line.data.length; i ++) {
               const value = data [field] [i];
-              line.data  [i] = value > 0 || - value < resolution ? Math.round (value * 98 / max) : 0;
+              line.data  [i] = value > 0 || - value > resolution? Math.round (value * 98 / max) : 0;
               line.value [i] = Types.moneyDC.toString (value);
             }
           }
