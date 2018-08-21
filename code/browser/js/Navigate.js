@@ -1381,8 +1381,9 @@ class Navigate {
         list .push ({name: 'Savings Withdrawals', amount: wth});
       if (sav + una + ovr + wth)
         list .push ({name: 'Projected Savings', amount: sav + una + ovr + wth});
-      if (inc != 0)
-        list .push ({name: 'Income Saved', percent: (sav + una + ovr + wth) * 1.0 / (-inc)});
+      const totSav = sav + una + ovr + wth;
+      if (inc < 0 && totSav > 0)
+        list .push ({name: 'Income Saved', percent: totSav * 1.0 / (-inc)});
       updateView (list);
     }
     return update;
