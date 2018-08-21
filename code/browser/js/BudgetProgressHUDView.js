@@ -326,10 +326,10 @@ class BudgetProgressHUDView extends View {
     const canvas = this._content .find ('._monthsGraph');
     const chart = canvas .data ('chart');
     const max = Object.keys (data)
-    .filter (f => ['priorYear', 'budget', 'actual'].includes (f))
-    .reduce ((m, f) => Math.max (m, data [f].reduce ((s, v) => {
-      return Math.max (s, Math.abs (v))
-    }, 0)), 0);
+      .filter (f => ['priorYear', 'budget', 'actual'].includes (f))
+      .reduce ((m, f) => Math.max (m, data [f].reduce ((s, v) => {
+        return Math.max (s, Math.abs (v))
+      }, 0)), 0);
     const resolution = max / 50;
 
     if (chart) {
@@ -354,7 +354,7 @@ class BudgetProgressHUDView extends View {
             return {
               label: d [0],
               value: data [d [1]].map (v => Types.moneyDC.toString (v)),
-              data: data [d [1]].map (v => v > 0 || - v > resolution ? Math.round (v * 98 / max) : 0),
+              data:  data [d [1]].map (v => v > 0 || - v > resolution ? Math.round (v * 98 / max) : 0),
               backgroundColor: d [2], hoverBackgroundColor: d [2],
               borderColor: d [3], hoverBorderColor: d [3]
             }
