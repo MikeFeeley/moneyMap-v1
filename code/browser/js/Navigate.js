@@ -339,14 +339,14 @@ class Navigate {
     } else if (eventType == NavigateViewEvent .BUDGET_TABLE_CLICK && arg .id) {
 
       /* Monthly or History Table (Budget or Actual) */
-      if (arg .dataset .cols .length == 1 && arg .dataset .cols [0] == 'Yr')
-        arg .date = [];
-      let im = ! arg .date || ! Array .isArray (arg .date) || arg .date .length != 0;
-      let iy = ! arg .date || ! im;
+      // if (arg .dataset .cols .length == 1 && arg .dataset .cols [0] == 'Yr')
+      //   arg .date = [];
+      let im = (! arg .date || ! Array .isArray (arg .date) || arg .date .length != 0) && arg .col != 'Yr';
+      let iy = ! arg .date || arg .col == 'Yr' || (! arg .col && arg .dataset .cols .includes ('Yr'));
       if (['_budgetTable', '_activityTable'] .includes (arg .name)) {
         if (arg .altClick) {
           let id = arg .id .split ('_') .slice (-1) [0];
-          let date  = (arg .date && arg .date .length > 0 && arg .dates [0]) || {start: this._budget .getStartDate(), end: this._budget .getEndDate()}
+          let date  = arg .date || {start: this._budget .getStartDate(), end: this._budget .getEndDate()};
           switch (arg .name) {
             case '_budgetTable':
               BudgetProgressHUD .show (id, arg .html, arg .position, this._accounts, this._variance, arg .date? arg .date .end: undefined);
@@ -356,9 +356,9 @@ class Navigate {
               break;
           }
         } else {
-          if (arg .date && arg .date .length == 0)
-            arg .date = [{start: this._budget .getStartDate(), end: this._budget .getEndDate()}];
-          await this._addMonthsTable (arg .name, arg .view, [arg .id], arg .date, true, true, arg .position, arg .html, undefined, undefined, im, iy);
+          if (! arg .date)
+            arg .date = {start: this._budget .getStartDate(), end: this._budget .getEndDate()};
+          await this._addMonthsTable (arg .name, arg .view, [arg .id], arg .date, true, true, arg .position, arg .html, arg .col, undefined, im, iy);
         }
       } else if (arg .name == '_budgetHistoryTable' && arg .id .length >= 1 && arg .id [0]) {
         if (arg .altClick) {
@@ -968,6 +968,17 @@ class Navigate {
         if (update)
           updateView (update);
       });
+      if (col == 'Yr' && dataset .cols .length != 1) {
+        const colNum = dataset .cols .indexOf (col);
+        if (colNum != -1) {
+          dataset .cols = [dataset .cols [colNum]];
+          if (col < dataset .dates .length)
+            dataset .dates = [dataset .dates [colNum]];
+          else
+            dataset .dates = [{start: dataset .dates [0] .start, end: dataset .dates .slice (-1) [0] .end}];
+          dataset .highlight = null;
+        }
+      }
       var updateView = view .addBudgetTable (name, dataset, dataset .cols .length == 1, skipFoot, popup, position, toHtml, () => {
         this._deleteUpdater (view, updater);
       }, ! dates || ! skipFoot, title);

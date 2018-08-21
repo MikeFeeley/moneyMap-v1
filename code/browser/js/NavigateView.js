@@ -1243,19 +1243,28 @@ class NavigateView extends Observable  {
           let prev = target .closest ('div.' + name);
           position .left = (prev .length? prev .position() .left + (prev .hasClass ('_popup')? 8: 0): 0) + 12;
         }
-        if (id)
+        if (id) {
+          let date;
+          if (col == -1 && dataset .dates .length > 1 && Types .date .subMonths (dataset .dates [1] .start, dataset .dates [0] .start) == 1)
+            date = {start: dataset .dates[0] .start, end: dataset .dates .slice (-1) [0] .end};
+          else if (col >= dataset .dates .length && col < dataset .cols .length)
+            date = {start: dataset .dates [0] .start, end: dataset .dates .slice (-1) [0] .end};
+          else if (col >= 0 && col < dataset .dates .length)
+            date = dataset .dates [col];
           this._notifyObservers (NavigateViewEvent .BUDGET_TABLE_CLICK, {
             name:     name,
             id:       id,
-            date:     dataset .dates && (col >= 0 && col < dataset .dates .length? dataset .dates [col]: col >= 0 && col < dataset .cols .length? []: null),
+            date:     date,
             html:     html,
             position: position,
             altClick: e .originalEvent && (e .originalEvent .webkitForce > 1 || e .originalEvent .altKey),
             view:     this,
-            dataset:  dataset
-          })
-          e .stopPropagation();
-          return false;
+            dataset:  dataset,
+            col:      dataset .cols [col]
+          });
+        }
+        e .stopPropagation();
+        return false;
       });
       var headTr = $('<tr>') .appendTo (thead);
       var cols   = ['Category'] .concat (dataset .cols) .concat (totalRows? ['Ave','Total','%Inc'] : []);
