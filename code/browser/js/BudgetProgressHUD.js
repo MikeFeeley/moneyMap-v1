@@ -400,7 +400,16 @@ class BudgetProgressHUD {
         categories: [this._id],
         showTotal: true,
         startDate: Types.dateFY.getFYStart (this._date, bs, be),
-        endDate: Types.dateFY.getFYEnd (this._date, bs, be)
+        endDate: Types.dateFY.getFYEnd (this._date, bs, be),
+        onFieldClick: (id, name, _0, _1, target) => {
+          if (name == 'total' && id) {
+            this .blur();
+            const hud  = new BudgetProgressHUD (this._accounts, this._variance, {noScheduleEntry: true});
+            const html = target .closest ('._BudgetProgressHUD');
+            const pos  = ui .calcPosition (target, html, {top: 23, left: -454});
+            hud .show (id, this._date, 0, 0, html, pos);
+          }
+        }
       };
       this._sub = new ScheduleEntry ('_ExpandedMiniScheduleEntry', this._accounts, this._variance, opt);
       this._view .addPresenter ('_schedule', this._sub);
@@ -437,7 +446,7 @@ class BudgetProgressHUD {
         endDate:              Types .date .monthEnd   (this._date),
         noInsertInside:       true,
         noRemoveLastSchedule: true,
-        scheduleOnly:         [this._id]
+        scheduleOnly:         [this._id],
       }
       this._shd = new ScheduleEntry  ('_MiniScheduleEntry', this._accounts, this._variance, opt);
       this._view .addText            ('_schedule', '', 'Allocation');

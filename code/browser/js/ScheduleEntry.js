@@ -275,7 +275,7 @@ class ScheduleEntry extends List {
 
       case ListViewEvent .FIELD_CLICK:
         if (this._options .onFieldClick)
-          this._options .onFieldClick (arg .id, arg .name, arg .html .parent() .parent(), {top: 50, left: 50});
+          this._options .onFieldClick (arg .id, arg .name, arg .html .parent() .parent(), {top: 50, left: 50}, arg .target);
         break;
 
       case ScheduleEntryViewEvent .REACTIVATE_ZOMBIE:
