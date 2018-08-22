@@ -642,6 +642,9 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
     ._budgetTableContainer > ._budgetHistoryTables > ._budgetHistoryTable > div > table._budgetHistoryTable > tfoot > tr:last-child > td {
       padding-bottom: 16px;
     }
+    ._budgetTableContainer {
+      margin-left: calc((100vw - 1400px) / 2);
+    }
     ._budgetTable > div > table,
     ._activityTable > div > table,
     ._budgetHistoryTable > div > table,
