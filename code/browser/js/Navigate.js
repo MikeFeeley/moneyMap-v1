@@ -1522,7 +1522,7 @@ class Navigate {
     historicAmounts = await Promise .all (historicAmounts);
     // compute future budgets
     let budgets = [];
-    for (let y = 0; y < PreferencesInstance .get() .futureYears; y++)
+    for (let y = 0; y <= PreferencesInstance .get() .futureYears; y++)
       budgets .push (this._budget .getDescriptor (y))
     var budgetAmounts = [];
     for (let budget of budgets) {
