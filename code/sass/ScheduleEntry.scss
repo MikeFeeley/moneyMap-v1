@@ -527,7 +527,10 @@ $indent:       24px;
     z-index: 5000;
     > div {
       @include icon-button();
-      &:hover {
+      &:not(._disabled) {
+        color: #e68ae6;
+      }
+      &:hover._disabled {
         color: #33b1ff;
         opacity: 1;
       }
