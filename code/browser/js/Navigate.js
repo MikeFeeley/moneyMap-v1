@@ -481,7 +481,7 @@ class Navigate {
           const cat = this._categories .get (id .split ('_') .slice (-1) [0]);
           let children = (cat .children || []) .concat (cat .zombies || []);
           if (id .includes ('other_'))
-            children = children .filter (c => ! this._categories .hasType (c, ScheduleType .NOT_NONE));
+            children = [];
           let result = children .map (c=> c._id);
           if (type == NavigateValueType .ACTUALS_BUD)
             result = ['budget_' + id] .concat (result);
