@@ -459,7 +459,8 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
 
   /* Freeze first column on scroll */
   div._budgetHistoryTable:not(._popup) > div, div._netWorthTableContainer:not(._popup) {
-    width: calc(100vw - 80px)!important;
+    margin-left: calc((100vw - 1400px - 80px) / 2)!important;
+    width: 1400px!important;
     overflow-x: scroll;
     > table > * > tr > td:first-child,  > table > * > tr > th:first-child {
       position:absolute;
@@ -641,9 +642,6 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
     ._netWorthTableContainer > ._netWorthTable > tfoot > tr:last-child > td,
     ._budgetTableContainer > ._budgetHistoryTables > ._budgetHistoryTable > div > table._budgetHistoryTable > tfoot > tr:last-child > td {
       padding-bottom: 16px;
-    }
-    ._budgetTableContainer {
-      margin-left: calc((100vw - 1400px) / 2);
     }
     ._budgetTable > div > table,
     ._activityTable > div > table,
