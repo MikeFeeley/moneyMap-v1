@@ -1556,20 +1556,20 @@ class NavigateView extends Observable  {
         if ([detail .intAmt, detail .infAmt, detail .addAmt, detail .subAmt] .filter (v => {return v}) .length > 1) {
           let net = detail .intAmt + detail .infAmt + detail .addAmt + detail .subAmt;
           let row = $('<tr>') .appendTo ($('<tfoot>') .appendTo (table))
-           .append ($('<td>', {text: 'Net ' + (net>=0 && !isCredit? 'Increase': 'Decrease')}))
-           .append ($('<td>', {text: Types .moneyD .toString (net)}))
+            .append ($('<td>', {text: 'Net ' + (net>=0 && !isCredit? 'Increase': 'Decrease')}))
+            .append ($('<td>', {text: Types .moneyD .toString (net)}))
          if (net < 0)
            row .children ('td:nth-child(2)') .addClass ('negative');
         }
         let tbody = $('<tbody>') .appendTo (table);
         if (detail .intAmt)
           tbody .append ($('<tr>')
-          .append ($('<td>', {text: isCredit? 'Interest': 'Earnings'}))
-          .append ($('<td>', {text: Types .moneyD .toString (detail .intAmt)})));
+            .append ($('<td>', {text: isCredit? 'Interest': 'Earnings'}))
+            .append ($('<td>', {text: Types .moneyD .toString (detail .intAmt)})));
         if (detail .infAmt)
           tbody .append ($('<tr>')
-          .append ($('<td>', {text: 'Inflation'}))
-          .append ($('<td>', {text: Types .moneyD .toString (detail .infAmt)})));
+            .append ($('<td>', {text: 'Inflation'}))
+            .append ($('<td>', {text: Types .moneyD .toString (detail .infAmt), class: detail .infAmt < 0? 'negative': ''})));
         let handleCellClick = (e, ids, cats) => {
           let target = $(e .target);
           let html   = target .offsetParent();
