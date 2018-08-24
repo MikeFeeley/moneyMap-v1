@@ -189,7 +189,7 @@ function cryptoDoc (cryptoOp, password, docs, table) {
   };
 
   const rule = cryptoRules .get (table);
-  if (rule) {
+  if (rule && docs) {
     const isArray = Array .isArray (docs);
     const outDocs = (isArray? docs: [docs]) . map (doc => rule .fields .find (field  => hasField (doc, field))? JSON .parse (JSON .stringify (doc)): doc);
     for (const field of rule .fields)

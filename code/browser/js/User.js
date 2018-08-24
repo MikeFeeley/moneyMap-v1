@@ -227,7 +227,7 @@ class User extends Observable {
             } else {
               localStorage .setItem (UserLocalStorageKey .HAS_LOGGED_IN, true);
               this._view .removeLanding();
-              const user           = login .user;
+              const user         = login .user;
               this._uid          = user._id;
               this._accessCap    = user .accessCap;
               this._username     = user .username;

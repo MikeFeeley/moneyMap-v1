@@ -169,8 +169,9 @@ async function removeUser (req, res, next) {
 }
 
 async function sendPasswordHint (req, res, next) {
-  const email = req .body .email;
-  const user = req .decrypt (await (await req .dbPromise) .collection ('users') .findOne ({username: email}), 'users');
+  const email  = req .body .email;
+  const users  = req .decrypt (await (await req .dbPromise) .collection ('users') .find() .toArray(), 'users');
+  const user   = users .find (u => u .username == email);
   if (! user)
     res .json ({okay: false, noUser: true});
   else if (! user .passwordHint)
