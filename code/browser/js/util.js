@@ -231,6 +231,9 @@ class DateType extends FieldType {
         return this._date (y, m, d);
       case 'MY':
       case 'MYorYear':
+        const slashPos = s .indexOf ('/');
+        if (slashPos != -1)
+          s = s .slice (0, slashPos);
         var sy = this._year  (context);
         if (s .indexOf ('-') == -1 && s.length >= 4 && this._mthsLC .indexOf (s .slice (0, 3)) != -1 && this._monthsLC .indexOf (s) == -1)
           s = s .slice (0,3) + '-' + s.slice (3);
