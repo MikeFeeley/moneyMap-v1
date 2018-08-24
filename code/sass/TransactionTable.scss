@@ -90,6 +90,13 @@ $table-stripe-background-occluded: rgba(248,248,248,.1);
       {text-align: right;}
     }
   }
+  > tfoot {
+  }
+  > tfoot > tr {
+    > td:not(._rightArrow) > ._field_tdebit,  > td:not(._leftArrow) > ._field_tcredit {
+      text-align: right;
+    }
+  }
 }
 
 div._fieldTip {

@@ -184,9 +184,8 @@ class TransactionHUD extends TransactionAndRulesTable {
   }
 
   _addFooter() {
-    var total = this._tdebit - this._tcredit;
-    this._view .addFooterRow ({
-      nop0:    '',
+    const total = this._tdebit - this._tcredit;
+    this._view .addFooterRow (Object .assign(this._view._options .readOnly? {}: {nop0: ''}, {
       nop1:    '',
       nop2:    '',
       tdebit:  total >= 0? Types .moneyDCZ .toString (total): 'net -->',
@@ -194,11 +193,11 @@ class TransactionHUD extends TransactionAndRulesTable {
       nop3:    '',
       nop4:    '',
       nop5:    ''
-    });
+    }));
     if (total >= 0)
-      $(this._view._tfoot .find ('td') [4]) .addClass ('_leftArrow');
+      $(this._view._tfoot .find ('td') [this._view._options .readOnly? 3: 4]) .addClass ('_leftArrow');
     else
-      $(this._view._tfoot .find ('td') [3]) .addClass ('_rightArrow');
+      $(this._view._tfoot .find ('td') [this._view._options .readOnly? 2: 3]) .addClass ('_rightArrow');
   }
 
   async _addModelData() {
