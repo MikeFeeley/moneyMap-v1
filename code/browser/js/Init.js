@@ -1,5 +1,5 @@
-const APP_CACHE_RESOURCES = true;
-const APP_VERSION_HASH    = 'a05f056';
+const APP_CACHE_RESOURCES = false;
+const APP_VERSION_HASH    = '8d41317';
 const APP_VERSION_STRING  = '1.0.0-beta (' + APP_VERSION_HASH + ')';
 
 const INIT_browserIsCompatible = navigator .appCodeName .includes ('Mozilla') && Number (navigator .appVersion .split (' ') [0]) >= 5.0;

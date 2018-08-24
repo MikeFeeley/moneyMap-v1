@@ -411,6 +411,7 @@ class RepeatField extends ViewScalableCheckbox {
                 const count = pos == (rows * cols - 1) ? 0 : pos - startPos + 1;
                 this.set (count != 1);
                 this._limit.set (count ? count - 1 : 0);
+                this._limit._handleChange();
                 updatePopup ();
               }
             });
