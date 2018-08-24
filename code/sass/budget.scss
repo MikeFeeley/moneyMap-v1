@@ -464,7 +464,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
   div._budgetHistoryTable:not(._popup) > div, div._netWorthTableContainer:not(._popup) {
     margin-left: auto;
     margin-right: auto;
-    width: 1350px!important;
+    max-width: 1350px!important;
     overflow-x: scroll;
     > table > * > tr > td:first-child,  > table > * > tr > th:first-child {
       position:absolute;
