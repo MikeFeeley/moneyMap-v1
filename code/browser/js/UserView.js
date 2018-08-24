@@ -108,7 +108,7 @@ class UserView extends View {
         .append ($('<div>', {html:
           'The longer you use <em>money</em><b>Map</b> the more you will know.  You will be able to compare current ' +
           'spending to the past to see long-term trends or changes in lifestyle.  And, ' +
-          'Once you know where you are spending money today, you will be able to start planning future spending by ' +
+          'once you know where you are spending money today, you will be able to start planning future spending by ' +
           'indicating which of your current expenses will recur and by entering anticipated changes for in future ' +
           'years.  Now you can plan for buying your first home, having kids, or retirement. ' }))
       )
