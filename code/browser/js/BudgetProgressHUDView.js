@@ -247,8 +247,10 @@ class BudgetProgressHUDView extends View {
         updateGraph();
       }
     } else {
-      if (this._compareGraph)
+      if (this._compareGraph) {
         this._compareGraph .empty();
+        $('<div>', {class: '_filler', html: '&nbsp;'}) .appendTo (this._compareGraph);
+      }
       this._hasCompareGraph = false;
     }
   }

@@ -1314,6 +1314,7 @@ class Navigate {
     const pinnedCategories = PinnedCategories .getInstance();
     const update = () => {
       const cats = pinnedCategories .get() .map (cid => this._categories .get (cid) || cid)
+      console.log(cats);
       for (const cat of cats)
         if (typeof cat != 'object')
           pinnedCategories .remove (cat);

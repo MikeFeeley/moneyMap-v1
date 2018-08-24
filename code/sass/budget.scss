@@ -263,6 +263,9 @@ html {
         display: flex;
         justify-content: center;
         margin-top: -70px;
+        > ._graphContainer0 > ._filler {
+          height: 44px;
+        }
       }
 
       > ._graphLine1 {
