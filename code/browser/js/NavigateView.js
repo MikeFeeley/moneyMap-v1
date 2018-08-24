@@ -278,6 +278,7 @@ class NavigateView extends Observable  {
               this._notifyObservers (NavigateViewEvent .PROGRESS_SIDEBAR_CLICK, {
                 id:       item .id,
                 type:     item .type,
+                aux:      item .aux,
                 html:     html,
                 position: pos,
                 view:     this,
@@ -297,6 +298,7 @@ class NavigateView extends Observable  {
               this._notifyObservers (NavigateViewEvent .PROGRESS_SIDEBAR_CLICK, {
                 id:       item .id,
                 type:     item .type + '_icon',
+                aux:      item .aux,
                 view:     this,
                 altClick: e .originalEvent .webkitForce > 1 || e .originalEvent .altKey
               });

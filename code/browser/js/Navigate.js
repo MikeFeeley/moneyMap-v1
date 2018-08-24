@@ -202,9 +202,9 @@ class Navigate {
       if (arg .type == 'pinned') {
         const html = isSafari? $('body'): $('html');
         const pos  = {top: html .scrollTop() + 68, left: html .scrollLeft() + 20};
-        BudgetProgressHUD .show (arg .id, html, pos, this._accounts, this._variance, undefined, true);
+        BudgetProgressHUD .show (arg .id, html, pos, this._accounts, this._variance, arg .aux, true);
       } else if (arg .type == 'pinned_icon')
-        PinnedCategories .getInstance() .remove (arg .id);
+        PinnedCategories .getInstance() .remove (arg .id, arg .aux);
       else if (arg .altClick)
         await this._addMonthsGraph ('_budgetMonthsGraph', arg.view, [arg .id], true, arg .position, arg .html);
       else
@@ -1313,15 +1313,26 @@ class Navigate {
     const updateView = this._progressView .addProgressSidebarGroup ([{icon: 'lnr-pushpin'},' Pinned Categories'], '');
     const pinnedCategories = PinnedCategories .getInstance();
     const update = () => {
-      const cats = pinnedCategories .get() .map (cid => this._categories .get (cid) || cid)
-      console.log(cats);
-      for (const cat of cats)
-        if (typeof cat != 'object')
-          pinnedCategories .remove (cat);
-      updateView (cats
-        .filter (cat => typeof cat == 'object')
-        .map    (cat => ({id: cat._id, name: cat .name, icon: 'lnr-cross', type: 'pinned'}))
-      );
+      const viewUpdate = [];
+      for (const entry of pinnedCategories .get()) {
+        const cat = this._categories .get (entry [0]);
+        if (! cat)
+          pinnedCategories .remove (entry [0], entry [1]);
+        else {
+          const bs = this._budget .getStartDate();
+          const be = this._budget .getEndDate();
+          const date = entry [1]? (' (' + Types .dateMYorYear .toString (Types .date._year (Types .dateFY .getFYStart (entry [1], bs, be)), bs) + ')'): '';
+          const name = cat .name + date;
+          viewUpdate .push ({
+            id:   cat._id,
+            name: name,
+            icon: 'lnr-cross',
+            type: 'pinned',
+            aux:  entry [1]
+          })
+        }
+      }
+      updateView (viewUpdate);
     }
     pinnedCategories .setObserver (update);
     update();

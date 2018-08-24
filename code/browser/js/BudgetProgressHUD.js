@@ -89,7 +89,7 @@ class BudgetProgressHUD {
       this._setExpanded();
     else if (eventType == BudgetProgressHUDViewEvent .PIN) {
       if (this._id)
-        PinnedCategories .getInstance() .add (this._id);
+        PinnedCategories .getInstance() .add (this._id, this._date != Types .date .today() && this._date);
     } else if (eventType == BudgetProgressHUDViewEvent.DOUGHNUT_CLICK) {
       if (arg.id != this._id)
         BudgetProgressHUD.show (arg.id, arg.html, arg.position, this._accounts, this._variance, this._date, true)
