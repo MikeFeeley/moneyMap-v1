@@ -51,7 +51,7 @@ class UserView extends View {
         .append ($('<div>', {text: 'Begin to Track Where Your Money Goes'}))
         .append ($('<div>', {html:
           'Once you start categorizing your transactions, <em>money</em><b>Map</b>, lets you see where your money is ' +
-          'going each using graphs and spread-sheet like tables.  Clicking on any category lets you dig deeper to look ' +
+          'going using graphs and spread-sheet like tables.  Clicking on any category lets you dig deeper to look ' +
           'at subcategories, to compare spending by where you shop, or to see the individual transactions behind the graph.'}))
       )
       .append ($('<div>', {class: '_landingTableImage'})
@@ -64,8 +64,8 @@ class UserView extends View {
       .append ($('<div>', {class: '_landingTableText'})
         .append ($('<div>', {text: 'Create a Budget'}))
         .append ($('<div>', {html:
-          'Then, when you are ready, you can start to create a budget by listing spending amounts for categories for ' +
-          'particular months or the entire year.  Each time you add an anticipated expense, can indicate whether this ' +
+          'Then, when you are ready, you can create a budget by listing spending amounts for categories for ' +
+          'particular months or the entire year.  Each time you add an anticipated expense, you can indicate whether this ' +
           'is something that will continue for the next few years, which then gives you the chance to start planning ahead. ' +
           'You do the same for your income and savings.'}))
       )
@@ -132,8 +132,10 @@ class UserView extends View {
       'on another browser or computer.'
     }) .appendTo (privacy)
     $('<div>', {text:
-      'If you elect to store your data in the cloud, so that you can access your data from multiple devices, we use several strategies to ensure that your data can only ' +
-      'be accessed by you. '
+      'If you elect to store your data in the cloud, so that you can access your data from multiple devices, ' +
+      "we process and store your data using Amazon's AWS EC2 and EFS services and " +
+      ' use a combination of strategies to ensure that your data can only ' +
+      'be accessed by you.  '
     }) .appendTo (privacy)
    $('<div>', {text:
       'First, all data sent between your browser and the cloud is encrypted while it is in the network.  '
