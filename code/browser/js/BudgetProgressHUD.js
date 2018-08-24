@@ -140,18 +140,19 @@ class BudgetProgressHUD {
   }
 
   _getExpandedData() {
-    const budget      = this._variance .getBudget();
-    const actuals     = this._variance .getActuals();
-    const categories  = budget .getCategories();
-    const cat         = categories .get (this._id);
-    const children    = (cat .children || []);
-    const sign        = budget .isCredit (cat)? -1: 1;
-    this._budgetTotal = budget .getAmount (cat) .amount * sign;
+    const budget     = this._variance .getBudget();
+    const actuals    = this._variance .getActuals();
+    const categories = budget .getCategories();
+    const cat        = categories .get (this._id);
+    const children   = (cat .children || []);
+    const sign       = budget .isCredit (cat)? -1: 1;
+    const bs         = budget.getStartDate ();
+    const be         = budget.getEndDate ();
+    const st         = Types.dateFY.getFYStart (this._date, bs, be);
+    const en         = Types.dateFY.getFYEnd (this._date, bs, be);
 
-    const bs = budget.getStartDate ();
-    const be = budget.getEndDate ();
-    const st = Types.dateFY.getFYStart (this._date, bs, be);
-    const en = Types.dateFY.getFYEnd (this._date, bs, be);
+    this._budgetTotal = budget .getAmount (cat, st, en) .amount * sign;
+
     this._budgetDescription = st == bs ? 'this Year' : budget.getLabel ({start: st, end: en});
     const va = [cat] .concat (children)
       .map (c => {
