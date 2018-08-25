@@ -1,7 +1,8 @@
 const express  = require ('express');
 const ObjectID = require ('mongodb').ObjectID
 const router   = express.Router();
-const nodemailer = require ('nodemailer');
+const AWS      = require ('aws-sdk');
+AWS .config .update ({region: 'us-west-2'});
 
 async function login (req, res, next) {
   try {
@@ -177,25 +178,35 @@ async function sendPasswordHint (req, res, next) {
   else if (! user .passwordHint)
     res .json ({okay: false, noHint: true});
   else {
-    const t = nodemailer .createTransport({
-      service: 'gmail',
-      auth: {
-        user: 'moneyMap.pw.hint@gmail.com',
-        pass: 'NH9-FTt-Zx9-MsK'
-      }
-    });
     const message = {
-      from:    'moneyMap.pw.hint@gmail.com',
-      to:       email,
-      subject: 'Password hint from moneyMap.app',
-      text:    'Your password hint is: "' + user .passwordHint + '"'
+      Destination: {
+        BccAddresses: [],
+        CcAddresses: [],
+        ToAddresses: [email]
+      },
+      Message: {
+        Subject: {
+          Charset: 'UTF-8',
+          Data:    'Password hint from moneyMap.app'
+        },
+        Body: {
+          Text: {
+            Charset: 'UTF-8',
+            Data:    'Your password hint is: "' + user .passwordHint + '"'
+          }
+        }
+      },
+      Source: 'admin@moneymap.app'
     };
-    t .sendMail (message, (error, info) => {
-      if (error)
-        res .json ({okay: false, error: error});
-      else
-        res .json ({okay: true, info: info});
-    });
+    console.log('message', message);
+    try {
+      await new AWS .SES ({apiVersion: '2010-12-01'}) .sendEmail (message);
+      console .log('okay');
+      res .json ({okay: true});
+    } catch (error) {
+      console .log('error', error);
+      res .json ({okay: false, error: error});
+    }
   }
 }
 
