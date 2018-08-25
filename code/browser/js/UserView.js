@@ -156,6 +156,13 @@ class UserView extends View {
       'we will never use your data to generate revenue by providing information about you (or aggregated from your data) to advertisers or anyone else. ' +
       'We enforce this policy using industry-standard encryption techniques and a password that only you know.'
     }) .appendTo (privacy)
+    $('<div>', {text:
+      'If you have signed up to use our cloud service, the other information that we store about you is your login email, a cryptographic hash ' +
+      'of your password and a password hint, if you provide one.  Your email address and the hint are encrypted with a key that we know, which is ' +
+      'necessary so that we can authenticate you when you login and send your hint to you if you ask us to.  When you login, you enter your password ' +
+      'on your computer which is encrypted and sent to our servers where we compare it to the encrypted password ' +
+      'we have on file for you.  Your password itself is never sent to us and we can not determined what it is from the information we store.'
+    }) .appendTo (privacy)
     if (INIT_browserIsCompatible && isNotNew)
       this .addLogin (toHtml, false);
   }
