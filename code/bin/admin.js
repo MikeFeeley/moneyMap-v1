@@ -200,11 +200,9 @@ async function sendPasswordHint (req, res, next) {
     };
     console.log('message', message);
     try {
-      await new AWS .SES ({apiVersion: '2010-12-01'}) .sendEmail (message);
-      console .log('okay');
-      res .json ({okay: true});
+      const info = await new AWS .SES ({apiVersion: '2010-12-01'}) .sendEmail (message) .promise();
+      res .json ({okay: true, info: info});
     } catch (error) {
-      console .log('error', error);
       res .json ({okay: false, error: error});
     }
   }
