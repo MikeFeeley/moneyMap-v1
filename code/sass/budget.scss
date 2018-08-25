@@ -809,7 +809,7 @@ div._budgetMonthsGraph, div._budgetHistoryGraph, div._activityMonthsGraph, div._
       margin-right: auto;
       max-width: $content-max-width;
       position: relative;
-      > div:not(._popup):not(._TransactionHUD) {
+      > div:not(._popup):not(._TransactionHUD):not(._BudgetProgressHUD) {
         display: inline-block;
         width:   33%;
       }
