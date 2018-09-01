@@ -246,7 +246,7 @@ class DateType extends FieldType {
               var y = Number (s);
               if (y > 0 && y < 100)
                 y += 2000;
-              return ! sy || y >= sy? y: undefined;
+              return y;
             }
           }
           var m = this._mthsLC .indexOf (s .slice (0,3)) + 1;
@@ -266,8 +266,6 @@ class DateType extends FieldType {
           return undefined;
         if (y < 100)
           y += 2000;
-        if (sy && y < sy)
-          return undefined;
         return this._date (y, m, 1);
       case 'MDY':
         var dt = s .split (/[- \/]/) .map (s => {return s.trim()});

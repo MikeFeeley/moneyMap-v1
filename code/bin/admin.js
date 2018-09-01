@@ -1,8 +1,12 @@
 const express  = require ('express');
 const ObjectID = require ('mongodb').ObjectID
 const router   = express.Router();
-const AWS      = require ('aws-sdk');
-AWS .config .update ({region: 'us-west-2'});
+let AWS;
+try {
+  AWS = require ('aws-sdk');
+  AWS .config .update ({region: 'us-west-2'});
+} catch (e) {}
+
 
 async function login (req, res, next) {
   try {
