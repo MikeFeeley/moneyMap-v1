@@ -212,8 +212,11 @@ class VarianceModel extends Observable {
       var t = ['none', 'month', 'year'] .reduce ((t,sch) => {
         return t + ['prev', 'cur'] .reduce ((t,per) => {return t + ((chiAmount [sch] && chiAmount [sch] .budget [per]) || 0)}, 0);
       }, 0);
-      amount .year .budget .prev = Math .max (0, amount .year .budget .prev - t - (chiAmount .otherMonths || 0));
-      amount .year .budget .cur  = 0;
+      if (amount .year .budget .prev) {
+        amount .year .budget .prev = Math .max (0, amount .year .budget .prev - t - (chiAmount .otherMonths || 0));
+        amount .year .budget .cur  = 0;
+      } else
+        amount .year .budget .cur = Math .max (0, amount .year .budget .cur - t - (chiAmount .otherMonths || 0));
     }
 
     // If we have a type, then move any "none" actuals to this type
