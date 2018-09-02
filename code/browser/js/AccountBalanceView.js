@@ -39,7 +39,7 @@ class AccountBalanceView extends TupleView {
   }
 
   findGroup (name) {
-    return this._html .find (name .split (' ') .map (np => '.' + np) .join());
+    return this._html .find (name .split (' ') .map (np => '.' + np) .join(''));
   }
 
   addGroup (title, name='') {
