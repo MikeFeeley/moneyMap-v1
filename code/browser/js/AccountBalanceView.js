@@ -38,6 +38,10 @@ class AccountBalanceView extends TupleView {
     this._html .find ('.' + name) .remove();
   }
 
+  findGroup (name) {
+    return this._html .find (name .split (' ') .map (np => '.' + np) .join());
+  }
+
   addGroup (title, name='') {
     return $('<div>', {class: name + ' _sidebar_group _group '})
       .appendTo (this._html)
@@ -51,8 +55,12 @@ class AccountBalanceView extends TupleView {
       })
   }
 
-  removeGroup (name) {
-    this._html .find('.' + name) .remove();
+  emptyGroup (name) {
+    this._html .find ('.' + name ) .empty();
+  }
+
+  addGroupHeading (group, heading) {
+    $('<div>', {class: '_heading', text: heading}) .appendTo (group);
   }
 
   setGroupVisible (group, isVisible) {
