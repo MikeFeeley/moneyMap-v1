@@ -734,8 +734,17 @@ class Account {
       (c,s,e) => {return (this._budget .getIndividualAmount(c,s,e) .year || {}) .amount || 0},
       (c,s,e) => {return (this._budget .getAmount (c,s,e) .year || {}) .amount || 0}
     )}
-    let getBudget = (cat, start, end, yearlyProRata) =>
-      getBudgetMonth (cat, start, end) + Math .round (getBudgetYear (cat, start, end) / yearlyProRata);
+    let getBudget = (cat, start, end, yearlyProRata, preMonthEnd) => {
+      const ds = this._budget .getStartDate();
+      let yr   = getBudgetYear (cat, start, end);
+      if (yr && end <= this._budget .getEndDate() && preMonthEnd > ds) {
+        // reduce yearly budget by any yearly actuals before curMonthEnd
+        const de = preMonthEnd;
+        const ac = this._actuals .getAmountRecursively (cat, ds, de, undefined, false, true);
+        yr = Math [this._budget .isCredit (cat)? 'max': 'min'] (0, yr - ac);
+      }
+      return getBudgetMonth (cat, start, end) + Math .round (yr / yearlyProRata);
+    }
 
     /*** getBalance body ***/
 
@@ -746,8 +755,9 @@ class Account {
     let baseDate = Types .date .monthEnd (endDate);
     if (baseDate != endDate)
       baseDate = Types .date .monthEnd (Types .date .addMonthStart(endDate, -1));
-    let curMonthEnd = Types .date .monthEnd (Types .date .today());
-    let sign        = this .creditBalance? 1: -1;
+    const curMonthEnd = Types .date .monthEnd (Types .date .today());
+    const preMonthEnd = Types .date .monthEnd (Types .date .addMonthStart (curMonthEnd, -1));
+    const sign        = this .creditBalance? 1: -1;
 
     let balanceEntry = this._balances .find (b => {return b .date == baseDate});
 
@@ -800,9 +810,9 @@ class Account {
         } else {
           // use plan for current and future periods
           let yearlyProRata = mStart <= budgetEndDate? monthsLeftInCurYear : 12;
-          add = (addCat? getBudget (addCat, mStart, mEnd, yearlyProRata): 0) + (intCat? getBudget (intCat, mStart, mEnd, yearlyProRata): 0);
-          sub = subCat? getBudget (subCat, mStart, mEnd, yearlyProRata): 0;
-          let tra = traCat? getBudget (traCat, mStart, mEnd, yearlyProRata): 0;
+          add = (addCat? getBudget (addCat, mStart, mEnd, yearlyProRata, preMonthEnd): 0) + (intCat? getBudget (intCat, mStart, mEnd, yearlyProRata, preMonthEnd): 0);
+          sub = subCat? getBudget (subCat, mStart, mEnd, yearlyProRata, preMonthEnd): 0;
+          let tra = traCat? getBudget (traCat, mStart, mEnd, yearlyProRata, preMonthEnd): 0;
           if (tra > 0)
             add += tra;
           else
