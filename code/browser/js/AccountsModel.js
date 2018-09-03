@@ -734,17 +734,8 @@ class Account {
       (c,s,e) => {return (this._budget .getIndividualAmount(c,s,e) .year || {}) .amount || 0},
       (c,s,e) => {return (this._budget .getAmount (c,s,e) .year || {}) .amount || 0}
     )}
-    let getBudget = (cat, start, end, yearlyProRata) => {
-      let yr = getBudgetYear (cat, start, end);
-      if (yr && end <= this._budget .getEndDate()) {
-        // reduce yearly budget by any yearly actuals before start
-        let ds = this._budget .getStartDate();
-        let de = Types .date .monthEnd (Types .date .addMonthStart (end, -1));
-        yr -= this._actuals .getAmountRecursively (cat, ds, de, undefined, false, true);  // remove all year actual amounts
-        yr = Math .max (0, yr);
-      }
-      return getBudgetMonth (cat, start, end) + Math .round (yr / yearlyProRata);
-    }
+    let getBudget = (cat, start, end, yearlyProRata) =>
+      getBudgetMonth (cat, start, end) + Math .round (getBudgetYear (cat, start, end) / yearlyProRata);
 
     /*** getBalance body ***/
 
