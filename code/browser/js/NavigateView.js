@@ -1624,8 +1624,9 @@ class NavigateView extends Observable  {
     } else
       table .appendTo ($('<div>', {class: '_netWorthTableContainer' + (popup? ' _popup': '')}) .appendTo (this._content));
     let showHeadFoot = dataset .cols .length > 1;
-    const fmtMoney = amt => Types ['money' + (Math.abs (amt) >= 10000000 ? 'K' : 'D')].toString (amt);
     var buildTable = () => {
+      const maxAmount = dataset .rows .reduce ((m,r) => Math .max (m, r .amounts .reduce ((m, a) => Math .max (m, Math .abs (a)), 0)), 0);
+      const fmtMoney  = amt => Types ['money' + (maxAmount >= 10000000 ? 'K' : 'D')].toString (amt);
       table.empty();
       var thead = $('<thead>') .appendTo (table);
       var tbody = $('<tbody>') .appendTo (table);
