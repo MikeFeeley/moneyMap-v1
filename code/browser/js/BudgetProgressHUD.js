@@ -259,8 +259,10 @@ class BudgetProgressHUD {
         const noVariance = this._varianceAmount && ! this._varianceAmount .month && ! this._varianceAmount .year;
         const noMonths   = this._monthsAmount   && ! ['actual', 'budget', 'priorYear'] .find (p => this._monthsAmount [p] .find (a => a != 0));
         const noCompare  = this._compareAmount  && ! [... Object .values (this._compareAmount)] .find (v => v != 0);
-        if (noVariance && noMonths && noCompare)
+        if (noVariance && noMonths && noCompare) {
+          this .hide();
           return;
+        }
       }
       this._view .setVisible (id);
       this._updateAll();
