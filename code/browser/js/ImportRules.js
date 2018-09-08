@@ -276,7 +276,7 @@ class ImportRules extends TuplePresenter {
       type:           ImportRulesModelType .UPDATE,
       predicate:      id,
       categoryUpdate: 1,
-      descriptionUpdate: this._tran .description != '',
+      descriptionUpdate: 0,
       payee:          this._tran .payee,
       debit:          this._tran .debit,
       credit:         this._tran .credit,
