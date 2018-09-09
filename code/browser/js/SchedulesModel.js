@@ -319,6 +319,7 @@ class SchedulesModel extends Observable {
     let isCredit = this .isCredit (cat);
     var ga = (cats, start, end, getOtherMonths) => {
       let rs = {amount: 0};
+      const getBalances = [];
       for (let cat of cats || []) {
         let am = 0;
         let om = 0;
@@ -349,6 +350,7 @@ class SchedulesModel extends Observable {
           if (account) {
             am = account .getAmount      (cat, start, end, am);
             gr = account .getGrossAmount (cat, start, end, am);
+            getBalances .push (() => account .getBalance (start, end) .amount);
           }
         }
         let ds = includeDescendants? ga (cat .children, start, end, yr || getOtherMonths): {amount: 0};
@@ -380,7 +382,11 @@ class SchedulesModel extends Observable {
         }
         if (om)
           rs .otherMonths = (rs .otherMonths || 0) + om;
+        if (ds .getBalance)
+          getBalances .push (ds .getBalance);
       }
+      if (getBalances .length)
+        rs .getBalance = () => getBalances .reduce ((t, e) => t + e(), 0);
       return rs;
     }
     return ga ([cat], start, end);

@@ -1186,22 +1186,37 @@ class NavigateView extends Observable  {
             text: vs [i] || '',
             class: (vs [i] && vs [i] .charAt (0) == '-'? 'negative': '') + (dataset .highlight == i - 1? ' _highlight': '')
           }) .appendTo (tr);
-          if (i > 0 && row .amounts [i-1] && row .amounts [i-1] .gross) {
+          if (i > 0 && row .amounts [i-1] && (row .amounts [i-1] .gross || row .amounts [i-1] .getBalance)) {
             let tt;
             td .hover (
               e => {
-                tt = $('<div>', {
-                  class: '_toolTipNoPosition',
-                  text: 'Before Tax: ' + Types .moneyDZ .toString (row .amounts [i-1] .gross),
-                }) .appendTo (td);
-                window .setTimeout (() => {
-                  if (tt) {
-                    tt .css (ui .calcPosition (td, td .offsetParent(), {top: -20, left: 8})) .fadeIn (UI_TOOL_TIP_FADE_MS);
-                  }
+                const amounts = row .amounts [i-1];
+                const endBalance = amounts .getBalance && amounts .getBalance();
+                if (amounts .gross || endBalance) {
+                  tt = $('<div>', {class: '_toolTipNoPosition _twoTableTip'}) .appendTo (td);
+                  const table = $('<table>') .appendTo (tt);
+                  const tbody = $('<tbody>') .appendTo (table);
+                  const data = [
+                    ['Before Tax:',     amounts .gross && Types .moneyDZ .toString (amounts .gross)],
+                    ['Ending Balance:', endBalance && Types .moneyD .toString (endBalance)]
+                  ] .filter (([name, value]) => value);
+                  for (const [name, value] of data)
+                    $('<tr>') .appendTo (tbody)
+                      .append ($('<td>', {text: name}))
+                      .append ($('<td>', {text: value}));
+                  window .setTimeout (() => {
+                    if (tt) {
+                      tt .css (ui .calcPosition (td, td .offsetParent(), {top: -20 * data .length, left: 8})) .fadeIn (UI_TOOL_TIP_FADE_MS);
+                      ui .scrollIntoView (tt);
+                    }
                 })
+                }
               },
               e => {
-                tt .remove();
+                if (tt) {
+                  tt .remove();
+                  tt = null;
+                }
               });
           }
        }

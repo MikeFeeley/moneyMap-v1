@@ -1551,15 +1551,22 @@ class Navigate {
         let isGoal   = this._budget .isGoal   (parent);
         for (let cat of (parent .children || [])) {
           let ba = this._budget .getAmount (cat, budget .start, budget .end);
-          amounts .push ({
-            id:       cat._id,
-            name:     cat .name,
-            sort:     cat .sort,
-            isCredit: isCredit,
-            isGoal:   isGoal,
-            amount:   ba .amount * (isCredit? -1: 1),
-            grossAmount: ba .grossAmount && ba .grossAmount * (isCredit? -1: 1)
-          });
+          const amount = {
+            id:          cat._id,
+            name:        cat .name,
+            sort:        cat .sort,
+            isCredit:    isCredit,
+            isGoal:      isGoal,
+            amount:      ba .amount * (isCredit? -1: 1),
+            grossAmount: ba .grossAmount && ba .grossAmount * (isCredit? -1: 1),
+          }
+          if (amount .amount) {
+            const catRoot           = this._categories .getRoot (cat);
+            const isIncomeOrSavings = [this._budget .getWithdrawalsCategory(), this._budget .getSavingsCategory()] .includes (catRoot);
+            if (isIncomeOrSavings)
+              amount .getBalance = ba .getBalance
+          }
+          amounts .push (amount);
         }
         var parentAmount = this._budget .getAmount (parent, budget .start, budget .end) .amount * (isCredit? -1: 1);
         var otherAmount  = parentAmount - amounts .reduce ((t,a) => {return t + a .amount}, 0);
@@ -1643,20 +1650,22 @@ class Navigate {
               isCredit:    cat .isCredit,
               isGoal:      cat .isGoal,
               amounts:  budgetAmounts .map (ba => {
-                var group = ba .find (as => {return as .id .sort () .join ('$') == pids});
+                const group = ba .find (as => {return as .id .sort () .join ('$') == pids});
                 if (group) {
-                  let a = group .amounts
-                    .filter (a => {return a .name == cat .name})
-                    .reduce ((o,e) => {
-                      o .id .push (e .id);
-                      o .amount += e .amount;
-                      o .grossAmount = e .grossAmount && (o .grossAmount || 0) + e .grossAmount
-                      return o;
-                    }, {id: [], amount: 0, grossAmount: undefined});
+                  const ourAmounts = group .amounts .filter (a => a .name == cat .name);
+                  let a = ourAmounts .reduce ((o,e) => {
+                    o .id .push (e .id);
+                    o .amount += e .amount;
+                    o .grossAmount = e .grossAmount && (o .grossAmount || 0) + e .grossAmount;
+                    return o;
+                  }, {id: [], amount: 0, grossAmount: undefined});
+                  if (ourAmounts .find (e => e .getBalance))
+                      a .getBalance = () => ourAmounts .reduce ((t, e) => t + ((e .getBalance && e .getBalance()) || 0), 0)
                   return {
-                    id:    a .id,
-                    value: a .amount,
-                    gross: a .grossAmount
+                    id:         a .id,
+                    value:      a .amount,
+                    getBalance: a .getBalance,
+                    gross:      a .grossAmount
                   }
                 } else
                   return {value: 0}

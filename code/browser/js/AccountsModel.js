@@ -550,8 +550,7 @@ class Account {
    *    - income source:
    *        - if cat == incCategory && ! intCategory; return net after tax amount
    *        - if cat == intCateogry; return tax amount
-   * returns [budgetAmount, accountAmount] pair
-   *    - accountAmount is normally undefined, but for taxable asset, it is the gross amount
+   * returns budgetAmount
    */
   getAmount (cat, start, end, amount) {
     end = Types .date .monthEnd (end);

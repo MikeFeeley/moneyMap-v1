@@ -138,6 +138,10 @@ class Categories {
       return this._roots || []
   }
 
+  getRoot (cat) {
+    return cat .parent? this .getRoot (cat .parent): cat;
+  }
+
   getRoots() {
     return this._roots;
   }
