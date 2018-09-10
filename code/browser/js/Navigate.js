@@ -1845,8 +1845,8 @@ class Navigate {
     if (datasetCopy .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       const updater = this._addUpdater (view, async (eventType, model, ids) => {
         dataset .groups   = (await this._getHistoryData (parentIds, date, date)) .groups;
-        let ds            = JSON .parse (JSON .stringify (dataset));
-        this._filterHistoryBySlider (ds)
+        let ds            = deepCopy (dataset);
+        this._filterHistoryBySlider (ds);
         for (const g of ds .groups)
           g .rows = g .rows .filter (r => {return r .amounts .find (a => {return a .value != 0})});
         updateView ([{replace: ds}])

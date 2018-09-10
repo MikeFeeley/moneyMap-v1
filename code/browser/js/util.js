@@ -647,3 +647,18 @@ if (typeof exports !== 'undefined') {
   exports .SERVER_DISCONNECT_THRESHOLD = SERVER_DISCONNECT_THRESHOLD;
 }
 
+const deepCopy = obj => {
+  if (obj) {
+    if (Array .isArray (obj))
+      return obj .map (e => deepCopy (e));
+    else if (typeof obj == 'object') {
+      const copy = Object .assign ({}, obj);
+      for (const key of Object .keys (copy))
+        if (typeof copy [key] == 'object')
+          copy [key] = deepCopy (copy [key]);
+      return copy;
+    }
+  }
+  return obj;
+}
+
