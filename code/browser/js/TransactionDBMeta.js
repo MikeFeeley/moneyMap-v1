@@ -57,6 +57,13 @@ async function TransactionDBMeta_apply (dbTran, pt, accId) {
   }
   if (accId) {
     let acc = await dbTran .findOne ('accounts', {_id: accId});
+
+    // DEBUG...
+    if (isNaN (amount)) {
+      console.log('DEBUG', dbTran, pt, prev, amount)
+    }
+    // ...DEBUG
+
     if (acc && (acc .pendingTransactions || []) .find (t => t .uid == pt .uid))
       await dbTran .updateOne ('accounts', {_id: accId, _updateSeq: acc._updateSeq}, {
         $inc:  {_updateSeq: 1},
