@@ -1,3 +1,1 @@
-  moneyMap.app 
-  
-  Source code
+This is the source code for https://moneyMap.app.
