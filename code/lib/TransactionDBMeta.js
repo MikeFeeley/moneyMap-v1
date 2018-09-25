@@ -17,9 +17,12 @@ class TransDBMeta_pseudoTran {
         return this._req
           ? docs .then (docs => {
               if (fn=='findOneAndDelete') {
-                console.log('DEBUG2 docs', docs);
-                console.log('DEBUG2 args', args);
-                console.log('DEBUG2 decrypt', this._req .decrypt (docs .value, args[0]));
+                const decrypt = this._req .decrypt (docs .value, args[0]);
+                if (isNaN(decrypt.debit) || isNaN(decrupt.credit)) {
+                  console.log('DEBUG2 docs', docs);
+                  console.log('DEBUG2 args', args);
+                  console.log('DEBUG2 decrypt', decrypt);
+                }
               }
               return fn == 'findOneAndDelete'
               ? {value: this._req .decrypt (docs .value, args[0])}
