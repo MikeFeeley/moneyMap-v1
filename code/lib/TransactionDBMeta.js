@@ -18,7 +18,7 @@ class TransDBMeta_pseudoTran {
           ? docs .then (docs => {
               if (fn=='findOneAndDelete') {
                 const decrypt = this._req .decrypt (docs .value, args[0]);
-                if (isNaN(decrypt.debit) || isNaN(decrupt.credit)) {
+                if (isNaN(decrypt.debit) || isNaN(decrypt.credit)) {
                   console.log('DEBUG2 docs', docs);
                   console.log('DEBUG2 args', args);
                   console.log('DEBUG2 decrypt', decrypt);
