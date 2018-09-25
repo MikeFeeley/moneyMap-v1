@@ -60,7 +60,7 @@ async function TransactionDBMeta_apply (dbTran, pt, accId) {
 
     // DEBUG...
     if (isNaN (amount)) {
-      console.log('DEBUG', dbTran, pt, prev, amount)
+      console.log('DEBUG1', dbTran, pt, prev, amount)
     }
     // ...DEBUG
 

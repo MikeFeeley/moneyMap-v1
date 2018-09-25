@@ -15,10 +15,16 @@ class TransDBMeta_pseudoTran {
         const args = [... arguments];
         const docs = this._db .collection (args [0]) [fn] (... args .slice (1));
         return this._req
-          ? docs .then (docs =>
-            fn == 'findOneAndDelete'
+          ? docs .then (docs => {
+              if (fn=='findOneAndDelete') {
+                console.log('DEBUG2 docs', docs);
+                console.log('DEBUG2 args', args);
+                console.log('DEBUG2 decrypt', this._req .decrypt (docs .value, args[0]));
+              }
+              return fn == 'findOneAndDelete'
               ? {value: this._req .decrypt (docs .value, args[0])}
               : this._req .decrypt (docs, args [0])
+            }
             )
           : docs;
       }
