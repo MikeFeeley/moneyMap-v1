@@ -1,4 +1,4 @@
-const APP_CACHE_RESOURCES = true;
+const APP_CACHE_RESOURCES = false;
 const APP_VERSION_HASH    = '072b60b';
 const APP_VERSION_STRING  = '1.0.0-beta (' + APP_VERSION_HASH + ')';
 

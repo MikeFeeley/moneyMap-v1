@@ -1502,9 +1502,11 @@ class Navigate {
           let e = m .get (c .name);
           if (e) {
             e .amount += a;
+            if (! e .id .includes (c._id))
+              e .id .push (c._id);
           } else {
             m .set (c .name, {
-              id:       c._id,
+              id:       [c._id],
               name:     c .name,
               sort:     c .sort,
               isCredit: isCredit,
@@ -1518,7 +1520,7 @@ class Navigate {
         let otherAmount  = parentAmount - amounts .reduce ((t,a) => {return t + a .amount}, 0);
         if (otherAmount != 0)
           amounts .push ({
-            id:       'other_' + parent._id,
+            id:       ['other_' + parent._id],
             name:     'Other',
             isCredit: isCredit,
             isGoal:   isGoal,
@@ -1552,7 +1554,7 @@ class Navigate {
         for (let cat of (parent .children || [])) {
           let ba = this._budget .getAmount (cat, budget .start, budget .end);
           const amount = {
-            id:          cat._id,
+            id:          [cat._id],
             name:        cat .name,
             sort:        cat .sort,
             isCredit:    isCredit,
@@ -1572,7 +1574,7 @@ class Navigate {
         var otherAmount  = parentAmount - amounts .reduce ((t,a) => {return t + a .amount}, 0);
         if (otherAmount != 0)
           amounts .push ({
-            id:       'other_' + parent._id,
+            id:       ['other_' + parent._id],
             name:     'Other',
             isCredit: isCredit,
             isGoal:   isGoal,
@@ -1640,7 +1642,8 @@ class Navigate {
             var ids = Array .from (budgetAmounts .reduce ((s,ba) => {
               return ba [i] .amounts .reduce ((s,a) => {
                 if (a .name == cat .name)
-                  s .add (a .id);
+                  for (const i of a .id)
+                    s .add (i);
                 return s;
               }, s)
             }, new Set()));
