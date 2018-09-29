@@ -11,7 +11,12 @@ class CategoriesModel extends Observable {}
 
 class Categories {
   constructor (docs, budget) {
-    this._index = docs .reduce ((map, doc) => {map .set (doc._id, doc); return map;}, new Map());
+    this._index = docs .reduce ((map, doc) => {
+      if (doc .name && typeof (doc .name) != 'string')
+        doc .name = String (doc.name);
+      map .set (doc._id, doc);
+      return map;
+    }, new Map());
     this._budget = budget;
     for (let doc of docs)
       this._addParentLink (doc, 'parent', doc .budgets .includes (budget .getId())? 'children': 'zombies');
