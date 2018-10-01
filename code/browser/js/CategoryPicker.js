@@ -18,7 +18,6 @@ class CategoryPicker {
   }
 
   _show (id, inColumn) {
-
     const cat = this._categories .get (id);
     const roots = this._categories .getRoots() .reduce ((map, root) => map .set (root .name, [root]), new Map());
     const path = [{children: roots}] .concat (this._categories .getPath (cat) .map (pathCat => ({
