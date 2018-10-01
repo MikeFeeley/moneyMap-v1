@@ -142,17 +142,18 @@ class BudgetProgressHUDView extends View {
   updateCompareGraph (data, prop) {
     let updateGraph = () => {
       let chart = this._compareGraph .find ('._compareGraph') .data ('chart');
-      let max = Math .max (data .lastYear, data .actual + data .available + data .over);
-
-      chart .data .datasets [0] .data   = [0,Math .round (data .lastYear * 100.0 / max), 0,0];
-      chart .data .datasets [0] .values = ['',Types .moneyDZ .toString (data .lastYear), '',''];
-      chart .data .datasets [1] .data   = [0,0, Math .round (data .actual * 100.0 / max),0];
-      chart .data .datasets [1] .values = ['','', Types .moneyDZ .toString (data .actual), ''];
-      chart .data .datasets [2] .data   = [0,0, Math .round (data .available * 100.0 / max)];
-      chart .data .datasets [2] .values = ['','', Types .moneyDZ .toString (data .available),''];
-      chart .data .datasets [3] .data   = [0,0, Math .round (data .over * 100.0 / max)];
-      chart .data .datasets [3] .values = ['','', Types .moneyDZ .toString (data .over),''];
-      chart .update();
+      if (chart && chart .data) {
+        const max = Math .max (data .lastYear, data .actual + data .available + data .over);
+        chart .data .datasets [0] .data   = [0,Math .round (data .lastYear * 100.0 / max), 0,0];
+        chart .data .datasets [0] .values = ['',Types .moneyDZ .toString (data .lastYear), '',''];
+        chart .data .datasets [1] .data   = [0,0, Math .round (data .actual * 100.0 / max),0];
+        chart .data .datasets [1] .values = ['','', Types .moneyDZ .toString (data .actual), ''];
+        chart .data .datasets [2] .data   = [0,0, Math .round (data .available * 100.0 / max)];
+        chart .data .datasets [2] .values = ['','', Types .moneyDZ .toString (data .available),''];
+        chart .data .datasets [3] .data   = [0,0, Math .round (data .over * 100.0 / max)];
+        chart .data .datasets [3] .values = ['','', Types .moneyDZ .toString (data .over),''];
+        chart .update();
+      }
     }
     if (data && (data .lastYear > 0 || data .actual > 0 || data .available > 0 || data .over > 0)) {
       if (! this._hasCompareGraph && this._compareGraph && this._compareGraph .length) {
