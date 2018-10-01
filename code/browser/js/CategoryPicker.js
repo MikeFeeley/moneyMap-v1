@@ -57,6 +57,8 @@ class CategoryPicker {
     this._selCol = this._cols .findIndex (c => ! c .find (r => r .selected)) - 1;
     if (this._selCol == -2)
       this._selCol = this._cols .length - 1;
+    else if (this._selCol == -1)
+      this._selCol = 0;
     this._selRow = this._cols .length > 0? this._cols [this._selCol] .findIndex (r => r .selected): -1;
     this._view .reset();
     this._id = id;
