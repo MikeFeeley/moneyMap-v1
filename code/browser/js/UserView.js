@@ -160,8 +160,8 @@ class UserView extends View {
       'If you have signed up to use our cloud service, the other information that we store about you is your login email, a cryptographic hash ' +
       'of your password and a password hint, if you provide one.  Your email address and the hint are encrypted with a key that we know, which is ' +
       'necessary so that we can authenticate you when you login and send your hint to you if you ask us to.  When you login, you enter your password ' +
-      'on your computer where it is encrypted and then sent to our servers for comparison to the encrypted password ' +
-      'we have on file for you.  Your password itself is never sent to us and we can not determined what it is from the information we store.'
+      'on your computer where it is encrypted to produce a one-way hash that is then sent to our servers for comparison to the encrypted password ' +
+      'we have on file for you.  Your password itself is never sent to us and there is no way for us to determined what it is.'
     }) .appendTo (privacy)
     if (INIT_browserIsCompatible && isNotNew)
       this .addLogin (toHtml, false);
