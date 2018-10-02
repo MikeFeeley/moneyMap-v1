@@ -7,10 +7,12 @@ class Navigate {
     this._categories         = this._budget .getCategories();
     this._updaters           = new Map();
     this._balances           = new Model ('balanceHistory');
+    this._rateFuture         = new Model ('rateFuture')
     this._parameters         = new Model ('parameters');
     this._accountsModel      = new Model ('accounts');
     this._varianceObserver   = this._variance      .addObserver (this, this._onModelChange);
     this._balancesObserver   = this._balances      .addObserver (this, (e,d,a) => {this._onModelChange (e,d,a,null,{constructor: {name: 'BalanceHistory'}})});
+    this._rateFutureObserver = this._rateFuture    .addObserver (this, (e,d,a) => {this._onModelChange (e,d,a,null,{constructor: {name: 'RateFuture'}})});
     this._parametersObserver = this._parameters    .addObserver (this, (e,d,a) => {this._onModelChange (e,d,a,null,{constructor: {name: 'Parameters'}})});
     this._accountsObserver   = this._accountsModel .addObserver (this, (e,d,a) => {this._onModelChange (e,d,a,null,{constructor: {name: 'Accounts'}})});
     this._accountsModel .observe ({});
@@ -20,9 +22,11 @@ class Navigate {
   delete() {
     this._variance      .deleteObserver (this._varianceObserver);
     this._balances      .deleteObserver (this._balancesObserver);
+    this._rateFuture    .deleteObserver (this._rateFutureObserver);
     this._parameters    .deleteObserver (this._parametersObserver);
     this._accounts      .deleteObserver (this._accountsObserver);
     this._balances      .delete();
+    this._rateFuture    .delete();
     this._parameters    .delete();
     this._accountsModel .delete();
     if (this._progressView)
