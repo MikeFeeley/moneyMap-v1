@@ -581,7 +581,7 @@ div._TransactionHUD {
         &:not(:last-child) {
           margin-right: 8px;
         }
-        ._BudgetProgressHUD {
+        ._BudgetProgressHUD:not(._expanded) {
           right: 126px!important;
         }
         &._field_category > div > ._content {
