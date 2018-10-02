@@ -80,7 +80,10 @@ class TransactionHUD extends TransactionAndRulesTable {
       .css      (ui .calcPosition (this._content .find ('._recategorizeButton'), this._content, {top: -16, left: -250}))
       .append   ($('<div>') .append ($('<div>',   {text: 'New Category:'})));
     let field = edit .addHtml ('', this._view, dialogue .children());
-    field .on ('mouseup webkitmouseforceup', e => {return false});
+    field .on ('mouseup webkitmouseforceup', e => {
+      if (e .target == field .find ('input') [0])
+        return false
+    });
     field .find (':input') .focus();
     let confirm = $('<button>', {text: 'Change All', class: '_changeAllButton _disabled', prop: {disabled: true}, click: e => {
       let cat = field .data ('field') .get();
@@ -221,7 +224,7 @@ class TransactionHUD extends TransactionAndRulesTable {
         let target = mousedownTarget || $(e .target);
         let pageY  = mousedownPageY || e .pageY;
         let field  = target .hasClass ('_content') && target .parent() .parent ('._field') .data ('field');
-        if (field) {
+        if (field && field._name != 'category' && field._value != "") {
           if ((e .originalEvent .webkitForce > 1 || e .originalEvent .altKey) && field._name == 'category') {
             let date     = target .closest ('tr') .find ('._field_date') .data ('field')._value;
             let html     = target .offsetParent();
@@ -248,8 +251,8 @@ class TransactionHUD extends TransactionAndRulesTable {
             );
             this._html .addClass ('_occluded');
           }
+          return false;
         }
-        return false;
       }
     });
     if (position)

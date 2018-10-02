@@ -64,7 +64,8 @@ class BudgetProgressHUD {
           if (arg .lastYear)
             dates = {start: Types .date .addYear (dates .start, -1), end: Types .date .addYear (dates .end, -1)};
         }
-        TransactionHUD .showCategory (arg .id || this._id, arg .month || dates, this._accounts, this._variance, arg .html, arg .position);
+        if (arg .id || this._id)
+          TransactionHUD .showCategory (arg .id || this._id, arg .month || dates, this._accounts, this._variance, arg .html, arg .position);
       } else {
         let isMonth = arg .name == 'months' || arg .name == '_month' || arg .name == '_monthly';
         let isAll   = arg .name == 'all';
@@ -73,7 +74,8 @@ class BudgetProgressHUD {
           dates .end   = Types .date .addYear (this._variance .getBudget() .getEndDate(),   -1);
         } else
           dates = undefined;
-        await Navigate .showActualMonthGraph (arg .id || this._id, dates, arg .html, arg .position, isMonth || isAll, ! isMonth || isAll);
+        if (arg .id || this._id)
+          await Navigate .showActualMonthGraph (arg .id || this._id, dates, arg .html, arg .position, isMonth || isAll, ! isMonth || isAll);
       }
     } else if (eventType == BudgetProgressHUDViewEvent .BODY_CLICK) {
       if (arg .altClick) {
