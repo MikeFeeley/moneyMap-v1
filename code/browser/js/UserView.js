@@ -29,7 +29,7 @@ class UserView extends View {
       .append ($('<li>', {text: 'Or upgrade to share across all of your devices.'}))
       .append ($('<li>', {html: 'Data is encrypted <b>on your computer</b> using a password only you know.'}))
       .append ($('<li>', {html: 'NO ads &mdash; NO data sharing.'}))
-      .append ($('<li>', {text: 'Export your data to Excel or Numbers at anytime.'}));
+      .append ($('<li>', {text: 'Export your data to Excel or Numbers at any time.'}));
     if (INIT_browserIsCompatible)
       $('<button>', {text: 'Get Started'}) .appendTo (go) .click (e => {
         this._notifyObservers (UserViewEvent .GET_STARTED);
