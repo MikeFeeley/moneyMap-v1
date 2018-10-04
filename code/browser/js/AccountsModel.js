@@ -740,7 +740,7 @@ class Account {
         // reduce yearly budget by any yearly actuals before curMonthEnd
         const de = preMonthEnd;
         const ac = this._actuals .getAmountRecursively (cat, ds, de, undefined, false, true);
-        yr = Math [this._budget .isCredit (cat)? 'max': 'min'] (0, yr - ac);
+        yr = Math [this._budget .isCredit (cat)? 'min': 'max'] (0, yr - ac);
       }
       return getBudgetMonth (cat, start, end) + Math .round (yr / yearlyProRata);
     }
