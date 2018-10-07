@@ -316,12 +316,13 @@ class SchedulesModel extends Observable {
   }
 
   _getAmount (cats, start, end, includeDescendants, skipAccountCalculation, getOtherMonths) {
-    const amount = {amount: 0, month: {amount: 0}, year: {amount: 0, allocated: 0, unallocated: 0}, otherMonths: 0, getBalances: []};
+    const amount = {amount: 0, month: {amount: 0}, year: {amount: 0, allocated: 0, unallocated: 0}, otherMonths: 0};
+    const getBalances = [];
 
     for (const cat of cats || []) {
       const isCredit = this .isCredit (cat);
 
-      let catAmount = {amount: 0, month: {amount: 0}, year: {amount: 0, allocated: 0, unallocated: 0}, otherMonths: 0, getBalances: []};
+      let catAmount = {amount: 0, month: {amount: 0}, year: {amount: 0, allocated: 0, unallocated: 0}, otherMonths: 0};
       let grossAmount, hasYear;
       for (const sch of cat .schedule || []) {
         const isYear = Types .dateMYorYear .isYear (sch .start);
@@ -362,13 +363,13 @@ class SchedulesModel extends Observable {
             catAmount .year  .amount = Math .around ((1 - percentMonth) * catAmount .amount);
           }
           catAmount .grossAmount = account .getGrossAmount (cat, start, end, catAmount .amount);
-          catAmount .getBalances .push (() => account .getBalance (start, end) .amount);
+          getBalances .push (() => account .getBalance (start, end) .amount);
         }
       }
 
       let desAmount = includeDescendants
         ? this._getAmount (cat .children, start, end, includeDescendants, skipAccountCalculation, hasYear || getOtherMonths)
-        : {amount: 0, month: {amount: 0}, year: {amount: 0, allocated: 0, unallocated: 0}, otherMonths: 0, getBalances: () => 0};
+        : {amount: 0, month: {amount: 0}, year: {amount: 0, allocated: 0, unallocated: 0}, otherMonths: 0};
 
       amount .month .amount += catAmount .month .amount + desAmount .month .amount;
       if (hasYear) {
@@ -385,10 +386,10 @@ class SchedulesModel extends Observable {
         amount .year  .unallocated += desAmount .year .unallocated;
       }
       amount .otherMonths += catAmount .otherMonths + desAmount .otherMonths;
-      amount .getBalances .push (... catAmount .getBalances);
-      amount .getBalances .push (desAmount .getBalances);
+      if (desAmount .getBalance)
+        getBalances .push (desAmount .getBalance);
     }
-    amount .getBalances = () => amount .getBalances .reduce ((t,d) => t + e(), 0);
+    amount .getBalance = () => getBalances .reduce ((t,e) => t + e(), 0);
     return amount;
   }
 
