@@ -999,7 +999,10 @@ class Navigate {
 
   async _getYearsData (type, id, blackouts) {
     var getBlackouts = async (d) => {
-      var boAmts  = await Promise .all (blackouts .map (async b => {return (await this._getAmounts (type, b._id, this._budget .isCredit (b), dates)) [0]}));
+      const boAmts = await Promise .all (blackouts .map (async b => ({
+        id: b._id,
+        value: (await this._getAmounts (type, b._id, this._budget .isCredit (b), dates)) .reduce ((t,e) => t + e .value, 0)
+      })));
       var amts    = d .reduce ((s,c) => {return s + c .amounts[0] .value}, 0);
       var inAmt   = boAmts .slice (0, -1) .reduce ((t,a) => {return t + a .value}, 0);
       var outAmt  = boAmts [boAmts .length - 1] .value
@@ -1021,8 +1024,12 @@ class Navigate {
         }
       }
     }
-    var dates = [{start: this._budget .getStartDate(), end: this._budget .getEndDate()}];
-    var data  = await this._getChildrenData (type, id, dates);
+    const dates = [];
+    for (let st = this._budget .getStartDate(); st <=this._budget .getEndDate(); st = Types .date .addMonthStart (st, 1))
+      dates .push ({start: st, end: Types .date .monthEnd (st)});
+    const data = await this._getChildrenData (type, id, dates);
+    for (const d of data .data)
+      d .amounts = [{id: d .amounts [0] .id, value: d .amounts .reduce ((t,a) => t + a .value, 0)}];
     let blackoutData;
     if (blackouts) {
       blackoutData = await getBlackouts (data .data);
@@ -1039,9 +1046,20 @@ class Navigate {
         blackout:  c .blackout,
       }}),
       getUpdate: async (e,m,i) => {
-        let updates = await data .getUpdate (e,m,i);
-        if (blackoutData)
-          updates = (updates || []) .concat (await blackoutData .getUpdate (await this._getChildrenData (type, id, dates)));
+        const updates = await data .getUpdate (e,m,i);
+        for (const u of updates)
+          if (u .update) {
+            u .update .amounts = [{
+              id: u .update .amounts [0] .id,
+              value: u .update .amounts .reduce ((t,e) => t + e .value, 0)
+            }]
+          }
+        if (blackoutData) {
+          const data = await this._getChildrenData (type, id, dates);
+          for (const d of data .data)
+            d .amounts = [{id: d .amounts [0] .id, value: d .amounts .reduce ((t,a) => t + a .value, 0)}];
+          updates .push (... (await blackoutData .getUpdate (data)));
+        }
         return updates;
       }
     }

@@ -44,7 +44,7 @@ class SchedulesModel extends Observable {
 
   _onAccModelChange (eventType, arg) {
     if (eventType == AccountsModelEvent .CATEGORY_CHANGE)
-      this._notifyObservers (Model .UPDATE, {_id: arg .id});
+      this._notifyObservers (ModelEvent .UPDATE, {_id: arg .id});
   }
 
   _onModelChange (eventType, doc, arg, model, source) {
