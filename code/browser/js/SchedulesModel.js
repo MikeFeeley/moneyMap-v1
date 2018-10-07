@@ -386,6 +386,8 @@ class SchedulesModel extends Observable {
         amount .year  .unallocated += desAmount .year .unallocated;
       }
       amount .otherMonths += catAmount .otherMonths + desAmount .otherMonths;
+      if (catAmount .grossAmount !== undefined || desAmount .grossAmount !== undefined)
+      amount .grossAmount = (catAmount .grossAmount || 0) + (desAmount .grossAmount || 0);
       if (desAmount .getBalance)
         getBalances .push (desAmount .getBalance);
     }
