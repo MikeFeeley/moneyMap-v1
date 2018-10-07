@@ -65,7 +65,7 @@ class ImportTransactions extends Observable {
       if (! this._lastImport._batch)
         showHelp();
     });
-    if (this._lastImport .isEmpty())
+    if (this._lastImport .isEmpty() && this._view .isVisible())
       showHelp();
   }
 

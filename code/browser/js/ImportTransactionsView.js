@@ -11,11 +11,13 @@ class ImportTransactionsView extends View {
     if (this._html) {
       this._html .remove();
       this._html = null;
+      this._toHtml = null;
     }
     $('html') .off ('dragover');
     $('html') .off ('drop');
   }
   async addHtml (toHtml) {
+    this._toHtml = toHtml;
     this._html = $('<div>', {class: '_ImportTransactions'}) .appendTo (toHtml);
     $('html') .on ({
       dragover: e => {e .preventDefault()},
@@ -88,6 +90,11 @@ class ImportTransactionsView extends View {
       )
     }
   }
+
+  isVisible() {
+    return this._toHtml && ! this._toHtml .hasClass ('background');
+  }
+
 }
 
 class ImportRulesField extends ViewLabel {
