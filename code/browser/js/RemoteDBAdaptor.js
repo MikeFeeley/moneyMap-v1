@@ -20,6 +20,10 @@ class RemoteDBAdaptor extends DBAdaptor {
     this._urls [DatabaseOperation .REMOVE_CONFIGURATION] = '/admin/removeConfiguration';
     this._urls [DatabaseOperation .REMOVE_USER]          = '/admin/removeUser';
     this._urls [DatabaseOperation .SEND_PASSWORD_HINT]   = '/admin/sendPasswordHint';
+    window .addEventListener ('focus', e => {
+      if (this._getState() ==  DBAdaptorState .PERMANENTLY_DOWN)
+        location .reload();
+    })
   }
 
   async perform (operation, data) {
