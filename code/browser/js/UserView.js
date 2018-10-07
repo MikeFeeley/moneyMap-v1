@@ -544,7 +544,7 @@ class UserView extends View {
     let tf = $('<form>') .appendTo (content);
     for (let d of ConfigDesc) {
       let i = ConfigDesc .indexOf (d);
-      if (! isCloudAuthorized && i != 2)
+      if (! isCloudAuthorized && i == 0)
         continue;
       let e = $('<div>', {class: '_dataStorageChoice'}) .appendTo (tf);
       let l = $('<label>') .appendTo (e)
