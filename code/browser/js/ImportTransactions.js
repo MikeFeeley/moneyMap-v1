@@ -40,7 +40,9 @@ class ImportTransactions extends Observable {
     await this._view .addTable (this._attention);
     await this._view .addTable (this._lastImport);
     const showHelp = () => this._view .addHelpTable (
-      ['Download transaction files from your bank and drag them here (or to any page).  ' +
+      ['You can add transactions directly or import transaction files you download from your bank.  '+
+       'To get started, use this page to configure the format of your bank import file.  '+
+       'Then, just draw your downloaded files onto any page to import them.',
       'Transactions are imported if the account number matches a Cash Flow account you have entered and ' +
       'if an identical transaction was not previously imported.  Check that your account balance on the right matches your bank ' +
       'following the import and adjust if necessary by adding transactions or updating the balance.',
@@ -51,11 +53,11 @@ class ImportTransactions extends Observable {
       'Transactions that are yet to be categorized or have a question mark in their comment show in the INBOX.',
       'Get started ...'],
       [
-        ['Import',                'Drag bank file'],
         ['Configure import file', $('<span>', {class: 'lnr-cog'})],
+        ['Import',                'Drag bank file'],
         ['Enter rule',            'Click R on transaction line'],
-        ['Enter transaction',     [$('<span>', {html: 'CMD + ENTER or &nbsp;'}), $('<span>', {class: 'lnr-plus-circle'})]],
         ['Split transaction',     'CMD + ALT + ENTER'],
+        ['Enter transaction',     [$('<span>', {html: 'CMD + ENTER or &nbsp;'}), $('<span>', {class: 'lnr-plus-circle'})]],
         ['Delete',                'CMD + DELETE']
       ])
     Help .add ('Inbox', showHelp);
@@ -63,6 +65,8 @@ class ImportTransactions extends Observable {
       if (! this._lastImport._batch)
         showHelp();
     });
+    if (this._lastImport .isEmpty())
+      showHelp();
   }
 
   async getModelData() {
@@ -353,6 +357,10 @@ class ImportBatchTable extends TransactionAndRulesTable {
   _updateButtons() {
     this._view .updateButton ('_older_button', this._hasOlder);
     this._view .updateButton ('_newer_button', this._hasNewer);
+  }
+
+  isEmpty() {
+    return ! this._hasNewer && ! this._hasOlder;
   }
 
   async addHtml (toHtml) {
