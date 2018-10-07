@@ -134,9 +134,7 @@ class AccountsModel extends Observable {
 
   _balanceCacheConsistencyCheck (modelName, eventType, doc, arg) {
     for (let account of this._accounts || []) {
-      let cc = account._balanceCacheConsistencyCheck (modelName, eventType, doc, arg);
-      if (cc)
-        this._notifyObservers (cc .eventType, cc .doc, cc .arg);
+      account._balanceCacheConsistencyCheck (modelName, eventType, doc, arg);
     }
   }
 
