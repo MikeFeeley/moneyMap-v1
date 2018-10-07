@@ -173,42 +173,10 @@ class ScheduleEntry extends List {
             return;
           }
         }
-        // prevent combining yearly and monthly schedules
-        if (arg.type == 'scheduleLine' && arg.pos.inType == 'scheduleLine') {
-          const start = this._categories.get (arg.id).start;
-          if (! Types.date.isBlank (start)) {
-            const type = Types.date.isYear (start) ? ScheduleType.YEAR : ScheduleType.MONTH;
-            const toType = this._categories.getType (this._categories.get (arg.pos.inside));
-            if (type != toType && toType != ScheduleType.NONE) {
-              this._view.cancelMove (arg.id);
-              return;
-            }
-          }
-        }
         this._move (arg .id, arg .pos, this._view);
         break;
 
       case ListViewEvent .UPDATE:
-        if (arg.fieldName == 'start') {
-          if (Types .dateMYorYear .isYear (arg .value)) {
-            let mismatch = this._categories .get (arg .id) .category .schedule .find (s => {
-              return s._id != arg.id && s.start && ! Types .dateMYorYear .isYear (s.start)
-            });
-            if (mismatch) {
-              this._view.setFieldError (arg.id, arg.fieldName, 'Yearly and monthly budget allocations can not be combined.');
-              eventType = ListViewEvent .CANCELLED;
-            }
-          } else if (! Types .dateMYorYear .isBlank (arg .value)) {
-            let mismatch = this._categories .get (arg.id) .category .schedule .find (s => {
-              return s._id != arg.id && s.start && Types .dateMYorYear .isYear (s.start)
-            });
-            let hasChildren = (this._categories .get (arg.id) .category .children || []) .length > 0;
-            if (mismatch) {
-              this._view .setFieldError (arg.id, arg .fieldName, 'Yearly and monthly budget allocations can not be combined.');
-              eventType = ListViewEvent .CANCELLED;
-            }
-          }
-        }
         if (arg .fieldName == 'start' || arg .fieldName == 'end') {
           let cat = this._categories .get (arg .id);
           let st  = this._view .getFieldValue (arg .id, 'start');

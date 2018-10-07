@@ -160,7 +160,13 @@ class VarianceModel extends Observable {
     amount [type] = {actual: {prev: 0, cur: 0}, budget: {prev: 0, cur: 0}};
     for (let per in period) {
       amount [type] .actual [per] = this._actuals .getAmount (cat, period [per] .start, period [per] .end, skip);
-      amount [type] .budget [per] = this._budget  .getIndividualAmount (cat, period [per] .start, period [per] .end) .amount;
+      const budget = this._budget  .getIndividualAmount (cat, period [per] .start, period [per] .end);
+      amount [type] .budget [per] = budget [type]? budget [type] .amount: 0;
+      if (type == 'year' && budget .month && budget .month .amount != 0) {
+        if (! amount .month)
+          amount .month = {actual: {prev: 0, cur: 0}, budget: {prev: 0, cur: 0}};
+        amount .month .budget [per] = budget .month .amount;
+      }
     }
     if (type == 'month') {
       let budgetEndDate = this._budget .getEndDate();
@@ -187,9 +193,9 @@ class VarianceModel extends Observable {
    *            each category summarizes its descendants and handles unallocated amounts from ancestors
    */
   _getAmountDown (cat, period, skip, excludeChild, transactionFocused) {
-    var type = this._getScheduleTypeName (cat, period.cur);
-    var amount    = this._getAmount (cat, period, skip);
-    var chiAmount = (cat .children || []) .concat (cat .zombies || [])
+    let   type      = this._getScheduleTypeName (cat, period.cur);
+    let   amount    = this._getAmount (cat, period, skip);
+    const chiAmount = (cat .children || []) .concat (cat .zombies || [])
       .filter (c => {return c != excludeChild})
       .reduce ((a, c) => {
         return this._addAmounts (a, this._getAmountDown (c, period, skip));
@@ -209,15 +215,16 @@ class VarianceModel extends Observable {
     }
     // if our type is 'year' then children subtract from us
     if (type == 'year') {
-      var t = ['none', 'month', 'year'] .reduce ((t,sch) => {
+      const chiTotal = ['none', 'month', 'year'] .reduce ((t,sch) => {
         return t + ['prev', 'cur'] .reduce ((t,per) => {return t + ((chiAmount [sch] && chiAmount [sch] .budget [per]) || 0)}, 0);
       }, 0);
       if (amount .year .budget .prev) {
-        amount .year .budget .prev = Math .max (0, amount .year .budget .prev - t - (chiAmount .otherMonths || 0));
+        amount .year .budget .prev = Math .max (0, amount .year .budget .prev - chiTotal - (chiAmount .otherMonths || 0));
         amount .year .budget .cur  = 0;
       } else
-        amount .year .budget .cur = Math .max (0, amount .year .budget .cur - t - (chiAmount .otherMonths || 0));
+        amount .year .budget .cur = Math .max (0, amount .year .budget .cur - chiTotal - (chiAmount .otherMonths || 0));
     }
+
 
     // If we have a type, then move any "none" actuals to this type
     if (type != 'none' && chiAmount .none) {

@@ -315,95 +315,95 @@ class SchedulesModel extends Observable {
     return cat .parent? this .isGoal (cat .parent): cat .goal;
   }
 
-  _getAmount (cat, start, end, includeDescendants, skipAccountCalculation) {
-    let isCredit = this .isCredit (cat);
-    var ga = (cats, start, end, getOtherMonths) => {
-      let rs = {amount: 0};
-      const getBalances = [];
-      for (let cat of cats || []) {
-        let am = 0;
-        let om = 0;
-        let gr;
-        let yr = false;
-        for (let sch of cat .schedule || []) {
-          yr |= Types .dateMYorYear .isYear (sch .start);
-          let inRange = Types .dateMYorYear .inRange (
+  _getAmount (cats, start, end, includeDescendants, skipAccountCalculation, getOtherMonths) {
+    const amount = {amount: 0, month: {amount: 0}, year: {amount: 0, allocated: 0, unallocated: 0}, otherMonths: 0, getBalances: []};
+
+    for (const cat of cats || []) {
+      const isCredit = this .isCredit (cat);
+
+      let catAmount = {amount: 0, month: {amount: 0}, year: {amount: 0, allocated: 0, unallocated: 0}, otherMonths: 0, getBalances: []};
+      let grossAmount, hasYear;
+      for (const sch of cat .schedule || []) {
+        const isYear = Types .dateMYorYear .isYear (sch .start);
+        hasYear |= isYear;
+        const inRange = Types .dateMYorYear .inRange (
+          sch .start, sch .end, sch .repeat, sch .limit,
+          start, end, this._budget .getStartDate(), this._budget .getEndDate()
+        );
+        if (inRange) {
+          const schAmount = (isCredit? -1: 1) * inRange * (sch .amount || 0);
+          catAmount .amount += schAmount;
+          catAmount [isYear? 'year': 'month'] .amount += schAmount;
+        }
+        else if (getOtherMonths) {
+          const fyStart = Types .dateFY .getFYStart (start, this._budget .getStartDate(), this._budget .getEndDate());
+          const fyEnd   = Types .dateFY .getFYEnd   (start, this._budget .getStartDate(), this._budget .getEndDate());
+          const inFyRange = Types .dateMYorYear .inRange (
             sch .start, sch .end, sch .repeat, sch .limit,
-            start, end, this._budget .getStartDate(), this._budget .getEndDate()
+            fyStart, fyEnd,
+            this._budget .getStartDate(), this._budget .getEndDate()
           );
-          if (inRange)
-            am += (isCredit? -1: 1) * inRange * (sch .amount || 0);
-          else if (getOtherMonths) {
-            let fyStart = Types .dateFY .getFYStart (start, this._budget .getStartDate(), this._budget .getEndDate());
-            let fyEnd   = Types .dateFY .getFYEnd   (start, this._budget .getStartDate(), this._budget .getEndDate());
-            let inRange = Types .dateMYorYear .inRange (
-              sch .start, sch .end, sch .repeat, sch .limit,
-              fyStart, fyEnd,
-              this._budget .getStartDate(), this._budget .getEndDate()
-            );
-            if (inRange)
-              om += (isCredit? -1: 1) * inRange * (sch .amount || 0);
-          }
+          if (inFyRange)
+            catAmount .otherMonths += (isCredit? -1: 1) * inFyRange * (sch .amount || 0);
         }
-        if (! skipAccountCalculation && cat .account) {
-          let account = this._actModel .getAccountsModel() .getAccount (cat .account);
-          if (account) {
-            am = account .getAmount      (cat, start, end, am);
-            gr = account .getGrossAmount (cat, start, end, am);
-            getBalances .push (() => account .getBalance (start, end) .amount);
-          }
-        }
-        let ds = includeDescendants? ga (cat .children, start, end, yr || getOtherMonths): {amount: 0};
-        if (yr) {
-          let amt = Math [am < 0? 'min': 'max'] (am, ds .amount);
-          rs .amount            += amt;
-          if (gr)
-            rs .grossAmount = (rs .grossAmount || 0) + gr;
-          rs .year               = (rs .year || {amount: 0, allocated: 0, unallocated: 0});
-          rs .year .amount      += Math [am < 0? 'min': 'max'] (am, ds .amount + ((ds .otherMonths && ds .otherMonths) || 0))
-                                   - (((ds .month && ds .month .amount) || 0) + ((ds .otherMonths && ds .otherMonths) || 0));
-          rs .year .allocated   += ds .amount + (ds .otherMonths || 0);
-          rs .year .unallocated += am - (ds .amount + (ds .otherMonths || 0));
-          if (ds .month) {
-            rs .month = rs .month || {};
-            for (let p in ds .month || {})
-              rs .month [p] = (rs .month [p] || 0) + ds .month [p];
-          }
-        } else {
-          rs .amount            += am + ds .amount;
-          rs .month              = (rs .month || {amount: 0});
-          rs .month .amount     += am + ((ds .month && ds .month .amount) || 0);
-          rs .otherMonths        = (rs .otherMonths || 0) + (ds .otherMonths || 0);
-          if (ds .year) {
-            rs .year = rs .year || {};
-            for (let p in ds .year)
-              rs .year [p] = (rs .year [p] || 0) + ds .year [p];
-          }
-        }
-        if (om)
-          rs .otherMonths = (rs .otherMonths || 0) + om;
-        if (ds .getBalance)
-          getBalances .push (ds .getBalance);
       }
-      if (getBalances .length)
-        rs .getBalance = () => getBalances .reduce ((t, e) => t + e(), 0);
-      return rs;
+
+      if (! skipAccountCalculation && cat .account) {
+        let account = this._actModel .getAccountsModel() .getAccount (cat .account);
+        if (account) {
+          catAmount .amount = account .getAmount (cat, start, end, catAmount .amount);
+          if (catAmount .year .amount != 0 && catAmount .month .amount == 0)
+            catAmount .year .amount = catAmount .amount;
+          else if (catAmount .year .amount == 0)
+            catAmount .month .amount = catAmount .amount;
+          else {
+            const percentMonth = 1.0 * catAmount .month .amount / (catAmount .month .amount + catAmount .year .amount);
+            catAmount .month .amount = Math .round (percentMonth * catAmount .amount);
+            catAmount .year  .amount = Math .around ((1 - percentMonth) * catAmount .amount);
+          }
+          catAmount .grossAmount = account .getGrossAmount (cat, start, end, catAmount .amount);
+          catAmount .getBalances .push (() => account .getBalance (start, end) .amount);
+        }
+      }
+
+      let desAmount = includeDescendants
+        ? this._getAmount (cat .children, start, end, includeDescendants, skipAccountCalculation, hasYear || getOtherMonths)
+        : {amount: 0, month: {amount: 0}, year: {amount: 0, allocated: 0, unallocated: 0}, otherMonths: 0, getBalances: () => 0};
+
+      amount .month .amount += catAmount .month .amount + desAmount .month .amount;
+      if (hasYear) {
+        amount .amount += Math [catAmount .amount < 0? 'min': 'max'] (catAmount .year .amount, desAmount .amount) + catAmount .month .amount;
+        amount .year .amount +=
+          Math [catAmount .amount < 0? 'min': 'max'] (catAmount .amount, desAmount .amount + (desAmount .otherMonths))
+          - (desAmount .month .amount + desAmount .otherMonths);
+        amount .year .allocated += desAmount .amount + desAmount .otherMonths;
+        amount .year .unallocated += catAmount .year .amount - (desAmount .amount + desAmount .otherMonths);
+      } else {
+        amount .amount             += catAmount .amount + desAmount .amount;
+        amount .year  .amount      += desAmount .year .amount;
+        amount .year  .allocated   += desAmount .year .allocated;
+        amount .year  .unallocated += desAmount .year .unallocated;
+      }
+      amount .otherMonths += catAmount .otherMonths + desAmount .otherMonths;
+      amount .getBalances .push (... catAmount .getBalances);
+      amount .getBalances .push (desAmount .getBalances);
     }
-    return ga ([cat], start, end);
+    amount .getBalances = () => amount .getBalances .reduce ((t,d) => t + e(), 0);
+    return amount;
   }
 
   /**
    * Get budget amount directly allocated to this individual category (non-recursively)
    */
   getIndividualAmount (cat, start = this._budget .getStartDate(), end = this._budget .getEndDate()) {
-    return this._getAmount (cat, start, end, false);
+    return this._getAmount ([cat], start, end, false);
   }
 
   /**
    * Get budget amount for category in period (recursively)
    */
   getAmount (cat, start = this._budget .getStartDate(), end = this._budget .getEndDate(), skipAccountCalculation) {
-    return this._getAmount (cat, start, end, true, skipAccountCalculation);
+    return this._getAmount ([cat], start, end, true, skipAccountCalculation);
   }
 }
 
@@ -427,6 +427,7 @@ class Schedules extends Categories {
   }
 
   getType (cat, noIndirectSchedule, date) {
+    let hasMonth = false;
     if (cat) {
       if (! noIndirectSchedule && cat .account) {
         let account = this._model._actModel .getAccountsModel() .getAccount (cat .account);
@@ -444,10 +445,10 @@ class Schedules extends Categories {
           if (Types.date.isYear (s.start, start, end))
             return ScheduleType .YEAR;
           else if (Types .date .isMonth (s .start))
-            return ScheduleType .MONTH;
+            hasMonth = true;
         }
     }
-    return ScheduleType .NONE;
+    return hasMonth? ScheduleType .MONTH: ScheduleType .NONE;
   }
 
   hasType (cat, type, noIndirectSchedule) {
