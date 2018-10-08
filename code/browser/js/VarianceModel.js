@@ -258,7 +258,7 @@ class VarianceModel extends Observable {
       // compute unallocated amount to distribute to children
       var amount = this._getAmount (cat .parent, period, skip);
       // subtract children if this is a yearly budget
-      if (this._budget .getCategories() .getType (cat .parent) == ScheduleType .YEAR)
+      if (this._budget .getCategories() .getType (cat .parent) == ScheduleType .YEAR && amount .year)
         amount .year .budget .prev = Math .max (0, amount .year .budget .prev - (cat .parent .children || []) .concat (cat .parent .zombies || []) .reduce ((t,c) => {
           return t + this._budget .getIndividualAmount(c) .amount;
         }, 0));
