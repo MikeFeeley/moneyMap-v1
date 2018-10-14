@@ -218,7 +218,7 @@ class ViewCategoryEdit extends ViewTextbox {
   }
   _close() {
     if (this._isOpen) {
-      this._view._categoryPicker.hide();
+      this .set (this._view._categoryPicker .hide());
       if (this.isSelected () && this.get() != this._startingValue)
         this._view._notifyObservers (ViewEvent.UPDATE, {
           id:        this._id,

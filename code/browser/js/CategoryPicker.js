@@ -18,6 +18,7 @@ class CategoryPicker {
   }
 
   _show (id, inColumn) {
+    this._id = id;
     const cat = this._categories .get (id);
     const roots = this._categories .getRoots() .reduce ((map, root) => map .set (root .name, [root]), new Map());
     const path = [{children: roots}] .concat (this._categories .getPath (cat) .map (pathCat => ({
@@ -60,7 +61,6 @@ class CategoryPicker {
       this._selCol = 0;
     this._selRow = this._cols .length > 0? this._cols [this._selCol] .findIndex (r => r .selected): -1;
     this._view .reset();
-    this._id = id;
     for (let i=0; i < this._cols .reduce ((m,c) => {return Math .max (m, c.length)}, 0); i++) {
       let row = [];
       for (let col of this._cols .slice (0, 3))
@@ -116,6 +116,7 @@ class CategoryPicker {
   }
 
   hide() {
+    const curId = this._id || null;
     this._id = undefined;
     var selected = this._cols
       .map    (c => {return c.find (r => {return r.selected})})
@@ -127,6 +128,7 @@ class CategoryPicker {
       clearTimeout (this._filterTimeout);
       this._filterTimeout = null;
     }
+    return curId;
   }
 
   moveUp() {
