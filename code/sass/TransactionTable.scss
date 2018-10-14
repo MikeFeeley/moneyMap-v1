@@ -104,6 +104,7 @@ div._fieldTip {
   > div {
     @include tip-popup();
   }
+  z-index: 10000;
 }
 
 
