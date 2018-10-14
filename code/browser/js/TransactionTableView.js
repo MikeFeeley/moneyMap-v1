@@ -106,6 +106,7 @@ class TransactionTableView extends TableView {
     let field    = this._getFieldHtml (id, fieldName) .closest ('td');
     let html     = field .offsetParent();
     let tip      = $('<div>', {class: '_fieldTip fader'}) .appendTo (html) .append ($('<div>'));
+    this._fieldTip = tip;
     $('<div>', {text: 'TIP'}) .appendTo (tip .children());
     for (let tl of tipText)
       $('<div>', {text: tl}) .appendTo (tip .children());
@@ -132,7 +133,6 @@ class TransactionTableView extends TableView {
           });
         }, UI_FIELD_TIP_DURATION_MS);
       });
-     this._fieldTip = tip;
     });
   }
 }
