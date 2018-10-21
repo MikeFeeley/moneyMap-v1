@@ -1582,7 +1582,7 @@ class Navigate {
             isCredit:    isCredit,
             isGoal:      isGoal,
             amount:      ba .amount * (isCredit? -1: 1),
-            grossAmount: ba .grossAmount && ba .grossAmount * (isCredit? -1: 1),
+            grossAmount: ! isGoal? ba .grossAmount && ba .grossAmount * (isCredit? -1: 1): 0
           }
           if (amount .amount) {
             const catRoot           = this._categories .getRoot (cat);
