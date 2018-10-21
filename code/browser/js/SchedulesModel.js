@@ -92,25 +92,6 @@ class SchedulesModel extends Observable {
         sch.category = this._joinMI (this._catModel, sch.category);
       }
       this._categories = new Schedules (cats, schs, this);
-
-      // XXX Converstion from limit to repeatEnd - deleted once conversion completed
-      const updates = [];
-      for (const sch of schs)
-        if (sch .repeat && sch .start && sch .repeatEnd === undefined) {
-          console.log('xxx');
-          if (! sch .limit)
-            sch .repeatEnd = null;
-          else {
-            const bs      = this._budget .getStartDate();
-            const be      = this._budget .getEndDate();
-            const startFY = Types .date .isYear (sch .start)? sch .start: Types .dateFY._fiscalYear (sch .start, bs, be);
-            sch .repeatEnd = startFY + sch .limit;
-          }
-          updates .push ({id: this._splitMI (sch._id) .id, update: {repeatEnd: sch .repeatEnd, limit: null}});
-        }
-      if (updates .length)
-        await this._schModel .updateList (updates);
-
       return this._categories;
     }
   }
