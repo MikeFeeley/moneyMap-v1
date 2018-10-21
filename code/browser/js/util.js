@@ -284,14 +284,13 @@ class DateType extends FieldType {
 
   /**
    * Determine whether date is in range of a budget schedule
-   *  st0, en0, rp, lm: budget schedule range description
+   *  st0, en0, rp, re: budget schedule range description
    *  st1, en1:         date range to test against schedule
    *  stY, enY:         current fiscal year start and end
    */
-  inRange (st0, en0, rp, lm, st1, en1, stY, enY) {
-    if (this .isBlank (st0) || this._yearMonth (st1) > this._yearMonth (en1)) {
+  inRange (st0, en0, rp, re, st1, en1, stY, enY) {
+    if (this .isBlank (st0) || this._yearMonth (st1) > this._yearMonth (en1))
       return 0;
-    }
     switch (this._format) {
       case 'MYorYear':
         if (this .isYear (st0)) {
@@ -306,17 +305,18 @@ class DateType extends FieldType {
       case 'MY':
         st0 = this ._yearMonth (st0);
         st1 = this ._yearMonth (st1);
+        const repeatEnd = Math .floor (rp && re && Types .date._yearEnd (re, stY, enY) / 100);
         rp  = rp && ! this .isInfinity (en0);
         en0 = (!en0 || en0 == '')? st0: (this .isInfinity (en0)? 999999: this ._yearMonth (en0));
         en1 = (!en1 || en1 == '')? st1: (this .isInfinity (en1)? 999999: this ._yearMonth (en1));
-        var cnt = 0;
-        for (let yr = 0; yr <= (rp? lm || 9999: 0); yr++) {
-          var st = st0 + yr * 100;
-          var en = en0 + yr * 100;
-          if (st <= en1) {
-            var str = Math .max (st, st1);
-            var enr = Math .min (en, en1);
-            var mor = Math .max (0, this._difMonths (this._fromYearMonth (enr), this._fromYearMonth (str)));
+        let cnt = 0;
+        for (let yr = 0; rp || yr == 0; yr ++) {
+          const st = st0 + yr * 100;
+          const en = en0 + yr * 100;
+          if (st <= en1 && (!repeatEnd || st <= repeatEnd)) {
+            const str = Math .max (st, st1);
+            const enr = Math .min (en, en1);
+            const mor = Math .max (0, this._difMonths (this._fromYearMonth (enr), this._fromYearMonth (str)));
             cnt += isYear? (mor? 1: 0): mor;
           } else
             break;
@@ -326,6 +326,7 @@ class DateType extends FieldType {
         return undefined;
     }
   }
+
   _difMonths (ym0, ym1) {
     return this._month (ym0) - this._month (ym1) + (this._year  (ym0) - this._year  (ym1)) * 12 + 1;
   }

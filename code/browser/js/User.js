@@ -1144,52 +1144,23 @@ class User extends Observable {
     let fs = await sm .find ({budget: from});
 
     // get new schedule
+    const budgetFY = Types .dateFY._fiscalYear (b .start, b .start, b .end);
     let ts = [];
     for (let sch of fs || []) {
 
       if (! Types .date .isBlank (sch .start) && fc .get (sch .category)) {
-        let fy  = Types .date .isYear (sch .start)? sch.start: Types .dateFY._fiscalYear (sch .start, b .start, b .end);
-        let c   = Types .date._year (b .start) - fy;
-        sch._id = undefined;
+        const fy = Types .date .isYear (sch .start)? sch. start: Types .dateFY._fiscalYear (sch .start, b .start, b .end);
+        sch._id  = undefined;
 
-        if (c <= 0) {
+        if (fy >= budgetFY)
           ts .push (sch);
 
-        } else if (Types .date .isYear (sch .start)) {
-          if (sch.start >= Types.date._year (b.start))
+        else if (! sch .repeat) {
+          if (! Types .date .isYear (sch .start) && (Types .date .isInfinity (sch .end) || (! Types .date .isBlank (sch .end) && sch .end >= b .start)))
             ts.push (sch);
-          else if (sch.repeat && (! sch.limit || sch.limit >= c)) {
-            sch .start += c;
-            if (sch .limit) {
-              sch .limit -= c;
-              sch .repeat = sch .limit > 0;
-            }
-            ts .push (sch);
-          }
 
-        } else if (! sch.repeat) {
-          if (Types.date.isBlank (sch.end)) {
-            if (sch.start >= b.start)
-              ts.push (sch);
-          } else if (Types.date.isInfinity (sch.end)) {
-            if (sch.start < b.start)
-              sch.start = b.start;
-            ts.push (sch);
-          } else if (sch.end >= b.start) {
-            if (sch.start < b.start)
-              sch.start = b.start;
-            ts.push (sch);
-          }
-
-        } else if (! sch.limit)
+        } else if (! sch .repeatEnd || budgetFY <= sch .repeatEnd)
           ts .push (sch);
-
-        else if (Types.date.isBlank (sch.end)) {
-          if (Types.date.addYear (sch.start, sch.limit) >= b.start)
-            ts.push (sch);
-
-        } else if (Types.date.addYear (sch.end, sch.limit) >= b.start)
-          ts.push (sch);
       }
     }
 

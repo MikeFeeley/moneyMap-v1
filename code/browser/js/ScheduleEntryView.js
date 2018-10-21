@@ -36,12 +36,12 @@ class ScheduleEntryView extends ListView {
       new ViewScalableDate             ('end',             endFormat,                    '', '', 'End',   {type: 'EndMY',    budget: budget, other: 'start'}),
       new ViewScalableTextbox          ('amount',          ViewFormats ('moneyDC'),      '', '', 'Amount'),
       new RepeatField                  ('repeat',          variance .getBudget()),
-      new LimitField ('limit', ViewFormats ('number')),
+      new RepeatEndField ('repeatEnd', ViewFormats ('string')),
       new ViewElasticTextbox           ('notes',           ViewFormats ('string'),       '', '', 'Notes')
     ];
     const lineTypes = {
       categoryLine: ['name', 'account', 'zombie', 'zombieActive', 'scheduleLine', 'unallocated', 'total'],
-      scheduleLine: ['start', 'end', 'amount', 'repeat', 'limit', 'notes']
+      scheduleLine: ['start', 'end', 'amount', 'repeat', 'repeatEnd', 'notes']
     }
     options .protectRoot = true;
     super (name, fields, lineTypes, options);
@@ -356,12 +356,12 @@ class RepeatField extends ViewScalableCheckbox {
           return;
         if (popup)
           popup.remove ();
-        popup = $ ('<div>', {class: '_limitPicker fader'}).appendTo (this._html);
+        popup = $ ('<div>', {class: '_repeatEndPicker fader'}).appendTo (this._html);
         popup.addClass ('fader_visible');
         const content = $ ('<div>').appendTo (popup);
         popup.css ({top: 22, left: 4});
 
-        const limit = this._limit.get ();
+        const repeatEnd = this._repeatEnd.get ();
         $ ('<div>', {class: '_heading'}).appendTo (content);
         const table = $ ('<table>').appendTo (content);
         const tbody = $ ('<tbody>').appendTo (table);
@@ -369,13 +369,12 @@ class RepeatField extends ViewScalableCheckbox {
         const rows = Math.round (Math.sqrt (minYears));
         const cols = Math.ceil (minYears / rows);
         const startFY = Types.dateFY.getFYStart (this._html.closest ('li').find ('.' + this._view._getFieldHtmlClass ('start')).data ('field')._value, this._budgetStart, this._budgetEnd);
-        const startPos = Types.date._year (startFY) - Types.date._year (this._budgetStart);
 
         const updatePopup = () => {
-          const limit = this._limit.get ();
+          const repeatEnd = this._repeatEnd.get ();
           const heading = content.find ('._heading');
-          heading.text (this.get () ? 'Repeats ' + (! limit ? 'every year' : limit + 1 + ' times until ' + this._getThroughYear (limit)) : 'Does not repeat');
-          const endFY = this.get () ? limit && Types.date.addYear (startFY, limit) : startFY;
+          heading.text (this.get () ? 'Repeats ' + (! repeatEnd ? 'every year' : ' until ' + this._getThroughYear (repeatEnd)) : 'Does not repeat');
+          const endFY = this.get () ? repeatEnd && Types .date._yearStart (repeatEnd, this._budgetStart) : startFY;
           const tds = tbody.find ('td');
           let date = this._budgetStart;
           for (let r = 0; r < rows; r ++)
@@ -407,13 +406,17 @@ class RepeatField extends ViewScalableCheckbox {
             }
             td.on ('click', e => {
               const pos = r * cols + c;
-              if (pos >= startPos) {
-                const count = pos == (rows * cols - 1) ? 0 : pos - startPos + 1;
-                this.set (count != 1);
-                this._limit.set (count ? count - 1 : 0);
-                this._limit._handleChange();
-                updatePopup ();
+              if (pos == (rows * cols - 1)) {
+                this .set (true);
+                this._repeatEnd .set (null);
+              } else {
+                const selectedFY = Types .dateFY._fiscalYear (Types .date .addYear (this._budgetStart, pos), this._budgetStart, this._budgetEnd);
+                const isRepeat   = selectedFY > Types .dateFY._fiscalYear (startFY);
+                this .set (isRepeat);
+                this._repeatEnd .set (isRepeat? selectedFY: null);
               }
+              this._repeatEnd._handleChange();
+              updatePopup ();
             });
           }
           updatePopup ();
@@ -461,14 +464,13 @@ class RepeatField extends ViewScalableCheckbox {
     })
   }
 
-  _getThroughYear (limit) {
-    if (limit > 0) {
-      const start = this._html.closest ('li').find ('.' + this._view._getFieldHtmlClass ('start')).data ('field')._value;
-      return Types.dateFY.toString (Types.date.addYear (start, limit), this._budgetStart, this._budgetEnd);
+  _getThroughYear (repeatEnd) {
+    if (repeatEnd > 0) {
+      return Types.dateFY.toString (repeatEnd, this._budgetStart, this._budgetEnd);
     }
   }
-  _setWithLimit (limit) {
-    this._labels [1] = ! limit ? 'every year' : 'until ' + this._getThroughYear (limit);
+  _setWithRepeatEnd (repeatEnd) {
+    this._labels [1] = ! repeatEnd ? 'every year' : 'until ' + this._getThroughYear (repeatEnd);
     super._set (this._value);
   }
   _set (value) {
@@ -476,16 +478,16 @@ class RepeatField extends ViewScalableCheckbox {
       this._html .addClass ('_value_checked');
     else
       this._html .removeClass ('_value_checked');
-    if (!this._limit)
-      this._limit = this._html .closest ('li') .find ('.' + this._view._getFieldHtmlClass ('limit')) .data ('field');
-    if (this._limit)
-      this._setWithLimit (this._limit._value)
+    if (!this._repeatEnd)
+      this._repeatEnd = this._html .closest ('li') .find ('.' + this._view._getFieldHtmlClass ('repeatEnd')) .data ('field');
+    if (this._repeatEnd)
+      this._setWithRepeatEnd (this._repeatEnd._value)
     else
       super._set (value);
   }
 }
 
-class LimitField extends ViewScalableTextbox {
+class RepeatEndField extends ViewScalableTextbox {
   constructor (name, format, prefix, suffix, placeholder) {
     super (name, format, prefix, suffix, placeholder)
   }
@@ -496,7 +498,7 @@ class LimitField extends ViewScalableTextbox {
   }
   _set (value) {
     super._set (value);
-    this._repeat._setWithLimit (value);
+    this._repeat._setWithRepeatEnd (value);
   }
 }
 

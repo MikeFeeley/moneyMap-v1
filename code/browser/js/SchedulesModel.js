@@ -6,7 +6,7 @@
  *    end         ending date, blank for one-time, or '...' for no end
  *    amount      dollar amount
  *    repeat      true/false indicates whether schedule repeats annually (N/A if end is '...')
- *    limit       number of years schedule repeats or 0 if there is no limit
+ *    repeatEnd   repeats iff repeat && !repeatEnd || start <= end_date_of_fiscal_year(repeatEnd)
  *    notes       descriptive notes
  *    sort        automatically maintained sort order
  */
@@ -92,6 +92,25 @@ class SchedulesModel extends Observable {
         sch.category = this._joinMI (this._catModel, sch.category);
       }
       this._categories = new Schedules (cats, schs, this);
+
+      // XXX Converstion from limit to repeatEnd - deleted once conversion completed
+      const updates = [];
+      for (const sch of schs)
+        if (sch .repeat && sch .start && sch .repeatEnd === undefined) {
+          console.log('xxx');
+          if (! sch .limit)
+            sch .repeatEnd = null;
+          else {
+            const bs      = this._budget .getStartDate();
+            const be      = this._budget .getEndDate();
+            const startFY = Types .date .isYear (sch .start)? sch .start: Types .dateFY._fiscalYear (sch .start, bs, be);
+            sch .repeatEnd = startFY + sch .limit;
+          }
+          updates .push ({id: this._splitMI (sch._id) .id, update: {repeatEnd: sch .repeatEnd, limit: null}});
+        }
+      if (updates .length)
+        await this._schModel .updateList (updates);
+
       return this._categories;
     }
   }
@@ -328,7 +347,7 @@ class SchedulesModel extends Observable {
         const isYear = Types .dateMYorYear .isYear (sch .start);
         hasYear |= isYear;
         const inRange = Types .dateMYorYear .inRange (
-          sch .start, sch .end, sch .repeat, sch .limit,
+          sch .start, sch .end, sch .repeat, sch .repeatEnd,
           start, end, this._budget .getStartDate(), this._budget .getEndDate()
         );
         if (inRange) {
@@ -340,7 +359,7 @@ class SchedulesModel extends Observable {
           const fyStart = Types .dateFY .getFYStart (start, this._budget .getStartDate(), this._budget .getEndDate());
           const fyEnd   = Types .dateFY .getFYEnd   (start, this._budget .getStartDate(), this._budget .getEndDate());
           const inFyRange = Types .dateMYorYear .inRange (
-            sch .start, sch .end, sch .repeat, sch .limit,
+            sch .start, sch .end, sch .repeat, sch .repeatEnd,
             fyStart, fyEnd,
             this._budget .getStartDate(), this._budget .getEndDate()
           );
@@ -444,7 +463,7 @@ class Schedules extends Categories {
       const start = date ? Types.dateFY.getFYStart (date, bs, be) : bs;
       const end = date ? Types.dateFY.getFYEnd (date, bs, be) : be;
       for (let s of cat .schedule || [])
-        if (Types.dateMYorYear.inRange (s.start, s.end, s.repeat, s.limit, start, end, start, end)) {
+        if (Types.dateMYorYear .inRange (s.start, s.end, s.repeat, s.repeatEnd, start, end, start, end)) {
           if (Types.date.isYear (s.start, start, end))
             return ScheduleType .YEAR;
           else if (Types .date .isMonth (s .start))

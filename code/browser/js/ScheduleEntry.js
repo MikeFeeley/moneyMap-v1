@@ -346,7 +346,7 @@ class ScheduleEntry extends List {
 
           const selectCandidates = cat => ({
             cat: cat,
-            schedule: (cat.schedule || []).filter (s => Types.dateMYorYear.inRange (s.start, s.end, s.repeat, s.limit, this._options.startDate, Types.date.infinity (), bs, be)),
+            schedule: (cat.schedule || []).filter (s => Types.dateMYorYear.inRange (s.start, s.end, s.repeat, s.repeatEnd, this._options.startDate, Types.date.infinity (), bs, be)),
             children: (cat.children || []).map (c => selectCandidates (c))
           });
           const candidates = selectCandidates (cat);
