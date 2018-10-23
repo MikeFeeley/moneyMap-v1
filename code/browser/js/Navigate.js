@@ -343,8 +343,6 @@ class Navigate {
     } else if (eventType == NavigateViewEvent .BUDGET_TABLE_CLICK && arg .id) {
 
       /* Monthly or History Table (Budget or Actual) */
-      // if (arg .dataset .cols .length == 1 && arg .dataset .cols [0] == 'Yr')
-      //   arg .date = [];
       let im = (! arg .date || ! Array .isArray (arg .date) || arg .date .length != 0) && arg .col != 'Yr';
       let iy = ! arg .date || arg .col == 'Yr' || (! arg .col && arg .dataset .cols .includes ('Yr'));
       if (['_budgetTable', '_activityTable'] .includes (arg .name)) {
