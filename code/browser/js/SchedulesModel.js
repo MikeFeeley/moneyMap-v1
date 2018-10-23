@@ -375,7 +375,7 @@ class SchedulesModel extends Observable {
       if (hasYear) {
         amount .amount += Math [catAmount .amount < 0? 'min': 'max'] (catAmount .year .amount, desAmount .amount) + catAmount .month .amount;
         amount .year .amount +=
-          Math [catAmount .amount < 0? 'min': 'max'] (catAmount .amount, desAmount .amount + (desAmount .otherMonths))
+          Math [catAmount .amount < 0? 'min': 'max'] (catAmount .year .amount, desAmount .amount + (desAmount .otherMonths))
           - (desAmount .month .amount + desAmount .otherMonths);
         amount .year .allocated += desAmount .amount + desAmount .otherMonths;
         amount .year .unallocated += catAmount .year .amount - (desAmount .amount + desAmount .otherMonths);
