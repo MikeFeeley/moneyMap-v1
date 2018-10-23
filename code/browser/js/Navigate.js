@@ -1388,13 +1388,14 @@ class Navigate {
         list .push ({
           name:    'Starting Cash Flow',
           amount:  stc,
+          showSign: true,
           tooltip: tt
         });
       }
       if (wth < 0)
         list .push ({name: 'Savings Withdrawals', amount: wth});
       if (sav + una + ovr + wth)
-        list .push ({name: 'Projected Savings', amount: sav + una + ovr + wth});
+        list .push ({name: 'Projected Savings', amount: sav + una + ovr + wth, showSign: true});
       const totSav = sav + una + ovr + wth;
       if (inc < 0 && totSav > 0)
         list .push ({name: 'Income Saved', percent: totSav * 1.0 / (-inc)});
