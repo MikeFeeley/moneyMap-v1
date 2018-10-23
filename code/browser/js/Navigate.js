@@ -1084,7 +1084,7 @@ class Navigate {
         if (! u .name)
           u .name = d .name;
         return u
-      }, {})
+      }, {});
       if (data .cats .length && (!popup || data .cats .length > 1 || ! data .cats [0] .id .includes ('leaf_'))) {
         let updater = this._addUpdater (view, async (eventType, model, ids) => {
           let update = (await Promise .all (data .getUpdate .map (async g => {return g (eventType, model, ids)})))
@@ -1094,6 +1094,7 @@ class Navigate {
           if (update .length)
             updateView (update);
         })
+        console.log(data);
         if (!! data .cats .find (c => c .amount != 0 && ! c .blackout))
           var updateView = view .addDoughnut (data, name, popup, position, direction, () => {
             this._deleteUpdater (view, updater);

@@ -404,9 +404,22 @@ class SchedulesModel extends Observable {
 
   /**
    * Get budget amount for category in period (recursively)
+   *    If computing for multiple months, compute each month separately so that account-based categories
+   *    are correct in situations where there is cumulative compounding (e.g., mortgage interest)
    */
   getAmount (cat, start = this._budget .getStartDate(), end = this._budget .getEndDate(), skipAccountCalculation) {
-    return this._getAmount ([cat], start, end, true, skipAccountCalculation);
+    const dates = [];
+    for (let st = start; st <= end; st = Types .date .addMonthStart (st, 1))
+      dates .push ({start: st, end: Math .min (Types .date .monthEnd (st), end)});
+    const amounts = dates .map (d => this._getAmount ([cat], d. start, d. end, true, skipAccountCalculation));
+    const months  = amounts .reduce ((t,a) => t + a .month .amount, 0);
+    return {
+      amount:      months + amounts [amounts .length -1] .year .amount,
+      month:       {amount: months},
+      year:        amounts [amounts .length -1] .year,
+      otherMonths: amounts .reduce ((t,a) => t + a .otherMonths, 0),
+      getBalance:  amounts [amounts .length -1] .getBalance
+    }
   }
 }
 
