@@ -985,7 +985,7 @@ class Navigate {
       }
       var updateView = view .addBudgetTable (name, dataset, dataset .cols .length == 1, skipFoot, popup, position, toHtml, () => {
         this._deleteUpdater (view, updater);
-      }, ! dates || ! skipFoot, title);
+      }, ! col || ! skipFoot, title);
     }
   }
 
