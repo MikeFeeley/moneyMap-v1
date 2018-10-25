@@ -1845,6 +1845,18 @@ class Navigate {
   async _addHistoryTable (parentIds, date, skipFoot, popup, position, view, dataset, toHtml) {
     if (! dataset)
       dataset = await this._getHistoryData (parentIds, date);
+    if (dataset .groups .length == 0)
+      return;
+    if (dataset .groups .length == 1) {
+      if (dataset .groups [0] .rows .length == 0)
+        return;
+      if (dataset .groups [0] .rows .length == 1) {
+        if (dataset .groups [0] .rows [0] .id .length == 1) {
+          if (dataset .groups [0] .rows [0] .id [0] .startsWith ('other_'))
+            return;
+        }
+      }
+    }
     const datasetCopy   = Object .assign ({}, dataset);
     if (datasetCopy .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       const updater = this._addUpdater (view, async (eventType, model, ids) => {
