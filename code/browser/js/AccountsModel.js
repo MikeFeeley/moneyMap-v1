@@ -551,20 +551,27 @@ class Account {
    * returns budgetAmount
    */
   getAmount (cat, start, end, amount) {
-    end = Types .date .monthEnd (end);
 
     if (this .isPrincipalInterestLiabilityAccount() && [this .category, this .intCategory] .includes (cat._id)) {
-      let st  = Types .date .monthStart (Types .date .addMonthStart (end, -1));
-      let en  = Types .date .monthEnd   (st);
-      let bal = this .getBalance  (st, en);
-      let int = Math .max (0, this._getInterest (bal .amount, start, Types .date .subDays (end, start) + 1) * (this .creditBalance? 1: -1));
-      if (cat._id == this .intCategory)
-        return Math .min (amount, int);
-      else {
-        let pri = this._budget .getAmount (this._budget .getCategories() .get (this .intCategory), start, end, true);
-        amount += Math .max (0, (pri .month? pri .month .amount: 0) + (pri .year? pri .year .amount / 12 * (Types .date._difMonths (end, start)): 0));
-        return Math .max (0, amount - int);
+      // go month-by-month to correctly account for compounding
+      const getAmountForOneMonth = (start, end) => {
+        const st  = Types .date .monthStart (Types .date .addMonthStart (end, -1));
+        const en  = Types .date .monthEnd   (st);
+        const bal = this .getBalance  (st, en);
+        const int = Math .max (0, this._getInterest (bal .amount, start, Types .date .subDays (end, start) + 1) * (this .creditBalance? 1: -1));
+        let am  = amount;
+        if (cat._id == this .intCategory)
+          return Math .min (am, int);
+        else {
+          let pri = this._budget .getAmount (this._budget .getCategories() .get (this .intCategory), start, end, true);
+          am += Math .max (0, (pri .month? pri .month .amount: 0) + (pri .year? pri .year .amount / 12 * (Types .date._difMonths (end, start)): 0));
+          return Math .max (0, am - int);
+        }
       }
+      let totalAmount = 0;
+      for (let st = start; st <= end; st = Types .date .addMonthStart (st, 1))
+        totalAmount += getAmountForOneMonth (st, Math .min (Types .date .monthEnd (st), end));
+      return totalAmount;
 
     } else if (this .form == AccountForm .INCOME_SOURCE)
       return -this._getIncomeSourceAmount (cat, start, end, -amount);
