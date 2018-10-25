@@ -1847,14 +1847,12 @@ class Navigate {
       dataset = await this._getHistoryData (parentIds, date);
     if (dataset .groups .length == 0)
       return;
-    if (dataset .groups .length == 1) {
+    else if (dataset .groups .length == 1) {
       if (dataset .groups [0] .rows .length == 0)
         return;
-      if (dataset .groups [0] .rows .length == 1) {
-        if (dataset .groups [0] .rows [0] .id .length == 1) {
-          if (dataset .groups [0] .rows [0] .id [0] .startsWith ('other_'))
-            return;
-        }
+      else if (dataset .groups [0] .rows .length == 1) {
+        if (dataset .groups [0] .rows [0] .id .length == 1 && dataset .groups [0] .rows [0] .id [0] .startsWith ('other_'))
+          return;
       }
     }
     const datasetCopy   = Object .assign ({}, dataset);
