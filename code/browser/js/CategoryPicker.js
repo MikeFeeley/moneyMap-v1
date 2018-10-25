@@ -118,10 +118,6 @@ class CategoryPicker {
   hide() {
     const curId = this._id || null;
     this._id = undefined;
-    var selected = this._cols
-      .map    (c => {return c.find (r => {return r.selected})})
-      .filter (c => {return c});
-    this._onSelect ((selected.length && selected.slice (- 1) [0].id) || '');
     this._view .hide();
     this._budgetProgressHUD .hide();
     if (this._filterTimeout) {
