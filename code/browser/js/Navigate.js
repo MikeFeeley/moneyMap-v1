@@ -688,13 +688,11 @@ class Navigate {
           await processChildren (payees);
       }
       if (realChildren .length == 1 && ! realChildren [0] .cat .includes ('_')) {
-         let isLeaf = (await this._getChildren (type, realChildren [0] .cat, altDates))
-          .filter (cat       => {return ! cat .startsWith ('budget_')})
-          .filter (async cat => {return (await getAmounts (cat)) .find (a => {return a .value != 0})})
-          .length == 0;
+        const grandChildren = (await this._getChildren (type, realChildren [0] .cat, altDates)) .filter (id => ! id .startsWith('budget_'));
+        const isLeaf        = ! (await Promise .all (grandChildren .map (async id => await getAmounts (id)))) .find (aa => aa .find (a => a .value != 0));
         if (isLeaf)
           children [0] .cat = 'leaf_' + children [0] .cat;
-      } else if (realChildren .length == 0)
+       } else if (realChildren .length == 0)
         children .push ({cat: 'leaf_' + id, amounts: thisAmounts});
       let data = children .map (child => {
         let hasMonth, hasYear;
