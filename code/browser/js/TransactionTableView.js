@@ -225,7 +225,6 @@ class ViewCategoryEdit extends ViewTextbox {
           fieldName: this._name,
           value:     this.get()
         });
-      this.reset();
       this._isOpen = false;
       ui .ModalStack .delete (this._modalStackEntry);
     }
