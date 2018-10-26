@@ -218,12 +218,13 @@ class ViewCategoryEdit extends ViewTextbox {
   }
   _close() {
     if (this._isOpen) {
-      this .set (this._view._categoryPicker .hide());
-      if (this.isSelected () && this.get() != this._startingValue)
+      const id = this._view._categoryPicker .hide();
+      this .set (id);
+      if (this.isSelected () && id != this._startingValue)
         this._view._notifyObservers (ViewEvent.UPDATE, {
           id:        this._id,
           fieldName: this._name,
-          value:     this.get()
+          value:     id
         });
       this._isOpen = false;
       ui .ModalStack .delete (this._modalStackEntry);
