@@ -1,7 +1,8 @@
-const APP_CACHE_RESOURCES = false;
+const APP_CACHE_RESOURCES = true;
 const APP_VERSION_HASH    = '6cd1274';
 const APP_VERSION_STRING  = '1.0.0-beta (' + APP_VERSION_HASH + ')';
 
+const INIT_isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|BB|PlayBook|IEMobile|Windows Phone|Kindle|Silk|Opera Mini/i.test (navigator.userAgent);
 const INIT_browserIsCompatible = navigator .appCodeName .includes ('Mozilla') && Number (navigator .appVersion .split (' ') [0]) >= 5.0;
 
 const INIT = {
