@@ -242,7 +242,7 @@ class ViewField {
     var value = this .get();
     if (value === undefined)
       this._setError();
-    else {
+    else if (value != this._value) {
       this._view._notifyObservers (ViewEvent.UPDATE, {
         id:        this._id,
         fieldName: this._name,
