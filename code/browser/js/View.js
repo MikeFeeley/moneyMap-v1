@@ -238,11 +238,11 @@ class ViewField {
       }
     }, false);
   }
-  _handleChange (e) {
+  _handleChange (e, force) {
     var value = this .get();
     if (value === undefined)
       this._setError();
-    else if (value != this._value) {
+    else if (force || value != this._value) {
       this._view._notifyObservers (ViewEvent.UPDATE, {
         id:        this._id,
         fieldName: this._name,

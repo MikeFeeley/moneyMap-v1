@@ -415,7 +415,7 @@ class RepeatField extends ViewScalableCheckbox {
                 this .set (isRepeat);
                 this._repeatEnd .set (isRepeat? selectedFY: null);
               }
-              this._repeatEnd._handleChange();
+              this._repeatEnd._handleChange (undefined, true);
               updatePopup ();
             });
           }
