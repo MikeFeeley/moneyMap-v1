@@ -158,7 +158,7 @@ class DateType extends FieldType {
     return this._date (y, m, d);
   }
   _yearEnd (y, stY, enY) {
-    return this._date (y + (this._year (enY) - this._year (stY)), this._month (enY), this._day (enY));
+    return this._date (Number (y) + (this._year (enY) - this._year (stY)), this._month (enY), this._day (enY));
   }
   _yearForDate (d, stY) {
     var dm = this._month (d);
