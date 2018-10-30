@@ -628,7 +628,7 @@ class ViewDate extends ViewTextbox {
       })
       .on ('focusout', e => {
         if (this._changePending) {
-          this._handleChange();
+          this._handleChange(true);
           this._changePending = false;
         }
         removePopup();
