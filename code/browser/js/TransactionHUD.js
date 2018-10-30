@@ -224,7 +224,7 @@ class TransactionHUD extends TransactionAndRulesTable {
         let target = mousedownTarget || $(e .target);
         let pageY  = mousedownPageY || e .pageY;
         let field  = target .hasClass ('_content') && target .parent() .parent ('._field') .data ('field');
-        if (field && field._name != 'category' && field._value != "") {
+        if (field) {
           if ((e .originalEvent .webkitForce > 1 || e .originalEvent .altKey) && field._name == 'category') {
             let date     = target .closest ('tr') .find ('._field_date') .data ('field')._value;
             let html     = target .offsetParent();
