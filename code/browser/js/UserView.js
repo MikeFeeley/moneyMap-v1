@@ -21,7 +21,8 @@ class UserView extends View {
       .append ($('<div>', {text: 'Track, budget, plan.'}))
       .append ($('<div>', {text: 'Get a hold of your finances.'}))
       .append ($('<div>', {html: 'Start simple &mdash; gradually unleash your planning power.'}))
-    .append ($('<div>', {text: 'Keep your information private and secure.'}))
+      .append ($('<div>', {text: 'Keep your information private and secure.'}))
+      .append ($('<div>', {text: 'Spreadsheet-like power for the serious planner.'}))
     $('<div>') .appendTo (main)
       .append ($('<img>', {src: 'images/screen.jpeg'}));
     $('<ul>') .appendTo (bullets)
