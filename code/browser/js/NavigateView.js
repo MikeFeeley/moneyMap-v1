@@ -1580,7 +1580,7 @@ class NavigateView extends Observable  {
         if (detail .intAmt)
           tbody .append ($('<tr>')
             .append ($('<td>', {text: isCredit? 'Interest': 'Earnings'}))
-            .append ($('<td>', {text: Types .moneyD .toString (detail .intAmt)})));
+            .append ($('<td>', {text: Types .moneyD .toString (detail .intAmt), class: detail .intAmt < 0? 'negative': ''})));
         if (detail .infAmt)
           tbody .append ($('<tr>')
             .append ($('<td>', {text: 'Inflation'}))
