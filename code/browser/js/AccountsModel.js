@@ -551,6 +551,7 @@ class Account {
    * returns budgetAmount
    */
   getAmount (cat, start, end, amount) {
+    end = Types .date .monthEnd (end);
 
     if (this .isPrincipalInterestLiabilityAccount() && [this .category, this .intCategory] .includes (cat._id)) {
       // go month-by-month to correctly account for compounding
