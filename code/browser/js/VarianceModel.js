@@ -168,7 +168,25 @@ class VarianceModel extends Observable {
         amount .month .budget [per] = budget .month .amount;
       }
     }
-    if (type == 'month') {
+    // if category has both types, then favour applying to monthly
+    if (amount .month && amount .year) {
+      if (amount .month .budget .prev > 0 && amount .year .actual .prev > 0) {
+        let deal = 0;
+        for (let st = period .prev .start; st < period .prev .end; st = Types .date .addMonthStart (st, 1)) {
+          const en = Types .date .monthEnd (st);
+          const ac = this._actuals .getAmount (cat, st, en, skip);
+          const bu = this._budget  .getIndividualAmount (cat, st, en);
+          deal += Math .min (ac, bu .month .amount);
+          amount .month .actual .prev += deal;
+          amount .year  .actual .prev -= deal;
+        }
+      } else if (amount .month .budget .cur > 0 && amount .year .actual .cur > 0) {
+        const deal = Math .min (amount .month .budget .cur, amount .year .actual .cur);
+        amount .month .actual .cur += deal;
+        amount .year  .actual .cur -= deal;
+      }
+    }
+    if (this._budget .getCategories() .getType (cat, undefined, undefined, true) .includes (ScheduleType .MONTH)) {
       let budgetEndDate = this._budget .getEndDate();
       if (period .cur .end != budgetEndDate) {
           amount .otherMonths = this._budget .getIndividualAmount (cat, Types .date .addMonthStart (period .cur .end, 1), budgetEndDate) .amount;
@@ -371,7 +389,7 @@ class VarianceModel extends Observable {
     // get amounts for category and its descendants
     var amount = this._getAmountDown (cat, period, skip);
 
-    // incorporate amount from ancestor or use ancesor if this is budgetLess and skip
+    // incorporate amount from ancestor or use ancestor if this is budgetLess and skip
     var amountUp = this._getAmountUp (cat, period, skip);
     if (amount .isBudgetless && skip && amountUp .nearestCatWithType)
       return this._getAmountUpDown (amountUp .nearestCatWithType, period, skip);
@@ -421,18 +439,20 @@ class VarianceModel extends Observable {
       }
 
     // deal year over into month available if possible
-    if (amount .year && amount .month)
+    if (amount .year && amount .month) {
+      let yearAvailable = amount .year .budget .prev;
       for (const per of ['prev', 'cur']) {
-        const yearVariance = amount .year .budget [per] - amount .year .actual [per];
-        if (yearVariance < 0) {
+        yearAvailable -= amount .year .actual [per];
+        if (yearAvailable < 0) {
           const monthAvailable = Math .max (0, amount .month .budget [per] - amount .month .actual [per]);
           if (monthAvailable > 0) {
-            const deal = Math .min (-yearVariance, monthAvailable);
+            const deal = Math .min (-yearAvailable, monthAvailable);
             amount .year .actual [per] -= deal;
             amount .month .actual [per] += deal;
           }
         }
       }
+    }
 
     return {amount: amount, addCats: amountUp .addCats};
   }
