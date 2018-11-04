@@ -139,7 +139,7 @@ class VarianceModel extends Observable {
   }
 
   _getScheduleTypeName (cat, period) {
-    switch (this._budget.getCategories ().getType (cat, undefined, period.start, period.end)) {
+    switch (this._budget.getCategories ().getType (cat, undefined, period.start)) {
       case ScheduleType .NONE:
         return 'none';
       case ScheduleType .MONTH:

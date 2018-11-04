@@ -93,9 +93,9 @@ class ActualsModel extends Observable {
   }
 
   getAmountRecursively (cat, st = this._budget .getStartDate(), en = this._budget .getEndDate(), skip, includeMonths=true, includeYears=true) {
-    let type = this._budget .getCategories() .getType (cat);
+    let type = this._budget .getCategories() .getType (cat, undefined, undefined, true);
     cat = cat || this._nullCat;
-    let include = (includeMonths && type == ScheduleType .MONTH) || (includeYears  && type == ScheduleType .YEAR) || type == ScheduleType .NONE;
+    let include = (includeMonths && type .includes (ScheduleType .MONTH)) || (includeYears  && type .includes (ScheduleType .YEAR)) || type .includes (ScheduleType .NONE);
     var amt = include? this .getAmount (cat, st, en, skip): 0;
     for (let child of (cat .children || []) .concat (cat .zombies || []))
       amt += this.getAmountRecursively (child, st, en, skip, includeMonths, includeYears);

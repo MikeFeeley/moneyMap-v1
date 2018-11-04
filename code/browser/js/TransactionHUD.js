@@ -396,8 +396,8 @@ class TransactionHUD extends TransactionAndRulesTable {
     const getFamily = (cats) => {
       const family = [];
       for (const cat of cats || []) {
-        const type = categories .getType (cat);
-        if ((type == ScheduleType .MONTH && includeMonths) || (type == ScheduleType .YEAR && includeYears) || type == ScheduleType .NONE)
+        const type = categories .getType (cat, undefined, undefined, true);
+        if ((includeMonths && type .includes (ScheduleType .MONTH)) || (includeYears && type .includes (ScheduleType .YEAR)) || type .includes (ScheduleType .NONE))
           family .push (cat ._id);
         for (const id of getFamily ((cat .children || []) .concat (cat .zombies || [])))
           if (! isOther || (isCurrent && ! categories .hasType (categories .get (id), ScheduleType .NOT_NONE)))

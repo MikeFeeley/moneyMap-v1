@@ -3,6 +3,7 @@
  *     options = {
  *         --- presenter ---
  *         categories:                           [cat*],                       // include only cats and their descendants
+ *         categories:                           [cat*],                       // include only cats and their descendants
  *         moveRootIsChild:                      boolean,
  *         depthLimit:                           number,
  *         scheduleOnly:                         [cat*],

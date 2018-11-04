@@ -404,23 +404,9 @@ class SchedulesModel extends Observable {
 
   /**
    * Get budget amount for category in period (recursively)
-   // *    If computing for multiple months, compute each month separately so that account-based categories
-   // *    are correct in situations where there is cumulative compounding (e.g., mortgage interest)
    */
   getAmount (cat, start = this._budget .getStartDate(), end = this._budget .getEndDate(), skipAccountCalculation) {
     return this._getAmount ([cat], start, end, true, skipAccountCalculation);
-    // const dates = [];
-    // for (let st = start; st <= end; st = Types .date .addMonthStart (st, 1))
-    //   dates .push ({start: st, end: Math .min (Types .date .monthEnd (st), end)});
-    // const amounts = dates .map (d => this._getAmount ([cat], d. start, d. end, true, skipAccountCalculation));
-    // const months  = amounts .reduce ((t,a) => t + a .month .amount, 0);
-    // return {
-    //   amount:      months + amounts [amounts .length -1] .year .amount,
-    //   month:       {amount: months},
-    //   year:        amounts [amounts .length -1] .year,
-    //   otherMonths: amounts .reduce ((t,a) => t + a .otherMonths, 0),
-    //   getBalance:  amounts [amounts .length -1] .getBalance
-    // }
   }
 }
 
@@ -443,8 +429,16 @@ class Schedules extends Categories {
     }
   }
 
-  getType (cat, noIndirectSchedule, date) {
+  /**
+   * Return category's type based on its schedule (ignoring descendants)
+   *     noIndrectSchedule if true then does not include information that comes from account connected to category
+   *     date              a date in fiscal year for which to examine schedules (default is current fiscal)
+   *     reportBoth        if true returns an array that lists BOTH MONTH and YEAR for categories that have both
+   *                       if false and category has BOTH, returns YEAR
+   */
+  getType (cat, noIndirectSchedule, date, reportBoth) {
     let hasMonth = false;
+    let hasYear  = false;
     if (cat) {
       if (! noIndirectSchedule && cat .account) {
         let account = this._model._actModel .getAccountsModel() .getAccount (cat .account);
@@ -460,19 +454,25 @@ class Schedules extends Categories {
       for (let s of cat .schedule || [])
         if (Types.dateMYorYear .inRange (s.start, s.end, s.repeat, s.repeatEnd, start, end, start, end)) {
           if (Types.date.isYear (s.start, start, end))
-            return ScheduleType .YEAR;
+            hasYear = true;
           else if (Types .date .isMonth (s .start))
             hasMonth = true;
         }
+        if (! reportBoth && hasYear)
+          return ScheduleType .YEAR;
     }
-    return hasMonth? ScheduleType .MONTH: ScheduleType .NONE;
+    const result = reportBoth && hasMonth && hasYear? [ScheduleType .MONTH, ScheduleType .YEAR]: hasMonth? ScheduleType .MONTH: ScheduleType .NONE;
+    return reportBoth && ! Array .isArray (result)? [result]: result;
   }
 
-  hasType (cat, type, noIndirectSchedule) {
-    let typeMatch = catType => {return Array .isArray (type)? type .includes (catType): catType == type}
+  /**
+   * Return TRUE iff specified category (or an of its descendants) has a schedule whose type is listed in the type parameter
+   */
+  hasType (cat, type, noIndirectSchedule, date) {
+    const typeMatch = catTypes => !! catTypes .find (catType => Array .isArray (type)? type .find (t => catType == t): catType == type);
     if (cat == null)
       return false
-    else if (typeMatch (this .getType (cat, noIndirectSchedule)))
+    else if (typeMatch (this .getType (cat, noIndirectSchedule, date, true)))
       return true;
     else
       return ((cat .children || []) .concat (cat .zombies || [])) .find (c => {
