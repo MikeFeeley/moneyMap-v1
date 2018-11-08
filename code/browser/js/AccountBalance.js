@@ -58,6 +58,13 @@ class AccountBalance extends TuplePresenter {
     if (eventType == ViewEvent .UPDATE && arg .fieldName .startsWith ('editable_'))
       arg .fieldName = arg .fieldName .split ('_') .slice (-1);
     if (eventType == AccountBalanceViewEvent .CLICK) {
+      const showGraph = id => {
+        arg .position .top = Math .min (
+          document .documentElement .clientHeight - 546,
+          Math .max (0, arg .position .top - 200)
+        );
+        Navigate .showActualMonthGraph (id, {start: this._budget .getStartDate(), end: this._budget .getEndDate()}, arg .toHtml, arg .position, undefined, undefined, true);
+      }
       var dates = {
         start: Types .date .monthStart (Types .date .today()),
         end:   Types .date .monthEnd   (Types .date .today())
@@ -65,15 +72,22 @@ class AccountBalance extends TuplePresenter {
       if (arg .isCat) {
         if (arg .name == 'Other')
           arg .id = 'other_' + arg .id;
-        TransactionHUD .showCategory (arg .id, dates, this._accounts, this._variance, arg .toHtml, arg .position);
+        if (arg .altKey)
+          showGraph (arg .id)
+        else
+          TransactionHUD .showCategory (arg .id, dates, this._accounts, this._variance, arg .toHtml, arg .position);
       } else {
         let account = this._accounts .getAccount (arg .id);
         if (account .form == AccountForm .CASH_FLOW)
           TransactionHUD .showAccount  (arg .id, dates, this._accounts, this._variance, arg .toHtml, arg .position);
         else {
-          let cid = arg .altKey? account .intCategory: account .category || account .intCategory;
-          if (cid)
-            TransactionHUD .showCategory (cid, dates, this._accounts, this._variance, arg .toHtml, arg .position);
+          const cid = arg .shiftKey? account .intCategory: account .category || account .intCategory;
+          if (cid) {
+            if (arg .altKey)
+              showGraph (cid);
+            else
+              TransactionHUD .showCategory (cid, dates, this._accounts, this._variance, arg .toHtml, arg .position);
+          }
         }
       }
     } else

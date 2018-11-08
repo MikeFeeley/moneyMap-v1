@@ -80,15 +80,19 @@ class AccountBalanceView extends TupleView {
         data .balance = 0;
       tuple = super .addTuple (data, tuple, getToHtml);
       tuple .find ('._field_name, ._field_balance') .on ('click webkitmouseforcedown', e => {
-        let target   = $(e .target) .parent();
-        let html     = target .offsetParent() .parent();
+        const target       = $(e .target);
+        const scrollParent = target .closest ('._AccountBalanceView');
+        const top          = ui .calcPosition (target, scrollParent) .top - scrollParent .scrollTop() + $('body') .scrollTop();
+        const html         = target .closest ('._ImportTransactions') .children ('._import');
+        const pos          = {top: top, left: 50};
         this._notifyObservers (AccountBalanceViewEvent .CLICK, {
           id:       data._id,
           name:     data .name,
           toHtml:   html,
-          position: {top: ui .calcPosition (target, html) .top, left: 50},
+          position: pos,
           isCat:    data .isCat,
-          altKey:   e .originalEvent .webkitForce > 1 || e .originalEvent .altKey
+          altKey:   e .originalEvent .webkitForce > 1 || e .originalEvent .altKey,
+          shiftKey: e .originalEvent .shiftKey
         });
       });
     }

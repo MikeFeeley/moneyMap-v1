@@ -212,7 +212,7 @@ class Navigate {
       else if (arg .altClick)
         await this._addMonthsGraph ('_budgetMonthsGraph', arg.view, [arg .id], true, arg .position, arg .html);
       else
-        await this._addMonthsGraph ('_activityMonthsGraph', arg.view, [arg .id], true, arg .position, arg .html);
+        await this._addMonthsGraph ('_activityMonthsGraph', arg.view, [arg .id], true, arg .position, arg .html, undefined, undefined, undefined, undefined, undefined, undefined, true);
 
     } else if (eventType == NavigateViewEvent .BUDGET_CHART_CLICK  && arg .id) {
       /* Yearly Chart (Budget or Actual) */
@@ -803,7 +803,8 @@ class Navigate {
     ids           = [this._budget .getWithdrawalsCategory()._id, this._budget .getIncomeCategory()._id, this._budget .getSavingsCategory()._id, this._budget .getExpenseCategory()._id],
     includeMonths = true,
     includeYears  = true,
-    addCats       = []
+    addCats       = [],
+    includeEmpty  = false
   ) {
     let altDates = dates && (dates .start != this._budget .getStartDate()) && dates;
     if (!dates || (dates .start && dates .end != Types .date .monthEnd (dates .start))) {
@@ -839,8 +840,9 @@ class Navigate {
         }
       })));
     let note = groups [0] && groups [0] .note;
-    groups = groups
-      .filter (g => {return g .rows .find (r => {return r .amounts .find (a => {return a .value != 0})})})
+    if (! includeEmpty)
+      groups = groups
+        .filter (g => {return g .rows .find (r => {return r .amounts .find (a => {return a .value != 0})})})
     if ((type == NavigateValueType .BUDGET_YR_AVE_ACT || type == NavigateValueType .ACTUALS_BUD) && groups .length > 1)
       groups = groups .map (g => {
         g .rows = g .rows .filter (r => {return ! r .id .includes ('budget_')})
@@ -889,8 +891,8 @@ class Navigate {
     }
   }
 
-  async _getMonthsData (type, dates, ids, includeMonths, includeYears, addCats) {
-    let data = await this._getData (type, dates, ids, includeMonths, includeYears, addCats);
+  async _getMonthsData (type, dates, ids, includeMonths, includeYears, addCats, includeEmpty) {
+    let data = await this._getData (type, dates, ids, includeMonths, includeYears, addCats, includeEmpty);
     let parentUpdate = data .getUpdate;
     data .getUpdate = async (e,m,i) => {
       let up = await Promise .all ((await parentUpdate (e,m,i)) .map (async u => {
@@ -908,15 +910,15 @@ class Navigate {
   /**
    * Add GRAPH (either budget or actual) showing children of specified root list
    */
-  async _addMonthsGraph (name, view, ids, popup, position, toHtml, includeMonths=true, includeYears=true, addCats=[], dates=null, startColor=0, viewUpdater) {
-    var type    = name .startsWith ('_budget')? NavigateValueType .BUDGET_YR_AVE_ACT: NavigateValueType .ACTUALS_BUD;
-    var dataset = await this._getMonthsData (type, dates, ids, includeMonths, includeYears, addCats);
+  async _addMonthsGraph (name, view, ids, popup, position, toHtml, includeMonths=true, includeYears=true, addCats=[], dates=null, startColor=0, viewUpdater, showIfEmpty=false) {
+    const type    = name .startsWith ('_budget')? NavigateValueType .BUDGET_YR_AVE_ACT: NavigateValueType .ACTUALS_BUD;
+    const dataset = await this._getMonthsData (type, dates, ids, includeMonths, includeYears, addCats, showIfEmpty);
     const nothingToShow = ! dataset .groups .find (g =>
       g .rows .find (r =>
         r .amounts .find (a =>
           (Array.isArray (a .id) || ! a .id .startsWith ('budget_')) && a .value != 0
      )));
-    if (nothingToShow)
+    if (! showIfEmpty && nothingToShow)
       return;
     if (!ids || ids .length > 1) {
       let dt = dates && [] .concat (dates);
@@ -944,7 +946,7 @@ class Navigate {
         {highlight: dataset .highlight || false},
         {updateAll: rows .map (row => {return {update: row}})}
       ]);
-    } else if (dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
+    } else if (showIfEmpty || dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       var updater = this._addUpdater (view, async (eventType, model, ids) => {
         let update = await dataset .getUpdate (eventType, model, ids);
         if (update)
@@ -2078,9 +2080,9 @@ class Navigate {
   /**************************/
   /***** STATIC METHODS *****/
 
-  static async showActualMonthGraph (id, dates, html, position, includeMonths=true, includeYears=true) {
+  static async showActualMonthGraph (id, dates, html, position, includeMonths=true, includeYears=true, showIfEmpty=false) {
     if (NavigateInstance && NavigateInstance._progressView)
-      await NavigateInstance._addMonthsGraph ('_activityMonthsGraph', NavigateInstance._progressView, [id], true, position, html, includeMonths, includeYears, [], dates);
+      await NavigateInstance._addMonthsGraph ('_activityMonthsGraph', NavigateInstance._progressView, [id], true, position, html, includeMonths, includeYears, [], dates, undefined, undefined, showIfEmpty);
   }
   static async showBudgetMonthGraph (id, dates, html, position, includeMonths=true, includeYears=true) {
     if (NavigateInstance && NavigateInstance._progressView)
