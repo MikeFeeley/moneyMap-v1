@@ -312,13 +312,14 @@ class BudgetProgressHUDView extends View {
             scaleShowLabels: false,
             scales: {
               xAxes: [{
-                gridLines: {display: true, zeroLineColor: 'rgba(0,0,0,0)', tickMarkLength: displayXTicks? 10: 1},
+                gridLines: {display: true, zeroLineColor: 'transparent', tickMarkLength: displayXTicks? 10: 1},
                 ticks: {
                   display: displayXTicks
                 }
               }],
               yAxes: [{
-                display: false, ticks: {max: 100}
+                display: true, ticks: {max: 100, display: false},
+                gridLines: {display: true, zeroLineColor: 'rgb(220,220,220)', color: 'transparent'}
               }]
             }
           }
