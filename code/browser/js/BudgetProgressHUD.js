@@ -2,7 +2,7 @@ class BudgetProgressHUD {
   constructor (accounts, variance, options = {}, categoryPicker) {
     this._accounts        = accounts;
     this._variance        = variance;
-    this._view            = new BudgetProgressHUDView (! options .isNotModal, () => {this .delete()}, options .topBuffer);
+    this._view            = new BudgetProgressHUDView (! options .isNotModal, () => {this .delete()}, options .topBuffer, this._variance .getBudget() .getEndDate());
     this._observer        = this._variance .addObserver (this, this._onModelChange);
     this._options         = options;
     this._categoryPicker  = categoryPicker;
@@ -104,6 +104,8 @@ class BudgetProgressHUD {
       this._expanded = false;
       this._id = null;
       this._addTitle();
+      if (this._date != Types.date.today ())
+        this._view.addText ('', '_date', 'As of ' + (this._date == Types.date.today () ? 'Today' : Types.dateLong.toString (this._date)));
       this._addCompare();
       this._addMonth();
       this._addYear();
@@ -127,7 +129,7 @@ class BudgetProgressHUD {
       this._view .addCompareGraph ('_graphContainer0');
 
       this._view .addGroup ('_graphLine1');
-      this._view.addText ('', '_date', 'As of ' + (this._date == Types.date.today () ? 'Today' : Types.dateLong.toString (this._date)));
+      this._view.addText ('', '_date', this._date == Types.date.today () ? '' : 'As of ' + Types.dateLong.toString (this._date));
       this._view.addMonthsGraph ('_graphLine1', this._monthsAmount, {width: 500, height: 80}, false);
 
       this._view .addGroup ('_graphs');
@@ -295,10 +297,10 @@ class BudgetProgressHUD {
   }
 
   _addMonth() {
+    this._view.addGroup ('_month');
+    this._view.addMonthsGraph ('_month', this._monthsAmount);
     if (this._date <= this._variance.getBudget ().getEndDate ()) {
-      this._view.addGroup ('_month');
-      this._view.addText ('_month', '_monthTitle', 'Monthly as of ' + Types.dateLong.toString (this._date));
-      this._view.addMonthsGraph ('_month', this._monthsAmount);
+      this._view.addText ('_month', '_monthTitle', 'This Month');
       this._view.addProgressGraph ('_month', '_month');
     }
   }
@@ -308,7 +310,7 @@ class BudgetProgressHUD {
       this._view.addGroup ('_year');
       var budget = this._variance.getBudget ();
       var year = Types.dateFY.toString (this._date, budget.getStartDate (), budget.getEndDate ());
-      this._view.addText ('_year', '_yearTitle', 'Anytime in ' + year);
+      this._view.addText ('_year', '_yearTitle', 'This Year');
       this._view.addProgressGraph ('_year', '_year');
     }
   }
@@ -515,8 +517,9 @@ class BudgetProgressHUD {
       lastYear:  lastYearAmount * creditAdjust,
       actual:    Math .min (actualAmount, budgetAmount),
       available: Math .max (0, budgetAmount - actualAmount),
-      over:      Math .max (0, actualAmount - budgetAmount)
-    }
+      over:      Math .max (0, actualAmount - budgetAmount),
+      isFutureYear: this._date > be
+    };
   }
 
   _updateAll() {

@@ -1,6 +1,7 @@
 class BudgetProgressHUDView extends View {
-  constructor (isModal, onDelete, topBuffer=0) {
+  constructor (isModal, onDelete, topBuffer=0, fyEnd) {
     super();
+    this._fyEnd   = fyEnd;
     this._monthsDatasets = [
       ['Last Year', 'priorYear', '#f4f4f4', '#d8d8d8'],
       ['Budget',    'budget',    '#eef6ee', '#acd2ac'],
@@ -241,7 +242,11 @@ class BudgetProgressHUDView extends View {
           hoverBackgroundColor: lightRed,
           borderColor:          red,
           hoverBorderColor:     red,
-        }]
+        }];
+        if (data .isFutureYear) {
+          chart .data .datasets [0] .label = 'Prior Year Budget';
+          chart .data .datasets [2] .label = 'Current Year Budget';
+        }
         canvas .data ('chart', chart);
         updateGraph();
       } else {
@@ -334,12 +339,18 @@ class BudgetProgressHUDView extends View {
         return Math.max (s, Math.abs (v))
       }, 0)), 0);
     const resolution = max / 50;
+    let datasets = this._monthsDatasets;
+    if (data .date [0] .end > this._fyEnd) {
+      datasets = datasets .map (e => e .map (e => e));
+      datasets [0][0] = 'Prior Year Budget'
+      datasets [1][0] = 'Current Year Budget';
+    }
 
     if (chart) {
 
       if (chart && chart.data && chart.data.datasets.length) {
         const datasets = chart.data.datasets;
-        for (const [label, field] of [['Last Year', 'priorYear'], ['Budget', 'budget'], ['Activity', 'actual']]) {
+        for (const [label, field] of datasets) {
           const line = datasets.find (d => d.label == label);
           if (line) {
             for (let i = 0; i < line.data.length; i ++) {
@@ -353,7 +364,7 @@ class BudgetProgressHUDView extends View {
       } else {
 
         if (chart && chart.data) {
-          chart.data.datasets = this._monthsDatasets.map (d => {
+          chart.data.datasets = datasets .map (d => {
             return {
               label: d [0],
               value: data [d [1]].map (v => Types.moneyDC.toString (v)),

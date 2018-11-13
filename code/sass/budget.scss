@@ -154,7 +154,15 @@ html {
         }
       }
       > ._compare {
-        margin-bottom: -10px;
+        margin-left: 4px;
+        margin-bottom: -16px;
+      }
+      > ._month {
+        margin-top: 20px;
+        margin-bottom: -4px;
+      }
+      > ._year {
+        margin-bottom: -4px;
       }
       ._graph_title {
         margin-top: 16px;
@@ -162,6 +170,16 @@ html {
         font-size: 16px;
         color: black;
         font-weight: 100;
+      }
+      > div {
+        > ._monthTitle, > ._yearTitle {
+          margin-bottom: -2px;
+        }
+      }
+      > ._graph_title {
+        margin-top: 4px;
+        margin-left: 6px;
+        color: #bfbfbf;
       }
       ._monthlyGraph {
         margin-top: 6px;
