@@ -350,9 +350,8 @@ class BudgetProgressHUDView extends View {
     if (chart) {
 
       if (chart && chart.data && chart.data.datasets.length) {
-        const datasets = chart.data.datasets;
         for (const [label, field] of datasets) {
-          const line = datasets.find (d => d.label == label);
+          const line = chart .data .datasets .find (d => d.label == label);
           if (line) {
             for (let i = 0; i < line.data.length; i ++) {
               const value = data [field] [i];
