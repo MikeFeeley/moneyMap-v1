@@ -508,8 +508,8 @@ class BudgetProgressHUD {
     else
       lastYearAmount = budget.getAmount (cat, lyS, lyE).amount;
     let actualAmount = this._variance .getActuals() .getAmountRecursively (cat, cyS, cyE) * creditAdjust;
-    let budgetAmount = budget.getAmount (cat, cyS, cyE).amount;
-      const isBudgetLess = ! ['month', 'year']
+    let budgetAmount = budget .getAmount (cat, cyS, cyE) .amount * creditAdjust;
+    const isBudgetLess = ! ['month', 'year']
       .find (p => this._varianceAmount [p] && ! this._varianceAmount [p] .isBudgetless);
     if (isBudgetLess)
       budgetAmount = actualAmount;
