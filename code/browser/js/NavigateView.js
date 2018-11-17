@@ -575,11 +575,12 @@ class NavigateView extends Observable  {
           goUp .addClass ('_disabled');
         let goPrevNext = prev => {
           this._notifyObservers (NavigateViewEvent .BUDGET_GRAPH_PREV_NEXT, {
-            name:     name,
-            id:       Array .from (data .reduce ((s,d) => {return [] .concat (d .id) .reduce((s,i) => {return s .add (i)},s)}, new Set())),
-            dates:    dataset .dates,
-            prev:     prev,
-            update:   update
+            name:       name,
+            id:         Array .from (data .reduce ((s,d) => {return [] .concat (d .id) .reduce((s,i) => {return s .add (i)},s)}, new Set())),
+            dates:      dataset .dates,
+            prev:       prev,
+            update:     update,
+            monthsOnly: dataset .monthsOnly
           })
         }
         if (hasPrevNext) {
@@ -902,6 +903,7 @@ class NavigateView extends Observable  {
 
         } else if (update .replace) {
           dataset  = Object .assign ({}, update .replace);
+          console.log(dataset);
           if (popup && dataset .groups .length)
             graph .find ('span._heading') .text (dataset .groups [0] .name);
           processDataset();

@@ -292,7 +292,9 @@ class Navigate {
         : dates .start > this._budget .getEndDate()
           ? '_budgetMonthsGraph' + ' ' + arg .name
           : arg .name .split (' ') .slice (-1) [0];
-      await this._addMonthsGraph (name, arg .view, arg .id, true, arg .position, arg .html, true, true, [], dates, undefined, arg .update, true);
+      const im = true;
+      const iy = ! arg .monthsOnly;
+      await this._addMonthsGraph (name, arg .view, arg .id, true, arg .position, arg .html, im, iy, [], dates, undefined, arg .update, true);
 
     } else if (eventType == NavigateViewEvent .BUDGET_GRAPH_GET_HISTORY) {
       await this._actuals .findHistory();
@@ -913,6 +915,8 @@ class Navigate {
   async _addMonthsGraph (name, view, ids, popup, position, toHtml, includeMonths=true, includeYears=true, addCats=[], dates=null, startColor=0, viewUpdater, showIfEmpty=false) {
     const type    = name .startsWith ('_budget')? NavigateValueType .BUDGET_YR_AVE_ACT: NavigateValueType .ACTUALS_BUD;
     const dataset = await this._getMonthsData (type, dates, ids, includeMonths, includeYears, addCats, showIfEmpty);
+    if (includeMonths && ! includeYears)
+      dataset .monthsOnly = true;
     const nothingToShow = ! dataset .groups .find (g =>
       g .rows .find (r =>
         r .amounts .find (a =>
@@ -949,8 +953,11 @@ class Navigate {
     } else if (showIfEmpty || dataset .groups .reduce ((m,d) => {return Math .max (m, d .rows .length)}, 0)) {
       var updater = this._addUpdater (view, async (eventType, model, ids) => {
         let update = await dataset .getUpdate (eventType, model, ids);
-        if (update)
+        if (update) {
+          if (update .length == 1 && update [0] .replace && includeMonths && ! includeYears)
+            update [0] .replace .monthsOnly = true;
           updateView (update);
+        }
       });
       let oneBar = dataset .groups .length == 1 && dataset .groups [0] .rows .filter (r => {return ! r .id .startsWith ('budget_')}) .length == 1;
       updateView = view .addMonthsGraph (name, dataset, popup, position, () => {
@@ -2086,7 +2093,7 @@ class Navigate {
   }
   static async showBudgetMonthGraph (id, dates, html, position, includeMonths=true, includeYears=true) {
     if (NavigateInstance && NavigateInstance._progressView)
-      await NavigateInstance._addMonthsGraph ('_budgetMonthsGraph', NavigateInstance._progressView, [id], true, position, html, includeMonths, includeYears, []);
+      await NavigateInstance._addMonthsGraph ('_budgetMonthsGraph', NavigateInstance._progressView, [id], true, position, html, includeMonths, includeYears, [], dates);
   }
 }
 
