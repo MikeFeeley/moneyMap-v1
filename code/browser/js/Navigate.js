@@ -292,7 +292,7 @@ class Navigate {
         : dates .start > this._budget .getEndDate()
           ? '_budgetMonthsGraph' + ' ' + arg .name
           : arg .name .split (' ') .slice (-1) [0];
-      await this._addMonthsGraph (name, arg .view, arg .id, true, arg .position, arg .html, true, true, [], dates, undefined, arg .update);
+      await this._addMonthsGraph (name, arg .view, arg .id, true, arg .position, arg .html, true, true, [], dates, undefined, arg .update, true);
 
     } else if (eventType == NavigateViewEvent .BUDGET_GRAPH_GET_HISTORY) {
       await this._actuals .findHistory();
