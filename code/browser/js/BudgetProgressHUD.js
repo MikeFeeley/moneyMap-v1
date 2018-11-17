@@ -337,16 +337,17 @@ class BudgetProgressHUD {
 
   _updateMonth() {
     if (this._id) {
-      this._view .updateGroup ('_month', this._varianceAmount .month);
+      const hasMonth = this._hasAmount (this._varianceAmount .month)
+      this._view .updateGroup ('_month', hasMonth);
       if (this._varianceAmount .month) {
         this._view .updateMonthsGraph   (this._monthsAmount);
-        this._view .updateProgressGraph ('_month', this._varianceAmount .month, this._hasAmount (this._varianceAmount .month));
+        this._view .updateProgressGraph ('_month', this._varianceAmount .month, hasMonth);
       }
     }
   }
 
   _hasAmount (a) {
-    return a && Object .keys (a .amounts) .reduce ((t,k) => {return t + a .amounts[k]}, 0) != 0;
+    return a && Object .values (a .amounts) .find (a => a != 0);
   }
 
   _updateYear() {
