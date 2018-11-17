@@ -1264,7 +1264,7 @@ class NavigateView extends Observable  {
           let date;
           if (col == -1 && dataset .dates .length > 1 && Types .date .subMonths (dataset .dates [1] .start, dataset .dates [0] .start) == 1)
             date = {start: dataset .dates[0] .start, end: dataset .dates .slice (-1) [0] .end};
-          else if (col >= dataset .dates .length && col < dataset .cols .length)
+          else if (col >= dataset .dates .length)
             date = {start: dataset .dates [0] .start, end: dataset .dates .slice (-1) [0] .end};
           else if (col >= 0 && col < dataset .dates .length)
             date = dataset .dates [col];

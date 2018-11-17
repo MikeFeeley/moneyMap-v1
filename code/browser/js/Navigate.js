@@ -367,7 +367,7 @@ class Navigate {
           if (! arg .date || arg .date .end > this._budget .getStartDate()) {
             arg .date == arg .date || {start: this._budget .getStartDate(), end: this._budget .getEndDate()};
             let activeId = arg .id .find (i => {let cat= this._categories .get (i); return cat && cat .budgets .includes (this._budget .getId())});
-            if (activeId)
+            if (activeId && arg .date)
               BudgetProgressHUD .show (activeId, arg .html, arg .position, this._accounts, this._variance, arg .date .end);
           } else
             TransactionHUD .showCategory (arg.id [0], arg .date, this._accounts, this._variance, arg .html, arg .position);
