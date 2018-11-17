@@ -26,7 +26,7 @@ class ImportRulesView extends TupleView {
     );
     var cats      = variance .getBudget() .getCategories();
     var catFormat = new ViewFormatOptions (
-      value => {var cat = cats .get (value); return cat? cat.name: value},
+      value => {var cat = cats .get (value); return cat? cat.name: null},
       view  => {return view},
       value => {return cats .getPathname (cats .get (value)) .join (': ')},
       ()    => {return cats}

@@ -7,6 +7,7 @@ class BudgetProgressHUD {
     this._options         = options;
     this._categoryPicker  = categoryPicker;
     this._view .addObserver (this, this._onViewChange);
+    this._categories      = this._variance .getBudget() .getCategories();
   }
 
   delete() {
@@ -20,7 +21,8 @@ class BudgetProgressHUD {
   }
 
   _onModelChange (eventType, doc, arg, model) {
-    if (this._id) {
+    this._cat = this._id && this._categories .get (this._id);
+    if (this._cat) {
       if (! this._expanded) {
         this._getData();
         this._updateCompare();
@@ -28,8 +30,7 @@ class BudgetProgressHUD {
         this._updateYear();
         this._updateTitle();
         if (eventType == ModelEvent .INSERT || eventType == ModelEvent .REMOVE) {
-          var cat = this._variance .getBudget() .getCategories() .get (this._id);
-          if (((cat .children || []) .length != 0) != this._hasSubCategories)
+          if (((this._cat .children || []) .length != 0) != this._hasSubCategories)
             this._updateSubCategories (true);
         }
         if (this._categoryPicker) {
@@ -79,7 +80,7 @@ class BudgetProgressHUD {
       }
     } else if (eventType == BudgetProgressHUDViewEvent .BODY_CLICK) {
       if (arg .altClick) {
-        let parent = this._variance .getBudget() .getCategories() .get(this._id) .parent;
+        let parent = this._cat .parent;
         if (parent)
           BudgetProgressHUD .show (parent._id, arg .html, arg .position, this._accounts, this._variance, this._date);
       } else
@@ -146,19 +147,17 @@ class BudgetProgressHUD {
   _getExpandedData() {
     const budget     = this._variance .getBudget();
     const actuals    = this._variance .getActuals();
-    const categories = budget .getCategories();
-    const cat        = categories .get (this._id);
-    const children   = (cat .children || []);
-    const sign       = budget .isCredit (cat)? -1: 1;
+    const children   = (this._cat .children || []);
+    const sign       = budget .isCredit (this._cat)? -1: 1;
     const bs         = budget.getStartDate ();
     const be         = budget.getEndDate ();
     const st         = Types.dateFY.getFYStart (this._date, bs, be);
     const en         = Types.dateFY.getFYEnd (this._date, bs, be);
 
-    this._budgetTotal = budget .getAmount (cat, st, en) .amount * sign;
+    this._budgetTotal = budget .getAmount (this._cat, st, en) .amount * sign;
 
     this._budgetDescription = st == bs ? 'this Year' : budget.getLabel ({start: st, end: en});
-    const va = [cat] .concat (children)
+    const va = [this._cat] .concat (children)
       .map (c => {
         const b = budget .getAmount (c, st, en) .amount * sign;
         const a = actuals .getAmountRecursively (c, st, en) * sign;
@@ -176,7 +175,7 @@ class BudgetProgressHUD {
       va [0] .actual    = Math .max (0, va [0] .actual    - ca .actual);
       va [0] .name = 'Other';
     }
-    const rootName = categories .getPath (cat) [0] .name;
+    const rootName = this._categories .getPath (this._cat) [0] .name;
     this._budget = va
       .filter (item => item .actual > 0 || item .available > 0)
       .map (item => [
@@ -187,7 +186,7 @@ class BudgetProgressHUD {
     this._varianceAmounts = [this._id] .concat (children .map (child => child._id))
       .map    (cid => this._getAmount (cid, true))
       .filter (item =>
-        (item._id == this._id || categories .hasType (categories .get (item._id), ScheduleType .NOT_NONE)) &&
+        (item._id == this._id || this._categories .hasType (this._categories .get (item._id), ScheduleType .NOT_NONE)) &&
         (this._hasAmount (item .month) || this._hasAmount (item .year)));
     for (const per of ['month', 'year']) {
       const list = this._varianceAmounts .map (item => item [per]) .filter (item => item);
@@ -241,7 +240,7 @@ class BudgetProgressHUD {
     this._view .updateDoughnut ('_budget', this._budget);
     this._updateProgress();
     this._updateScheduleEntry();
-    this._view .setVisible (id);
+    this._view .setVisible (!! this._cat);
   }
 
   show (id, date, debit, credit, toHtml, position, expanded, showProgress) {
@@ -259,6 +258,7 @@ class BudgetProgressHUD {
   update (id) {
     if (id == null || id != this._id) {
       this._id = id;
+      this._cat = this._id && this._categories .get (this._id);
       this._getData();
       if (this._options .noScheduleEntry) {
         const noVariance = this._varianceAmount && ! this._varianceAmount .month && ! this._varianceAmount .year;
@@ -269,29 +269,30 @@ class BudgetProgressHUD {
           return;
         }
       }
-      this._view .setVisible (id);
+      this._view .setVisible (!! this._cat);
       this._updateAll();
      }
   }
   
   hide() {
     this._id = undefined;
+    this._cat = undefined;
     this._deleteScheduleEntries();
     this._view .removeHtml();
   }
 
   _addTitle (subtitle) {
-    this._title = new BudgetProgressCategoryTitle (this._variance, this._view, this._accounts, this._variance .getBudget() .getCategories());
+    this._title = new BudgetProgressCategoryTitle (this._variance, this._view, this._accounts, this._categories);
     this._view.addTitle (this._title, subtitle);
   }
 
   _updateTitle() {
-    if (this._id && this._title) {
+    if (this._cat && this._title) {
       if (! this._expanded) {
         this._title .setId (this._id);
-        this._view .setTitleHasNoParent (this._variance .getBudget() .getCategories() .get (this._id) .parent == null);
+        this._view .setTitleHasNoParent (this._cat .parent == null);
       } else {
-        this._view .updateTitle (this._variance .getBudget() .getCategories() .get (this._id) .name);
+        this._view .updateTitle (this._cat .name);
         this._view .updateBudgetTotal (this._budgetTotal);
       }
     }
@@ -336,7 +337,7 @@ class BudgetProgressHUD {
   }
 
   _updateMonth() {
-    if (this._id) {
+    if (this._cat) {
       const hasMonth = this._hasAmount (this._varianceAmount .month)
       this._view .updateGroup ('_month', hasMonth);
       if (this._varianceAmount .month) {
@@ -351,7 +352,7 @@ class BudgetProgressHUD {
   }
 
   _updateYear() {
-    if (this._id) {
+    if (this._cat) {
       var hasYear = this._hasAmount (this._varianceAmount .year);
       this._view .updateGroup ('_year', hasYear);
       if (hasYear) {
@@ -365,17 +366,15 @@ class BudgetProgressHUD {
   }
 
   _updateSubCategories (setFocus) {
-    if (this._id) {
+    if (this._cat) {
       if (this._options .noScheduleEntry)
         return;
-      var cats = this._variance .getBudget() .getCategories();
-      var cat  = cats .get (this._id);
       this._view .emptyGroup ('_subcategories');
       if (this._sub) {
         this._sub .delete();
         this._sub = null;
       }
-      this._hasSubCategories = (cat .children || []) .length != 0;
+      this._hasSubCategories = (this._cat .children || []) .length != 0;
       if (this._hasSubCategories) {
         var opt = {
           startDate:                            Types .date .monthStart (this._date),
@@ -401,7 +400,7 @@ class BudgetProgressHUD {
   }
 
   _updateScheduleEntry() {
-    if (this._id) {
+    if (this._cat) {
       const budget = this._variance.getBudget ();
       const bs = budget.getStartDate ();
       const be = budget.getEndDate ();
@@ -435,16 +434,14 @@ class BudgetProgressHUD {
   _addSchedule () {
     this._view .addGroup ('_schedule');
     if (this._expanded) {
-      const categories = this._variance .getBudget() .getCategories();
-      this._view .addPath  ('_schedule', categories .getPath (categories .get (this._id)) .slice (0, -1));
+      this._view .addPath  ('_schedule', this._categories .getPath (this._cat) .slice (0, -1));
     }
   }
 
   _updateSchedule() {
-    if (this._id) {
+    if (this._cat) {
       if (this._options .noScheduleEntry)
         return;
-      var cats = this._variance .getBudget() .getCategories();
       this._view .emptyGroup ('_schedule');
       if (this._shd) {
         this._shd .delete();
@@ -475,7 +472,7 @@ class BudgetProgressHUD {
   }
 
   _getData() {
-    if (this._id) {
+    if (this._cat) {
       this._varianceAmount = this._getAmount (this._id);
       let budget           = this._variance .getBudget();
       let bs = budget.getStartDate ();
@@ -493,24 +490,24 @@ class BudgetProgressHUD {
     const cyE = Types.dateFY.getFYEnd (this._date, bs, be);
     const lyS = Types.date.addYear (cyS, - 1);
     const lyE = Types.date.addYear (cyE, - 1);
-    const cat = budget.getCategories ().get (this._id);
+    const cat = this._cat;
     const isCredit = ['month', 'year'].reduce ((isc, per) => {
       return isc || (this._varianceAmount [per] && this._varianceAmount [per] .isCredit)
     }, false)
     const creditAdjust = isCredit ? - 1 : 1;
     let lastYearAmount;
     if (lyS < bs)
-      lastYearAmount = [cat].concat ((cat.parent && cat.parent.zombies) || [])
+      lastYearAmount = [this._cat].concat ((this._cat.parent && this._cat.parent.zombies) || [])
       .filter (c => {
-        return c.name == cat.name
+        return c.name == this._cat.name
       })
       .reduce ((t, c) => {
         return t + this._variance.getActuals ().getAmountRecursively (c, lyS, lyE)
       }, 0);
     else
-      lastYearAmount = budget.getAmount (cat, lyS, lyE).amount;
-    let actualAmount = this._variance .getActuals() .getAmountRecursively (cat, cyS, cyE) * creditAdjust;
-    let budgetAmount = budget .getAmount (cat, cyS, cyE) .amount * creditAdjust;
+      lastYearAmount = budget.getAmount (this._cat, lyS, lyE).amount;
+    let actualAmount = this._variance .getActuals() .getAmountRecursively (this._cat, cyS, cyE) * creditAdjust;
+    let budgetAmount = budget .getAmount (this._cat, cyS, cyE) .amount * creditAdjust;
     const isBudgetLess = ! ['month', 'year']
       .find (p => this._varianceAmount [p] && ! this._varianceAmount [p] .isBudgetless);
     if (isBudgetLess)
@@ -559,7 +556,7 @@ class BudgetProgressHUD {
     var isNegative = amt < 0;
     var isNegative = amt < 0;
     amt = amt * (isNegative? -1: 1);
-    const cat = includeName && this._variance .getBudget() .getCategories() .get (id);
+    const cat = includeName && this._cat;
     for (let t of ['month', 'year']) {
       if (data [t] && includeName) {
         data [t]._id   = cat._id;
