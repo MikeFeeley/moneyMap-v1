@@ -244,10 +244,11 @@ class BudgetProgressHUD {
     this._view .setVisible (id);
   }
 
-  show (id, date, debit, credit, toHtml, position, expanded) {
+  show (id, date, debit, credit, toHtml, position, expanded, showProgress) {
     this._originalId = id;
     this._amount     = (debit || 0) - (credit || 0);
     this._date = date || Types.date.today ();
+    this._showProgress = showProgress || Types .date._yearMonth (this._date) == Types .date._yearMonth (Types .date .today());
     this._view .addHtml (toHtml, position);
     if (! expanded)
       this._setNormal();
@@ -299,14 +300,14 @@ class BudgetProgressHUD {
   _addMonth() {
     this._view.addGroup ('_month');
     this._view.addMonthsGraph ('_month', this._monthsAmount);
-    if (this._date <= this._variance.getBudget ().getEndDate ()) {
+    if (this._showProgress) {
       this._view.addText ('_month', '_monthTitle', 'This Month');
       this._view.addProgressGraph ('_month', '_month');
     }
   }
 
   _addYear () {
-    if (this._date <= this._variance.getBudget ().getEndDate ()) {
+    if (this._showProgress) {
       this._view.addGroup ('_year');
       var budget = this._variance.getBudget ();
       var year = Types.dateFY.toString (this._date, budget.getStartDate (), budget.getEndDate ());
@@ -316,7 +317,7 @@ class BudgetProgressHUD {
   }
 
   _addProgress () {
-    if (this._date <= this._variance.getBudget ().getEndDate ()) {
+    if (this._showProgress) {
       const options = {barThickness: 24, barPercentage: .85};
       this._view.addText ('_progress', '_thisMonth', 'This Month', false);
       this._view.addProgressGraph ('_progress', '_monthly', false, options);
@@ -380,7 +381,7 @@ class BudgetProgressHUD {
           endDate:                              Types .date .monthEnd   (this._date),
           noInsertInside:                       true,
           noRemoveCategoryWithNonBlankSchedule: true,
-          showTotal:                            'variance',
+          showTotal:                            this._showProgress? 'variance': true,
           categoriesOnlyWithParent:             [this._id],
           onFieldClick:                         (id, name, html, pos) => {
             if (name != 'name' && id) {

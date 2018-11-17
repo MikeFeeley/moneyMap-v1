@@ -95,7 +95,7 @@ class CategoryPicker {
       this._show (id);
       this._view .addHtml (toHtml, (id) => {this._select (id)});
       this._view .show();
-      this._budgetProgressHUD .show (id, date, debit, credit, toHtml, {right: 130});
+      this._budgetProgressHUD .show (id, date, debit, credit, toHtml, {right: 130}, undefined, true);
       this._view .updateHeight();
     }
   }
