@@ -272,7 +272,12 @@ html {
         margin-left: 32px;
         margin-top: -94px;
         margin-bottom: 94px;
-        font-size: 28px;
+        @media (max-width: $expandedMiniScheduleThreshold) {
+          font-size: 20px;
+        }
+        @media (min-width: $expandedMiniScheduleThreshold) {
+          font-size: 28px;
+        }
         font-weight: 200;
         color: #bbb;
       }
