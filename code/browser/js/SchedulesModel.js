@@ -315,7 +315,7 @@ class SchedulesModel extends Observable {
     return cat .parent? this .isGoal (cat .parent): cat .goal;
   }
 
-  _getAmount (cats, start, end, includeDescendants, skipAccountCalculation, getOtherMonths) {
+  _getAmount (cats, start, end, includeDescendants, skipAccountCalculation, getOtherMonths, noRecursiveAccount) {
     const amount = {amount: 0, month: {amount: 0}, year: {amount: 0, allocated: 0, unallocated: 0}, otherMonths: 0};
     const getBalances = [];
 
@@ -349,26 +349,30 @@ class SchedulesModel extends Observable {
         }
       }
 
-      if (! skipAccountCalculation && cat .account) {
-        let account = this._actModel .getAccountsModel() .getAccount (cat .account);
-        if (account) {
-          catAmount .amount = account .getAmount (cat, start, end, catAmount .amount);
-          if (catAmount .year .amount != 0 && catAmount .month .amount == 0)
-            catAmount .year .amount = catAmount .amount;
-          else if (catAmount .year .amount == 0)
-            catAmount .month .amount = catAmount .amount;
-          else {
-            const percentMonth = 1.0 * catAmount .month .amount / (catAmount .month .amount + catAmount .year .amount);
-            catAmount .month .amount = Math .round (percentMonth * catAmount .amount);
-            catAmount .year  .amount = Math .around ((1 - percentMonth) * catAmount .amount);
+      if (! skipAccountCalculation) {
+        const getAccount = cat => cat && (cat .account || (! noRecursiveAccount && getAccount (cat .parent)));
+        const accountId  = getAccount (cat);
+        if (accountId) {
+          let account = this._actModel .getAccountsModel() .getAccount (accountId);
+          if (account) {
+            catAmount .amount = account .getAmount (cat, start, end, catAmount .amount);
+            if (catAmount .year .amount != 0 && catAmount .month .amount == 0)
+              catAmount .year .amount = catAmount .amount;
+            else if (catAmount .year .amount == 0)
+              catAmount .month .amount = catAmount .amount;
+            else {
+              const percentMonth = 1.0 * catAmount .month .amount / (catAmount .month .amount + catAmount .year .amount);
+              catAmount .month .amount = Math .round (percentMonth * catAmount .amount);
+              catAmount .year  .amount = Math .around ((1 - percentMonth) * catAmount .amount);
+            }
+            catAmount .grossAmount = account .getGrossAmount (start, end, catAmount .amount);
+            getBalances .push (() => account .getBalance (start, end) .amount);
           }
-          catAmount .grossAmount = account .getGrossAmount (cat, start, end, catAmount .amount);
-          getBalances .push (() => account .getBalance (start, end) .amount);
         }
       }
 
       let desAmount = includeDescendants
-        ? this._getAmount (cat .children, start, end, includeDescendants, skipAccountCalculation, hasYear || getOtherMonths)
+        ? this._getAmount (cat .children, start, end, includeDescendants, skipAccountCalculation, hasYear || getOtherMonths, true)
         : {amount: 0, month: {amount: 0}, year: {amount: 0, allocated: 0, unallocated: 0}, otherMonths: 0};
 
       amount .month .amount += catAmount .month .amount + desAmount .month .amount;
@@ -440,12 +444,16 @@ class Schedules extends Categories {
     let hasMonth = false;
     let hasYear  = false;
     if (cat) {
-      if (! noIndirectSchedule && cat .account) {
-        let account = this._model._actModel .getAccountsModel() .getAccount (cat .account);
-        if (cat._id == account .category && account .intCategory)
-          cat = this .get (account .intCategory);
-        else if (cat._id == account .intCategory && account .incCategory)
-          cat = this .get (account .incCategory);
+      if (! noIndirectSchedule) {
+        const getAccount = cat => cat && (cat .account || getAccount (cat .parent));
+        const accountId = getAccount (cat);
+        if (accountId) {
+          let account = this._model._actModel .getAccountsModel() .getAccount (accountId);
+          if (cat._id == account .category && account .intCategory)
+            cat = this .get (account .intCategory);
+          else if (cat._id == account .intCategory && account .incCategory)
+            cat = this .get (account .incCategory);
+        }
       }
       const bs = this._budget.getStartDate ();
       const be = this._budget.getEndDate ();

@@ -551,9 +551,11 @@ class Account {
    * returns budgetAmount
    */
   getAmount (cat, start, end, amount) {
+    const getAccountCat = cat => cat .account? cat: cat .parent? getAccountCat (cat .parent): null;
+    const accountCat    = getAccountCat (cat);
     end = Types .date .monthEnd (end);
 
-    if (this .isPrincipalInterestLiabilityAccount() && [this .category, this .intCategory] .includes (cat._id)) {
+    if (this .isPrincipalInterestLiabilityAccount() && [this .category, this .intCategory] .includes (accountCat._id)) {
       // go month-by-month to correctly account for compounding
       const getAmountForOneMonth = (start, end) => {
         const st  = Types .date .monthStart (Types .date .addMonthStart (end, -1));
@@ -561,7 +563,7 @@ class Account {
         const bal = this .getBalance  (st, en);
         const int = Math .max (0, this._getInterest (bal .amount, start, Types .date .subDays (end, start) + 1) * (this .creditBalance? 1: -1));
         let am  = amount;
-        if (cat._id == this .intCategory)
+        if (accountCat._id == this .intCategory)
           return Math .min (am, int);
         else {
           let pri = this._budget .getAmount (this._budget .getCategories() .get (this .intCategory), start, end, true);
@@ -575,13 +577,13 @@ class Account {
       return totalAmount;
 
     } else if (this .form == AccountForm .INCOME_SOURCE)
-      return -this._getIncomeSourceAmount (cat, start, end, -amount);
+      return -this._getIncomeSourceAmount (cat, accountCat, start, end, -amount);
 
     else
       return amount;
   }
 
-  getGrossAmount (cat, start, end, amount) {
+  getGrossAmount (start, end, amount) {
     if (this .form == AccountForm .ASSET_LIABILITY && this .creditBalance && this .disTaxRate) {
       let taxRate = this .disTaxRate / 10000.0;
       let lastMonth = Types .date .addMonthStart (start, -1);
@@ -597,13 +599,13 @@ class Account {
   /**
    * Get income-source amount
    */
-  _getIncomeSourceAmount (cat, start, end, amount) {
+  _getIncomeSourceAmount (cat, accountCat, start, end, amount) {
     if (this .form == AccountForm .INCOME_SOURCE) {
 
       if (this .taxType == AccountsTaxType .PERCENTAGE) {
-        if (cat._id == this .incCategory && ! this .intCategory)
+        if (accountCat._id == this .incCategory && ! this .intCategory)
           amount = Math .round (amount * (1 - this .taxRate / 10000.0));
-        else if (this .incCategory && this .intCategory && cat._id == this .intCategory) {
+        else if (this .incCategory && this .intCategory && accountCat._id == this .intCategory) {
           let inc = this._budget .getAmount (this._budget .getCategories() .get (this .incCategory), start, end, true);
           amount -= (inc .month? inc .month .amount: 0) + (inc .year? inc .year .amount / 12 * (Types .date._difMonths (end, start)): 0);
           amount = Math .round (amount * (this .taxRate / 10000.0));
@@ -611,7 +613,7 @@ class Account {
       }
 
       if (this .taxType == AccountsTaxType .TABLE) {
-        if (cat._id == this .intCategory) {
+        if (accountCat._id == this .intCategory) {
           let pri = this._budget .getAmount (this._budget .getCategories() .get (this .incCategory), start, end, true);
           amount -= (pri .month? pri .month .amount: 0) + (pri .year? pri .year .amount / 12 * (Types .date._difMonths (end, start)): 0);
         }
@@ -625,9 +627,9 @@ class Account {
           }
           deduction += this._calcMonthDeduction (dt, monthAmount);
         }
-        if (cat._id == this .incCategory && ! this .intCategory)
+        if (accountCat._id == this .incCategory && ! this .intCategory)
           amount -= deduction;
-        else if (this .incCategory && this .intCategory && cat._id == this .intCategory)
+        else if (this .incCategory && this .intCategory && accountCat._id == this .intCategory)
           amount = -deduction;
       }
     }
