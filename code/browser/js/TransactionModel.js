@@ -188,7 +188,8 @@ class TransactionModel extends Model {
     if (query && query .$options && query .$options .primeCacheDateRange)
       if (! await this._checkCache ({date: query .date}, append, true))
         await super .find ({date: query .date}, append);
-    return super .find (query, append, await this._checkCache (query, append, true));
+    const okToUseCacheForGroupLookup = await this._checkCache({date: query .date});
+    return super .find (query, append, await this._checkCache (query, append, true), ! okToUseCacheForGroupLookup);
   }
 
   /**

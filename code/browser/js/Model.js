@@ -150,7 +150,7 @@ class Model extends Observable {
   /**
    * Query server and return matching documents
    */
-  async find (query, append = false, cacheOnly = false) {
+  async find (query, append = false, cacheOnly = false, doNotUseCacheForGroup = false) {
     this._options = query && query .$options;
     if (query && query .$options)
       query = Object .keys (query) .reduce ((o,k) => {if (k != '$options') o [k] = query [k]; return o}, {});
@@ -169,7 +169,7 @@ class Model extends Observable {
       if (groups .length > 0) {
         query = {};
         query [this._options .groupBy] = {$in: groups};
-        let groupDocs = cacheOnly? this._collection .findFromCache (query): (await this._collection .find (query));
+        let groupDocs = cacheOnly && ! doNotUseCacheForGroup? this._collection .findFromCache (query): await this._collection .find (query);
         docs = docs .concat (groupDocs);
         this._groups = groups .reduce ((map,group) => {
           map .set (group, groupDocs .filter (d => {return d [this._options .groupBy] == group}));
