@@ -30,7 +30,7 @@ class ScheduleEntryView extends ListView {
       new ScheduleEntryZombie          ('zombie',          ViewFormats ('string')),
       new ScheduleEntryZombieActive    ('zombieActive',    ViewFormats ('string'), categories, variance .getActuals()),
       new ViewEmpty                    ('scheduleLine',    ViewFormats ('string')),
-      new ScheduleEntryTotal           ('total',           totalFormat, hud, budget .getStartDate()),
+      new ScheduleEntryTotal           ('total',           totalFormat, hud, budget .getStartDate(), budget .getEndDate()),
       new ScheduleEntryViewUnallocated ('unallocated',     ViewFormats ('moneyDC')),
       new ViewScalableDate             ('start',           startFormat,                  '', '', 'Start', {type: 'MYorYear', budget: budget, other: 'end'}),
       new ViewScalableDate             ('end',             endFormat,                    '', '', 'End',   {type: 'EndMY',    budget: budget, other: 'start'}),
@@ -164,10 +164,11 @@ class ScheduleEntryView extends ListView {
 }
 
 class ScheduleEntryTotal extends ViewLabel {
-  constructor (name, format, hud, budgetStart) {
+  constructor (name, format, hud, budgetStart, budgetEnd) {
     super (name, format);
     this._hud = hud;
     this._budgetStart = budgetStart;
+    this._budgetEnd   = budgetEnd;
   }
   _addHtml() {
     super._addHtml();
@@ -182,7 +183,7 @@ class ScheduleEntryTotal extends ViewLabel {
         const isMoving = line .parent() .find ('._placeholder') .length > 0;
         if (e .originalEvent .webkitForce > 1 || e .originalEvent .altKey) {
           if (! isMoving)
-            Navigate .showBudgetMonthGraph (id, {start: this._budgetStart, end: Types .date .today()}, toHtml, pos);
+            Navigate .showBudgetMonthGraph (id, {start: this._budgetStart, end: this._budgetEnd}, toHtml, pos);
         } else
           this._hud .show (id, Types .dateDMY .today(), 0, 0, toHtml, pos);
         return false;
