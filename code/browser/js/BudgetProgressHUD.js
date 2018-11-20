@@ -121,6 +121,7 @@ class BudgetProgressHUD {
       if (! this._originalId)
         this._originalId = this._id;
       this._id = this._originalId;
+      this._cat = this._id && this._categories .get (this._id);
       this._getExpandedData();
       this._addTitle ('Budget ' + this._budgetDescription);
 
@@ -231,6 +232,7 @@ class BudgetProgressHUD {
 
   _updateExpanded (id, skipGetData) {
     this._id = id;
+    this._cat = this._id && this._categories .get (this._id);
     if (skipGetData)
       this._getExpandedData();
     this._updateTitle();
