@@ -9,6 +9,8 @@ class TransactionModel extends Model {
 
   delete() {
     super .delete();
+    TransactionModel_queries = [];
+    TransactionModel_database = undefined;
   }
 
   _getQueries() {
