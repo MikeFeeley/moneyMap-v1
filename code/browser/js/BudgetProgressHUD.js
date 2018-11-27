@@ -70,7 +70,7 @@ class BudgetProgressHUD {
         let isMonth = arg .name == 'months' || arg .name == '_month' || arg .name == '_monthly';
         let isAll   = arg .name == 'all';
         if (arg .id || this._id) {
-          if (dates .end < bs)
+          if (arg .lastYear? dates .end < bs: dates .end <= be)
             await Navigate .showActualMonthGraph (arg .id || this._id, dates, arg .html, arg .position, isMonth || isAll, ! isMonth || isAll);
           else
             await Navigate .showBudgetMonthGraph (this._id, dates, arg .html, arg .position);
