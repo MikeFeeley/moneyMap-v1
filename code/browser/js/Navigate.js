@@ -1477,7 +1477,7 @@ class Navigate {
   /**** HISTORY ****/
 
   /**
-   * Get a budget data for root and its children
+   * Get a budget data for roots and their children
    *   returns {
    *     cols:   array of column headers
    *     dates:  date ranges for each column
@@ -1496,8 +1496,19 @@ class Navigate {
    *   }
    */
   async _getHistoryData (parentIds, date, filter) {
-    const defaultParents  = [this._budget .getWithdrawalsCategory(), this._budget .getIncomeCategory(), this._budget .getSavingsCategory(), this._budget .getExpenseCategory()];
-    parentIds           = (parentIds || (defaultParents .map (p => {return p._id}))) .filter (pid => ! pid .includes ('_'));
+    const defaultParents = [this._budget .getWithdrawalsCategory(), this._budget .getIncomeCategory(), this._budget .getSavingsCategory(), this._budget .getExpenseCategory()];
+    parentIds            = (parentIds || (defaultParents .map (p => {return p._id}))) .filter (pid => ! pid .includes ('_'));
+
+    const homonyms = [];
+    for (const pid of parentIds) {
+      const cat    = this._categories .get(pid);
+      const parent = cat .parent;
+      for (const sib of parent .zombies || [])
+        if (sib .name == cat .name)
+          homonyms .push (sib._id);
+    }
+    parentIds .push (... homonyms);
+
     // get historic amounts
     const historicYears = this._actuals .getHistoricYears();
     let historicAmounts = [];
