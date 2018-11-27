@@ -1503,9 +1503,10 @@ class Navigate {
     for (const pid of parentIds) {
       const cat    = this._categories .get(pid);
       const parent = cat .parent;
-      for (const sib of parent .zombies || [])
-        if (sib .name == cat .name)
-          homonyms .push (sib._id);
+      if (parent)
+        for (const sib of parent .zombies || [])
+          if (sib .name == cat .name)
+            homonyms .push (sib._id);
     }
     parentIds .push (... homonyms);
 
