@@ -914,12 +914,12 @@ class Account {
     };
   }
 
-  getBalances (dates) {
+  async getBalances (dates) {
     let bs       = this._budget .getStartDate();
     let be       = this._budget .getEndDate();
     let balances = dates .map (d => {return this .getBalance (Types .dateFY .getFYStart (d, bs, be), Types .dateFY .getFYEnd (d, bs , be))});
     return {
-      curBal:      this.getCurBalance() * (this .creditBalance? 1: -1),
+      curBal:      (await this.getCurBalance()) * (this .creditBalance? 1: -1),
       liquid:      this .liquid,
       amounts:     balances .map (d => {return d && d .amount}),
       detail:      balances .map (d => {return d && d .detail}),

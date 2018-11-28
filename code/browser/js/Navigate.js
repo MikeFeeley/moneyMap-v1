@@ -1951,12 +1951,12 @@ class Navigate {
       colDates .push(d);
 
      // compute balances
-    let rowsData = rows .map (row => {
+    let rowsData = await Promise .all (rows .map (async row => {
       let rowAccounts = row .type == AccountType .GROUP
         ? accounts .filter (a => {return a .group == row._id})
         : [row];
       let rowData = rowAccounts .length
-        ? rowAccounts .map (account => {return account .getBalances (colDates)})
+        ? await Promise .all (rowAccounts .map (async account => {return await account .getBalances (colDates)}))
         : [Account .getZeroBalances (colDates)];
       return {
         id:     row._id,
@@ -1985,7 +1985,7 @@ class Navigate {
             }
           })}, [])
       };
-    })
+    }));
     if (! accountIds)
       rowsData = [this._accounts.getCashFlowBalances (colDates)].concat (rowsData);
     let result = {
