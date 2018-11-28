@@ -28,6 +28,15 @@ class AccountBalance extends TuplePresenter {
   _onActualsChange (eventType, doc, arg) {
     if (this._isNetZeroCategory (doc .category) || (arg && arg._original_category && this._isNetZeroCategory (arg._original_category)))
       this._updateNetToZero();
+    for (const id of [doc .category, arg && arg._original_category])
+      if (id)
+        accounts: for (const acc of this._accounts .getAccounts())
+          if (acc)
+            for (const acid of [acc .category, acc .intCategory, acc .disCategory, acc .traCategory])
+              if (acid == id) {
+                this._updateBalance (acc._id);
+                break accounts;
+              }
   }
 
   _onAccountsChange (eventType, doc, arg) {
@@ -124,18 +133,21 @@ class AccountBalance extends TuplePresenter {
     }
   }
 
-  _addEditableTuple (acc, group) {
+  async _addEditableTuple (acc, group) {
+    const cur = await acc .getCurBalance();
     if (acc .balance) {
       acc = Object .assign ({}, acc);
-      acc .editable_balance = acc .balance || 0;
+      acc .editable_balance = cur || 0;
       delete acc .balance;
       this._addTuple (acc, group);
     }
   }
 
-  _updateBalance (aid) {
-    let acc = this._accounts .getAccount (aid);
-    this._view .updateField (acc._id, 'balance', acc .balance);
+  async _updateBalance (aid) {
+    const acc = this._accounts .getAccount (aid);
+    const bal = await acc .getCurBalance();
+    this._view .updateField (acc._id, 'balance', bal);
+    this._view .updateField (acc._id, 'editable_balance', bal);
   }
 
   _addNetToZero() {

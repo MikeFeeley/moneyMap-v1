@@ -677,6 +677,31 @@ class Account {
   }
 
   /**
+   * Returns the current account balance as of specficied date.  The differences between this and getBalance
+   * are the the current balance reflects all to-date actuals and no to-date budgets; and there's not detail.
+   */
+  async getCurBalance (date = Types .date .today()) {
+    const getTransactionAmount =  async (cid, st, en) => {
+      const trans = await this._model._tranModel .find ({category: cid, date: {$gt: st, $lte: en}});
+      return trans .reduce ((t,a) => t + a .debit - a .credit, 0);
+    }
+    if (date <= this .balanceDate)
+      return this .balance;
+    else {
+      const cats = [
+        this .category    && this._budget .getCategories() .get (this .category),
+        this .disCategory && this._budget .getCategories() .get (this .disCategory),
+        this .intCategory && this._budget .getCategories() .get (this .intCategory),
+        this .traCategory && this._budget .getCategories() .get (this .traCategory)
+      ];
+      const st = this .balanceDate;
+      const en = date;
+      const actuals = await Promise .all (cats .map (async cat => cat? await getTransactionAmount (cat._id, st, en): 0));
+      return this .balance + (this .creditBalance? 1: -1) * actuals .reduce ((t,a) => t + a);
+    }
+  }
+
+  /**
    * Returns account balance on last day of specified month with detail for specified period
    *   returns
    *     amount: ,
@@ -894,7 +919,7 @@ class Account {
     let be       = this._budget .getEndDate();
     let balances = dates .map (d => {return this .getBalance (Types .dateFY .getFYStart (d, bs, be), Types .dateFY .getFYEnd (d, bs , be))});
     return {
-      curBal:      this .balance * (this .creditBalance? 1: -1),
+      curBal:      this.getCurBalance() * (this .creditBalance? 1: -1),
       liquid:      this .liquid,
       amounts:     balances .map (d => {return d && d .amount}),
       detail:      balances .map (d => {return d && d .detail}),
