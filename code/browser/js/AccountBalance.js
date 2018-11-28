@@ -143,6 +143,11 @@ class AccountBalance extends TuplePresenter {
     }
   }
 
+  hasBecomeVisible() {
+    if (this._view .isEmpty())
+      this._buildHtml();
+  }
+
   async _updateBalance (aid) {
     const acc = this._accounts .getAccount (aid);
     const bal = await acc .getCurBalance();
@@ -214,7 +219,6 @@ class AccountBalance extends TuplePresenter {
 
   _resetHtml() {
     this._view .resetHtml();
-    this._buildHtml();
   }
 
   addHtml (toHtml) {

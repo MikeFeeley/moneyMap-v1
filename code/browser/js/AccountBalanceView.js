@@ -30,6 +30,10 @@ class AccountBalanceView extends TupleView {
     this .empty();
   }
 
+  isEmpty() {
+    return this._tuples .size == 0;
+  }
+
   addText (name, text) {
     $('<div>', {class: name, text: text}) .appendTo (this._html);
   }
@@ -79,22 +83,24 @@ class AccountBalanceView extends TupleView {
       if (data .editable_balance === undefined && data .balance == undefined)
         data .balance = 0;
       tuple = super .addTuple (data, tuple, getToHtml);
-      tuple .find ('._field_name, ._field_balance') .on ('click webkitmouseforcedown', e => {
-        const target       = $(e .target);
-        const scrollParent = target .closest ('._AccountBalanceView');
-        const top          = ui .calcPosition (target, scrollParent) .top - scrollParent .scrollTop() + $('body') .scrollTop();
-        const html         = target .closest ('._ImportTransactions') .children ('._import');
-        const pos          = {top: top, left: 50};
-        this._notifyObservers (AccountBalanceViewEvent .CLICK, {
-          id:       data._id,
-          name:     data .name,
-          toHtml:   html,
-          position: pos,
-          isCat:    data .isCat,
-          altKey:   e .originalEvent .webkitForce > 1 || e .originalEvent .altKey,
-          shiftKey: e .originalEvent .shiftKey
+      if (tuple) {
+        tuple .find ('._field_name, ._field_balance') .on ('click webkitmouseforcedown', e => {
+          const target       = $(e .target);
+          const scrollParent = target .closest ('._AccountBalanceView');
+          const top          = ui .calcPosition (target, scrollParent) .top - scrollParent .scrollTop() + $('body') .scrollTop();
+          const html         = target .closest ('._ImportTransactions') .children ('._import');
+          const pos          = {top: top, left: 50};
+          this._notifyObservers (AccountBalanceViewEvent .CLICK, {
+            id:       data._id,
+            name:     data .name,
+            toHtml:   html,
+            position: pos,
+            isCat:    data .isCat,
+            altKey:   e .originalEvent .webkitForce > 1 || e .originalEvent .altKey,
+            shiftKey: e .originalEvent .shiftKey
+          });
         });
-      });
+      }
     }
   }
 }

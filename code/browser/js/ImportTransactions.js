@@ -62,6 +62,8 @@ class ImportTransactions extends Observable {
       ])
     Help .add ('Inbox', showHelp);
     toHtml .data ('visible', () => {
+      if (this._view)
+        this._view .hasBecomeVisible();
       if (! this._lastImport._batch)
         showHelp();
     });

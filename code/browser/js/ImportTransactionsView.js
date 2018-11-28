@@ -7,6 +7,7 @@ class ImportTransactionsView extends View {
     super (name, fields);
     this._variance = variance;
   }
+
   remove() {
     if (this._html) {
       this._html .remove();
@@ -16,6 +17,7 @@ class ImportTransactionsView extends View {
     $('html') .off ('dragover');
     $('html') .off ('drop');
   }
+
   async addHtml (toHtml) {
     this._toHtml = toHtml;
     this._html = $('<div>', {class: '_ImportTransactions'}) .appendTo (toHtml);
@@ -27,9 +29,14 @@ class ImportTransactionsView extends View {
          this ._notifyObservers (ImportTransactionsViewEvent .DROPPED, e .originalEvent .dataTransfer .files [0])
       }
     });
-    await (new AccountBalance (this._variance)) .addHtml (this._html);
+    this._accountBalance = new AccountBalance (this._variance);
+    await this._accountBalance .addHtml (this._html);
     this._import = $('<div>', {class: '_import'})  .appendTo (this._html);
-    this._html .parent() .addClass ('_ImportTransactionsContents')
+    this._html .parent() .addClass ('_ImportTransactionsContents');
+  }
+
+  hasBecomeVisible() {
+    this._accountBalance .hasBecomeVisible();
   }
 
   addText (name, text) {
