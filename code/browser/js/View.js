@@ -248,7 +248,8 @@ class ViewField {
         fieldName: this._name,
         value:     value
       });
-    }
+    } else
+      this .set (value);
   }
   _setError (message) {
     let content = this._html .find ('._content');
