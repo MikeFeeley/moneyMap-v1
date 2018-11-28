@@ -20,7 +20,8 @@ class TableView extends TupleView {
 
   _handleKeydown (e) {
     var moveRow = (reverse, sameCol) => {
-      $(document.activeElement).blur();
+      const activeElement = $(document.activeElement);
+      activeElement .blur();
       var tr  = $(e.target) .closest ('tr');
       var col = sameCol? tr .children() .index (td): 0;
       var ntr = tr;
@@ -31,6 +32,8 @@ class TableView extends TupleView {
       } while (ntr .length && ! $(ntr .find ('td') .get (col)) .find (':input') .filter (':visible') .length)
       if (ntr .length)
         $(ntr .find ('td') .get (col)) .find (':input') .focus();
+      else
+        activeElement .focus();
     }
     if (e.metaKey && [8, 13] .includes (e.keyCode))
       var id = $(e.target) .closest ('._field') .data ('field') ._id;
