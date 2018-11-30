@@ -1592,15 +1592,17 @@ class Navigate {
           }
           amounts .push (amount);
         }
-        var parentAmount = this._budget .getAmount (parent, budget .start, budget .end) .amount * (isCredit? -1: 1);
-        var otherAmount  = parentAmount - amounts .reduce ((t,a) => {return t + a .amount}, 0);
+        const parentBudget = this._budget .getAmount (parent, budget .start, budget .end);
+        const parentAmount = parentBudget .amount * (isCredit? -1: 1);
+        const otherAmount  = parentAmount - amounts .reduce ((t,a) => {return t + a .amount}, 0);
         if (otherAmount != 0)
           amounts .push ({
             id:       ['other_' + parent._id],
             name:     'Other',
             isCredit: isCredit,
             isGoal:   isGoal,
-            amount:   otherAmount
+            amount:   otherAmount,
+            grossAmount: (parentBudget .grossAmount || 0) * (isCredit? -1: 1) - amounts .reduce ((t,a) => t + (a .grossAmount || 0), 0)
           })
       }
     }

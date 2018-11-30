@@ -316,7 +316,7 @@ class SchedulesModel extends Observable {
   }
 
   _getAmount (cats, start, end, includeDescendants, skipAccountCalculation, getOtherMonths, noRecursiveAccount) {
-    const amount = {amount: 0, month: {amount: 0}, year: {amount: 0, allocated: 0, unallocated: 0}, otherMonths: 0};
+    const amount = {amount: 0, month: {amount: 0}, year: {amount: 0, allocated: 0, unallocated: 0}, otherMonths: 0, grossAmount: 0};
     const getBalances = [];
 
     for (const cat of cats || []) {
@@ -407,7 +407,7 @@ class SchedulesModel extends Observable {
       amount .otherMonths         += catAmount .otherMonths;
       amount .year .allocated     += catAmount .year .allocated;
       amount .year .unallocated   += catAmount .year .unallocated;
-      amount .grossAmounts        += catAmount .grossAmount;
+      amount .grossAmount         += catAmount .grossAmount;
     }
     amount .getBalance = () => getBalances .reduce ((t,e) => t + e(), 0);
     return amount;
