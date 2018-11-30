@@ -75,7 +75,7 @@ class ScheduleEntry extends List {
           this._view .update (cat._id, {
             total:       amt .amount * sign,
             unallocated: this._categories .getType (cat) == ScheduleType .YEAR && amt. year && amt .year .allocated
-              ? amt .year .unallocated : 0,
+              ? sign * amt .year .unallocated : 0,
             _computedAmount: amt
           });
           updateTotals (cat .parent);
