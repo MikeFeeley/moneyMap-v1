@@ -125,11 +125,11 @@ class AccountBalance extends TuplePresenter {
     }
   }
 
-  _addEditableGroup (name, accounts) {
+  async _addEditableGroup (name, accounts) {
     if (accounts .length > 0) {
       let g = this._view .addGroup (name, '_editable ' + (accounts [0] .creditBalance? '_flagGood': '_flagBad'));
       for (let acc of accounts)
-        this._addEditableTuple (acc, g);
+        await this._addEditableTuple (acc, g);
     }
   }
 
@@ -204,8 +204,8 @@ class AccountBalance extends TuplePresenter {
     }
   }
 
-  _addAssetLiability (accounts) {
-    this._addEditableGroup ('Assets',      accounts .filter (a => {return a .isAssetAccount()}));
+  async _addAssetLiability (accounts) {
+    await this._addEditableGroup ('Assets',      accounts .filter (a => {return a .isAssetAccount()}));
     this._addGroup         ('Liabilities', accounts .filter (a => {return a .isLiabilityAccount()}));
   }
 
