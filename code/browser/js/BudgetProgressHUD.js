@@ -557,7 +557,7 @@ class BudgetProgressHUD {
     var isNegative = amt < 0;
     var isNegative = amt < 0;
     amt = amt * (isNegative? -1: 1);
-    const cat = includeName && this._cat;
+    const cat = includeName && this._categories .get (id);
     for (let t of ['month', 'year']) {
       if (data [t] && includeName) {
         data [t]._id   = cat._id;
