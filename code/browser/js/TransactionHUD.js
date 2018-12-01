@@ -270,7 +270,7 @@ class TransactionHUD extends TransactionAndRulesTable {
       return false;
     })
     $('<div>', {class: '_calendarButton lnr-calendar-full'}) .appendTo (buttons)
-      .on ('click',                e => {this._toggleMonthYear()})
+      .on ('click',                e => {e .originalEvent .altKey? this._calendarYear(): this._toggleMonthYear()})
       .on ('webkitmouseforcedown', e => {this._calendarYear()})
     if (this._context && this._context .cat) {
       let cat = this._context .cat;
