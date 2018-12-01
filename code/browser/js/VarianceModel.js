@@ -172,14 +172,15 @@ class VarianceModel extends Observable {
     if (amount .month && amount .year) {
       if (amount .month .budget .prev > 0 && amount .year .actual .prev > 0) {
         let deal = 0;
-        for (let st = period .prev .start; st < period .prev .end; st = Types .date .addMonthStart (st, 1)) {
+        const fyStart = Types .dateFY .getFYStart (period .prev .start, this._budget .getStartDate(), this._budget .getEndDate());
+        for (let st = fyStart; st < period .prev .end; st = Types .date .addMonthStart (st, 1)) {
           const en = Types .date .monthEnd (st);
           const ac = this._actuals .getAmount (cat, st, en, skip);
           const bu = this._budget  .getIndividualAmount (cat, st, en);
           deal += Math .min (ac, bu .month .amount);
-          amount .month .actual .prev += deal;
-          amount .year  .actual .prev -= deal;
         }
+        amount .month .actual .prev += deal;
+        amount .year  .actual .prev -= deal;
       } else if (amount .month .budget .cur > 0 && amount .year .actual .cur > 0) {
         const deal = Math .min (amount .month .budget .cur, amount .year .actual .cur);
         amount .month .actual .cur += deal;
