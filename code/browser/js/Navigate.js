@@ -1182,7 +1182,7 @@ class Navigate {
             if (Math .abs (rootAmount [per]) == 1)
               rootAmount [per] = 0;
           }
-        if (Array .from (Object .keys (rootAmount)) .reduce ((t,p) => t + oaTotal [p], 0) > 0)
+        if (Array .from (Object .values (oaTotal)) .reduce ((t,v) => t + v) > 0) {
           amounts .push ({
             cat: {
               _id:      'other_' + root._id,
@@ -1191,6 +1191,7 @@ class Navigate {
             },
             amount: rootAmount
           })
+        }
       }
       months = includeMonths && getData ('month', amounts .filter (a => {return a .amount .month}));
       years  = includeYears  && getData ('year',  amounts .filter (a => {return a .amount .year}));
