@@ -21,13 +21,21 @@ class AccountBalance extends TuplePresenter {
   }
 
   _onBudgetChange (eventType, doc, arg, source, model) {
-    if (model instanceof SchedulesModel && this._isNetZeroCategory (doc._id))
-      this._updateNetToZero();
+    if (model instanceof SchedulesModel && this._isNetZeroCategory (doc._id)) {
+      if (this._view .isVisible())
+        this._updateNetToZero();
+      else
+        this._resetHtml();
+    }
   }
 
   _onActualsChange (eventType, doc, arg) {
-    if (this._isNetZeroCategory (doc .category) || (arg && arg._original_category && this._isNetZeroCategory (arg._original_category)))
-      this._updateNetToZero();
+    if (this._isNetZeroCategory (doc .category) || (arg && arg._original_category && this._isNetZeroCategory (arg._original_category))) {
+      if (this._view .isVisible())
+        this._updateNetToZero();
+      else
+        this._resetHtml();
+    }
     for (const id of [doc .category, arg && arg._original_category])
       if (id)
         accounts: for (const acc of this._accounts .getAccounts())
@@ -145,7 +153,7 @@ class AccountBalance extends TuplePresenter {
 
   hasBecomeVisible() {
     if (this._view .isEmpty())
-      this._buildHtml();
+     this._buildHtml();
   }
 
   async _updateBalance (aid) {
@@ -206,7 +214,7 @@ class AccountBalance extends TuplePresenter {
 
   async _addAssetLiability (accounts) {
     await this._addEditableGroup ('Assets',      accounts .filter (a => {return a .isAssetAccount()}));
-    this._addGroup         ('Liabilities', accounts .filter (a => {return a .isLiabilityAccount()}));
+    this._addGroup               ('Liabilities', accounts .filter (a => {return a .isLiabilityAccount()}));
   }
 
   _buildHtml() {
@@ -221,7 +229,7 @@ class AccountBalance extends TuplePresenter {
     this._view .resetHtml();
   }
 
-  addHtml (toHtml) {
+  async addHtml (toHtml) {
     this._view .addHtml (toHtml, () => {this._buildHtml()});
     this._buildHtml();
   }

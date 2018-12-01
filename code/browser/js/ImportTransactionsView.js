@@ -35,8 +35,8 @@ class ImportTransactionsView extends View {
     this._html .parent() .addClass ('_ImportTransactionsContents');
   }
 
-  hasBecomeVisible() {
-    this._accountBalance .hasBecomeVisible();
+  async hasBecomeVisible() {
+    await this._accountBalance .hasBecomeVisible();
   }
 
   addText (name, text) {

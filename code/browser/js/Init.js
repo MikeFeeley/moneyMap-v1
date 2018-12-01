@@ -1,5 +1,5 @@
 const APP_CACHE_RESOURCES = false;
-const APP_VERSION_HASH    = 'cd1e7ca';
+const APP_VERSION_HASH    = '6ed07bc';
 const APP_VERSION_STRING  = '1.0-beta (' + APP_VERSION_HASH + ')';
 
 const INIT_isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|BB|PlayBook|IEMobile|Windows Phone|Kindle|Silk|Opera Mini/i.test (navigator.userAgent);
