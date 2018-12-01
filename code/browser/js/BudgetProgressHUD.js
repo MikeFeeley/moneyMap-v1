@@ -188,6 +188,36 @@ class BudgetProgressHUD {
       .filter (item =>
         (item._id == this._id || this._categories .hasType (this._categories .get (item._id), ScheduleType .NOT_NONE)) &&
         (this._hasAmount (item .month) || this._hasAmount (item .year)));
+
+    const other = this._varianceAmounts .length > 1 && this._varianceAmounts .reduce ((t, e, i) => {
+      const sign = i==0? 1: -1;
+      const result = {available: (t .available || 0) + sign * e .available};
+      for (const per of ['month', 'year']) {
+        if (e [per])
+          result [per] = [... Object .keys (e [per] .amounts)] .reduce ((o,p) => {o[p] = sign * e [per] .amounts [p] + ((t [per] || {}) [p] || 0); return o}, {});
+        else
+          result [per] = t [per];
+      }
+      return result;
+    }, {});
+    if (other && other .available || ['month', 'year'] .find (per => other [per] && [... Object .keys (other [per])] .find (p => other [per] [p]))) {
+      const otherAmount = {_id: 'other_' + this._id, addCats: [], available: other .available};
+      const cat         = this._varianceAmounts [0];
+      for (const per of ['month', 'year'])
+        if (other [per])
+          otherAmount [per] = {
+            amounts: other [per],
+            _id:     'other_' + this._id,
+            name:    'Other',
+            isCredit: cat [per] .isCredit,
+            isGoal:   cat [per] .isGoal,
+            isYear:   cat [per] .isYear,
+            percentComplete: cat [per] .percentComplete,
+            percentInBudget: cat [per] .percentInBudget
+          }
+      this._varianceAmounts .push (otherAmount);
+    }
+
     for (const per of ['month', 'year']) {
       const list = this._varianceAmounts .map (item => item [per]) .filter (item => item);
       if (list .length == 2) {
@@ -195,6 +225,7 @@ class BudgetProgressHUD {
           list [0].deleteThis = true;
       }
     }
+
     for (const item of this._varianceAmounts)
       for (const per of ['month', 'year'])
         if (item [per] && item [per] .deleteThis)
