@@ -583,7 +583,7 @@ class Account {
       return amount;
   }
 
-  getGrossAmount (start, end, amount) {
+  getGrossAmount (start, end, amount, schAmount) {
     if (this .form == AccountForm .ASSET_LIABILITY && this .creditBalance && this .disTaxRate) {
       let taxRate = this .disTaxRate / 10000.0;
       let lastMonth = Types .date .addMonthStart (start, -1);
@@ -593,7 +593,8 @@ class Account {
         let bal = (this .creditBalance? -1: 1) * this .getBalance (lastMonth, Types .date .monthEnd (lastMonth)) .amount;
         return amount + Math .round (this._getInterest (bal, start, Types .date .subDays (end, start) + 1)) * taxRate;
       }
-    }
+    } else if (this .form == AccountForm .INCOME_SOURCE && schAmount !== undefined)
+      return schAmount;
   }
 
   /**

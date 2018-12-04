@@ -1572,8 +1572,8 @@ class Navigate {
           name:    parent .name,
           amounts: amounts
         });
-        let isCredit = this._budget .isCredit (parent);
-        let isGoal   = this._budget .isGoal   (parent);
+        const isCredit = this._budget .isCredit (parent);
+        const isGoal   = this._budget .isGoal   (parent);
         for (let cat of (parent .children || [])) {
           let ba = this._budget .getAmount (cat, budget .start, budget .end);
           const amount = {
@@ -1583,7 +1583,7 @@ class Navigate {
             isCredit:    isCredit,
             isGoal:      isGoal,
             amount:      ba .amount * (isCredit? -1: 1),
-            grossAmount: ! isGoal? ba .grossAmount && ba .grossAmount * (isCredit? -1: 1): 0
+            grossAmount: isCredit? ba .grossAmount && ba .grossAmount * (isCredit? -1: 1): 0
           }
           if (amount .amount) {
             const catRoot           = this._categories .getRoot (cat);

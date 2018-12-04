@@ -382,7 +382,8 @@ class SchedulesModel extends Observable {
         if (accountId) {
           let account = this._actModel .getAccountsModel() .getAccount (accountId);
           if (account) {
-            catAmount .amount = account .getAmount (cat, start, end, catAmount .amount);
+            const schAmount = catAmount .amount;
+            catAmount .amount = account .getAmount (cat, start, end, schAmount);
             if (catAmount .year .amount != 0 && catAmount .month .amount == 0)
               catAmount .year .amount = catAmount .amount;
             else if (catAmount .year .amount == 0)
@@ -394,7 +395,7 @@ class SchedulesModel extends Observable {
             }
             if (catAmount .otherMonths)
               catAmount .otherMonths = account .getAmount (cat, start, Types .dateFY .getFYEnd (start, this._budget .getStartDate(), this._budget .getEndDate()))
-            catAmount .grossAmount = account .getGrossAmount (start, end, catAmount .amount);
+            catAmount .grossAmount = account .getGrossAmount (start, end, catAmount .amount, schAmount);
             getBalances .push (() => account .getBalance (start, end) .amount);
           }
         }
