@@ -141,7 +141,7 @@ class ActualsModel extends Observable {
   }
 
   hasTransactions (cats, start, end) {
-    return [] .concat (cats) .find (cat => {return this._getActiveMonths (cat) .find (m => {
+    return cats && [] .concat (cats) .find (cat => {return this._getActiveMonths (cat) .find (m => {
       return (! start || m >= start) && (!end || m <= end)
     })}) != null;
   }
