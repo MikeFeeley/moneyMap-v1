@@ -219,7 +219,7 @@ class AccountsModel extends Observable {
               acc .balance += ((doc .debit || 0) - (doc .credit || 0)) * sign;
               var pacc = this._accounts .find (a => {return a._id == arg ._original_account});
               if (pacc) {
-                pacc .balance -= ((doc .debit || 0) - (doc .credit || 0)) * sign;
+                pacc .balance -= ((doc .debit || 0) - (doc .credit || 0)) * (pacc .creditBalance? -1: 1);
                 await this._notifyObserversAsync (ModelEvent .UPDATE, pacc, {balance: pacc .balance});
                 await this._model._notifyObserversAsync (ModelEvent .UPDATE, pacc, {balance: pacc .balance});
               }
