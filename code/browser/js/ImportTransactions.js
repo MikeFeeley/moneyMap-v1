@@ -165,6 +165,7 @@ class TransactionAndRulesTable extends TransactionTable {
     this._title            = title;
     this._hasTitle         = title != null;
     this._importRulesModel = parent ._importRulesModel;
+    this._importRulesModelObserver = this._importRulesModel .addObserver (this, this._onRuleModelChange);
     this._openRule;
     this._accounts = parent._accounts;
     this._variance = parent._variance;
@@ -173,10 +174,12 @@ class TransactionAndRulesTable extends TransactionTable {
 
   delete() {
     super .delete();
+    this._importRulesModel .deleteObserver (this._importRulesModelObserver);
   }
 
   _updateModelData (doc) {
     doc .rules = this._importRulesModel .getMatchingRules (doc) .length > 0;
+    return doc;
   }
 
   _onViewChange (eventType, arg) {
@@ -199,16 +202,24 @@ class TransactionAndRulesTable extends TransactionTable {
       this._updateModelData (doc);
       if (! doc .imported && this._parent._lastImport)
         this._parent._lastImport .newBatch (doc .importTime)
+    } else if (eventType == ModelEvent .UPDATE) {
+      this._updateModelData (doc);
+      this._view .updateRulesField (doc._id, doc .rules);
     }
     if (this._openRule && this._openRule .id == doc._id) {
-      if (eventType == ModelEvent .UPDATE)
+      if (eventType == ModelEvent .UPDATE) {
         this._openRule .rule .updateTran (doc);
-      else if (eventType == ModelEvent .REMOVE) {
+      } else if (eventType == ModelEvent .REMOVE) {
         this._openRule .rule .close();
         this._openRule = null;
       }
     }
     super._onModelChange (eventType, doc, arg, source);
+  }
+
+ async _onRuleModelChange (eventType, doc, arg, source) {
+    for (const tran of (await this._getCachedModelData()). map (tran => this._updateModelData (tran)))
+      this._view .updateRulesField (tran._id, !! tran .rules);
   }
 
   async _getModelData() {

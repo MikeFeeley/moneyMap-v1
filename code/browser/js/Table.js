@@ -32,6 +32,10 @@ class Table extends TuplePresenter {
     return data;
   }
 
+  async _getCachedModelData() {
+    return this._model .find (this._query, undefined, true);
+  }
+
   async _addModelData() {
     var docs = await this._getModelData();
     if (this._sort)

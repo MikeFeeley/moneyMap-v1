@@ -217,6 +217,11 @@ class ImportedTransactionTableView extends TransactionTableView {
       tr .remove();
     }
   }
+
+  updateRulesField (id, rules) {
+    const field = this._getField (id, 'rules');
+    this .updateField (id, 'rules', field._ruleIsShowing || rules);
+  }
 }
 
 class NeedsAttentionTableView extends ImportedTransactionTableView {
