@@ -615,7 +615,8 @@ class BudgetProgressHUDNameView extends View {
         this._notifyObservers (ViewEvent .UPDATE, {
           id:        field._id,
           fieldName: field._name,
-          value:     field .get()
+          value:     field .get(),
+          metaKey:   e .metaKey
         });
       }
     });

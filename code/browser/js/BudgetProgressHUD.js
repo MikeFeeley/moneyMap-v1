@@ -425,7 +425,14 @@ class BudgetProgressHUD {
         }
         this._sub = new ScheduleEntry         ('_MiniScheduleEntry', this._accounts, this._variance, opt);
       } else
-        this._sub = new BudgetProgressHUDName ((name) => {this._addSub (name)}, setFocus);
+        this._sub = new BudgetProgressHUDName ((name, alsoInsertBlank) => (async() => {
+          await this._addSub (name);
+          this .update (this._id);
+          if (alsoInsertBlank) {
+            const result = await this._addSub('');
+            this._sub._view._selectTupleWithId (result [0], {first: true}) ;
+          }
+        })(), setFocus);
       this._view .addText      ('_subcategories', '', 'Subcategories');
       this._view .addPresenter ('_subcategories',  this._sub);
     }
@@ -456,11 +463,8 @@ class BudgetProgressHUD {
     }
   }
   
-  _addSub (name) {
-    (async () => {
-      await this._variance .getBudget() .getSchedulesModel() .insert ({name: name}, {id: this._id, inside: true});
-      this .update (this._id);
-    }) ();
+  async _addSub (name) {
+    return this._variance .getBudget() .getSchedulesModel() .insert ({name: name}, {id: this._id, inside: true});
   }
 
   _addSchedule () {
@@ -641,7 +645,7 @@ class BudgetProgressHUDName extends Presenter {
   }
 
   _onViewChange (eventType, arg) {
-    this._onChange (arg .value);
+    this._onChange (arg .value, arg .metaKey);
   }
 
   addHtml (toHtml) {
