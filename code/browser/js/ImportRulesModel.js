@@ -64,6 +64,11 @@ class ImportRulesModel extends Observable {
       this._rules   .clear();
     }
     for (let r of await this._model .find()) {
+      if (r .category) {
+        const cat = this._categories .get (r .category);
+        if (! cat || this._categories .isZombie (r .category))
+          r .category = null;
+      }
       this._entries .set (r._id, r);
       if (r .type == ImportRulesModelType .PREDICATE)
         this._rules .set (r._id, r);
