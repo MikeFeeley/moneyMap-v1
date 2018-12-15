@@ -61,6 +61,12 @@ class TransactionHUD extends TransactionAndRulesTable {
     }
   }
 
+  _resetIfChanged() {
+    super._resetIfChanged();
+    if (this._recategorizeUpdate)
+      this._recategorizeUpdate();
+  }
+
   _showRecatorize() {
     let cats   = this._variance .getBudget() .getCategories();
     let format = new ViewFormatOptions (
@@ -97,9 +103,10 @@ class TransactionHUD extends TransactionAndRulesTable {
       return false;
     }}) .appendTo (dialogue .children());
     this._recategorizeUpdate = () => {
-      let isDisabled = field .data ('field') .get() == '';
+      const isDisabled = field .data ('field') .get() == '';
       confirm [(isDisabled? 'add': 'remove') + 'Class'] ('_disabled');
-      confirm .prop ({disabled: isDisabled})
+      confirm .prop ({disabled: isDisabled});
+      edit .reset();
     };
     let modalEntry = ui .ModalStack .add (
       e => {
@@ -219,7 +226,7 @@ class TransactionHUD extends TransactionAndRulesTable {
     let mousedownFired, mousedownTarget, mousedownPageY;
     this._content .on ('mousedown webkitmouseforcedown', e => {mousedownFired = true; mousedownTarget = $(e .target); mousedownPageY = e .pageY})
     this._content .on ('mouseup webkitmouseforceup', e => {
-      if (this._view._options .readOnly && mousedownFired) {
+      if (this._view._options .readOnly && mousedownFired && ! this._recategorizeUpdate) {
         mousedownFired = false;
         let target = mousedownTarget || $(e .target);
         let pageY  = mousedownPageY || e .pageY;
