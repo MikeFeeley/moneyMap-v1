@@ -519,7 +519,7 @@ div._TransactionHUD {
         color: #33b1ff;
       }
      }
-    > ._recategorizeDialogue > div > div, ._recategorizeDialogue > div > ._changeAllButton {
+    > ._recategorizeDialogue > div > div:first-child, ._recategorizeDialogue > div > ._changeAllButton {
       color: #33b1ff;
       &._disabled {
         color: grey;

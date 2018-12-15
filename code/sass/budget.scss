@@ -90,6 +90,9 @@ html {
     box-shadow: $drop-shadow;
     > table {
       > tbody {
+        tr {
+          color: black;
+        }
         tr *:not(._selected) {
           color: rgb(180,180,180);
         }
