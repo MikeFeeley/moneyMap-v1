@@ -259,7 +259,7 @@ class SchedulesModel extends Observable {
       let bid = this._budget .getId();
       let cl  = [cat] .concat (this._categories .getDescendants (cat));
 
-      // remove budget from cat and see if cat can be remove
+      // remove budget from cat and see if cat can be removed
       let ul = [], rl = [];
       for (let cat of cl) {
         let budgets = cat .budgets .filter (budget => {return budget != bid});
@@ -278,9 +278,9 @@ class SchedulesModel extends Observable {
         return l .concat ((c .schedule || []) .map (s => {return this._splitMI (s._id) .id}));
       }, []);
       let accounts = this._accModel .getAccounts();
-      let al = cl
+      const al = cl
         .map (c => {
-          if (c .account) {
+          if (c .account && c .budgets .filter (budget => budget != bid) .length == 0) {
             let account = accounts .find (a => {return a._id == c .account});
             if (account) {
               for (let field of ['category', 'disCategory', 'intCategory', 'incCategory', 'traCategory'])
