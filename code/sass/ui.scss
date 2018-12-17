@@ -98,15 +98,19 @@ div._systemStatus {
     background-color: rgba(100, 255, 100, 0.3);
   }
   &._delayed {
+    top: 4px;
+    right: 4px;
     font-size: 18px;
     height:  40px;
     line-height: 40px;
-    width:   220px;
+    padding-left: 12px;
+    padding-right: 12px;
     text-align: center;
-    color: rgb(102, 95, 61);
-    background-color: rgba(255, 225, 0, 0.4);
+    color: rgb(204, 237, 255);
+    background-color: rgb(102, 199, 255);
   }
   &._down {
+    top: 20px;
     font-size: 32px;
     height:  80px;
     line-height: 80px;

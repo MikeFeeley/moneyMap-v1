@@ -39,7 +39,7 @@ class App {
   }
 
   _setDelayed (transition) {
-    let addText = () => {this._status .text (this._pending + ' update' + (this._pending > 1? 's': '') + ' in progress')}
+    const addText = () => {this._status .text ('Waiting for Network (' + this._pending + ')')}
     if (transition) {
       this._status .addClass ('_delayed');
       if (this._status .text() == '')
@@ -47,13 +47,7 @@ class App {
       this._status
         .queue ('_systemStatus', next => {
           this._status .animate ({
-            opacity:         1,
-            width:           '200px',
-            height:          '40px',
-            'line-height':   '40px',
-            'font-size':     '18px',
-            color:           'rgb(102, 95, 61)',
-            backgroundColor: 'rgba(255, 236, 128, 0.7)'
+            opacity: 1
           }, {
             complete: () => {addText()},
             duration: 100
@@ -66,6 +60,7 @@ class App {
   }
 
   _setClear (transition) {
+    return;
     if (transition) {
       this._status .clearQueue    ('_systemStatus') .fadeOut (100, () => {
         this._status .text        ('');
