@@ -97,6 +97,12 @@ class TransactionModel extends Model {
         dates = {start: query.date.$gte, end: 99999999}
       else if (query .date .$gte && query .date .$lte && Object .keys (query .date) .length == 2)
         dates = {start: query .date .$gte, end: query .date .$lte}
+      else if (query .date .$gte && query .date .$lt && Object .keys (query .date) .length == 2)
+        dates = {start: query .date .$gt, end: Types .date .addDay (query .date .$lte, -1)}
+      else if (query .date .$gt && query .date .$lte && Object .keys (query .date) .length == 2)
+        dates = {start: Types .date .addDay (query .date .$gt, 1), end: query .date .$lte}
+      else if (query .date .$gt && query .date .$lt && Object .keys (query .date) .length == 2)
+        dates = {start: Types .date .addDay (query .date .$gt, 1), end: Types .date .addDay (query .date .$lte, -1)}
       else if (query .date .$and && query .date .$and .length == 2) {
         let st = date .$and .find (a => {return a .$gte});
         let en = date .$and .find (a => {return a .$lte});
