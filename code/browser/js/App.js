@@ -60,7 +60,6 @@ class App {
   }
 
   _setClear (transition) {
-    return;
     if (transition) {
       this._status .clearQueue    ('_systemStatus') .fadeOut (100, () => {
         this._status .text        ('');
