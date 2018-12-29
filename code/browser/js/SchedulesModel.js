@@ -393,7 +393,7 @@ class SchedulesModel extends Observable {
               catAmount .month .amount = account .getAmount (cat, start, end, catAmount .month .amount);
               catAmount .year .amount = account .getAmount (cat, start, end, catAmount .year .amount);
               catAmount .year .allocated = account .getAmount (cat, start, end, catAmount .year .allocated);
-              catAmount .year .unallocated = catAmount .year .amount - catAmount .year .allocated;
+              catAmount .year .unallocated = account .getAmount (cat, start, end, catAmount .year .unallocated);
             }
             if (catAmount .otherMonths)
               catAmount .otherMonths = account .getAmount (cat, start, Types .dateFY .getFYEnd (start, this._budget .getStartDate(), this._budget .getEndDate()))
