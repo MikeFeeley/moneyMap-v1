@@ -568,7 +568,9 @@ class Navigate {
             if (dates .slice (-1) [0] .end < Types .date .addMonthStart (this._budget .getStartDate(), -12))
               await this._actuals .findHistory();
             let isOther = id .includes ('other_');
-            let tc = [cat];
+            const siblings = cat && cat .parent && ([] .concat (cat .parent .children || []) .concat (cat .parent .zombies || []));
+            const homonyms = siblings && siblings .filter (s => s .name == cat .name);
+            const tc = homonyms || [];
             return dates .map (date => {
               let value;
               if (isOther)
