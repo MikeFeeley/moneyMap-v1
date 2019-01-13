@@ -570,7 +570,7 @@ class Navigate {
             let isOther = id .includes ('other_');
             const siblings = cat && cat .parent && ([] .concat (cat .parent .children || []) .concat (cat .parent .zombies || []));
             const homonyms = siblings && siblings .filter (s => s .name == cat .name);
-            const tc = homonyms || [];
+            const tc = homonyms || [cat];
             return dates .map (date => {
               let value;
               if (isOther)
