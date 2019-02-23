@@ -207,7 +207,6 @@ class BudgetProgressHUD {
             const pre = (fld == 'Available'? 'prev': 'pre') + fld;
             const cur = 'cur' + fld;
             if (other [per] [pre] < 0) {
-              if (this._cat.name=='Phoenix') console.log(other[per][pre], other[per][cur]);
               const delta = Math .min (-other [per] [pre], other [per] [cur]);
               other [per] [pre] += delta;
               other [per] [cur] -= delta;
