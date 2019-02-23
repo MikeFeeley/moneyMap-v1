@@ -201,6 +201,18 @@ class BudgetProgressHUD {
       return result;
     }, {});
     if (other && other .available || ['month', 'year'] .find (per => other [per] && [... Object .keys (other [per])] .find (p => other [per] [p]))) {
+      for (const per of ['month', 'year'])
+        if (other [per])
+          for (const fld of ['Available', 'BudgetedActual', 'OverActual']) {
+            const pre = (fld == 'Available'? 'prev': 'pre') + fld;
+            const cur = 'cur' + fld;
+            if (other [per] [pre] < 0) {
+              if (this._cat.name=='Phoenix') console.log(other[per][pre], other[per][cur]);
+              const delta = Math .min (-other [per] [pre], other [per] [cur]);
+              other [per] [pre] += delta;
+              other [per] [cur] -= delta;
+            }
+          }
       const otherAmount = {_id: 'other_' + this._id, addCats: [], available: other .available};
       const cat         = this._varianceAmounts [0];
       for (const per of ['month', 'year'])
