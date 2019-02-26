@@ -83,7 +83,7 @@ class Preferences extends Observable {
       .append ($('<div>', {html: '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; https://stuk.github.io/ (JSZip)', css: {color: '#ccc'}}))
       .append ($('<div>', {html: '&nbsp;'}))
       .append ($('<a>', {href: 'https://github.com/MikeFeeley/moneyMap', target: '_blank', text: 'github.com/MikeFeeley/moneyMap', css: {color: '#aaa', 'padding-bottom': '6px'}}))
-      .append ($('<div>', {text: '(c) 2018 Mike Feeley (feeley@cs.ubc.ca)'}))
+      .append ($('<div>', {text: '(c) 2019 Mike Feeley (feeley@cs.ubc.ca)'}))
     about.css ({top: 100, left: 50});
     ui .ModalStack .add (
       e => e && !$.contains (about .get (0), e .target) && about .get (0) != e .target,
