@@ -184,7 +184,7 @@ class BudgetProgressHUD {
       ]);
 
     this._varianceAmounts = [this._id] .concat (children .map (child => child._id))
-      .map    (cid => this._getAmount (cid, true))
+      .map    (cid => this._getAmount (cid, true, cid != this._id))
       .filter (item =>
         (item._id == this._id || this._categories .hasType (this._categories .get (item._id), ScheduleType .NOT_NONE)) &&
         (this._hasAmount (item .month) || this._hasAmount (item .year)));
@@ -589,7 +589,7 @@ class BudgetProgressHUD {
     this._view .blur();
   }
   
-  _getAmount (id, includeName) {
+  _getAmount (id, includeName, skipThis) {
     var isZero = a => {
       var total = Object .keys (a .amounts) .reduce ((s,k) => {
         return s + (a .amounts [k] || 0)
@@ -629,13 +629,15 @@ class BudgetProgressHUD {
             dat .thisCreditAvailable = amt;
         } else {
           var bud = Math .min (amt, dat .available);
-          dat .thisBudgeted = bud;
-          dat .thisOver     = amt - bud;
+          if (! skipThis) {
+            dat .thisBudgeted = bud;
+            dat .thisOver     = amt - bud;
+          }
           dat .available    = Math.max (0, dat .available - amt);
           let pa = dat .prevAvailable;
           dat .prevAvailable = Math.max (0, dat .prevAvailable - amt);
           dat .curAvailable = Math.max (0, dat .curAvailable - amt - (pa - dat .prevAvailable));
-          if (t == 'month' && data .year && data .year .available) {
+          if (! skipThis && t == 'month' && data .year && data .year .available) {
             amt           = dat .thisOver;
             dat .thisOver = 0;
           }
