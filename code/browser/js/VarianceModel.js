@@ -276,8 +276,10 @@ class VarianceModel extends Observable {
     if (cat .parent) {
       // compute unallocated amount to distribute to children
       var amount = this._getAmount (cat .parent, period, skip);
+      const categories = this._budget .getCategories();
+      const parentType = categories .getType (cat .parent, undefined, period .cur .start);
       // subtract children if this is a yearly budget
-      if (this._budget .getCategories() .getType (cat .parent, undefined, period .cur .start) == ScheduleType .YEAR)
+      if (parentType == ScheduleType .YEAR)
         amount .year .budget .prev = Math .max (0, amount .year .budget .prev - (cat .parent .children || []) .concat (cat .parent .zombies || []) .reduce ((t,c) => {
           return t + this._budget .getIndividualAmount(c) .amount;
         }, 0));
@@ -298,7 +300,7 @@ class VarianceModel extends Observable {
       }, {});
 
       // compute portion of unalloc for THIS child
-      if (unalloc .prev > 0 || unalloc .cur > 0) {
+      if (parentType == ScheduleType .NONE && (unalloc .prev > 0 || unalloc .cur > 0)) {
 
         // get amounts for children
         var children = (cat .parent .children || []) .concat (cat .parent .zombies || []) .map (child => {
@@ -365,7 +367,7 @@ class VarianceModel extends Observable {
           let overAlloc = totalBudget != 0?  Math .round (unalloc [per] * thisBudget / totalBudget): 1.0 / children .length;
           return (o [per] = thisAlloc + overAlloc) != null && o;
         }, {})
-        alloc .addCats = upAmount .addCats .concat (alloc .prev + alloc .cur != 0? [cat .parent ._id]: [])
+        alloc .addCats = upAmount .addCats .concat (alloc .prev + alloc .cur != 0? [cat .parent ._id]: []);
       } else
         var alloc = {prev: 0, cur: 0, addCats: upAmount .addCats}
 

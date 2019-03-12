@@ -1149,12 +1149,25 @@ class Navigate {
             total [per] .budgetlessActual = t;
         }
         return total
-      }, {})
+      }, {});
+      let hasUnusedTotalAmount = false;
+      if (this._categories .getType (root) != ScheduleType .NONE) {
+        for (const per of ['month', 'year'])
+          if (total [per])
+            for (const fld of ['available', 'curAvailable', 'prevAvailable'])
+              if (total [per] [fld]) {
+                total [per] [fld] = 0;
+                hasUnusedTotalAmount = true;
+              }
+
+      }
       let rootAmount  = this._variance .getAmount (root._id, date);
       let otherAmount = ['month', 'year'] .reduce ((o,per) => {
         if (rootAmount [per]) {
           if (total [per] && total [per] .budgetlessActual) {
-            o [per] = {budgetlessActual: (rootAmount [per] .amounts .curBudgetedActual || 0) - (total [per] .budgetlessActual || 0)};
+            o [per] = {
+              budgetlessActual: (rootAmount [per] .amounts .curBudgetedActual || 0) + (rootAmount [per] .amounts .curOverActual || 0) - (total [per] .budgetlessActual || 0)
+            };
           } else {
             o [per] = {};
             for (let p of Object .keys (rootAmount [per] .amounts))
@@ -1165,6 +1178,13 @@ class Navigate {
         }
         return o;
       }, {});
+      for (const per of ['month', 'year'])
+        if (otherAmount [per])
+          for (const [f,t] of [['curOverActual', 'curBudgetActual']])
+            if (otherAmount [per] [f] < 0) {
+              otherAmount [per] [t] += otherAmount [per] [f];
+              otherAmount [per] [f] = 0;
+            }
       let oaTotal = ['month', 'year'] .reduce ((o,per) => {
         o [per] = (otherAmount [per]? Array .from (Object .keys (otherAmount [per])): []) .reduce ((t,p) => {
           return t + (otherAmount [per] [p] || 0);
@@ -1180,7 +1200,7 @@ class Navigate {
       if (Array .from (Object .keys (oaTotal)) .reduce ((t,p) => {return t + oaTotal [p]}, 0) > 0) {
         for (let per of ['month', 'year'])
           if (rootAmount [per]) {
-            rootAmount [per] .amounts = (raTotal [per] != oaTotal [per]) && otherAmount [per];
+            rootAmount [per] .amounts = (raTotal [per] != oaTotal [per] || hasUnusedTotalAmount) && otherAmount [per];
             if (Math .abs (rootAmount [per]) == 1)
               rootAmount [per] = 0;
           }
